@@ -1,17 +1,15 @@
 {
-  "$schema": "https://schema.tauri.app/config/2.json",
-  "package": {
-    "productName": "Proxemic",
-    "version": "0.1.0",
-    "identifier": "com.lukose.proxemic"
-  },
+  "$schema": "./tauri.conf.schema.json",
+  "productName": "Proxemic",
+  "version": "0.1.0",
+  "identifier": "com.lukose.proxemic",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:3000",
-    "distDir": "../dist"
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist"
   },
-  "tauri": {
+  "app": {
     "windows": [
       {
         "title": "Proxemic",
@@ -19,34 +17,13 @@
         "height": 600
       }
     ],
-    "allowlist": {
-      "fs": {
-        "all": true,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "createDir": true,
-        "removeDir": true,
-        "renameFile": true,
-        "exists": true
-      },
-      "path": {
-        "all": true
-      },
-      "dialog": {
-        "all": true
-      },
-      "shell": {
-        "open": true
-      }
-    },
     "security": {
       "csp": null
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "appimage", "msi", "nsis", "app", "dmg"],
+    "targets": ["msi", "nsis", "app"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
