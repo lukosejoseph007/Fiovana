@@ -56,3 +56,7 @@ temp/
 
 # Development
 .turbo/
+
+
+# Project Information
+projectinfo/
