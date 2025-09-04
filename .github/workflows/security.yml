@@ -9,8 +9,12 @@ on:
 jobs:
   cargo-audit:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
