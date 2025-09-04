@@ -2,15 +2,102 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum SecurityError {
-    #[error("Path traversal attempt detected: {0}")]
-    PathTraversal(String),
+    #[error("Path traversal attempt detected: {path}")]
+    PathTraversal { path: String },
 
-    #[error("Invalid file extension: {0}")]
-    InvalidExtension(String),
+    #[error("Invalid file extension: {extension}")]
+    InvalidExtension { extension: String },
 
-    #[error("Access denied to path: {0}")]
-    AccessDenied(String),
+    #[error("Path too long: {length} exceeds maximum {max}")]
+    PathTooLong { length: usize, max: usize },
 
-    #[error("File too large: {0} bytes")]
-    FileSizeExceeded(u64),
+    #[error("Filename contains prohibited characters: {filename}")]
+    ProhibitedCharacters { filename: String },
+
+    #[error("Access denied to path: {path}")]
+    AccessDenied { path: String },
+
+    #[error("File size {size} exceeds limit {limit}")]
+    FileSizeExceeded { size: u64, limit: u64 },
+}
+
+#[derive(Error, Debug)]
+pub enum ValidationError {
+    #[error("File type validation failed: {reason}")]
+    FileType { reason: String },
+
+    #[error("Magic number mismatch for file type: {expected} vs {actual}")]
+    MagicNumber { expected: String, actual: String },
+
+    #[error("File corruption detected: {details}")]
+    Corruption { details: String },
+}
+
+// 🔽 Add these impl blocks here
+impl SecurityError {
+    pub fn code(&self) -> &'static str {
+        match self {
+            SecurityError::PathTraversal { .. } => "SEC_PATH_TRAVERSAL",
+            SecurityError::InvalidExtension { .. } => "SEC_INVALID_EXTENSION",
+            SecurityError::PathTooLong { .. } => "SEC_PATH_TOO_LONG",
+            SecurityError::ProhibitedCharacters { .. } => "SEC_PROHIBITED_CHARS",
+            SecurityError::AccessDenied { .. } => "SEC_ACCESS_DENIED",
+            SecurityError::FileSizeExceeded { .. } => "SEC_FILE_TOO_LARGE",
+        }
+    }
+}
+
+impl ValidationError {
+    pub fn code(&self) -> &'static str {
+        match self {
+            ValidationError::FileType { .. } => "VAL_FILE_TYPE",
+            ValidationError::MagicNumber { .. } => "VAL_MAGIC_MISMATCH",
+            ValidationError::Corruption { .. } => "VAL_CORRUPTION",
+        }
+    }
+}
+
+// Your existing tests stay at the bottom
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_security_error_display() {
+        let err = SecurityError::PathTraversal {
+            path: "/etc/passwd".into(),
+        };
+        assert_eq!(
+            format!("{}", err),
+            "Path traversal attempt detected: /etc/passwd"
+        );
+    }
+
+    #[test]
+    fn test_validation_error_display() {
+        let err = ValidationError::MagicNumber {
+            expected: "PDF".into(),
+            actual: "TXT".into(),
+        };
+        assert_eq!(
+            format!("{}", err),
+            "Magic number mismatch for file type: PDF vs TXT"
+        );
+    }
+}
+
+#[test]
+fn test_security_error_code() {
+    let err = SecurityError::AccessDenied {
+        path: "C:/restricted.txt".into(),
+    };
+    assert_eq!(err.code(), "SEC_ACCESS_DENIED");
+}
+
+#[test]
+fn test_validation_error_code() {
+    let err = ValidationError::Corruption {
+        details: "checksum mismatch".into(),
+    };
+    assert_eq!(err.code(), "VAL_CORRUPTION");
 }
