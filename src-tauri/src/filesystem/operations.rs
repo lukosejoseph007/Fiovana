@@ -4,9 +4,8 @@ use crate::filesystem::security::path_validator::PathValidator;
 use std::path::Path;
 
 pub fn validate_file_for_import(path: &str) -> Result<String, SecurityError> {
-    // Use default config for now (later you can load from settings)
     let config = SecurityConfig::default();
-
-    let validated = PathValidator::validate(Path::new(path), &config)?;
+    let validator = PathValidator::new(config);
+    let validated = validator.validate_import_path(Path::new(path))?;
     Ok(validated.to_string_lossy().to_string())
 }
