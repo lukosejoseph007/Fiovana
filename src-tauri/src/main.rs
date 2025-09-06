@@ -6,7 +6,6 @@ mod filesystem;
 use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
 use tauri::Manager;
-use tracing_subscriber;
 
 fn main() {
     tauri::Builder::default()

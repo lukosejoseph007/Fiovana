@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum SecurityError {
     #[error("Path traversal attempt detected: {path}")]
@@ -21,6 +22,7 @@ pub enum SecurityError {
     FileSizeExceeded { size: u64, limit: u64 },
 }
 
+#[allow(dead_code)]
 #[derive(Error, Debug)]
 pub enum ValidationError {
     #[error("File type validation failed: {reason}")]
@@ -34,6 +36,7 @@ pub enum ValidationError {
 }
 
 // 🔽 Error code getters
+#[allow(dead_code)]
 impl SecurityError {
     pub fn code(&self) -> &'static str {
         match self {
@@ -47,6 +50,7 @@ impl SecurityError {
     }
 }
 
+#[allow(dead_code)]
 impl ValidationError {
     pub fn code(&self) -> &'static str {
         match self {

@@ -1,5 +1,6 @@
 /// Defines allowed access scopes for file operations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ScopeRestrictions {
     /// Allowed directories or base paths
     pub allowed_paths: Vec<String>,
@@ -16,6 +17,7 @@ impl Default for ScopeRestrictions {
     }
 }
 
+#[allow(dead_code)]
 impl ScopeRestrictions {
     /// Check if a given path is within allowed scope
     pub fn is_within_scope(&self, path: &str) -> bool {

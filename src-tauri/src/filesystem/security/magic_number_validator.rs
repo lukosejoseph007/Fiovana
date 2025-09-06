@@ -5,10 +5,12 @@ use std::path::Path;
 
 use crate::filesystem::errors::ValidationError;
 
+#[allow(dead_code)]
 pub struct MagicNumberValidator {
     signatures: HashMap<String, Vec<u8>>,
 }
 
+#[allow(dead_code)]
 impl MagicNumberValidator {
     pub fn new() -> Self {
         let mut signatures = HashMap::new();

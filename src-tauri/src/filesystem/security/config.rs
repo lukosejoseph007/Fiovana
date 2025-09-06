@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SecurityConfig {
     pub allowed_extensions: HashSet<String>,
