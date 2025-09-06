@@ -64,7 +64,7 @@ impl PathValidator {
             .extension()
             .and_then(|e| e.to_str())
             .map(|e| format!(".{}", e.to_lowercase()))
-            .unwrap_or_else(|| "".to_string());
+            .unwrap_or_default();
 
         if !self.config.allowed_extensions.contains(&ext_with_dot) {
             return Err(SecurityError::InvalidExtension {
@@ -81,6 +81,7 @@ impl PathValidator {
     }
 
     // Returns the permissions rationale
+    #[allow(dead_code)]
     pub fn permission_rationale(&self) -> &'static str {
         PermissionsRationale::explain()
     }

@@ -7,14 +7,16 @@ pub struct ScopeRestrictions {
     pub max_subdirectory_depth: usize,
 }
 
-impl ScopeRestrictions {
-    pub fn default() -> Self {
+impl Default for ScopeRestrictions {
+    fn default() -> Self {
         Self {
             allowed_paths: vec!["C:/Users/test".to_string()],
             max_subdirectory_depth: 5,
         }
     }
+}
 
+impl ScopeRestrictions {
     /// Check if a given path is within allowed scope
     pub fn is_within_scope(&self, path: &str) -> bool {
         self.allowed_paths.iter().any(|base| path.starts_with(base))
