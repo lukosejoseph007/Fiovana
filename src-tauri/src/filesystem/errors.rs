@@ -33,7 +33,7 @@ pub enum ValidationError {
     Corruption { details: String },
 }
 
-// 🔽 Add these impl blocks here
+// 🔽 Error code getters
 impl SecurityError {
     pub fn code(&self) -> &'static str {
         match self {
@@ -57,7 +57,7 @@ impl ValidationError {
     }
 }
 
-// Your existing tests stay at the bottom
+// 🔽 Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,20 +84,20 @@ mod tests {
             "Magic number mismatch for file type: PDF vs TXT"
         );
     }
-}
 
-#[test]
-fn test_security_error_code() {
-    let err = SecurityError::AccessDenied {
-        path: "C:/restricted.txt".into(),
-    };
-    assert_eq!(err.code(), "SEC_ACCESS_DENIED");
-}
+    #[test]
+    fn test_security_error_code() {
+        let err = SecurityError::AccessDenied {
+            path: "C:/restricted.txt".into(),
+        };
+        assert_eq!(err.code(), "SEC_ACCESS_DENIED");
+    }
 
-#[test]
-fn test_validation_error_code() {
-    let err = ValidationError::Corruption {
-        details: "checksum mismatch".into(),
-    };
-    assert_eq!(err.code(), "VAL_CORRUPTION");
+    #[test]
+    fn test_validation_error_code() {
+        let err = ValidationError::Corruption {
+            details: "checksum mismatch".into(),
+        };
+        assert_eq!(err.code(), "VAL_CORRUPTION");
+    }
 }
