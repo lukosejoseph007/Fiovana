@@ -19,13 +19,13 @@ mod permissions_escalation {
 use permissions_escalation::PermissionEscalation;
 
 #[derive(Clone)]
-pub(crate) struct PathValidator {
+pub struct PathValidator {
     config: SecurityConfig,
 }
 
 impl PathValidator {
-    // Constructor
-    pub(crate) fn new(config: SecurityConfig) -> Self {
+    pub fn new(config: SecurityConfig) -> Self {
+        // <- pub instead of pub(crate)
         Self { config }
     }
 
@@ -82,7 +82,7 @@ impl PathValidator {
 
     // Returns the permissions rationale
     #[allow(dead_code)]
-    pub fn permission_rationale(&self) -> &'static str {
+    pub fn permission_rationale() -> &'static str {
         PermissionsRationale::explain()
     }
 }

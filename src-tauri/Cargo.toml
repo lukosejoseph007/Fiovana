@@ -13,6 +13,8 @@ edition = "2021"
 tauri-build = { version = "2.0", features = [] }
 
 [dependencies]
+anyhow = "1.0"
+thiserror = "1.0"
 tauri = { version = "2.0", features = [] }
 tauri-plugin-opener = "2.0"
 tauri-plugin-fs = "2.0"
@@ -21,6 +23,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 # Security & File Operations
 sha2 = "0.10"
@@ -42,6 +47,3 @@ thiserror = "1.0"
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
-
-
-
