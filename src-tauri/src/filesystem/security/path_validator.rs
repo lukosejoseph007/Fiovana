@@ -1,6 +1,7 @@
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::permissions::PermissionsRationale;
+use crate::filesystem::security::scope_validator::ScopeValidator;
 use std::path::{Path, PathBuf};
 
 // 🔹 Stub module for future permission escalation
@@ -21,19 +22,26 @@ use permissions_escalation::PermissionEscalation;
 #[derive(Clone)]
 pub struct PathValidator {
     config: SecurityConfig,
+    scope_validator: ScopeValidator,
 }
 
 impl PathValidator {
-    pub fn new(config: SecurityConfig) -> Self {
-        // <- pub instead of pub(crate)
-        Self { config }
+    pub fn new(config: SecurityConfig, allowed_paths: Vec<PathBuf>) -> Self {
+        Self {
+            config,
+            scope_validator: ScopeValidator::new(allowed_paths),
+        }
     }
 
-    // Instance method for validating paths
-    pub(crate) fn validate_import_path(&self, path: &Path) -> Result<PathBuf, SecurityError> {
+    pub fn validate_import_path(&self, path: &Path) -> Result<PathBuf, SecurityError> {
         let path_str = path.to_string_lossy();
 
-        // 1. Path length check
+        if self.scope_validator.validate(path).is_err() {
+            return Err(SecurityError::PathOutsideWorkspace {
+                path: path.display().to_string(),
+            });
+        }
+
         if path_str.len() > self.config.max_path_length {
             return Err(SecurityError::PathTooLong {
                 length: path_str.len(),
@@ -41,14 +49,12 @@ impl PathValidator {
             });
         }
 
-        // 2. Path traversal check
         if path_str.contains("..") {
             return Err(SecurityError::PathTraversal {
                 path: path.display().to_string(),
             });
         }
 
-        // 3. Prohibited characters check
         let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         if filename
             .chars()
@@ -59,7 +65,6 @@ impl PathValidator {
             });
         }
 
-        // 4. Extension check
         let ext_with_dot = path
             .extension()
             .and_then(|e| e.to_str())
@@ -72,15 +77,13 @@ impl PathValidator {
             });
         }
 
-        // 🔹 Placeholder for future permission escalation
         if !PermissionEscalation::can_escalate("import_path") {
-            // Currently does nothing, but ready for future rules
+            // Placeholder for future permission escalation
         }
 
         Ok(path.to_path_buf())
     }
 
-    // Returns the permissions rationale
     #[allow(dead_code)]
     pub fn permission_rationale() -> &'static str {
         PermissionsRationale::explain()
@@ -90,103 +93,147 @@ impl PathValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::Path;
     use std::thread;
 
-    fn default_config() -> SecurityConfig {
-        SecurityConfig::default()
+    fn default_config() -> (SecurityConfig, Vec<PathBuf>) {
+        let config = SecurityConfig::default();
+        let allowed_paths = vec![
+            dirs::desktop_dir().unwrap(),
+            dirs::document_dir().unwrap(),
+            dirs::download_dir().unwrap(),
+        ];
+        (config, allowed_paths)
     }
 
     #[test]
     fn test_valid_path() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/Users/test/document.txt");
-        assert!(validator.validate_import_path(path).is_ok());
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("document.txt");
+        assert!(validator.validate_import_path(&path).is_ok());
     }
 
     #[test]
     fn test_path_too_long() {
-        let validator = PathValidator::new(default_config());
-        let long_path = "a".repeat(300);
-        let path = Path::new(&long_path);
+        let (config, allowed_paths) = default_config();
+        let max_path_length = config.max_path_length;
+        let validator = PathValidator::new(config, allowed_paths);
+
+        let base_dir = dirs::document_dir().unwrap();
+        let base_len = base_dir.to_string_lossy().len();
+        let ext = ".txt";
+        let ext_len = ext.len();
+
+        let required_length = max_path_length + 1;
+        let separator_len = 1;
+        let filename_len = required_length.saturating_sub(base_len + separator_len + ext_len);
+
+        let long_filename = format!("{}{}", "a".repeat(filename_len.max(1)), ext);
+        let path = base_dir.join(long_filename);
+
         assert!(matches!(
-            validator.validate_import_path(path),
+            validator.validate_import_path(&path),
             Err(SecurityError::PathTooLong { .. })
         ));
     }
 
     #[test]
     fn test_prohibited_characters() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/temp/inva|id.txt");
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("inva|id.txt");
         assert!(matches!(
-            validator.validate_import_path(path),
+            validator.validate_import_path(&path),
             Err(SecurityError::ProhibitedCharacters { .. })
         ));
     }
 
     #[test]
     fn test_invalid_extension() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/temp/file.exe");
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("file.exe");
         assert!(matches!(
-            validator.validate_import_path(path),
+            validator.validate_import_path(&path),
             Err(SecurityError::InvalidExtension { .. })
         ));
     }
 
     #[test]
     fn test_path_traversal() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/Users/test/../Windows/System32/config.sys");
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("../test.txt");
         assert!(matches!(
-            validator.validate_import_path(path),
+            validator.validate_import_path(&path),
             Err(SecurityError::PathTraversal { .. })
         ));
     }
 
     #[test]
     fn test_empty_extension() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/temp/file");
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("file");
         assert!(matches!(
-            validator.validate_import_path(path),
+            validator.validate_import_path(&path),
             Err(SecurityError::InvalidExtension { .. })
         ));
     }
 
     #[test]
     fn test_mixed_case_extension() {
-        let validator = PathValidator::new(default_config());
-        let path = Path::new("C:/temp/Document.TXT");
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+        let path = dirs::document_dir().unwrap().join("Document.TXT");
         assert!(
-            validator.validate_import_path(path).is_ok(),
+            validator.validate_import_path(&path).is_ok(),
             "Mixed-case extensions should be valid"
         );
     }
 
     #[test]
     fn test_concurrent_access() {
-        let validator = PathValidator::new(default_config());
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
         let paths = vec![
-            "C:/Users/test/doc1.txt",
-            "C:/Users/test/doc2.txt",
-            "C:/Users/test/doc3.txt",
+            dirs::document_dir().unwrap().join("doc1.txt"),
+            dirs::document_dir().unwrap().join("doc2.txt"),
+            dirs::document_dir().unwrap().join("doc3.txt"),
         ];
 
         let handles: Vec<_> = paths
             .into_iter()
             .map(|p| {
                 let validator = validator.clone();
+                let path_str = p.to_string_lossy().to_string();
                 thread::spawn(move || {
-                    let path = Path::new(p);
-                    assert!(validator.validate_import_path(path).is_ok());
+                    let result = validator.validate_import_path(&p);
+                    (path_str, result)
                 })
             })
             .collect();
 
-        for handle in handles {
-            handle.join().unwrap();
+        let results: Vec<_> = handles.into_iter().map(|h| h.join()).collect();
+
+        let mut errors = Vec::new();
+        for result in results {
+            match result {
+                Ok((_path, Ok(_))) => {}
+                Ok((path, Err(e))) => {
+                    errors.push(format!("Validation failed for {}: {:?}", path, e));
+                }
+                Err(_) => {
+                    errors.push("Thread panicked".to_string());
+                }
+            }
         }
+
+        assert!(
+            errors.is_empty(),
+            "Found {} validation errors: {:?}",
+            errors.len(),
+            errors
+        );
     }
 }

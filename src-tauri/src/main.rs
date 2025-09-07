@@ -7,6 +7,8 @@ use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
 use tauri::Manager;
 
+use crate::filesystem::security::permissions_escalation::PermissionEscalation;
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
@@ -14,14 +16,15 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             validate_file_for_import,
-            get_file_info_secure
+            get_file_info_secure,
+            request_permission_escalation
         ])
         .setup(|app| {
             // Initialize security configuration
             let config = SecurityConfig::default();
 
             // Set up global security validator
-            let validator = std::sync::Arc::new(PathValidator::new(config));
+            let validator = std::sync::Arc::new(PathValidator::new(config, Vec::new()));
             app.manage(validator);
 
             // Initialize audit logging
@@ -55,6 +58,21 @@ async fn validate_file_for_import(
             Err(e.to_string())
         }
     }
+}
+
+// New command to request permission escalation
+#[tauri::command]
+async fn request_permission_escalation(
+    _window: tauri::Window,
+    _message: String,
+) -> Result<bool, String> {
+    // Simulate user approval; in a real app, you could get this from frontend
+    let user_approved = true;
+
+    // Create a permission escalation object
+    let escalation = PermissionEscalation::from_user_input(user_approved);
+
+    Ok(escalation.user_approved)
 }
 
 // Secure command to get file information

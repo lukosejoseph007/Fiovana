@@ -20,6 +20,9 @@ pub enum SecurityError {
 
     #[error("File size {size} exceeds limit {limit}")]
     FileSizeExceeded { size: u64, limit: u64 },
+
+    #[error("Path is outside the allowed workspace: {path}")]
+    PathOutsideWorkspace { path: String },
 }
 
 #[allow(dead_code)]
@@ -46,6 +49,7 @@ impl SecurityError {
             SecurityError::ProhibitedCharacters { .. } => "SEC_PROHIBITED_CHARS",
             SecurityError::AccessDenied { .. } => "SEC_ACCESS_DENIED",
             SecurityError::FileSizeExceeded { .. } => "SEC_FILE_TOO_LARGE",
+            SecurityError::PathOutsideWorkspace { .. } => "SEC_PATH_OUTSIDE_WORKSPACE",
         }
     }
 }
@@ -103,5 +107,17 @@ mod tests {
             details: "checksum mismatch".into(),
         };
         assert_eq!(err.code(), "VAL_CORRUPTION");
+    }
+
+    #[test]
+    fn test_path_outside_workspace_error() {
+        let err = SecurityError::PathOutsideWorkspace {
+            path: "C:/unauthorized/file.txt".into(),
+        };
+        assert_eq!(
+            format!("{}", err),
+            "Path is outside the allowed workspace: C:/unauthorized/file.txt"
+        );
+        assert_eq!(err.code(), "SEC_PATH_OUTSIDE_WORKSPACE");
     }
 }

@@ -1,24 +1,56 @@
-// src-tauri/tests/security_integration.rs
+use proxemic::filesystem::security::config::SecurityConfig;
+use proxemic::filesystem::security::path_validator::PathValidator;
+use std::collections::HashSet;
+use std::path::Path;
+use std::path::PathBuf;
+use tempfile::TempDir;
 
-use proxemic::commands::import_file;
+#[test]
+fn validate_import_rejects_exe() {
+    let config = SecurityConfig {
+        allowed_extensions: vec![".txt".to_string(), ".md".to_string(), ".pdf".to_string()]
+            .into_iter()
+            .collect::<HashSet<String>>(),
+        prohibited_filename_chars: vec!['|', '<', '>', ':', '*', '?', '\\', '/']
+            .into_iter()
+            .collect::<HashSet<char>>(),
+        max_path_length: 260,
+        max_file_size: 1024 * 1024,
+        allowed_workspace_paths: vec![],
+        temp_directory: PathBuf::from(""),
+        enable_magic_number_validation: false,
+    };
 
-#[tokio::test]
-async fn validate_import_rejects_exe() {
-    // Call the actual Tauri command (simulating a front-end request)
-    let result = import_file("C:/malicious.exe".into()).await;
+    let temp_dir = TempDir::new().unwrap();
+    let validator = PathValidator::new(config, vec![temp_dir.path().to_path_buf()]);
+    let path = Path::new("malicious.exe");
 
-    assert!(
-        result.is_err(),
-        "EXE should not be accepted by Tauri command layer"
-    );
+    assert!(validator.validate_import_path(path).is_err());
 }
 
-#[tokio::test]
-async fn validate_import_accepts_pdf() {
-    let result = import_file("C:/safe.pdf".into()).await;
+#[test]
+fn validate_import_accepts_pdf() {
+    let config = SecurityConfig {
+        allowed_extensions: vec![".txt".to_string(), ".md".to_string(), ".pdf".to_string()]
+            .into_iter()
+            .collect::<HashSet<String>>(),
+        prohibited_filename_chars: vec!['|', '<', '>', ':', '*', '?', '\\', '/']
+            .into_iter()
+            .collect::<HashSet<char>>(),
+        max_path_length: 260,
+        max_file_size: 1024 * 1024,
+        allowed_workspace_paths: vec![],
+        temp_directory: PathBuf::from(""),
+        enable_magic_number_validation: false,
+    };
+
+    let temp_dir = TempDir::new().unwrap();
+    let validator = PathValidator::new(config, vec![temp_dir.path().to_path_buf()]);
+    let path = temp_dir.path().join("document.pdf");
 
     assert!(
-        result.is_ok(),
-        "PDF should be accepted by Tauri command layer"
+        validator.validate_import_path(&path).is_ok(),
+        "PDF should be accepted by Tauri command layer. Error: {:?}",
+        validator.validate_import_path(&path).err()
     );
 }

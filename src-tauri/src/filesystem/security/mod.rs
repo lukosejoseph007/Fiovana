@@ -6,3 +6,4 @@ pub mod path_validator;
 pub mod permissions;
 pub mod permissions_escalation;
 pub mod scope;
+pub mod scope_validator;

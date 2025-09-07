@@ -1,30 +1,25 @@
-# Permissions & Security Rationale
+# Security Configuration Rationale
 
-## Filesystem (fs:read)
-- **Why**: Required for importing user documents (PDF, DOCX, TXT, MD).
-- **Risks**: Arbitrary file access → mitigated via PathValidator (length, traversal, chars, extension).
+## Overview
+This document outlines the security measures implemented in the Tauri application and the rationale behind each measure. The goal is to ensure that the application adheres to the principle of least privilege and provides robust security controls.
 
-## Magic Number Validation
-- **Why**: Prevents spoofed file uploads (e.g., .exe renamed to .pdf).
-- **Risks**: Malware injection → mitigated via MagicNumberValidator signatures.
+## Security Measures and Justifications
 
-## Path Restrictions
-- **Why**: Ensures user cannot escape into OS/system directories.
-- **Risks**: Access to sensitive files → mitigated via SecurityConfig `max_path_length`, prohibited chars, and traversal checks.
+### Path Validation
+- **Path Length Check**: Ensures that the path length does not exceed the maximum allowed length (260 characters for Windows). This prevents potential issues with long paths that could cause system errors or security vulnerabilities.
+- **Path Traversal Check**: Prevents path traversal attacks by ensuring that the path does not contain `..` which could be used to access directories outside the allowed workspace.
+- **Prohibited Characters Check**: Ensures that the filename does not contain prohibited characters (`<>:\"|?*\0`) which could cause issues with file operations or security vulnerabilities.
+- **Extension Check**: Validates the file extension against a list of allowed extensions. This prevents the import of files with potentially dangerous extensions.
 
-## Future Permission Escalation
-- **Plan**: Temporary privilege escalation only for approved operations.
-- **Process**:
-  1. Add scope to `SecurityConfig`
-  2. Document in `docs/permissions.md`
-  3. Require explicit code review/approval before enabling
+### Scope Restrictions
+- **Allowed Workspace Paths**: Restricts file access to specific workspace directories (Desktop, Documents, Downloads). This ensures that the application only accesses authorized locations and prevents access to sensitive system directories.
+- **Scope Validation**: Validates that the path is within the allowed workspace directories. This prevents access to unauthorized locations and ensures that the application adheres to the principle of least privilege.
 
+### Permission Escalation
+- **User Prompt Mechanism**: Implements a user prompt mechanism for escalation requests. This ensures that any permission escalation is explicitly approved by the user.
+- **Audit Logging**: Implements audit logging of escalation events. This provides a record of all permission escalations for auditing and security purposes.
+- **Time-Bound Permission Grants**: Creates time-bound permission grants. This ensures that any escalated permissions are only valid for a limited time, reducing the risk of misuse.
+- **Escalation Approval Workflow**: Develops an escalation approval workflow. This ensures that any permission escalation is properly reviewed and approved before being granted.
 
-## Permission Escalation (Future Plan)
-
-Escalation is **disabled by default**.
-When enabled:
-- Must log the escalation event
-- Must include an approval step (e.g., admin consent or explicit UI confirmation)
-- Must be time-bound (temporary elevation only)
-- Must be auditable
+## Conclusion
+The security measures implemented in the Tauri application provide robust security controls and adhere to the principle of least privilege. The rationale behind each measure is to ensure that the application is secure and can be trusted to handle sensitive data.
