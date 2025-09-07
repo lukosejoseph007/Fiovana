@@ -1,6 +1,5 @@
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing;
 
 /// Represents a user permission escalation request.
 pub struct PermissionEscalation {
@@ -42,22 +41,6 @@ impl PermissionEscalation {
     }
 
     fn log_escalation_event(approved: bool) {
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
-
-        let log_entry = format!(
-            "Escalation event at {}: Approved - {}\n",
-            timestamp, approved
-        );
-
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open("audit_log.txt")
-            .expect("Failed to open audit log file");
-
-        let _ = file.write_all(log_entry.as_bytes());
+        tracing::info!("Escalation event: Approved - {}", approved);
     }
 }
