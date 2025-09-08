@@ -1,37 +1,28 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tempfile::TempDir;
 
 // Bring in your library types
+use proxemic::commands::{
+    get_file_info_secure_with_validator, import_file_with_validator,
+    validate_file_for_import_with_validator, FileInfo,
+};
+use proxemic::filesystem::errors::SecurityError;
 use proxemic::filesystem::security::config::SecurityConfig;
 use proxemic::filesystem::security::path_validator::PathValidator;
+use tokio::runtime::Runtime;
 
 #[test]
 fn validate_scope_restriction() {
-    // Setup temporary workspace directory
     let temp_dir = TempDir::new().unwrap();
     let allowed_path = temp_dir.path().to_path_buf();
 
-    // Configure security with scope restrictions
     let config = SecurityConfig {
-        allowed_extensions: vec![".txt".to_string(), ".md".to_string(), ".pdf".to_string()]
-            .into_iter()
-            .collect(),
-        prohibited_filename_chars: vec!['|', '<', '>', ':', '*', '?', '\\', '/']
-            .into_iter()
-            .collect(),
-        max_path_length: 260,
-        max_file_size: 1024 * 1024,
         allowed_workspace_paths: vec![allowed_path.clone()],
-        temp_directory: PathBuf::from(""),
-        enable_magic_number_validation: false,
+        ..Default::default()
     };
-
     let validator = PathValidator::new(config, vec![allowed_path.clone()]);
 
-    // Valid path within allowed scope
     let valid_path = allowed_path.join("document.pdf");
-
-    // Invalid path outside allowed scope
     let invalid_path = Path::new("C:/Windows/system32/calc.exe");
 
     assert!(
@@ -51,17 +42,93 @@ fn validate_path_traversal_attempt() {
 
     let config = SecurityConfig {
         allowed_workspace_paths: vec![allowed_path.clone()],
-        // Fill in defaults for the rest
-        ..SecurityConfig::default()
+        ..Default::default()
     };
-
     let validator = PathValidator::new(config, vec![allowed_path.clone()]);
 
-    // Attempt path traversal outside allowed scope
     let traversal_path = allowed_path.join("../secret.txt");
 
     assert!(
         validator.validate_import_path(&traversal_path).is_err(),
         "Path traversal attempt should be rejected"
     );
+}
+
+#[test]
+fn validate_tauri_command_security() {
+    let rt = Runtime::new().unwrap();
+    let temp_dir = TempDir::new().unwrap();
+    let allowed_path = temp_dir.path().to_path_buf();
+
+    let config = SecurityConfig {
+        allowed_workspace_paths: vec![allowed_path.clone()],
+        ..Default::default()
+    };
+    let validator = PathValidator::new(config, vec![allowed_path.clone()]);
+
+    let valid_path = allowed_path.join("safe.txt");
+    std::fs::write(&valid_path, b"safe content").unwrap();
+
+    rt.block_on(async {
+        let result = validate_file_for_import_with_validator(&valid_path, &validator).await;
+        assert!(result.is_ok(), "Expected valid path to be accepted");
+
+        let result =
+            validate_file_for_import_with_validator(Path::new("../../../etc/passwd"), &validator)
+                .await;
+        assert!(result.is_err(), "Expected malicious path to be rejected");
+    });
+}
+
+#[test]
+fn test_get_file_info_secure() {
+    let rt = Runtime::new().unwrap();
+    let temp_dir = TempDir::new().unwrap();
+    let allowed_path = temp_dir.path().to_path_buf();
+
+    let config = SecurityConfig {
+        allowed_workspace_paths: vec![allowed_path.clone()],
+        ..Default::default()
+    };
+    let validator = PathValidator::new(config, vec![allowed_path.clone()]);
+
+    let valid_path = allowed_path.join("info.txt");
+    std::fs::write(&valid_path, b"some content").unwrap();
+
+    rt.block_on(async {
+        let result: Result<FileInfo, SecurityError> =
+            get_file_info_secure_with_validator(&valid_path, &validator).await;
+        assert!(result.is_ok(), "Expected file info retrieval to succeed");
+
+        let result =
+            get_file_info_secure_with_validator(Path::new("../../../etc/passwd"), &validator).await;
+        assert!(
+            result.is_err(),
+            "Expected malicious file info request to be rejected"
+        );
+    });
+}
+
+#[test]
+fn test_import_file_command() {
+    let rt = Runtime::new().unwrap();
+    let temp_dir = TempDir::new().unwrap();
+    let allowed_path = temp_dir.path().to_path_buf();
+
+    let config = SecurityConfig {
+        allowed_workspace_paths: vec![allowed_path.clone()],
+        ..Default::default()
+    };
+    let validator = PathValidator::new(config, vec![allowed_path.clone()]);
+
+    let valid_path = allowed_path.join("import.txt");
+    std::fs::write(&valid_path, b"importable").unwrap();
+
+    rt.block_on(async {
+        let result = import_file_with_validator(&valid_path, &validator).await;
+        assert!(result.is_ok(), "Expected valid import to succeed");
+
+        let result = import_file_with_validator(Path::new("../../../etc/passwd"), &validator).await;
+        assert!(result.is_err(), "Expected malicious import to fail");
+    });
 }

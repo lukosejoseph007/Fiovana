@@ -23,6 +23,9 @@ pub enum SecurityError {
 
     #[error("Path is outside the allowed workspace: {path}")]
     PathOutsideWorkspace { path: String },
+
+    #[error("I/O error occurred: {0}")]
+    IoError(String),
 }
 
 #[allow(dead_code)]
@@ -50,6 +53,7 @@ impl SecurityError {
             SecurityError::AccessDenied { .. } => "SEC_ACCESS_DENIED",
             SecurityError::FileSizeExceeded { .. } => "SEC_FILE_TOO_LARGE",
             SecurityError::PathOutsideWorkspace { .. } => "SEC_PATH_OUTSIDE_WORKSPACE",
+            SecurityError::IoError(_) => "SEC_IO_ERROR",
         }
     }
 }
@@ -62,6 +66,12 @@ impl ValidationError {
             ValidationError::MagicNumber { .. } => "VAL_MAGIC_MISMATCH",
             ValidationError::Corruption { .. } => "VAL_CORRUPTION",
         }
+    }
+}
+
+impl From<std::io::Error> for SecurityError {
+    fn from(err: std::io::Error) -> SecurityError {
+        SecurityError::IoError(err.to_string())
     }
 }
 

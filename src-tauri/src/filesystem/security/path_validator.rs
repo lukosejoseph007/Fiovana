@@ -16,7 +16,6 @@ mod permissions_escalation {
         }
     }
 }
-
 use permissions_escalation::PermissionEscalation;
 
 #[derive(Clone)]
@@ -235,5 +234,28 @@ mod tests {
             errors.len(),
             errors
         );
+    }
+
+    #[test]
+    fn test_malicious_inputs() {
+        let (config, allowed_paths) = default_config();
+        let validator = PathValidator::new(config, allowed_paths);
+
+        let malicious_inputs = [
+            "../../../../etc/passwd",
+            r"\\server\share\sensitive.txt",
+            "/dev/null",
+            "file:///etc/passwd",
+            "./.git/config",
+        ];
+
+        for input in &malicious_inputs {
+            let path = Path::new(input);
+            assert!(
+                validator.validate_import_path(path).is_err(),
+                "Malicious input should be rejected: {}",
+                input
+            );
+        }
     }
 }

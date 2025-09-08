@@ -4,6 +4,8 @@ use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
+
+use dirs;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -41,10 +43,11 @@ pub struct FileInfo {
     is_dir: bool,
 }
 
+// ---------------- Standard Tauri Commands ----------------
+
 #[tauri::command]
 pub async fn validate_file_for_import(path: String) -> Result<String, CommandError> {
     let validator = PathValidator::new(SecurityConfig::default(), vec![]);
-
     let result = validator.validate_import_path(Path::new(&path));
     SecurityAuditor::log_file_access_attempt(Path::new(&path), "validate_import", &result);
     result
@@ -54,15 +57,11 @@ pub async fn validate_file_for_import(path: String) -> Result<String, CommandErr
 
 #[tauri::command]
 pub async fn get_file_info_secure(path: String) -> Result<FileInfo, CommandError> {
-    // Validate path first
     let validator = PathValidator::new(SecurityConfig::default(), vec![]);
     let validated_path = validator
         .validate_import_path(Path::new(&path))
         .map_err(CommandError::from)?;
-
-    // Get file metadata
     let metadata = fs::metadata(&validated_path).map_err(CommandError::from)?;
-
     Ok(FileInfo {
         size: metadata.len(),
         modified: metadata.modified().ok(),
@@ -75,13 +74,48 @@ pub async fn get_file_info_secure(path: String) -> Result<FileInfo, CommandError
 pub async fn import_file(path: PathBuf) -> Result<PathBuf, CommandError> {
     let config = SecurityConfig::default();
     let allowed_paths = vec![
-        dirs::desktop_dir().unwrap(),
-        dirs::document_dir().unwrap(),
-        dirs::download_dir().unwrap(),
+        dirs::desktop_dir().unwrap_or_default(),
+        dirs::document_dir().unwrap_or_default(),
+        dirs::download_dir().unwrap_or_default(),
     ];
-
     let validator = PathValidator::new(config, allowed_paths);
     validator
         .validate_import_path(&path)
         .map_err(CommandError::from)
+}
+
+// ---------------- Testable Variants with Custom Validator ----------------
+
+/// Validate a file for import using a supplied PathValidator
+pub async fn validate_file_for_import_with_validator(
+    path: &Path,
+    validator: &PathValidator,
+) -> Result<PathBuf, SecurityError> {
+    let result = validator.validate_import_path(path);
+    SecurityAuditor::log_file_access_attempt(path, "validate_import", &result);
+    result
+}
+
+/// Get file info securely using a supplied PathValidator
+pub async fn get_file_info_secure_with_validator(
+    path: &Path,
+    validator: &PathValidator,
+) -> Result<FileInfo, SecurityError> {
+    let validated_path = validator.validate_import_path(path)?;
+
+    let metadata = fs::metadata(&validated_path)?;
+    Ok(FileInfo {
+        size: metadata.len(),
+        modified: metadata.modified().ok(),
+        is_file: metadata.is_file(),
+        is_dir: metadata.is_dir(),
+    })
+}
+
+/// Import a file using a supplied PathValidator
+pub async fn import_file_with_validator(
+    path: &Path,
+    validator: &PathValidator,
+) -> Result<PathBuf, SecurityError> {
+    validator.validate_import_path(path)
 }
