@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[allow(dead_code)]
-#[derive(Error, Debug)]
+#[derive(Error, Debug, serde::Serialize, serde::Deserialize)]
 pub enum SecurityError {
     #[error("Path traversal attempt detected: {path}")]
     PathTraversal { path: String },
@@ -26,7 +26,7 @@ pub enum SecurityError {
 }
 
 #[allow(dead_code)]
-#[derive(Error, Debug)]
+#[derive(Error, Debug, serde::Serialize, serde::Deserialize)]
 pub enum ValidationError {
     #[error("File type validation failed: {reason}")]
     FileType { reason: String },
