@@ -1,6 +1,12 @@
 // src-tauri/src/commands.rs
 
 use crate::filesystem::errors::SecurityError;
+use crate::filesystem::security::audit_logger::SecurityAuditor;
+use crate::filesystem::security::config::SecurityConfig;
+use crate::filesystem::security::path_validator::PathValidator;
+use serde::Serialize;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum CommandError {
@@ -26,11 +32,6 @@ impl From<String> for CommandError {
         CommandError::Custom(err)
     }
 }
-use crate::filesystem::security::config::SecurityConfig;
-use crate::filesystem::security::path_validator::PathValidator;
-use serde::Serialize;
-use std::fs;
-use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 pub struct FileInfo {
@@ -44,10 +45,11 @@ pub struct FileInfo {
 pub async fn validate_file_for_import(path: String) -> Result<String, CommandError> {
     let validator = PathValidator::new(SecurityConfig::default(), vec![]);
 
-    match validator.validate_import_path(Path::new(&path)) {
-        Ok(canonical_path) => Ok(canonical_path.to_string_lossy().to_string()),
-        Err(e) => Err(e.into()),
-    }
+    let result = validator.validate_import_path(Path::new(&path));
+    SecurityAuditor::log_file_access_attempt(Path::new(&path), "validate_import", &result);
+    result
+        .map(|p| p.to_string_lossy().to_string())
+        .map_err(|e| e.into())
 }
 
 #[tauri::command]
