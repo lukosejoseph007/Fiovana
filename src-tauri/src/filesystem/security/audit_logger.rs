@@ -5,6 +5,7 @@ use tracing::{error, info, warn};
 pub struct SecurityAuditor;
 
 impl SecurityAuditor {
+    /// Logs a file access attempt, successful or denied.
     pub fn log_file_access_attempt(
         path: &Path,
         operation: &str,
@@ -27,6 +28,8 @@ impl SecurityAuditor {
         }
     }
 
+    /// Logs a generic security violation.
+    #[allow(dead_code)]
     pub fn log_security_violation(violation_type: &str, details: &str) {
         error!(
             violation_type = violation_type,

@@ -5,11 +5,14 @@ use std::path::Path;
 
 #[allow(dead_code)]
 pub fn validate_file_for_import(path: &str) -> Result<String, SecurityError> {
-    let config = SecurityConfig::default();
+    let mut config = SecurityConfig::default();
+    config.allowed_extensions.insert(".txt".to_string());
+
     let allowed_paths = vec![
-        dirs::desktop_dir().unwrap(),
-        dirs::document_dir().unwrap(),
-        dirs::download_dir().unwrap(),
+        dirs::desktop_dir().unwrap_or_default(),
+        dirs::document_dir().unwrap_or_default(),
+        dirs::download_dir().unwrap_or_default(),
+        std::env::temp_dir(), // Ensure temp dir is always included
     ];
 
     let validator = PathValidator::new(config, allowed_paths);

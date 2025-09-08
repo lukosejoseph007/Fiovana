@@ -13,14 +13,16 @@ impl ScopeValidator {
 
     /// Validate that a path is inside the allowed scope.
     pub fn validate(&self, path: &Path) -> Result<(), SecurityError> {
-        for allowed_path in &self.allowed_paths {
-            if self.path_starts_with(path, allowed_path) {
-                return Ok(());
-            }
+        if !self
+            .allowed_paths
+            .iter()
+            .any(|allowed| self.path_starts_with(path, allowed))
+        {
+            return Err(SecurityError::PathOutsideWorkspace {
+                path: path.display().to_string(),
+            });
         }
-        Err(SecurityError::PathOutsideWorkspace {
-            path: path.to_string_lossy().to_string(),
-        })
+        Ok(())
     }
 
     #[cfg(target_os = "windows")]

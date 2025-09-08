@@ -5,11 +5,12 @@ use tracing;
 pub struct PermissionEscalation {
     pub user_approved: bool,
     #[allow(dead_code)]
-    expiration_time: u64, // used internally, but warning suppressed
+    expiration_time: u64, // used internally, warning suppressed
 }
 
 impl PermissionEscalation {
     /// Creates a permission escalation result from a manual approval input.
+    #[allow(dead_code)]
     pub fn from_user_input(user_approved: bool) -> Self {
         let expiration_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -26,7 +27,7 @@ impl PermissionEscalation {
     }
 
     /// Checks if the permission is still valid.
-    #[allow(dead_code)] // suppress warning if not called yet
+    #[allow(dead_code)]
     pub fn is_valid(&self) -> bool {
         if !self.user_approved {
             return false;
@@ -40,6 +41,7 @@ impl PermissionEscalation {
         current_time <= self.expiration_time
     }
 
+    #[allow(dead_code)]
     fn log_escalation_event(approved: bool) {
         tracing::info!("Escalation event: Approved - {}", approved);
     }

@@ -1,6 +1,6 @@
 /// Permissions rationale for path validation
 pub struct PermissionsRationale;
-
+#[allow(dead_code)]
 impl PermissionsRationale {
     pub fn explain() -> &'static str {
         "Permissions rationale:\n\

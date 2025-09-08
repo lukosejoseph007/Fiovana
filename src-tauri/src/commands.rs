@@ -5,12 +5,11 @@ use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
 
-use dirs;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, serde::Deserialize)]
 pub enum CommandError {
     SecurityError(SecurityError),
     IoError(String),
@@ -43,11 +42,29 @@ pub struct FileInfo {
     is_dir: bool,
 }
 
+/// Helper function to create a properly configured validator for production use
+fn create_default_validator() -> PathValidator {
+    let mut config = SecurityConfig::default();
+    // Ensure common extensions are allowed
+    config.allowed_extensions.insert(".txt".to_string());
+
+    let mut allowed_paths = vec![
+        dirs::desktop_dir().unwrap_or_default(),
+        dirs::document_dir().unwrap_or_default(),
+        dirs::download_dir().unwrap_or_default(),
+    ];
+
+    // Also allow temp directory for temporary operations
+    allowed_paths.push(std::env::temp_dir());
+
+    PathValidator::new(config, allowed_paths)
+}
+
 // ---------------- Standard Tauri Commands ----------------
 
 #[tauri::command]
 pub async fn validate_file_for_import(path: String) -> Result<String, CommandError> {
-    let validator = PathValidator::new(SecurityConfig::default(), vec![]);
+    let validator = create_default_validator();
     let result = validator.validate_import_path(Path::new(&path));
     SecurityAuditor::log_file_access_attempt(Path::new(&path), "validate_import", &result);
     result
@@ -57,7 +74,7 @@ pub async fn validate_file_for_import(path: String) -> Result<String, CommandErr
 
 #[tauri::command]
 pub async fn get_file_info_secure(path: String) -> Result<FileInfo, CommandError> {
-    let validator = PathValidator::new(SecurityConfig::default(), vec![]);
+    let validator = create_default_validator();
     let validated_path = validator
         .validate_import_path(Path::new(&path))
         .map_err(CommandError::from)?;
@@ -72,13 +89,7 @@ pub async fn get_file_info_secure(path: String) -> Result<FileInfo, CommandError
 
 #[tauri::command]
 pub async fn import_file(path: PathBuf) -> Result<PathBuf, CommandError> {
-    let config = SecurityConfig::default();
-    let allowed_paths = vec![
-        dirs::desktop_dir().unwrap_or_default(),
-        dirs::document_dir().unwrap_or_default(),
-        dirs::download_dir().unwrap_or_default(),
-    ];
-    let validator = PathValidator::new(config, allowed_paths);
+    let validator = create_default_validator();
     validator
         .validate_import_path(&path)
         .map_err(CommandError::from)
@@ -86,7 +97,7 @@ pub async fn import_file(path: PathBuf) -> Result<PathBuf, CommandError> {
 
 // ---------------- Testable Variants with Custom Validator ----------------
 
-/// Validate a file for import using a supplied PathValidator
+#[allow(dead_code)]
 pub async fn validate_file_for_import_with_validator(
     path: &Path,
     validator: &PathValidator,
@@ -96,14 +107,16 @@ pub async fn validate_file_for_import_with_validator(
     result
 }
 
-/// Get file info securely using a supplied PathValidator
+#[allow(dead_code)]
 pub async fn get_file_info_secure_with_validator(
     path: &Path,
     validator: &PathValidator,
 ) -> Result<FileInfo, SecurityError> {
     let validated_path = validator.validate_import_path(path)?;
-
-    let metadata = fs::metadata(&validated_path)?;
+    let metadata =
+        fs::metadata(&validated_path).map_err(|e| SecurityError::PathOutsideWorkspace {
+            path: e.to_string(),
+        })?;
     Ok(FileInfo {
         size: metadata.len(),
         modified: metadata.modified().ok(),
@@ -112,7 +125,7 @@ pub async fn get_file_info_secure_with_validator(
     })
 }
 
-/// Import a file using a supplied PathValidator
+#[allow(dead_code)]
 pub async fn import_file_with_validator(
     path: &Path,
     validator: &PathValidator,
