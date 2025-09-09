@@ -57,3 +57,7 @@ custom-protocol = ["tauri/custom-protocol"]
 [[test]]
 name = "performance_benchmarks"
 path = "tests/performance_benchmarks.rs"
+
+[[test]]
+name = "integration_tests"
+path = "tests/integration_tests.rs"
