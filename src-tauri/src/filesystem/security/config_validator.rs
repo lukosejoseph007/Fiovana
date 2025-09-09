@@ -40,7 +40,7 @@ pub enum FieldType {
     Object,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct FieldConstraints {
     pub min_length: Option<usize>,
     pub max_length: Option<usize>,
@@ -78,13 +78,20 @@ pub struct ConfigSchemaValidator {
     schema: ConfigSchema,
 }
 
-impl ConfigSchemaValidator {
-    pub fn new() -> Self {
+impl Default for ConfigSchemaValidator {
+    fn default() -> Self {
         Self {
             schema: Self::create_default_schema(),
         }
     }
+}
 
+impl ConfigSchemaValidator {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    #[allow(dead_code)]
     pub fn from_schema(schema: ConfigSchema) -> Self {
         Self { schema }
     }
@@ -193,6 +200,14 @@ impl ConfigSchemaValidator {
             }
             (FieldType::Array, serde_json::Value::Array(arr)) => {
                 if let Some(ref constraints) = field_schema.constraints {
+                    if let Some(min_len) = constraints.min_length {
+                        if arr.len() < min_len {
+                            return Err(ValidationError::FieldValidation {
+                                field: field_schema.name.clone(),
+                                message: format!("Array too short: {} < {}", arr.len(), min_len),
+                            });
+                        }
+                    }
                     if let Some(max_len) = constraints.max_length {
                         if arr.len() > max_len {
                             return Err(ValidationError::FieldValidation {
@@ -305,7 +320,8 @@ impl ConfigSchemaValidator {
         // Check forbidden combinations
         for forbidden in &constraints.forbidden_combinations {
             if self.evaluate_condition(config, &forbidden.condition) {
-                if config.get(&forbidden.forbidden_field).is_some() {
+                if let Some(serde_json::Value::Bool(false)) = config.get(&forbidden.forbidden_field)
+                {
                     return Err(ValidationError::SecurityViolation {
                         message: forbidden.message.clone(),
                     });
@@ -340,12 +356,10 @@ impl ConfigSchemaValidator {
                 let expected = expected_value.trim().trim_matches('"');
                 match field_value {
                     serde_json::Value::String(s) => s == expected,
-                    serde_json::Value::Bool(b) => {
-                        expected.parse::<bool>().map_or(false, |exp| *b == exp)
-                    }
+                    serde_json::Value::Bool(b) => expected.parse::<bool>() == Ok(*b),
                     serde_json::Value::Number(n) => expected
                         .parse::<f64>()
-                        .map_or(false, |exp| n.as_f64() == Some(exp)),
+                        .is_ok_and(|exp| n.as_f64() == Some(exp)),
                     _ => false,
                 }
             } else {
@@ -510,20 +524,6 @@ impl ConfigSchemaValidator {
     }
 }
 
-impl Default for FieldConstraints {
-    fn default() -> Self {
-        Self {
-            min_length: None,
-            max_length: None,
-            min_value: None,
-            max_value: None,
-            allowed_values: None,
-            pattern: None,
-            format: None,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -543,7 +543,11 @@ mod tests {
             "audit_logging_enabled": true
         });
 
-        assert!(validator.validate_config(&config, "production").is_ok());
+        let result = validator.validate_config(&config, "production");
+        if let Err(e) = &result {
+            println!("Validation error: {:?}", e);
+        }
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -635,7 +639,10 @@ mod tests {
         let result = validator.validate_config(&config, "production");
         assert!(result.is_err());
         if let Err(ValidationError::SchemaValidation { errors }) = result {
-            assert!(errors.iter().any(|e| e.contains("must be set to")));
+            println!("Actual errors: {:?}", errors);
+            assert!(errors
+                .iter()
+                .any(|e| e.contains("Magic number validation cannot be disabled")));
         }
     }
 }

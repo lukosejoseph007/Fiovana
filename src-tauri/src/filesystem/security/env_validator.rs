@@ -239,10 +239,11 @@ impl EnvironmentValidator {
         result.security_level = self.determine_security_level()?;
 
         // Get required variables for this security level
+        let empty_vec = vec![];
         let required_vars = self
             .required_vars
             .get(&result.security_level)
-            .unwrap_or(&vec![]);
+            .unwrap_or(&empty_vec);
 
         // Check required variables
         for var_name in required_vars {
@@ -434,6 +435,7 @@ impl EnvironmentValidator {
     }
 
     /// Generate a configuration validation report
+    #[allow(dead_code)]
     pub fn generate_validation_report(&self) -> Result<String, SecurityConfigError> {
         let result = self.validate_environment()?;
 
@@ -494,6 +496,7 @@ impl EnvironmentValidator {
     }
 
     /// Check if environment is ready for production deployment
+    #[allow(dead_code)]
     pub fn is_production_ready(&self) -> Result<bool, SecurityConfigError> {
         let result = self.validate_environment()?;
         Ok(result.valid

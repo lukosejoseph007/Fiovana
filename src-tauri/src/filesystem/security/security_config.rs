@@ -11,6 +11,7 @@ use std::path::PathBuf;
 #[derive(Debug, thiserror::Error)]
 pub enum SecurityConfigError {
     #[error("Invalid configuration: {message}")]
+    #[allow(dead_code)]
     InvalidConfig { message: String },
     #[error("Environment variable error: {var} - {error}")]
     EnvVarError { var: String, error: String },
@@ -19,7 +20,7 @@ pub enum SecurityConfigError {
 }
 
 /// Production security levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SecurityLevel {
     Development,
     Production,
@@ -76,6 +77,7 @@ impl SecurityConfig {
     }
 
     /// Create SecurityConfig from AppSecurityConfig with environment overrides
+    #[allow(dead_code)]
     pub fn from_app_config_with_env(
         app_config: &AppSecurityConfig,
     ) -> Result<Self, SecurityConfigError> {
@@ -168,7 +170,7 @@ impl SecurityConfig {
         if let Ok(path_len_str) = std::env::var("PROXEMIC_MAX_PATH_LENGTH") {
             match path_len_str.parse::<usize>() {
                 Ok(length) => {
-                    if length < 50 || length > 4096 {
+                    if !(50..=4096).contains(&length) {
                         // Reasonable bounds
                         return Err(SecurityConfigError::EnvVarError {
                             var: "PROXEMIC_MAX_PATH_LENGTH".to_string(),

@@ -452,7 +452,7 @@ mod tests {
 
         // This would require actual config files in a real test
         // For now, just verify the integration points exist
-        assert!(true); // Placeholder for actual integration tests
+        // Integration test placeholder - no assertion needed
 
         env::remove_var("PROXEMIC_SECURITY_LEVEL");
     }

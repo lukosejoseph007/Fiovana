@@ -18,48 +18,22 @@ pub mod security_config;
 pub mod startup_validator;
 
 // Re-export commonly used types for convenience
-pub use config_validator::{ConfigSchemaValidator, ValidationError as ConfigValidationError};
 pub use deployment_checker::DeploymentChecker;
-pub use path_validator::PathValidator;
 pub use security_config::{SecurityConfig, SecurityConfigError, SecurityLevel};
-pub use startup_validator::{initialize_security_system, StartupValidationResult};
+pub use startup_validator::StartupValidationResult;
 
-// Security constants
-pub const DEFAULT_MAX_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100MB
-pub const PRODUCTION_MAX_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100MB
-pub const HIGH_SECURITY_MAX_FILE_SIZE: u64 = 50 * 1024 * 1024; // 50MB
-pub const DEFAULT_MAX_PATH_LENGTH: usize = 260; // Windows MAX_PATH
-pub const DEFAULT_MAX_CONCURRENT_OPS: u32 = 10;
+/// Initialize the security system and perform startup validation
+/// This should be called early in the application lifecycle
+pub fn initialize_security_system() -> Result<StartupValidationResult, SecurityConfigError> {
+    use startup_validator::StartupValidator;
 
-/// Production security validation helper
-pub fn validate_production_config(config: &SecurityConfig) -> Result<(), SecurityConfigError> {
-    config.validate()
-}
-
-/// Environment-aware security configuration loader
-pub fn load_security_config() -> Result<SecurityConfig, SecurityConfigError> {
-    let mut config = SecurityConfig::default();
-    config.apply_environment_overrides()?;
-    config.validate()?;
-    Ok(config)
+    let validator = StartupValidator::new();
+    validator.validate_startup_configuration()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_load_security_config() {
-        let config = load_security_config();
-        assert!(config.is_ok());
-    }
-
-    #[test]
-    fn test_production_constants() {
-        assert_eq!(PRODUCTION_MAX_FILE_SIZE, 100 * 1024 * 1024);
-        assert_eq!(HIGH_SECURITY_MAX_FILE_SIZE, 50 * 1024 * 1024);
-        assert_eq!(DEFAULT_MAX_PATH_LENGTH, 260);
-    }
 
     #[test]
     fn test_security_system_initialization() {

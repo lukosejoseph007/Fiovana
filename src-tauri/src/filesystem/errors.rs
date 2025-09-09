@@ -166,6 +166,7 @@ impl SecurityError {
     }
 
     /// Get the error category for logging and metrics
+    #[allow(dead_code)]
     pub fn category(&self) -> SecurityErrorCategory {
         match self {
             SecurityError::InvalidExtension { .. }
@@ -195,6 +196,7 @@ impl SecurityError {
     }
 
     /// Check if the error should trigger an immediate security alert
+    #[allow(dead_code)]
     pub fn should_alert(&self) -> bool {
         matches!(
             self.severity(),
@@ -203,6 +205,7 @@ impl SecurityError {
     }
 
     /// Get recommended remediation action
+    #[allow(dead_code)]
     pub fn remediation(&self) -> &'static str {
         match self {
             SecurityError::SuspiciousContent { .. } => {
@@ -295,6 +298,7 @@ pub enum ValidationError {
 }
 
 impl ValidationError {
+    #[allow(dead_code)]
     pub fn code(&self) -> &'static str {
         match self {
             ValidationError::FileType { .. } => "VAL_FILE_TYPE",

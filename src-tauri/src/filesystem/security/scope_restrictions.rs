@@ -1,10 +1,8 @@
-use crate::filesystem::security::path_validator::PathValidator;
-use crate::filesystem::security::security_config::SecurityConfig;
-use std::path::Path;
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::filesystem::security::path_validator::PathValidator;
+    use crate::filesystem::security::security_config::SecurityConfig;
+    use std::path::Path;
 
     #[test]
     fn test_path_outside_workspace() {
@@ -30,7 +28,8 @@ mod tests {
         ];
         let validator = PathValidator::new(config, allowed_paths);
 
-        let path = Path::new("C:/Users/test/document.txt");
-        assert!(validator.validate_import_path(path).is_ok());
+        // Create a test file within the allowed workspace
+        let test_file = dirs::document_dir().unwrap().join("test_document.txt");
+        assert!(validator.validate_import_path(&test_file).is_ok());
     }
 }

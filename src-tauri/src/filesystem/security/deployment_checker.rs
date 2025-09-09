@@ -2,12 +2,11 @@
 // Production deployment readiness checker
 
 use crate::filesystem::security::config_validator::{ConfigSchemaValidator, ValidationError};
-use crate::filesystem::security::env_validator::{EnvironmentValidator, ValidationResult};
+use crate::filesystem::security::env_validator::EnvironmentValidator;
 use crate::filesystem::security::security_config::{
     SecurityConfig, SecurityConfigError, SecurityLevel,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 
 /// Deployment readiness assessment
@@ -373,7 +372,7 @@ impl DeploymentChecker {
         }
 
         // Ensure minimum score
-        score.max(0)
+        score
     }
 
     fn generate_recommendations(
@@ -549,13 +548,12 @@ impl Default for DeploymentChecker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
     fn test_deployment_checker_creation() {
         let checker = DeploymentChecker::new();
-        // Basic smoke test
-        assert!(true);
+        // Basic smoke test - ensure checker can be created
+        assert!(matches!(checker.env_validator, EnvironmentValidator { .. }));
     }
 
     #[test]

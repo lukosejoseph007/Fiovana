@@ -1,8 +1,9 @@
 // src-tauri/src/filesystem/security/startup_validator.rs
 // Application startup configuration validation
 
+use crate::filesystem::security::env_validator::EnvironmentValidator;
 use crate::filesystem::security::{
-    DeploymentChecker, EnvironmentValidator, SecurityConfig, SecurityConfigError, SecurityLevel,
+    DeploymentChecker, SecurityConfig, SecurityConfigError, SecurityLevel,
 };
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -239,17 +240,18 @@ impl StartupValidator {
         // Check log level configuration
         match env::var("RUST_LOG") {
             Ok(level) => {
-                if level.to_lowercase().contains("trace") || level.to_lowercase().contains("debug")
-                {
-                    if matches!(
-                        result.security_level,
-                        SecurityLevel::Production | SecurityLevel::HighSecurity
-                    ) {
-                        result.warnings.push(
-                            "Debug/trace logging enabled in production - may impact performance"
-                                .to_string(),
-                        );
-                    }
+                let is_debug_trace = level.to_lowercase().contains("trace")
+                    || level.to_lowercase().contains("debug");
+                let is_production_mode = matches!(
+                    result.security_level,
+                    SecurityLevel::Production | SecurityLevel::HighSecurity
+                );
+
+                if is_debug_trace && is_production_mode {
+                    result.warnings.push(
+                        "Debug/trace logging enabled in production - may impact performance"
+                            .to_string(),
+                    );
                 }
             }
             Err(_) => {
@@ -259,128 +261,12 @@ impl StartupValidator {
             }
         }
     }
-
-    /// Generate a startup validation report for logging/debugging
-    pub fn generate_startup_report(&self) -> Result<String, SecurityConfigError> {
-        let result = self.validate_startup_configuration()?;
-
-        let mut report = String::new();
-        report.push_str("═══════════════════════════════════════════════════════════════\n");
-        report.push_str("                PROXEMIC STARTUP VALIDATION REPORT\n");
-        report.push_str("═══════════════════════════════════════════════════════════════\n\n");
-
-        // Status overview
-        let status_icon = if result.success { "✅" } else { "❌" };
-        report.push_str(&format!(
-            "Startup Validation: {} {}\n",
-            status_icon,
-            if result.success { "PASSED" } else { "FAILED" }
-        ));
-        report.push_str(&format!("Security Level: {:?}\n", result.security_level));
-        report.push_str(&format!(
-            "Environment Ready: {}\n",
-            if result.environment_ready {
-                "✅"
-            } else {
-                "❌"
-            }
-        ));
-        report.push_str(&format!(
-            "Configuration Valid: {}\n",
-            if result.config_valid { "✅" } else { "❌" }
-        ));
-
-        if matches!(
-            result.security_level,
-            SecurityLevel::Production | SecurityLevel::HighSecurity
-        ) {
-            report.push_str(&format!(
-                "Production Ready: {}\n",
-                if result.production_ready {
-                    "✅"
-                } else {
-                    "❌"
-                }
-            ));
-        }
-        report.push('\n');
-
-        // Errors
-        if !result.errors.is_empty() {
-            report.push_str("🔴 CRITICAL ERRORS:\n");
-            for (i, error) in result.errors.iter().enumerate() {
-                report.push_str(&format!("  {}. {}\n", i + 1, error));
-            }
-            report.push('\n');
-        }
-
-        // Warnings
-        if !result.warnings.is_empty() {
-            report.push_str("⚠️  WARNINGS:\n");
-            for warning in &result.warnings {
-                report.push_str(&format!("  • {}\n", warning));
-            }
-            report.push('\n');
-        }
-
-        // Recommendations based on result
-        report.push_str("💡 STARTUP RECOMMENDATIONS:\n");
-        if !result.success {
-            report.push_str("  1. Address all critical errors before proceeding\n");
-            report.push_str("  2. Review environment configuration\n");
-            report.push_str("  3. Restart application after fixes\n");
-        } else {
-            report.push_str("  1. Application ready to start\n");
-            if !result.warnings.is_empty() {
-                report.push_str("  2. Consider addressing warnings for optimal operation\n");
-            }
-            if !result.production_ready
-                && matches!(
-                    result.security_level,
-                    SecurityLevel::Production | SecurityLevel::HighSecurity
-                )
-            {
-                report.push_str("  3. Complete production readiness checklist\n");
-            }
-        }
-
-        report.push_str("\n═══════════════════════════════════════════════════════════════\n");
-
-        Ok(report)
-    }
-
-    /// Check if it's safe to start the application
-    pub fn is_safe_to_start(&self) -> Result<bool, SecurityConfigError> {
-        let result = self.validate_startup_configuration()?;
-
-        // Allow startup if basic validation passes, even with warnings
-        // But block if there are critical security errors
-        Ok(result.success && result.config_valid && result.environment_ready)
-    }
-
-    /// Get startup validation result for use by main application
-    pub fn get_validation_result(&self) -> Result<StartupValidationResult, SecurityConfigError> {
-        self.validate_startup_configuration()
-    }
 }
 
 impl Default for StartupValidator {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// Convenience function to run startup validation
-/// Should be called early in main() or in Tauri's setup hook
-pub fn validate_startup() -> Result<StartupValidationResult, SecurityConfigError> {
-    let validator = StartupValidator::new();
-    validator.validate_startup_configuration()
-}
-
-/// Convenience function to check if startup is safe
-pub fn is_startup_safe() -> Result<bool, SecurityConfigError> {
-    let validator = StartupValidator::new();
-    validator.is_safe_to_start()
 }
 
 #[cfg(test)]
@@ -391,8 +277,11 @@ mod tests {
     #[test]
     fn test_startup_validator_creation() {
         let validator = StartupValidator::new();
-        // Basic smoke test
-        assert!(true);
+        // Basic smoke test - ensure validator can be created
+        assert!(matches!(
+            validator.env_validator,
+            EnvironmentValidator { .. }
+        ));
     }
 
     #[test]
@@ -424,12 +313,12 @@ mod tests {
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
 
-        // Should fail due to default encryption key
+        // Should fail due to default encryption key (either from environment validator or startup validator)
         assert!(!result.success);
         assert!(result
             .errors
             .iter()
-            .any(|e| e.contains("Default encryption key")));
+            .any(|e| e.contains("encryption key") || e.contains("Encryption key")));
 
         // Clean up
         env::remove_var("PROXEMIC_SECURITY_LEVEL");
@@ -445,10 +334,12 @@ mod tests {
         env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
 
         let validator = StartupValidator::new();
-        let is_safe = validator.is_safe_to_start().unwrap();
+        let result = validator.validate_startup_configuration().unwrap();
 
         // Development mode with minimal config should be safe
-        assert!(is_safe);
+        assert!(result.success);
+        assert!(result.config_valid);
+        assert!(result.environment_ready);
 
         env::remove_var("PROXEMIC_SECURITY_LEVEL");
     }
