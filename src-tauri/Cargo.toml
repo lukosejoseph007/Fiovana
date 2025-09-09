@@ -31,6 +31,7 @@ infer = "0.19.0"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tempfile = "3.8"
 
 # Security & File Operations
 sha2 = "0.10"
@@ -52,3 +53,7 @@ thiserror = "1.0"
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[[test]]
+name = "performance_benchmarks"
+path = "tests/performance_benchmarks.rs"
