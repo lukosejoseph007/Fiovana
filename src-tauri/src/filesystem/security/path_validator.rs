@@ -315,7 +315,17 @@ impl PathValidator {
             }
         }
 
-        if !extension_found && validate_multiple_extensions(filename_lower.as_str()) {
+        if !extension_found
+            && validate_multiple_extensions(
+                &filename_lower,
+                &self
+                    .config
+                    .allowed_extensions
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            )
+        {
             extension_found = true;
         }
 
@@ -339,19 +349,25 @@ impl PathValidator {
     }
 }
 
-pub(crate) fn validate_multiple_extensions(file_name: &str) -> bool {
-    let allowed_extensions = [".tar.gz", ".zip", ".txt", ".gz"];
-    let extensions: Vec<&str> = file_name.split('.').collect();
-
-    if extensions.len() < 2 {
-        return false;
+pub(crate) fn validate_multiple_extensions(file_name: &str, allowed_extensions: &[String]) -> bool {
+    let parts: Vec<&str> = file_name.split('.').collect();
+    if parts.len() < 2 {
+        return false; // no extension
     }
 
-    (1..extensions.len()).any(|i| {
-        let combined = extensions[i..].join(".");
-        let ext = format!(".{}", combined);
-        allowed_extensions.contains(&&*ext)
-    })
+    // Check all possible "combined" extensions from the last part backwards
+    for i in 1..parts.len() {
+        let combined_ext = parts[i..].join(".");
+        let combined_ext_with_dot = format!(".{}", combined_ext.to_lowercase());
+        if allowed_extensions
+            .iter()
+            .any(|allowed| allowed.to_lowercase() == combined_ext_with_dot)
+        {
+            return true;
+        }
+    }
+
+    false
 }
 
 #[cfg(test)]

@@ -30,6 +30,9 @@ pub enum SecurityError {
     #[error("File validation failed")]
     FileValidationFailed,
 
+    #[error("Invalid file type: {0}")]
+    FileTypeViolation(String),
+
     #[error("MIME type violation: {0}")]
     MimeTypeViolation(String),
 
@@ -72,6 +75,7 @@ impl SecurityError {
             SecurityError::FileValidationFailed => "SEC_FILE_VALIDATION_FAILED",
             SecurityError::MimeTypeViolation(_) => "SEC_MIME_VIOLATION",
             SecurityError::MagicNumberMismatch(_) => "SEC_MAGIC_NUMBER_MISMATCH",
+            SecurityError::FileTypeViolation(_) => "SEC_FILE_TYPE_VIOLATION", // ✅ Add this
         }
     }
 }

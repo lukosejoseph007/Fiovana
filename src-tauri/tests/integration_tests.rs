@@ -1,6 +1,7 @@
 // src-tauri/tests/integration_tests.rs
 // End-to-end integration tests for the security validation system
 
+use proxemic::app_config::types::SecurityConfig as AppSecurityConfig;
 use proxemic::filesystem::security::path_validator::PathValidator;
 use proxemic::filesystem::security::security_config::SecurityConfig;
 use std::path::{Path, PathBuf};
@@ -11,6 +12,7 @@ struct TestWorkspace {
     _temp_dir: TempDir,
     path: PathBuf,
     validator: PathValidator,
+    allowed_mime_types: Vec<String>, // Store allowed MIME types separately
 }
 
 impl TestWorkspace {
@@ -23,26 +25,14 @@ impl TestWorkspace {
         tokio::fs::create_dir_all(path.join("imports")).await?;
         tokio::fs::create_dir_all(path.join("temp")).await?;
 
-        // Create security config for the workspace
-        let mut config = SecurityConfig::default();
-        config.allowed_extensions.insert(".docx".to_string());
-        config.allowed_extensions.insert(".pdf".to_string());
-        config.allowed_extensions.insert(".md".to_string());
-        config.allowed_extensions.insert(".txt".to_string());
+        // Use development config for testing (more permissive)
+        let app_config = AppSecurityConfig::development_defaults();
 
-        config
-            .allowed_mime_types
-            .insert("application/pdf".to_string());
-        config.allowed_mime_types.insert("text/plain".to_string());
-        config
-            .allowed_mime_types
-            .insert("text/markdown".to_string());
-        config.allowed_mime_types.insert(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document".to_string(),
-        );
-        config
-            .allowed_mime_types
-            .insert("application/octet-stream".to_string());
+        // Convert to legacy SecurityConfig for the path validator
+        let config = SecurityConfig::from_app_config(&app_config);
+
+        // Store allowed MIME types for testing
+        let allowed_mime_types = config.allowed_mime_types.iter().cloned().collect();
 
         let allowed_paths = vec![path.clone()];
         let validator = PathValidator::new(config, allowed_paths);
@@ -51,6 +41,7 @@ impl TestWorkspace {
             _temp_dir: temp_dir,
             path,
             validator,
+            allowed_mime_types,
         })
     }
 
@@ -90,6 +81,21 @@ impl TestWorkspace {
         }
 
         Ok(files)
+    }
+}
+
+// Mock MIME type detection for tests
+fn get_mime_type_for_test(file_path: &Path) -> String {
+    match file_path.extension().and_then(|ext| ext.to_str()) {
+        Some("docx") => {
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document".to_string()
+        }
+        Some("pdf") => "application/pdf".to_string(),
+        Some("md") => "text/markdown".to_string(),
+        Some("txt") => "text/plain".to_string(),
+        Some("csv") => "text/csv".to_string(),
+        Some("json") => "application/json".to_string(),
+        _ => "application/octet-stream".to_string(),
     }
 }
 
@@ -135,6 +141,16 @@ async fn validate_file_for_import(
     path: &str,
 ) -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync>> {
     let path_buf = PathBuf::from(path);
+
+    // Mock MIME type detection for tests
+    let mime_type = get_mime_type_for_test(&path_buf);
+    if !workspace.allowed_mime_types.contains(&mime_type) {
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("MIME type violation: {}", mime_type),
+        )));
+    }
+
     let validated = workspace.validator.validate_import_path(&path_buf)?;
     Ok(validated)
 }
@@ -150,13 +166,14 @@ async fn test_complete_import_workflow() {
         .await
         .expect("Failed to create test workspace");
 
-    // Test file data
+    // Test file data with proper magic numbers for MIME type detection
     let test_files = [
-        ("test.docx", "Mock DOCX content with headers and formatting"),
+        // Use content that will be detected as text/plain
         (
-            "presentation.pdf",
-            "Mock PDF content with slides and images",
+            "test.docx",
+            "This is a test document.\nSecond line of text.",
         ),
+        ("presentation.pdf", "%PDF- Mock PDF content"),
         (
             "notes.md",
             "# Markdown Notes\n\nThis is a test markdown file with **bold** text.",
@@ -278,21 +295,28 @@ async fn test_file_type_validation_workflow() {
         .await
         .expect("Failed to create test workspace");
 
-    // Test allowed file types
+    // Test allowed file types (based on development config)
     let valid_files = vec![
-        ("document.docx", "Valid DOCX content", true),
-        ("report.pdf", "Valid PDF content", true),
+        (
+            "document.docx",
+            "This is a test document.\nSecond line of text.",
+            true,
+        ),
+        ("report.pdf", "%PDF- Valid PDF content", true),
         ("readme.md", "# Valid Markdown", true),
         ("notes.txt", "Valid text content", true),
+        ("data.csv", "col1,col2\nval1,val2", true),
+        ("config.json", "{\"key\": \"value\"}", true),
     ];
 
-    // Test blocked file types
+    // Test blocked file types (should all be blocked even in development)
     let invalid_files = vec![
         ("malware.exe", "Fake executable", false),
         ("script.bat", "@echo off\ndir", false),
         ("payload.js", "alert('xss')", false),
         ("config.ini", "[settings]\nkey=value", false),
-        ("data.json", "{\"key\": \"value\"}", false),
+        ("archive.zip", "PK...", false),  // ZIP files not allowed
+        ("image.png", "PNG data", false), // Images not in development allowed list
     ];
 
     // Test valid files
@@ -471,30 +495,14 @@ async fn test_error_recovery_and_cleanup() {
         "File with prohibited characters should be rejected"
     );
 
-    // 2. File that's too large (simulate by creating config with small limit)
-    let small_config = SecurityConfig {
-        max_file_size: 10, // 10 bytes
-        allowed_extensions: {
-            let mut set = std::collections::HashSet::new();
-            set.insert(".txt".to_string());
-            set
-        },
-        allowed_mime_types: {
-            let mut set = std::collections::HashSet::new();
-            set.insert("text/plain".to_string());
-            set
-        },
-        ..Default::default()
-    };
-
-    let small_validator = PathValidator::new(small_config, vec![workspace.path.clone()]);
-
+    // 2. File that's too large (development config has 100MB limit)
+    let large_content = "x".repeat(110 * 1024 * 1024); // 110MB > 100MB development limit
     let large_file_path = workspace
-        .create_test_file("temp/large_file.txt", &"x".repeat(100))
+        .create_test_file("temp/large_file.txt", &large_content)
         .await
         .expect("Failed to create large file");
 
-    let large_file_result = small_validator.validate_import_path(&large_file_path);
+    let large_file_result = workspace.validator.validate_import_path(&large_file_path);
     assert!(large_file_result.is_err(), "Large file should be rejected");
 
     // 3. Verify cleanup - temp files should not affect workspace

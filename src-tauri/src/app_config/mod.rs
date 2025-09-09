@@ -25,15 +25,38 @@ impl ConfigManager {
     pub async fn new() -> ConfigResult<Self> {
         let environment = Self::detect_environment();
         let config_paths = Self::get_config_search_paths(&environment)?;
-        let mut config = Self::load_configuration(&config_paths, &environment).await?;
 
-        // Apply environment-specific settings
-        Self::apply_environment_overrides(&mut config, &environment)?;
+        // Start with environment-appropriate defaults
+        let mut config = ProxemicConfig::for_environment(&environment);
 
-        // Validate configuration
-        Self::validate_configuration(&config)?;
+        // Try to load configuration from files
+        if let Ok(file_config) = Self::load_configuration(&config_paths, &environment).await {
+            Self::merge_configurations(&mut config, file_config);
+        }
 
-        // Apply production hardening if needed
+        // Apply environment variable overrides with validation
+        if let Err(override_errors) = config.apply_environment_overrides() {
+            return Err(ConfigError::ValidationError {
+                field: "environment_overrides".to_string(),
+                message: format!(
+                    "Environment override errors: {}",
+                    override_errors.join(", ")
+                ),
+            });
+        }
+
+        // Comprehensive configuration validation
+        if let Err(validation_errors) = config.validate() {
+            return Err(ConfigError::ValidationError {
+                field: "configuration".to_string(),
+                message: format!(
+                    "Configuration validation failed: {}",
+                    validation_errors.join(", ")
+                ),
+            });
+        }
+
+        // Apply production hardening (redundant but ensures consistency)
         if environment.is_production() {
             config.apply_production_hardening();
         }
@@ -44,11 +67,50 @@ impl ConfigManager {
         // Update runtime metadata
         config.loaded_at = Some(chrono::Utc::now());
 
-        Ok(Self {
+        let manager = Self {
             config: Arc::new(RwLock::new(config)),
             config_paths,
             environment,
-        })
+        };
+
+        // Log security configuration status
+        manager.log_security_status();
+
+        Ok(manager)
+    }
+
+    /// Log the current security configuration status
+    fn log_security_status(&self) {
+        if let Ok(config) = self.config.read() {
+            let env_name = format!("{:?}", self.environment);
+
+            if self.environment.is_production() {
+                println!("🔒 Production security hardening applied:");
+                println!(
+                    "   - Max file size: {} MB",
+                    config.security.max_file_size / (1024 * 1024)
+                );
+                println!(
+                    "   - Rate limit: {} req/min",
+                    config.security.max_requests_per_minute
+                );
+                println!("   - Audit enabled: {}", config.security.audit_enabled);
+                println!(
+                    "   - File quarantine: {}",
+                    config.security.enable_file_quarantine
+                );
+                println!(
+                    "   - Magic number validation: {}",
+                    config.security.enable_magic_number_validation
+                );
+                println!(
+                    "   - Strict MIME validation: {}",
+                    config.security.enforce_strict_mime_validation
+                );
+            } else {
+                println!("🔧 {} environment security configuration loaded", env_name);
+            }
+        }
     }
 
     /// Get a read-only reference to the current configuration
@@ -56,14 +118,41 @@ impl ConfigManager {
         Arc::clone(&self.config)
     }
 
-    /// Reload configuration from disk
+    /// Reload configuration from disk with full validation
     pub async fn reload(&self) -> ConfigResult<()> {
-        let mut new_config =
-            Self::load_configuration(&self.config_paths, &self.environment).await?;
+        // Create new configuration with environment-appropriate defaults
+        let mut new_config = ProxemicConfig::for_environment(&self.environment);
 
-        Self::apply_environment_overrides(&mut new_config, &self.environment)?;
-        Self::validate_configuration(&new_config)?;
+        // Try to load from files
+        if let Ok(file_config) =
+            Self::load_configuration(&self.config_paths, &self.environment).await
+        {
+            Self::merge_configurations(&mut new_config, file_config);
+        }
 
+        // Apply environment overrides with validation
+        if let Err(override_errors) = new_config.apply_environment_overrides() {
+            return Err(ConfigError::ValidationError {
+                field: "environment_overrides".to_string(),
+                message: format!(
+                    "Environment override errors: {}",
+                    override_errors.join(", ")
+                ),
+            });
+        }
+
+        // Validate the new configuration
+        if let Err(validation_errors) = new_config.validate() {
+            return Err(ConfigError::ValidationError {
+                field: "configuration".to_string(),
+                message: format!(
+                    "Configuration validation failed: {}",
+                    validation_errors.join(", ")
+                ),
+            });
+        }
+
+        // Apply production hardening if needed
         if self.environment.is_production() {
             new_config.apply_production_hardening();
         }
@@ -81,12 +170,16 @@ impl ConfigManager {
             })?;
         *config_guard = new_config;
 
+        println!("Configuration reloaded and validated successfully");
+        drop(config_guard);
+        self.log_security_status();
+
         Ok(())
     }
 
     /// Save current configuration to disk (with sensitive values encrypted)
     pub async fn save_configuration(&self, path: Option<PathBuf>) -> ConfigResult<()> {
-        // Scope the lock so it’s released ASAP
+        // Scope the lock so it's released ASAP
         let config_to_save = {
             let config_guard = self
                 .config
@@ -122,31 +215,56 @@ impl ConfigManager {
         let json_content = serde_json::to_string_pretty(&config_to_save)?;
         fs::write(&save_path, json_content).await?;
 
+        println!("Configuration saved to: {}", save_path.display());
         Ok(())
     }
 
-    /// Detect the current environment from various sources
+    /// Detect the current environment from various sources with validation
     fn detect_environment() -> Environment {
+        // Try environment variables in order of precedence
         if let Ok(env_str) = env::var("PROXEMIC_ENV") {
             if let Ok(env) = Environment::from_str(&env_str) {
+                println!("Environment detected from PROXEMIC_ENV: {:?}", env);
                 return env;
+            } else {
+                eprintln!(
+                    "Warning: Invalid PROXEMIC_ENV value '{}', falling back",
+                    env_str
+                );
             }
         }
+
         if let Ok(env_str) = env::var("RUST_ENV") {
             if let Ok(env) = Environment::from_str(&env_str) {
-                return env;
-            }
-        }
-        if let Ok(env_str) = env::var("NODE_ENV") {
-            if let Ok(env) = Environment::from_str(&env_str) {
+                println!("Environment detected from RUST_ENV: {:?}", env);
                 return env;
             }
         }
 
+        if let Ok(env_str) = env::var("NODE_ENV") {
+            if let Ok(env) = Environment::from_str(&env_str) {
+                println!("Environment detected from NODE_ENV: {:?}", env);
+                return env;
+            }
+        }
+
+        // Heuristic detection based on other environment variables
         if env::var("RUST_LOG").unwrap_or_default().contains("debug") {
+            println!("Environment detected from RUST_LOG (debug): Development");
             return Environment::Development;
         }
 
+        // Check for production indicators
+        if env::var("PRODUCTION").is_ok()
+            || env::var("PROD").is_ok()
+            || env::var("NODE_ENV").unwrap_or_default() == "production"
+        {
+            println!("Environment detected from production indicators: Production");
+            return Environment::Production;
+        }
+
+        // Default fallback
+        println!("No environment specified, defaulting to Development");
         Environment::Development
     }
 
@@ -157,13 +275,18 @@ impl ConfigManager {
         // Get application config directory
         let app_config_dir = Self::get_app_config_directory()?;
 
-        // Add environment-specific paths
+        // Add environment-specific paths in order of priority
         for filename in ProxemicConfig::config_file_names(environment) {
+            // First check in app config directory
             paths.push(app_config_dir.join(&filename));
-            paths.push(PathBuf::from(&filename)); // Current directory
+            // Then check current working directory
+            paths.push(PathBuf::from(&filename));
+            // Also check in src-tauri/src/app_config/ for bundled configs
+            paths.push(PathBuf::from("src-tauri/src/app_config").join(&filename));
         }
 
-        // Add default fallback path
+        // Add generic fallback paths
+        paths.push(app_config_dir.join("proxemic.json"));
         paths.push(PathBuf::from("proxemic.json"));
 
         Ok(paths)
@@ -171,8 +294,27 @@ impl ConfigManager {
 
     /// Get the application's configuration directory
     fn get_app_config_directory() -> ConfigResult<PathBuf> {
+        if let Ok(config_dir_override) = env::var("PROXEMIC_CONFIG_DIR") {
+            return Ok(PathBuf::from(config_dir_override));
+        }
+
         if let Some(config_dir) = dirs::config_dir() {
-            Ok(config_dir.join("proxemic"))
+            let app_config_dir = config_dir.join("proxemic");
+
+            // Try to create the directory if it doesn't exist
+            if !app_config_dir.exists() {
+                if let Err(e) = std::fs::create_dir_all(&app_config_dir) {
+                    eprintln!(
+                        "Warning: Failed to create config directory {}: {}",
+                        app_config_dir.display(),
+                        e
+                    );
+                    // Fall back to current directory
+                    return Ok(PathBuf::from("."));
+                }
+            }
+
+            Ok(app_config_dir)
         } else {
             // Fallback to current directory
             Ok(PathBuf::from("."))
@@ -184,9 +326,7 @@ impl ConfigManager {
         config_paths: &[PathBuf],
         environment: &Environment,
     ) -> ConfigResult<ProxemicConfig> {
-        let mut config = ProxemicConfig::default();
-        config.app.environment = environment.clone();
-
+        let mut config = ProxemicConfig::for_environment(environment);
         let mut found_config = false;
 
         // Try to load from each path in order
@@ -197,6 +337,7 @@ impl ConfigManager {
                         Self::merge_configurations(&mut config, file_config);
                         config.config_file_path = Some(path.clone());
                         found_config = true;
+                        println!("Configuration loaded from: {}", path.display());
                         break;
                     }
                     Err(e) => {
@@ -233,174 +374,65 @@ impl ConfigManager {
 
     /// Merge configuration from file into base configuration
     fn merge_configurations(base: &mut ProxemicConfig, file_config: ProxemicConfig) {
+        // Only merge non-default values from file config
+
+        // App config merging
         if file_config.app.name != AppConfig::default().name {
             base.app.name = file_config.app.name;
         }
         if file_config.app.version != AppConfig::default().version {
             base.app.version = file_config.app.version;
         }
-        if file_config.app.debug != AppConfig::default().debug {
+        if file_config.app.debug != base.app.debug {
             base.app.debug = file_config.app.debug;
         }
+        if file_config.app.max_file_handles != AppConfig::default().max_file_handles {
+            base.app.max_file_handles = file_config.app.max_file_handles;
+        }
+        if file_config.app.request_timeout_ms != AppConfig::default().request_timeout_ms {
+            base.app.request_timeout_ms = file_config.app.request_timeout_ms;
+        }
+        if file_config.app.max_concurrent_operations
+            != AppConfig::default().max_concurrent_operations
+        {
+            base.app.max_concurrent_operations = file_config.app.max_concurrent_operations;
+        }
 
+        // Security config merging
         if !file_config.security.allowed_extensions.is_empty() {
             base.security.allowed_extensions = file_config.security.allowed_extensions;
+        }
+        if !file_config.security.allowed_mime_types.is_empty() {
+            base.security.allowed_mime_types = file_config.security.allowed_mime_types;
         }
         if file_config.security.max_file_size != SecurityConfig::default().max_file_size {
             base.security.max_file_size = file_config.security.max_file_size;
         }
+        if file_config.security.max_path_length != SecurityConfig::default().max_path_length {
+            base.security.max_path_length = file_config.security.max_path_length;
+        }
+        if file_config.security.max_requests_per_minute
+            != SecurityConfig::default().max_requests_per_minute
+        {
+            base.security.max_requests_per_minute = file_config.security.max_requests_per_minute;
+        }
 
+        // Merge boolean flags
+        base.security.audit_enabled = file_config.security.audit_enabled;
+        base.security.rate_limit_enabled = file_config.security.rate_limit_enabled;
+        base.security.enable_magic_number_validation =
+            file_config.security.enable_magic_number_validation;
+        base.security.enable_path_traversal_protection =
+            file_config.security.enable_path_traversal_protection;
+        base.security.enable_file_quarantine = file_config.security.enable_file_quarantine;
+
+        // Always merge these subsections completely
         base.logging = file_config.logging;
         base.database = file_config.database;
         base.ai = file_config.ai;
     }
 
-    /// Apply environment variable overrides
-    fn apply_environment_overrides(
-        config: &mut ProxemicConfig,
-        environment: &Environment,
-    ) -> ConfigResult<()> {
-        if let Ok(log_level) = env::var("RUST_LOG") {
-            config.logging.level = log_level;
-        }
-
-        if let Ok(debug_str) = env::var("PROXEMIC_DEBUG") {
-            config.app.debug = debug_str.to_lowercase() == "true";
-        }
-
-        if let Ok(db_url) = env::var("DATABASE_URL") {
-            config.database.url = db_url;
-        }
-
-        if let Ok(api_key) = env::var("OPENROUTER_API_KEY") {
-            config.ai.openrouter_api_key = Some(api_key);
-        }
-
-        if let Ok(api_key) = env::var("ANTHROPIC_API_KEY") {
-            config.ai.anthropic_api_key = Some(api_key);
-        }
-
-        if let Ok(max_size_str) = env::var("PROXEMIC_MAX_FILE_SIZE") {
-            if let Ok(max_size) = max_size_str.parse::<u64>() {
-                config.security.max_file_size = max_size;
-            }
-        }
-
-        if let Ok(vector_path) = env::var("VECTOR_INDEX_PATH") {
-            config.ai.vector_index_path = PathBuf::from(vector_path);
-        }
-
-        if let Ok(batch_size_str) = env::var("MAX_EMBEDDING_BATCH_SIZE") {
-            if let Ok(batch_size) = batch_size_str.parse::<usize>() {
-                config.ai.max_embedding_batch_size = batch_size;
-            }
-        }
-
-        match environment {
-            Environment::Production => {
-                config.app.debug = false;
-                config.security.audit_enabled = true;
-                config.logging.structured_logging = true;
-            }
-            Environment::Development => {
-                if env::var("PROXEMIC_DEBUG").is_err() {
-                    config.app.debug = true;
-                }
-                config.logging.console_enabled = true;
-            }
-            Environment::Staging => {
-                config.logging.structured_logging = true;
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Validate configuration
-    fn validate_configuration(config: &ProxemicConfig) -> ConfigResult<()> {
-        if config.app.name.is_empty() {
-            return Err(ConfigError::ValidationError {
-                field: "app.name".to_string(),
-                message: "Application name cannot be empty".to_string(),
-            });
-        }
-
-        if config.app.max_file_handles == 0 {
-            return Err(ConfigError::ValidationError {
-                field: "app.max_file_handles".to_string(),
-                message: "Maximum file handles must be greater than 0".to_string(),
-            });
-        }
-
-        if config.security.allowed_extensions.is_empty() {
-            return Err(ConfigError::ValidationError {
-                field: "security.allowed_extensions".to_string(),
-                message: "At least one file extension must be allowed".to_string(),
-            });
-        }
-
-        if config.security.max_file_size == 0 {
-            return Err(ConfigError::ValidationError {
-                field: "security.max_file_size".to_string(),
-                message: "Maximum file size must be greater than 0".to_string(),
-            });
-        }
-
-        if config.security.max_path_length == 0 || config.security.max_path_length > 32767 {
-            return Err(ConfigError::ValidationError {
-                field: "security.max_path_length".to_string(),
-                message: "Path length must be between 1 and 32767 characters".to_string(),
-            });
-        }
-
-        let valid_log_levels = ["error", "warn", "info", "debug", "trace"];
-        if !valid_log_levels.contains(&config.logging.level.to_lowercase().as_str()) {
-            return Err(ConfigError::ValidationError {
-                field: "logging.level".to_string(),
-                message: format!("Log level must be one of: {}", valid_log_levels.join(", ")),
-            });
-        }
-
-        if config.database.url.is_empty() {
-            return Err(ConfigError::ValidationError {
-                field: "database.url".to_string(),
-                message: "Database URL cannot be empty".to_string(),
-            });
-        }
-
-        if config.database.max_connections == 0 {
-            return Err(ConfigError::ValidationError {
-                field: "database.max_connections".to_string(),
-                message: "Maximum database connections must be greater than 0".to_string(),
-            });
-        }
-
-        if config.app.environment.is_production() {
-            if config.app.debug {
-                return Err(ConfigError::ValidationError {
-                    field: "app.debug".to_string(),
-                    message: "Debug mode must be disabled in production".to_string(),
-                });
-            }
-
-            if !config.security.audit_enabled {
-                return Err(ConfigError::ValidationError {
-                    field: "security.audit_enabled".to_string(),
-                    message: "Audit logging must be enabled in production".to_string(),
-                });
-            }
-
-            if !config.logging.structured_logging {
-                return Err(ConfigError::ValidationError {
-                    field: "logging.structured_logging".to_string(),
-                    message: "Structured logging must be enabled in production".to_string(),
-                });
-            }
-        }
-
-        Ok(())
-    }
-
+    /// Public accessor methods
     pub fn environment(&self) -> &Environment {
         &self.environment
     }
@@ -422,6 +454,47 @@ impl ConfigManager {
         let config_guard = self.config.read().ok()?;
         config_guard.loaded_at
     }
+
+    /// Get current security settings (convenient accessor)
+    pub fn get_security_config(&self) -> Option<SecurityConfig> {
+        let config_guard = self.config.read().ok()?;
+        Some(config_guard.security.clone())
+    }
+
+    /// Update a specific configuration section
+    pub fn update_security_config(&self, new_security_config: SecurityConfig) -> ConfigResult<()> {
+        let mut config_guard = self
+            .config
+            .write()
+            .map_err(|_| ConfigError::ValidationError {
+                field: "config_lock".to_string(),
+                message: "Failed to acquire write lock for configuration".to_string(),
+            })?;
+
+        // Validate the new security config
+        if let Err(errors) = new_security_config.validate_for_environment(&self.environment) {
+            return Err(ConfigError::ValidationError {
+                field: "security".to_string(),
+                message: format!("Security config validation failed: {}", errors.join(", ")),
+            });
+        }
+
+        config_guard.security = new_security_config;
+        Ok(())
+    }
+
+    /// Check if configuration is stale and needs reloading
+    pub fn is_stale(&self, max_age_hours: u64) -> bool {
+        if let Some(loaded_at) = self.loaded_at() {
+            let age = chrono::Utc::now().signed_duration_since(loaded_at);
+            // Convert to total seconds for more precision with small time intervals
+            let age_seconds = age.num_seconds();
+            let max_age_seconds = max_age_hours as i64 * 3600;
+            age_seconds >= max_age_seconds
+        } else {
+            true // No load time recorded, consider stale
+        }
+    }
 }
 
 /// Initialize the configuration system
@@ -442,6 +515,20 @@ pub async fn init() -> ConfigResult<ConfigManager> {
         println!("Using default configuration (no config file found)");
     }
 
+    // Log some key configuration details
+    if let Ok(config) = config_manager.config.read() {
+        println!("App: {} v{}", config.app.name, config.app.version);
+        println!("Debug mode: {}", config.app.debug);
+        println!(
+            "Max file size: {} MB",
+            config.security.max_file_size / (1024 * 1024)
+        );
+        println!(
+            "Allowed extensions: {:?}",
+            config.security.allowed_extensions
+        );
+    }
+
     Ok(config_manager)
 }
 
@@ -454,7 +541,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_config_manager_creation() {
-        std::env::set_var("PROXEMIC_ENV", "Development"); // ✅ proper casing
+        std::env::set_var("PROXEMIC_ENV", "Development");
 
         let manager = ConfigManager::new().await;
         assert!(manager.is_ok());
@@ -467,9 +554,26 @@ mod tests {
 
     #[tokio::test]
     #[serial]
+    async fn test_production_environment_hardening() {
+        std::env::set_var("PROXEMIC_ENV", "Production");
+
+        let manager = ConfigManager::new().await.unwrap();
+        assert!(manager.is_production());
+
+        if let Ok(config) = manager.config.read() {
+            assert!(!config.app.debug); // Debug should be disabled in production
+            assert!(config.security.audit_enabled); // Audit should be enabled
+            assert!(config.security.rate_limit_enabled); // Rate limiting should be enabled
+        }
+
+        std::env::remove_var("PROXEMIC_ENV");
+    }
+
+    #[tokio::test]
+    #[serial]
     async fn test_config_file_loading() {
         let temp_dir = TempDir::new().unwrap();
-        let config_path = temp_dir.path().join("proxemic.json");
+        let config_path = temp_dir.path().join("proxemic.dev.json");
 
         let test_config = ProxemicConfig {
             app: AppConfig {
@@ -500,20 +604,72 @@ mod tests {
         assert!(env.is_development());
 
         std::env::remove_var("PROXEMIC_ENV");
+
+        // Test fallback
+        let env = ConfigManager::detect_environment();
+        assert!(env.is_development()); // Should default to development
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_environment_overrides() {
+        std::env::set_var("PROXEMIC_DEBUG", "false");
+        std::env::set_var("PROXEMIC_MAX_FILE_SIZE", "1048576"); // 1MB
+
+        let manager = ConfigManager::new().await.unwrap();
+
+        if let Ok(config) = manager.config.read() {
+            assert!(!config.app.debug);
+            assert_eq!(config.security.max_file_size, 1048576);
+        }
+
+        std::env::remove_var("PROXEMIC_DEBUG");
+        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
     }
 
     #[test]
     fn test_config_validation() {
         let mut config = ProxemicConfig::default();
 
-        assert!(ConfigManager::validate_configuration(&config).is_ok());
+        // Valid config should pass
+        assert!(config.validate().is_ok());
 
+        // Empty app name should fail
         config.app.name = String::new();
-        assert!(ConfigManager::validate_configuration(&config).is_err());
+        assert!(config.validate().is_err());
 
-        config = ProxemicConfig::default();
-        config.app.environment = Environment::Production;
-        config.app.debug = true;
-        assert!(ConfigManager::validate_configuration(&config).is_err());
+        // Reset and test production validation
+        config = ProxemicConfig::for_environment(&Environment::Production);
+        config.app.debug = true; // This should fail in production
+        assert!(config.validate().is_err());
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_config_reload() {
+        let manager = ConfigManager::new().await.unwrap();
+
+        // Should be able to reload without errors
+        let result = manager.reload().await;
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_config_staleness() {
+        let manager_result = std::thread::spawn(|| {
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async { ConfigManager::new().await })
+        })
+        .join()
+        .unwrap();
+
+        let manager = manager_result.unwrap();
+
+        // Fresh config should not be stale
+        assert!(!manager.is_stale(1)); // 1 hour threshold
+
+        // Very short threshold should make it stale
+        assert!(manager.is_stale(0)); // 0 hour threshold
     }
 }

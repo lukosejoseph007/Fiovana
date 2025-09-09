@@ -46,15 +46,55 @@ mod tests {
 
     #[test]
     fn test_validate_multiple_extensions_valid_cases() {
-        assert!(validate_multiple_extensions("archive.tar.gz"));
-        assert!(validate_multiple_extensions("data.backup.zip"));
-        assert!(validate_multiple_extensions("file.txt"));
+        let allowed_extensions = vec![
+            ".txt".to_string(),
+            ".md".to_string(),
+            ".pdf".to_string(),
+            ".csv".to_string(),
+            ".docx".to_string(),
+            ".json".to_string(),
+            ".zip".to_string(),
+            ".tar.gz".to_string(),
+        ];
+
+        assert!(validate_multiple_extensions(
+            "archive.tar.gz",
+            &allowed_extensions
+        ));
+        assert!(validate_multiple_extensions(
+            "data.backup.zip",
+            &allowed_extensions
+        ));
+        assert!(validate_multiple_extensions(
+            "file.txt",
+            &allowed_extensions
+        ));
     }
 
     #[test]
     fn test_validate_multiple_extensions_invalid_cases() {
-        assert!(!validate_multiple_extensions("malicious.bin.exe"));
-        assert!(!validate_multiple_extensions("unsafe.zip.rar"));
-        assert!(!validate_multiple_extensions("double..dots"));
+        let allowed_extensions = vec![
+            ".txt".to_string(),
+            ".md".to_string(),
+            ".pdf".to_string(),
+            ".csv".to_string(),
+            ".docx".to_string(),
+            ".json".to_string(),
+            ".zip".to_string(),
+            ".tar.gz".to_string(),
+        ];
+
+        assert!(!validate_multiple_extensions(
+            "malicious.bin.exe",
+            &allowed_extensions
+        ));
+        assert!(!validate_multiple_extensions(
+            "unsafe.zip.rar",
+            &allowed_extensions
+        ));
+        assert!(!validate_multiple_extensions(
+            "double..dots",
+            &allowed_extensions
+        ));
     }
 }
