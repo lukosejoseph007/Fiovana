@@ -12,9 +12,9 @@ use proxemic::commands::{
     validate_file_for_import_with_validator, FileInfo,
 };
 use proxemic::filesystem::errors::SecurityError;
-use proxemic::filesystem::security::config::SecurityConfig;
 use proxemic::filesystem::security::magic_number_validator::MagicNumberValidator;
 use proxemic::filesystem::security::path_validator::PathValidator;
+use proxemic::filesystem::security::security_config::SecurityConfig;
 use tokio::runtime::Runtime;
 
 // ==================== HELPER FUNCTIONS ====================

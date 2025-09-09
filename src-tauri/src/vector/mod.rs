@@ -1,14 +1,17 @@
+// src-tauri/src/vector/mod.rs
 use anyhow::{anyhow, Result};
 use std::path::Path;
 
 // For now, let's create a minimal implementation without ORT
 // We'll add ORT back once we get the basic structure working
 
+#[allow(dead_code)]
 pub struct EmbeddingEngine {
     // Placeholder - will add actual ONNX session later
     _model_path: std::path::PathBuf,
 }
 
+#[allow(dead_code)]
 impl EmbeddingEngine {
     pub async fn new(model_path: &Path) -> Result<Self> {
         // For now, just validate the path exists
@@ -37,12 +40,14 @@ impl EmbeddingEngine {
 }
 
 // Simple vector storage using basic similarity search
+#[allow(dead_code)]
 pub struct VectorStore {
     vectors: Vec<Vec<f32>>,
     dimension: usize,
     documents: Vec<String>, // Store document references
 }
 
+#[allow(dead_code)]
 impl VectorStore {
     pub fn new(dimension: usize) -> Self {
         Self {

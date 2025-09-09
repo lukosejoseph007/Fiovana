@@ -1,8 +1,8 @@
 // src-tauri/tests/integration_tests.rs
 // End-to-end integration tests for the security validation system
 
-use proxemic::filesystem::security::config::SecurityConfig;
 use proxemic::filesystem::security::path_validator::PathValidator;
+use proxemic::filesystem::security::security_config::SecurityConfig;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 

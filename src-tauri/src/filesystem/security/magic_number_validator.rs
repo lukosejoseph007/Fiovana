@@ -5,7 +5,7 @@ use std::io::Read;
 use std::path::Path;
 
 use crate::filesystem::errors::ValidationError;
-use crate::filesystem::security::config::SecurityConfig;
+use crate::filesystem::security::security_config::SecurityConfig;
 
 #[allow(dead_code)]
 pub struct MagicNumberValidator {

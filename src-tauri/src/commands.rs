@@ -2,8 +2,8 @@
 
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::audit_logger::SecurityAuditor;
-use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
+use crate::filesystem::security::security_config::SecurityConfig;
 
 use serde::Serialize;
 use std::fs;
@@ -61,6 +61,11 @@ fn create_default_validator() -> PathValidator {
 }
 
 // ---------------- Standard Tauri Commands ----------------
+
+#[tauri::command]
+pub async fn greet(name: String) -> Result<String, String> {
+    Ok(format!("Hello, {}!", name))
+}
 
 #[tauri::command]
 pub async fn validate_file_for_import(path: String) -> Result<String, CommandError> {

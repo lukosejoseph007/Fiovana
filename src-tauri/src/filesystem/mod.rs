@@ -1,11 +1,14 @@
+// src-tauri/src/filesystem/mod.rs
+
 pub mod errors;
 pub mod operations;
 pub mod security;
 
 pub use errors::SecurityError;
-pub use security::config::SecurityConfig;
 pub use security::path_validator::PathValidator;
+pub use security::security_config::SecurityConfig;
 
+#[allow(dead_code)]
 pub fn init_security_subsystem(config: SecurityConfig) -> Result<PathValidator, SecurityError> {
     let allowed_paths = vec![
         dirs::desktop_dir().unwrap_or_default(),

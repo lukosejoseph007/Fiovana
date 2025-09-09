@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Proxemic",
+    "version": "0.1.0",
+    "environment": "Development",
+    "debug": true,
+    "max_file_handles": 200,
+    "request_timeout_ms": 60000,
+    "max_concurrent_operations": 10
+  },
+  "security": {
+    "allowed_extensions": [".docx", ".pdf", ".md", ".txt"],
+    "max_path_length": 260,
+    "max_file_size": 104857600,
+    "allowed_mime_types": [
+      "application/pdf",
+      "text/plain",
+      "text/markdown",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ],
+    "prohibited_filename_chars": ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", "\u0000"],
+    "enable_magic_number_validation": true,
+    "enable_path_traversal_protection": true,
+    "enable_file_quarantine": false,
+    "quarantine_directory": "./tmp/proxemic_quarantine",
+    "audit_enabled": false,
+    "rate_limit_enabled": false,
+    "max_requests_per_minute": 200
+  },
+  "logging": {
+    "level": "debug",
+    "format": "pretty",
+    "file_enabled": false,
+    "file_path": "./logs/proxemic_dev.log",
+    "console_enabled": true,
+    "max_file_size_mb": 50,
+    "max_files": 10,
+    "structured_logging": false
+  },
+  "database": {
+    "url": "sqlite:./Proxemic_dev.db",
+    "max_connections": 10,
+    "connection_timeout_ms": 10000,
+    "enable_migrations": true,
+    "backup_enabled": false,
+    "backup_interval_hours": 0
+  },
+  "ai": {
+    "openrouter_api_key": null,
+    "anthropic_api_key": null,
+    "max_embedding_batch_size": 100,
+    "vector_index_path": "./vector_index_dev",
+    "enable_cloud_sync": false,
+    "enable_collaboration": true,
+    "request_timeout_ms": 120000
+  }
+}
