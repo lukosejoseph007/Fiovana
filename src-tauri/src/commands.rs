@@ -11,14 +11,22 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, serde::Deserialize)]
 pub enum CommandError {
-    SecurityError(SecurityError),
+    SecurityError {
+        message: String,
+        code: String,
+        severity: String,
+    },
     IoError(String),
     Custom(String),
 }
 
 impl From<SecurityError> for CommandError {
     fn from(err: SecurityError) -> CommandError {
-        CommandError::SecurityError(err)
+        CommandError::SecurityError {
+            message: err.to_string(),
+            code: err.code().to_string(),
+            severity: err.severity().to_string(),
+        }
     }
 }
 

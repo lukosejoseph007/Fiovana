@@ -1,5 +1,5 @@
-use crate::filesystem::security::config::SecurityConfig;
 use crate::filesystem::security::path_validator::PathValidator;
+use crate::filesystem::security::security_config::SecurityConfig;
 use std::path::Path;
 
 #[cfg(test)]
