@@ -50,10 +50,66 @@ pub struct SecurityConfig {
 7. File Extension Whitelist Check
 8. Workspace Boundary Enforcement
 
-## Audit Logging
-All security violations are logged with:
-- Timestamp
-- File path
-- Validation failure type
-- User context
-- Stack trace
+## Incident Response Procedures
+
+### Security Violation Protocol
+1. **Immediate Containment**
+   - Quarantine affected files/systems
+   - Preserve audit logs and evidence
+2. **Impact Assessment**
+   - Determine scope using audit trail
+   - Classify incident severity (Low/Med/High)
+3. **Remediation**
+   - Apply security patches/updates
+   - Rotate credentials if compromised
+4. **Post-Mortem**
+   - Document root cause analysis
+   - Update security controls accordingly
+
+## Security Update Procedures
+
+```rust
+// Example security update workflow
+async fn apply_security_update(update: SecurityPatch) -> Result<(), SecurityError> {
+    verify_patch_signature(&update)?;
+    create_system_snapshot()?;
+    apply_patch_files(&update)?;
+    restart_security_services()?;
+    log_update(update)
+}
+```
+
+## Developer Security Guidelines
+
+### Secure Coding Practices
+- Validate ALL user-provided paths
+- Use type-safe handles for file operations
+- Limit file descriptors per operation
+- Implement resource quotas
+- Never log sensitive file contents
+
+### Code Review Checklist
+- [ ] Path validation present
+- [ ] Error handling for IO operations
+- [ ] Memory limits enforced
+- [ ] Async cancellation points
+- [ ] Tests for security edge cases
+
+## Audit Logging Implementation
+
+```rust
+pub struct SecurityEvent {
+    pub timestamp: DateTime<Utc>,
+    pub event_type: SecurityEventType,
+    pub file_path: PathBuf,
+    pub user: UserContext,
+    pub metadata: serde_json::Value,
+}
+
+impl AuditLogger {
+    pub fn log_event(&self, event: SecurityEvent) {
+        // Uses encrypted write-ahead logging
+        self.log_queue.send(event).await?;
+    }
+}
+```

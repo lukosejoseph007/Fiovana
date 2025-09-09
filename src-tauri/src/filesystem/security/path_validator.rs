@@ -20,7 +20,29 @@ mod permissions_escalation {
     }
 }
 
-/// PathValidator provides secure path validation for file system operations.
+/// # PathValidator
+/// Secure path validation system implementing defense-in-depth security measures.
+///
+/// ## Features
+/// - Path canonicalization & traversal prevention
+/// - File extension whitelisting
+/// - File size validation
+/// - Workspace boundary enforcement
+/// - Magic number verification (optional)
+///
+/// ## Example
+/// ```rust
+/// use proxemic::filesystem::security::{PathValidator, SecurityConfig};
+/// use std::path::Path;
+///
+/// let config = SecurityConfig::default();
+/// let validator = PathValidator::new(config, vec![PathBuf::from("/safe/directory")]);
+///
+/// match validator.validate_import_path(Path::new("data.txt")) {
+///     Ok(path) => println!("Valid path: {}", path.display()),
+///     Err(e) => eprintln!("Security violation: {}", e),
+/// }
+/// ```
 ///
 /// This validator implements defense-in-depth security measures:
 /// - Path canonicalization to resolve symlinks and relative paths
@@ -67,7 +89,25 @@ pub struct PathValidator {
 }
 
 impl PathValidator {
-    /// Creates a new PathValidator with the given configuration and allowed workspace paths.
+    /// Creates a new PathValidator instance.
+    ///
+    /// # Arguments
+    /// * `config` - Security configuration parameters
+    /// * `allowed_paths` - List of approved workspace directories
+    ///
+    /// # Panics
+    /// If no allowed paths are provided and workspace enforcement is enabled
+    ///
+    /// # Example
+    /// ```rust
+    /// use proxemic::filesystem::security::{PathValidator, SecurityConfig};
+    ///
+    /// let config = SecurityConfig {
+    ///     max_file_size: 100_000_000,
+    ///     ..Default::default()
+    /// };
+    /// let validator = PathValidator::new(config, vec!["/user/docs".into()]);
+    /// ```
     ///
     /// # Arguments
     ///
@@ -206,6 +246,34 @@ impl PathValidator {
     ///
     /// * `Ok(PathBuf)` - Canonicalized path if validation passes.
     /// * `Err(SecurityError)` - If any validation fails.
+    ///
+    /// Validates a file path against all security rules.
+    ///
+    /// # Arguments
+    /// * `path` - Path to validate
+    ///
+    /// # Returns
+    /// - Ok(PathBuf): Canonicalized safe path
+    /// - Err(SecurityError): Detailed validation failure
+    ///
+    /// # Errors
+    /// - PathTooLong: Exceeds max_path_length
+    /// - ProhibitedCharacters: Contains dangerous chars
+    /// - PathTraversal: Contains ../ patterns
+    /// - InvalidExtension: Not in allowed_extensions
+    /// - PathOutsideWorkspace: Outside allowed directories
+    ///
+    /// # Example
+    /// ```rust
+    /// # use proxemic::filesystem::security::*;
+    /// # let validator = PathValidator::default();
+    /// match validator.validate_import_path(Path::new("data.csv")) {
+    ///     Ok(_) => println!("File approved"),
+    ///     Err(SecurityError::InvalidExtension { extension }) =>
+    ///         eprintln!("Unsupported file type: {}", extension),
+    ///     _ => {}
+    /// }
+    /// ```
     pub fn validate_import_path(
         &self,
         path: &std::path::Path,
