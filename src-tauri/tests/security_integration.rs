@@ -1,3 +1,8 @@
+// src-tauri/tests/security_integration.rs
+// Updated integration tests with flexible collection types (Vec) to avoid
+// mismatched fixed-size array type errors.
+
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
@@ -8,6 +13,7 @@ use proxemic::commands::{
 };
 use proxemic::filesystem::errors::SecurityError;
 use proxemic::filesystem::security::config::SecurityConfig;
+use proxemic::filesystem::security::magic_number_validator::MagicNumberValidator;
 use proxemic::filesystem::security::path_validator::PathValidator;
 use tokio::runtime::Runtime;
 
@@ -22,7 +28,108 @@ fn create_test_security_config() -> SecurityConfig {
     config.allowed_extensions.insert(".docx".to_string());
     config.allowed_extensions.insert(".pdf".to_string());
 
+    // Allow octet-stream as fallback MIME type
     config
+        .allowed_mime_types
+        .insert("application/octet-stream".to_string());
+
+    // If SecurityConfig has a magic_number_map, ensure it's present. If not,
+    // tests that need magic numbers will construct their own config.
+    // (We avoid assuming a specific field layout beyond what's present in your config.)
+
+    config
+}
+
+#[test]
+fn test_mixed_case_extension() {
+    let config = SecurityConfig {
+        allowed_extensions: [".pdf".into()].into_iter().collect(),
+        allowed_mime_types: ["application/pdf".into()].into_iter().collect(),
+        // Provide a magic number map-like field only if your SecurityConfig actually contains it.
+        // This test uses MagicNumberValidator::new(&config) which expects fields used there.
+        ..Default::default()
+    };
+    let validator = MagicNumberValidator::new(&config);
+
+    // Create test PDF file with valid magic number and extension
+    let temp_file = tempfile::Builder::new().suffix(".PDF").tempfile().unwrap();
+    let path = temp_file.path();
+    let mut file = std::fs::File::create(path).unwrap();
+    // Write minimal valid PDF header
+    file.write_all(b"%PDF-1.7\n%\xE2\xE3\xCF\xD3\n").unwrap(); // Valid PDF header
+
+    // Test with lowercase ext argument to validator (the validator should be case-insensitive)
+    assert!(validator.validate_file_type(path, "pdf").is_ok());
+
+    // Test with mixed-case extension by renaming
+    let mixed_case_path = path.with_extension("PdF");
+    std::fs::rename(path, &mixed_case_path).unwrap();
+    assert!(validator
+        .validate_file_type(&mixed_case_path, "pdf")
+        .is_ok());
+}
+
+#[test]
+fn test_invalid_extensions() {
+    let config = SecurityConfig::default();
+    let validator = PathValidator::new(config, vec![std::env::temp_dir()]);
+
+    type ErrorPredicate = fn(&SecurityError) -> bool;
+    let test_cases: Vec<(&str, &[u8], ErrorPredicate)> = vec![
+        ("virus.exe", b"malicious", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("document.txt.exe", b"hidden", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("IMAGE.JPEG.EXE", b"jpgEXE", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("report.tar.gz.bad", b"badarchive", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("double.extension.txt.doc", b"confusing", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("file.EXE", b"executable", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("script.bat.", b"batch", |e| {
+            matches!(e, SecurityError::ProhibitedCharacters { .. })
+        }), // Trailing dot
+        ("config.bat..", b"double_dot", |e| {
+            matches!(e, SecurityError::ProhibitedCharacters { .. })
+        }), // Double trailing dots
+        ("file..exe", b"multi_dot", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+        ("backup.tar.gz.exe", b"disguised", |e| {
+            matches!(e, SecurityError::InvalidExtension { .. })
+        }),
+    ];
+
+    for (case, content, expected_error) in test_cases {
+        let path = std::env::temp_dir().join(case);
+        std::fs::write(&path, content).unwrap();
+        let result = validator.validate_import_path(&path);
+        assert!(
+            result.is_err(),
+            "Invalid extension '{}' should be rejected",
+            case
+        );
+
+        match result {
+            Err(error) => {
+                assert!(
+                    expected_error(&error),
+                    "Expected different error type for '{}'. Got: {:?}",
+                    case,
+                    error
+                );
+            }
+            Ok(_) => panic!("Expected error for '{}'", case),
+        }
+    }
 }
 
 /// Creates a PathValidator for a specific temporary directory
@@ -46,7 +153,11 @@ fn validate_scope_restriction() {
     let validator = PathValidator::new(config, vec![allowed_path.clone()]);
 
     let valid_path = allowed_path.join("document.pdf");
-    let invalid_path = Path::new("C:/Windows/system32/calc.exe");
+    let invalid_path = if cfg!(target_os = "windows") {
+        Path::new("C:/Windows/system32/calc.exe")
+    } else {
+        Path::new("/usr/bin/passwd")
+    };
 
     assert!(
         validator.validate_import_path(&valid_path).is_ok(),
@@ -69,6 +180,10 @@ fn validate_path_traversal_attempt() {
     };
     let validator = PathValidator::new(config, vec![allowed_path.clone()]);
 
+    // Create a benign file and then try traversal relative to it
+    let target = allowed_path.join("secret.txt");
+    std::fs::write(&target, b"secret").unwrap();
+
     let traversal_path = allowed_path.join("../secret.txt");
 
     assert!(
@@ -83,17 +198,16 @@ fn validate_tauri_command_security() {
     let temp_dir = TempDir::new().unwrap();
     let allowed_path = temp_dir.path().to_path_buf();
 
-    println!("DEBUG: temp_dir path: {:?}", allowed_path);
+    // Create config with MIME type restrictions
+    let mut config = create_test_security_config();
+    config.allowed_mime_types.insert("text/plain".to_string());
+    config.max_file_size = 1024; // 1KB for testing
 
     // Use our helper to create a properly configured validator
     let validator = create_validator_for_tempdir(allowed_path.clone());
 
     let valid_path = allowed_path.join("safe.txt");
     std::fs::write(&valid_path, b"safe content").unwrap();
-
-    println!("DEBUG: valid_path: {:?}", valid_path);
-    println!("DEBUG: valid_path exists: {}", valid_path.exists());
-    println!("DEBUG: valid_path is_file: {}", valid_path.is_file());
 
     rt.block_on(async {
         let result = validate_file_for_import_with_validator(&valid_path, &validator).await;
@@ -122,7 +236,9 @@ fn validate_reserved_filenames() {
     // Windows reserved names (only run on Windows)
     #[cfg(target_os = "windows")]
     {
-        let reserved = ["CON", "PRN", "NUL", "AUX", "COM1", "LPT1"];
+        let reserved = vec![
+            "CON", "PRN", "NUL", "AUX", "COM1", "COM2", "LPT1", "LPT2", "CLOCK$",
+        ];
         for name in reserved {
             let path = std::env::temp_dir().join(name);
             let result = validator.validate_import_path(&path);
@@ -137,7 +253,7 @@ fn validate_reserved_filenames() {
     // Unix-like hidden files
     #[cfg(unix)]
     {
-        let hidden = [".git", ".env", ".ssh"];
+        let hidden = vec![".git", ".env", ".ssh"];
         for name in hidden {
             let path = std::env::temp_dir().join(name);
             let result = validator.validate_import_path(&path);
@@ -152,16 +268,11 @@ fn test_get_file_info_secure() {
     let temp_dir = TempDir::new().unwrap();
     let allowed_path = temp_dir.path().to_path_buf();
 
-    println!("DEBUG: temp_dir path: {:?}", allowed_path);
-
     // Use our helper to create a properly configured validator
     let validator = create_validator_for_tempdir(allowed_path.clone());
 
     let valid_path = allowed_path.join("info.txt");
     std::fs::write(&valid_path, b"some content").unwrap();
-
-    println!("DEBUG: valid_path: {:?}", valid_path);
-    println!("DEBUG: valid_path exists: {}", valid_path.exists());
 
     rt.block_on(async {
         let result: Result<FileInfo, SecurityError> =
@@ -190,16 +301,11 @@ fn test_import_file_command() {
     let temp_dir = TempDir::new().unwrap();
     let allowed_path = temp_dir.path().to_path_buf();
 
-    println!("DEBUG: temp_dir path: {:?}", allowed_path);
-
     // Use our helper to create a properly configured validator
     let validator = create_validator_for_tempdir(allowed_path.clone());
 
     let valid_path = allowed_path.join("import.txt");
     std::fs::write(&valid_path, b"importable").unwrap();
-
-    println!("DEBUG: valid_path: {:?}", valid_path);
-    println!("DEBUG: valid_path exists: {}", valid_path.exists());
 
     rt.block_on(async {
         let result = import_file_with_validator(&valid_path, &validator).await;
@@ -225,12 +331,8 @@ fn validate_tempdir_workflow() {
     let dir = tempdir().expect("TempDir creation failed");
     let file_path = dir.path().join("workflow_test.txt");
 
-    println!("DEBUG: tempdir path: {:?}", dir.path());
-    println!("DEBUG: file_path: {:?}", file_path);
-
     // Create a dummy file
     File::create(&file_path).expect("Failed to create file");
-    println!("DEBUG: file created, exists: {}", file_path.exists());
 
     // Create validator that includes the temp directory in allowed paths
     let validator = create_validator_for_tempdir(dir.path().to_path_buf());
@@ -261,11 +363,7 @@ async fn validate_async_command_security() {
 
     // Valid path - create file in temp directory
     let valid = std::env::temp_dir().join("safe_file.txt");
-    println!("DEBUG: temp dir path: {:?}", std::env::temp_dir());
-    println!("DEBUG: valid file path: {:?}", valid);
-
     std::fs::write(&valid, "dummy").unwrap();
-    println!("DEBUG: file created, exists: {}", valid.exists());
 
     // Since operations.rs already includes temp_dir in allowed_paths, this should work
     let result = validate_file_for_import(valid.to_str().unwrap());

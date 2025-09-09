@@ -1,27 +1,62 @@
-use std::collections::HashMap;
+use infer::Infer;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
 use crate::filesystem::errors::ValidationError;
+use crate::filesystem::security::config::SecurityConfig;
 
 #[allow(dead_code)]
 pub struct MagicNumberValidator {
-    signatures: HashMap<String, Vec<u8>>,
+    signatures: HashMap<String, Vec<Vec<u8>>>,
+    allowed_mime_types: HashSet<String>,
+    max_file_size: u64,
 }
 
 #[allow(dead_code)]
 impl MagicNumberValidator {
-    pub fn new() -> Self {
-        let mut signatures = HashMap::new();
+    pub fn new(config: &SecurityConfig) -> Self {
+        Self {
+            signatures: config.magic_number_map.clone(),
+            allowed_mime_types: config.allowed_mime_types.clone(),
+            max_file_size: config.max_file_size,
+        }
+    }
 
-        // PDF signature
-        signatures.insert("pdf".to_string(), vec![0x25, 0x50, 0x44, 0x46]); // "%PDF"
+    pub fn validate_file_size(&self, path: &Path) -> Result<(), ValidationError> {
+        let metadata = std::fs::metadata(path).map_err(|_| ValidationError::FileType {
+            reason: "Unable to read file metadata".into(),
+        })?;
 
-        // DOCX signature (ZIP format)
-        signatures.insert("docx".to_string(), vec![0x50, 0x4B, 0x03, 0x04]); // "PK.."
+        if metadata.len() > self.max_file_size {
+            return Err(ValidationError::FileSize {
+                size: metadata.len(),
+                max: self.max_file_size,
+            });
+        }
+        Ok(())
+    }
 
-        Self { signatures }
+    pub fn validate_mime_type(&self, path: &Path) -> Result<(), ValidationError> {
+        let mut file = File::open(path).map_err(|_| ValidationError::FileType {
+            reason: "Unable to open file".into(),
+        })?;
+
+        let mut buffer = [0; 256];
+        let _ = file.read(&mut buffer).unwrap_or(0);
+
+        let mime = Infer::new()
+            .get(&buffer)
+            .map(|info| info.mime_type())
+            .unwrap_or("application/octet-stream");
+
+        if !self.allowed_mime_types.contains(mime) {
+            return Err(ValidationError::MimeType {
+                mime: mime.to_string(),
+            });
+        }
+        Ok(())
     }
 
     pub fn validate_file_type(
@@ -29,6 +64,13 @@ impl MagicNumberValidator {
         path: &Path,
         expected_ext: &str,
     ) -> Result<(), ValidationError> {
+        let expected_ext = expected_ext.to_lowercase();
+
+        // Handle text files with multiple possible magic number patterns
+        if ["md", "csv", "log"].contains(&&*expected_ext) {
+            return Ok(());
+        }
+
         let mut file = File::open(path).map_err(|_| ValidationError::FileType {
             reason: "Unable to open file".into(),
         })?;
@@ -36,17 +78,22 @@ impl MagicNumberValidator {
         let mut buffer = [0u8; 8];
         let bytes_read = file.read(&mut buffer).unwrap_or(0);
 
-        if let Some(signature) = self.signatures.get(&expected_ext.to_lowercase()) {
-            if bytes_read < signature.len() {
-                return Err(ValidationError::FileType {
-                    reason: "File too short for magic number check".into(),
-                });
+        if let Some(signatures) = self.signatures.get(&expected_ext) {
+            let mut matched = false;
+            for signature in signatures {
+                if bytes_read >= signature.len() && buffer[..signature.len()] == signature[..] {
+                    matched = true;
+                    break;
+                }
             }
 
-            if buffer[..signature.len()] != signature[..] {
+            if !matched {
                 return Err(ValidationError::MagicNumber {
-                    expected: format!("{:?}", signature),
-                    actual: format!("{:?}", &buffer[..signature.len()]),
+                    expected: format!("Any of: {:?}", signatures),
+                    actual: format!(
+                        "{:?}",
+                        &buffer[..signatures.iter().map(|s| s.len()).max().unwrap_or(0)]
+                    ),
                 });
             }
         }
@@ -58,6 +105,6 @@ impl MagicNumberValidator {
 // 👇 Must be outside the above impl
 impl Default for MagicNumberValidator {
     fn default() -> Self {
-        Self::new()
+        Self::new(&SecurityConfig::default())
     }
 }

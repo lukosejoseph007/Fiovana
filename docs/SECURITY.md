@@ -1,25 +1,59 @@
-# Security Configuration Rationale
+# Security Architecture
 
-## Overview
-This document outlines the security measures implemented in the Tauri application and the rationale behind each measure. The goal is to ensure that the application adheres to the principle of least privilege and provides robust security controls.
+## Defense-in-Depth Security Measures
 
-## Security Measures and Justifications
+### File Validation
+- **Magic Number Validation**: Verifies file signatures match known patterns for allowed types
+- **MIME Type Detection**: Uses both file signature and extension to validate content type
+- **File Size Limits**: Enforces maximum file size (default: 100MB)
 
-### Path Validation
-- **Path Length Check**: Ensures that the path length does not exceed the maximum allowed length (260 characters for Windows). This prevents potential issues with long paths that could cause system errors or security vulnerabilities.
-- **Path Traversal Check**: Prevents path traversal attacks by ensuring that the path does not contain `..` which could be used to access directories outside the allowed workspace.
-- **Prohibited Characters Check**: Ensures that the filename does not contain prohibited characters (`<>:\"|?*\0`) which could cause issues with file operations or security vulnerabilities.
-- **Extension Check**: Validates the file extension against a list of allowed extensions. This prevents the import of files with potentially dangerous extensions.
+### Path Security
+- **Path Length Limits**: Prevents path overflow attacks (260 char max)
+- **Traversal Prevention**: Blocks paths containing `..` sequences
+- **Character Whitelisting**: Prohibits dangerous characters in filenames `<>:"|?*`
 
-### Scope Restrictions
-- **Allowed Workspace Paths**: Restricts file access to specific workspace directories (Desktop, Documents, Downloads). This ensures that the application only accesses authorized locations and prevents access to sensitive system directories.
-- **Scope Validation**: Validates that the path is within the allowed workspace directories. This prevents access to unauthorized locations and ensures that the application adheres to the principle of least privilege.
+### Access Control
+- **Workspace Boundaries**: Restricts operations to user directories (Desktop/Documents/Downloads)
+- **Scope Validation**: Ensures files remain within allowed directories
 
-### Permission Escalation
-- **User Prompt Mechanism**: Implements a user prompt mechanism for escalation requests. This ensures that any permission escalation is explicitly approved by the user.
-- **Audit Logging**: Implements audit logging of escalation events. This provides a record of all permission escalations for auditing and security purposes.
-- **Time-Bound Permission Grants**: Creates time-bound permission grants. This ensures that any escalated permissions are only valid for a limited time, reducing the risk of misuse.
-- **Escalation Approval Workflow**: Develops an escalation approval workflow. This ensures that any permission escalation is properly reviewed and approved before being granted.
+## Threat Model Mitigations
 
-## Conclusion
-The security measures implemented in the Tauri application provide robust security controls and adhere to the principle of least privilege. The rationale behind each measure is to ensure that the application is secure and can be trusted to handle sensitive data.
+| Threat Type              | Mitigation                                                                 |
+|--------------------------|----------------------------------------------------------------------------|
+| Path Traversal           | Canonicalization + workspace boundary checks                              |
+| Malicious File Upload    | Magic number + MIME type validation                                        |
+| Resource Exhaustion      | Strict file size limits (configurable)                                     |
+| File Spoofing            | Extension/MIME type correlation enforcement                                |
+| Directory Climbing       | Multiple .. detection layers                                               |
+
+## Security Configuration
+
+```rust
+pub struct SecurityConfig {
+    pub allowed_extensions: HashSet<String>,  // Allowed file extensions
+    pub allowed_mime_types: HashSet<String>,  // Permitted MIME types
+    pub max_path_length: usize,               // Max path length (chars)
+    pub max_file_size: u64,                   // Max file size in bytes
+    pub prohibited_filename_chars: HashSet<char>, // Dangerous characters
+    pub enable_magic_number_validation: bool, // File signature checking
+}
+```
+
+## Validation Workflow
+
+1. Path Length Check
+2. Traversal Attempt Detection
+3. File Size Validation
+4. MIME Type Verification
+5. Magic Number Check
+6. Filename Character Validation
+7. File Extension Whitelist Check
+8. Workspace Boundary Enforcement
+
+## Audit Logging
+All security violations are logged with:
+- Timestamp
+- File path
+- Validation failure type
+- User context
+- Stack trace
