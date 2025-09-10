@@ -4,6 +4,7 @@
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
+use once_cell::sync::Lazy;
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
@@ -70,8 +71,8 @@ impl FileOperationMetrics {
 
 // Global metrics instance
 #[allow(dead_code)]
-static FILE_OPERATION_METRICS: once_cell::sync::Lazy<FileOperationMetrics> =
-    once_cell::sync::Lazy::new(FileOperationMetrics::default);
+static FILE_OPERATION_METRICS: Lazy<FileOperationMetrics> =
+    Lazy::new(FileOperationMetrics::default);
 
 /// Get a reference to the global file operation metrics
 #[allow(dead_code)]

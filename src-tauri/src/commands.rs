@@ -4,6 +4,7 @@ use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
+use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
@@ -65,8 +66,7 @@ impl ValidationMetrics {
 }
 
 // Global validation metrics instance
-static VALIDATION_METRICS: once_cell::sync::Lazy<ValidationMetrics> =
-    once_cell::sync::Lazy::new(ValidationMetrics::default);
+static VALIDATION_METRICS: Lazy<ValidationMetrics> = Lazy::new(ValidationMetrics::default);
 
 /// Get a reference to the global validation metrics
 #[allow(dead_code)]

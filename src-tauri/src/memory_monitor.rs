@@ -1,6 +1,7 @@
 // src-tauri/src/memory_monitor.rs
 // Cross-platform memory usage monitoring
 
+use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -44,8 +45,7 @@ impl MemoryStats {
 }
 
 // Global memory statistics
-static MEMORY_STATS: once_cell::sync::Lazy<MemoryStats> =
-    once_cell::sync::Lazy::new(MemoryStats::default);
+static MEMORY_STATS: Lazy<MemoryStats> = Lazy::new(MemoryStats::default);
 
 /// Memory monitor configuration
 #[derive(Debug, Clone)]

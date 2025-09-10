@@ -1,6 +1,7 @@
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::log_rotation;
 use chrono::{DateTime, Utc};
+use once_cell::sync::OnceCell;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -8,9 +9,8 @@ use tracing::{error, info, warn};
 use uuid::Uuid;
 
 // Global log rotation manager
-static LOG_ROTATION_MANAGER: once_cell::sync::OnceCell<
-    Arc<Mutex<log_rotation::LogRotationManager>>,
-> = once_cell::sync::OnceCell::new();
+static LOG_ROTATION_MANAGER: OnceCell<Arc<Mutex<log_rotation::LogRotationManager>>> =
+    OnceCell::new();
 
 /// Standardized security levels for audit logging
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
