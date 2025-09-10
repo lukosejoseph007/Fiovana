@@ -286,8 +286,19 @@ mod tests {
 
     #[test]
     fn test_development_mode_startup() {
-        // Ensure we're in development mode
+        // Set up clean test environment
+        env::remove_var("PROXEMIC_ENV");
+        env::remove_var("RUST_ENV");
+        env::remove_var("NODE_ENV");
+        env::remove_var("PRODUCTION");
+        env::remove_var("PROD");
+
+        // Explicitly set development mode
+        env::set_var("PROXEMIC_ENV", "development");
         env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+
+        // Set non-debug log to avoid environment detection confusion
+        env::set_var("RUST_LOG", "info");
 
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
@@ -295,7 +306,10 @@ mod tests {
         assert_eq!(result.security_level, SecurityLevel::Development);
         assert!(!result.production_ready); // Should not be production ready in dev mode
 
+        // Clean up
+        env::remove_var("PROXEMIC_ENV");
         env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        env::remove_var("RUST_LOG");
     }
 
     #[test]
