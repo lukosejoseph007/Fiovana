@@ -1,7 +1,6 @@
-use chrono::{DateTime, Utc};
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::error;
 
@@ -162,6 +161,7 @@ impl LogRotationManager {
     }
 
     /// Gets all log files sorted by creation time (newest first)
+    #[allow(dead_code)]
     pub fn get_log_files(&self) -> io::Result<Vec<PathBuf>> {
         let mut files = Vec::new();
 

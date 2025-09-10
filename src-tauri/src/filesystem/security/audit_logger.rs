@@ -1,9 +1,16 @@
 use crate::filesystem::errors::SecurityError;
+use crate::filesystem::security::log_rotation;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use tracing::{error, info, warn};
 use uuid::Uuid;
+
+// Global log rotation manager
+static LOG_ROTATION_MANAGER: once_cell::sync::OnceCell<
+    Arc<Mutex<log_rotation::LogRotationManager>>,
+> = once_cell::sync::OnceCell::new();
 
 /// Standardized security levels for audit logging
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -49,6 +56,21 @@ pub struct SecurityEvent {
 pub struct SecurityAuditor;
 
 impl SecurityAuditor {
+    /// Initialize the log rotation system for audit logging
+    pub fn init_log_rotation(log_dir: Option<std::path::PathBuf>) -> Result<(), std::io::Error> {
+        let manager = log_rotation::init_file_logging(log_dir)?;
+        LOG_ROTATION_MANAGER
+            .set(Arc::new(Mutex::new(manager)))
+            .map_err(|_| std::io::Error::other("Log rotation manager already initialized"))?;
+        Ok(())
+    }
+
+    /// Check if log rotation is initialized
+    #[allow(dead_code)]
+    pub fn is_log_rotation_initialized() -> bool {
+        LOG_ROTATION_MANAGER.get().is_some()
+    }
+
     /// Helper function to convert string security level to SecurityLevel enum
     pub fn parse_security_level(level: &str) -> SecurityLevel {
         match level.to_uppercase().as_str() {
@@ -208,6 +230,54 @@ impl SecurityAuditor {
         let event_json = serde_json::to_string(&event)
             .unwrap_or_else(|_| "Failed to serialize event".to_string());
 
+        // Try to log to file first, fall back to console if file logging fails
+        if let Some(manager) = LOG_ROTATION_MANAGER.get() {
+            if let Ok(mut manager) = manager.lock() {
+                if let Err(e) = manager.write_log(&event_json) {
+                    // Fall back to console logging if file logging fails
+                    tracing::error!("Failed to write to audit log file: {}", e);
+                } else {
+                    // Successfully logged to file, also log to console for visibility
+                    match event.event_type {
+                        SecurityEventType::FileAccessGranted => info!(
+                            security_event = %event_json,
+                            "Security event: File access granted"
+                        ),
+                        SecurityEventType::FileAccessDenied => warn!(
+                            security_event = %event_json,
+                            "Security event: File access denied"
+                        ),
+                        SecurityEventType::SecurityViolation => error!(
+                            security_event = %event_json,
+                            "Security event: Security violation"
+                        ),
+                        SecurityEventType::ConfigurationChange => info!(
+                            security_event = %event_json,
+                            "Security event: Configuration change"
+                        ),
+                        SecurityEventType::EnvironmentOverride => info!(
+                            security_event = %event_json,
+                            "Security event: Environment override"
+                        ),
+                        SecurityEventType::SchemaValidationFailed => error!(
+                            security_event = %event_json,
+                            "Security event: Schema validation failed"
+                        ),
+                        SecurityEventType::PermissionEscalationAttempt => error!(
+                            security_event = %event_json,
+                            "Security event: Permission escalation attempt"
+                        ),
+                        SecurityEventType::ResourceExhaustion => warn!(
+                            security_event = %event_json,
+                            "Security event: Resource exhaustion"
+                        ),
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Fallback: log only to console if file logging is not available
         match event.event_type {
             SecurityEventType::FileAccessGranted => info!(
                 security_event = %event_json,

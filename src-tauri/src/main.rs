@@ -16,7 +16,9 @@ mod filesystem;
 mod vector;
 
 use app_config::ConfigManager;
-use filesystem::security::{initialize_security_system, SecurityLevel, StartupValidationResult};
+use filesystem::security::{
+    audit_logger, initialize_security_system, SecurityLevel, StartupValidationResult,
+};
 
 // Enhanced application state to hold both configuration and security information
 pub struct AppState {
@@ -279,8 +281,14 @@ fn setup_security_monitoring(app: &tauri::App) -> Result<(), Box<dyn std::error:
     if audit_enabled {
         info!("Security audit logging enabled");
 
+        // Initialize audit log rotation system
+        if let Err(e) = audit_logger::SecurityAuditor::init_log_rotation(None) {
+            tracing::error!("Failed to initialize audit log rotation: {}", e);
+        } else {
+            info!("Audit log rotation system initialized successfully");
+        }
+
         // In a production system, you might set up:
-        // - Log file rotation
         // - Security event aggregation
         // - Alert thresholds
         // - Monitoring dashboards

@@ -8,6 +8,7 @@ pub mod deployment_checker;
 pub mod env_validator;
 pub mod file_guard;
 pub mod json_schema_validator;
+pub mod log_rotation;
 pub mod magic_number_validator;
 pub mod path_validator;
 pub mod permissions;
