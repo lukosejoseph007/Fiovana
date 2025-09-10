@@ -531,14 +531,15 @@ impl ProxemicConfig {
             errors.push(format!("Security config error: {}", e));
         }
 
-        // Additional app-level overrides
+        // Debug override - fix the logic here
         if let Ok(debug_str) = std::env::var("PROXEMIC_DEBUG") {
             let debug_enabled = debug_str.to_lowercase() == "true";
 
-            // Validate debug setting for production
+            // Only validate in production if trying to ENABLE debug
             if self.app.environment.is_production() && debug_enabled {
                 errors.push("Debug mode cannot be enabled in production environment".to_string());
             } else {
+                // Allow disabling debug in any environment
                 self.app.debug = debug_enabled;
             }
         }

@@ -43,6 +43,16 @@ pub struct SecurityConfig {
     pub enforce_workspace_boundaries: bool,
     pub max_concurrent_operations: u32,
     pub audit_logging_enabled: bool,
+
+    // Monitoring and alerting thresholds
+    pub memory_warning_threshold_kb: u64,
+    pub memory_critical_threshold_kb: u64,
+    pub operation_latency_warning_ms: u64,
+    pub operation_latency_critical_ms: u64,
+    pub error_rate_warning_percent: f64,
+    pub error_rate_critical_percent: f64,
+    pub monitoring_enabled: bool,
+    pub performance_sampling_interval_secs: u64,
 }
 
 impl SecurityConfig {
@@ -62,6 +72,16 @@ impl SecurityConfig {
             enforce_workspace_boundaries: true, // Strict enforcement
             max_concurrent_operations: 10,      // Prevent resource exhaustion
             audit_logging_enabled: true,        // Always audit in production
+
+            // Production monitoring thresholds
+            memory_warning_threshold_kb: 256 * 1024, // 256MB warning
+            memory_critical_threshold_kb: 512 * 1024, // 512MB critical
+            operation_latency_warning_ms: 5000,      // 5 second warning
+            operation_latency_critical_ms: 10000,    // 10 second critical
+            error_rate_warning_percent: 5.0,         // 5% error rate warning
+            error_rate_critical_percent: 15.0,       // 15% error rate critical
+            monitoring_enabled: true,
+            performance_sampling_interval_secs: 30, // Sample every 30 seconds
         }
     }
 
@@ -73,6 +93,16 @@ impl SecurityConfig {
         config.max_path_length = 200; // Even stricter path limits
         config.max_concurrent_operations = 5; // Very limited concurrency
         config.allowed_extensions = Self::high_security_allowed_extensions();
+
+        // Stricter monitoring thresholds for high security
+        config.memory_warning_threshold_kb = 128 * 1024; // 128MB warning
+        config.memory_critical_threshold_kb = 256 * 1024; // 256MB critical
+        config.operation_latency_warning_ms = 3000; // 3 second warning
+        config.operation_latency_critical_ms = 6000; // 6 second critical
+        config.error_rate_warning_percent = 2.0; // 2% error rate warning
+        config.error_rate_critical_percent = 8.0; // 8% error rate critical
+        config.performance_sampling_interval_secs = 15; // More frequent sampling
+
         config
     }
 
@@ -118,6 +148,16 @@ impl SecurityConfig {
             enforce_workspace_boundaries: true,
             max_concurrent_operations: 50, // More permissive for development
             audit_logging_enabled: false,  // Disabled by default in development
+
+            // Development monitoring thresholds - more permissive
+            memory_warning_threshold_kb: 512 * 1024, // 512MB warning
+            memory_critical_threshold_kb: 768 * 1024, // 768MB critical
+            operation_latency_warning_ms: 10000,     // 10 second warning
+            operation_latency_critical_ms: 20000,    // 20 second critical
+            error_rate_warning_percent: 10.0,        // 10% error rate warning
+            error_rate_critical_percent: 25.0,       // 25% error rate critical
+            monitoring_enabled: false,               // Disabled by default in development
+            performance_sampling_interval_secs: 60,  // Less frequent sampling
         }
     }
 
@@ -161,6 +201,45 @@ impl SecurityConfig {
                     return Err(SecurityConfigError::EnvVarError {
                         var: "PROXEMIC_MAX_FILE_SIZE".to_string(),
                         error: "Invalid numeric value".to_string(),
+                    })
+                }
+            }
+        }
+
+        // Memory monitoring thresholds
+        if let Ok(warning_str) = std::env::var("PROXEMIC_MEMORY_WARNING_THRESHOLD_KB") {
+            match warning_str.parse::<u64>() {
+                Ok(threshold) => self.memory_warning_threshold_kb = threshold,
+                Err(_) => {
+                    return Err(SecurityConfigError::EnvVarError {
+                        var: "PROXEMIC_MEMORY_WARNING_THRESHOLD_KB".to_string(),
+                        error: "Invalid numeric value".to_string(),
+                    })
+                }
+            }
+        }
+
+        if let Ok(critical_str) = std::env::var("PROXEMIC_MEMORY_CRITICAL_THRESHOLD_KB") {
+            match critical_str.parse::<u64>() {
+                Ok(threshold) => self.memory_critical_threshold_kb = threshold,
+                Err(_) => {
+                    return Err(SecurityConfigError::EnvVarError {
+                        var: "PROXEMIC_MEMORY_CRITICAL_THRESHOLD_KB".to_string(),
+                        error: "Invalid numeric value".to_string(),
+                    })
+                }
+            }
+        }
+
+        // Monitoring enabled override
+        if let Ok(monitoring_str) = std::env::var("PROXEMIC_MONITORING_ENABLED") {
+            match monitoring_str.to_lowercase().as_str() {
+                "true" | "1" | "yes" => self.monitoring_enabled = true,
+                "false" | "0" | "no" => self.monitoring_enabled = false,
+                _ => {
+                    return Err(SecurityConfigError::EnvVarError {
+                        var: "PROXEMIC_MONITORING_ENABLED".to_string(),
+                        error: "Must be true/false, 1/0, or yes/no".to_string(),
                     })
                 }
             }
@@ -280,6 +359,7 @@ impl SecurityConfig {
         self.enable_magic_number_validation = true;
         self.enforce_workspace_boundaries = true;
         self.audit_logging_enabled = true;
+        self.monitoring_enabled = true;
         self.max_concurrent_operations = self.max_concurrent_operations.min(20);
 
         // Ensure production file size limits
@@ -298,6 +378,15 @@ impl SecurityConfig {
 
         // Restrict to very limited file types in high security
         self.allowed_extensions = Self::high_security_allowed_extensions();
+
+        // More aggressive monitoring in high security
+        self.memory_warning_threshold_kb = 128 * 1024;
+        self.memory_critical_threshold_kb = 256 * 1024;
+        self.operation_latency_warning_ms = 3000;
+        self.operation_latency_critical_ms = 6000;
+        self.error_rate_warning_percent = 2.0;
+        self.error_rate_critical_percent = 8.0;
+        self.performance_sampling_interval_secs = 15;
     }
 
     /// Validate configuration for security compliance
@@ -326,6 +415,28 @@ impl SecurityConfig {
             errors.push("allowed_extensions cannot be empty".to_string());
         }
 
+        // Validate monitoring thresholds
+        if self.memory_critical_threshold_kb <= self.memory_warning_threshold_kb {
+            errors.push(
+                "memory_critical_threshold_kb must be greater than memory_warning_threshold_kb"
+                    .to_string(),
+            );
+        }
+
+        if self.operation_latency_critical_ms <= self.operation_latency_warning_ms {
+            errors.push(
+                "operation_latency_critical_ms must be greater than operation_latency_warning_ms"
+                    .to_string(),
+            );
+        }
+
+        if self.error_rate_critical_percent <= self.error_rate_warning_percent {
+            errors.push(
+                "error_rate_critical_percent must be greater than error_rate_warning_percent"
+                    .to_string(),
+            );
+        }
+
         // Production-specific validations
         if matches!(
             self.security_level,
@@ -339,6 +450,9 @@ impl SecurityConfig {
             }
             if self.max_concurrent_operations > 100 {
                 errors.push("max_concurrent_operations too high for production".to_string());
+            }
+            if !self.monitoring_enabled {
+                errors.push("monitoring should be enabled in production environments".to_string());
             }
         }
 
@@ -516,6 +630,9 @@ mod tests {
         assert!(config.enforce_workspace_boundaries);
         assert!(config.audit_logging_enabled);
         assert_eq!(config.max_file_size, 100 * 1024 * 1024);
+        assert!(config.monitoring_enabled);
+        assert!(config.memory_warning_threshold_kb > 0);
+        assert!(config.memory_critical_threshold_kb > config.memory_warning_threshold_kb);
     }
 
     #[test]
@@ -524,6 +641,8 @@ mod tests {
         assert_eq!(config.security_level, SecurityLevel::HighSecurity);
         assert_eq!(config.max_file_size, 50 * 1024 * 1024);
         assert_eq!(config.max_concurrent_operations, 5);
+        assert!(config.monitoring_enabled);
+        assert!(config.memory_critical_threshold_kb <= 256 * 1024); // More restrictive
     }
 
     #[test]
@@ -533,6 +652,8 @@ mod tests {
         assert_eq!(config.security_level, SecurityLevel::Development);
         assert_eq!(config.max_concurrent_operations, 50);
         assert!(!config.audit_logging_enabled);
+        assert!(!config.monitoring_enabled);
+        assert!(config.memory_warning_threshold_kb > 0);
     }
 
     #[test]
@@ -546,9 +667,23 @@ mod tests {
     }
 
     #[test]
+    fn test_monitoring_threshold_validation() {
+        let mut config = SecurityConfig::production_defaults();
+
+        // Test invalid thresholds
+        config.memory_critical_threshold_kb = config.memory_warning_threshold_kb - 1;
+        assert!(config.validate().is_err());
+
+        // Fix and test again
+        config.memory_critical_threshold_kb = config.memory_warning_threshold_kb + 1;
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
     fn test_environment_overrides() {
         std::env::set_var("PROXEMIC_MAX_FILE_SIZE", "1048576"); // 1MB
         std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var("PROXEMIC_MONITORING_ENABLED", "true");
 
         let app_config = AppSecurityConfig::default();
         let config = SecurityConfig::from_app_config_with_env(&app_config);
@@ -557,10 +692,12 @@ mod tests {
         let config = config.unwrap();
         assert_eq!(config.max_file_size, 1048576);
         assert_eq!(config.security_level, SecurityLevel::Production);
+        assert!(config.monitoring_enabled);
 
         // Clean up
         std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
         std::env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        std::env::remove_var("PROXEMIC_MONITORING_ENABLED");
     }
 
     #[test]

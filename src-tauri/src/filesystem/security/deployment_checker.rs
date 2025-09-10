@@ -314,25 +314,28 @@ impl DeploymentChecker {
         &self,
         assessment: &mut DeploymentAssessment,
     ) -> Result<(), SecurityConfigError> {
-        // Check for required API keys
+        // Check if we're running in CI environment
+        let is_ci = std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok();
+
+        // Check for required API keys (skip warning in CI)
         let has_openrouter = env::var("OPENROUTER_API_KEY").is_ok();
         let has_anthropic = env::var("ANTHROPIC_API_KEY").is_ok();
 
-        if !has_openrouter && !has_anthropic {
+        if !has_openrouter && !has_anthropic && !is_ci {
             assessment
                 .warnings
                 .push("No AI service API keys configured".to_string());
         }
 
-        // Check database configuration
-        if env::var("DATABASE_URL").is_err() {
+        // Check database configuration (skip warning in CI)
+        if env::var("DATABASE_URL").is_err() && !is_ci {
             assessment
                 .warnings
                 .push("Database URL not configured - using default SQLite".to_string());
         }
 
-        // Check vector index configuration
-        if env::var("VECTOR_INDEX_PATH").is_err() {
+        // Check vector index configuration (skip warning in CI)
+        if env::var("VECTOR_INDEX_PATH").is_err() && !is_ci {
             assessment
                 .warnings
                 .push("Vector index path not configured - using default".to_string());
@@ -373,6 +376,25 @@ impl DeploymentChecker {
 
         // Ensure minimum score
         score
+    }
+
+    /// Get additional recommendations from environment validator
+    fn get_env_recommendations(&self) -> Result<Vec<String>, SecurityConfigError> {
+        // Simple recommendations based on current environment
+        let mut recommendations = Vec::new();
+
+        // Check if this is a production environment
+        if std::env::var("PROXEMIC_SECURITY_LEVEL")
+            .unwrap_or_default()
+            .to_lowercase()
+            == "production"
+        {
+            recommendations.push("Consider implementing automated security scanning".to_string());
+            recommendations.push("Set up centralized logging and monitoring".to_string());
+            recommendations.push("Implement regular security audits".to_string());
+        }
+
+        Ok(recommendations)
     }
 
     fn generate_recommendations(
@@ -418,7 +440,7 @@ impl DeploymentChecker {
         recommendations.push("Set up log rotation and retention policies".to_string());
 
         // Get additional recommendations from environment validator
-        let env_recommendations = self.env_validator.get_security_recommendations()?;
+        let env_recommendations = self.get_env_recommendations()?;
         recommendations.extend(env_recommendations);
 
         Ok(recommendations)

@@ -16,9 +16,7 @@ mod filesystem;
 mod vector;
 
 use app_config::ConfigManager;
-use filesystem::security::{
-    audit_logger, initialize_security_system, SecurityLevel, StartupValidationResult,
-};
+use filesystem::security::{audit_logger, SecurityLevel, StartupValidationResult};
 
 // Enhanced application state to hold both configuration and security information
 pub struct AppState {
@@ -155,6 +153,13 @@ async fn main() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn initialize_security_system() -> Result<StartupValidationResult, Box<dyn std::error::Error>> {
+    use filesystem::security::startup_validator::StartupValidator;
+
+    let validator = StartupValidator::new();
+    Ok(validator.validate_startup_environment()?)
 }
 
 /// Initialize early logging for security system startup
@@ -397,14 +402,20 @@ mod tests {
 
     #[test]
     fn test_production_readiness_check() {
-        // Test production configuration validation
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
-        env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
-        env::set_var(
+        // Clear environment first
+        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("RUST_ENV");
+        std::env::remove_var("NODE_ENV");
+
+        // Set production environment properly
+        std::env::set_var("PROXEMIC_ENV", "Production"); // Note: Capital P
+        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
+        std::env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        std::env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        std::env::set_var(
             "PROXEMIC_ENCRYPTION_KEY",
-            "test_key_32_characters_long_unique",
+            "production_key_32_chars_unique_123",
         );
 
         let result = initialize_security_system();
@@ -415,11 +426,12 @@ mod tests {
         assert_eq!(security_result.security_level, SecurityLevel::Production);
 
         // Clean up
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
-        env::remove_var("PROXEMIC_ENCRYPTION_KEY");
+        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        std::env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
+        std::env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
+        std::env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+        std::env::remove_var("PROXEMIC_ENCRYPTION_KEY");
     }
 
     #[test]

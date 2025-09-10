@@ -41,6 +41,10 @@ aes = "0.8"            # Low-level AES backend
 # Security & File Operations
 mime_guess = "2.0"
 
+# Windows API for memory monitoring
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["psapi", "processthreadsapi"] }
+
 # Path manipulation
 path-clean = "1.0"
 dunce = "1.0"

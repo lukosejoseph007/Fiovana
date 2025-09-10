@@ -26,11 +26,21 @@ pub use startup_validator::StartupValidationResult;
 
 /// Initialize the security system and perform startup validation
 /// This should be called early in the application lifecycle
+#[allow(dead_code)]
 pub fn initialize_security_system() -> Result<StartupValidationResult, SecurityConfigError> {
     use startup_validator::StartupValidator;
 
     let validator = StartupValidator::new();
     validator.validate_startup_configuration()
+}
+
+/// Legacy compatibility function for backward compatibility
+/// This function bridges the old and new validation methods
+#[allow(dead_code)]
+pub fn validate_startup_environment() -> Result<StartupValidationResult, Box<dyn std::error::Error>>
+{
+    let validator = startup_validator::StartupValidator::new();
+    Ok(validator.validate_startup_configuration()?)
 }
 
 #[cfg(test)]
@@ -40,6 +50,12 @@ mod tests {
     #[test]
     fn test_security_system_initialization() {
         let result = initialize_security_system();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_legacy_validation_function() {
+        let result = validate_startup_environment();
         assert!(result.is_ok());
     }
 }

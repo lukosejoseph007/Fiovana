@@ -508,6 +508,7 @@ impl EnvironmentValidator {
     }
 
     /// Get security recommendations based on current configuration
+    #[allow(dead_code)]
     pub fn get_security_recommendations(&self) -> Result<Vec<String>, SecurityConfigError> {
         let result = self.validate_environment()?;
         let mut recommendations = Vec::new();

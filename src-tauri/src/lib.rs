@@ -1,6 +1,7 @@
 pub mod app_config;
 pub mod commands;
 pub mod filesystem;
+pub mod memory_monitor;
 pub mod vector;
 
 pub use commands::*;

@@ -613,18 +613,33 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_environment_overrides() {
+        // Clear all environment variables first
+        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("RUST_ENV");
+        std::env::remove_var("NODE_ENV");
+        std::env::remove_var("PROXEMIC_DEBUG");
+        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
+
+        // Set specific test environment
+        std::env::set_var("PROXEMIC_ENV", "Development"); // Explicitly set development
         std::env::set_var("PROXEMIC_DEBUG", "false");
         std::env::set_var("PROXEMIC_MAX_FILE_SIZE", "1048576"); // 1MB
 
         let manager = ConfigManager::new().await.unwrap();
 
         if let Ok(config) = manager.config.read() {
-            assert!(!config.app.debug);
+            // The test should pass now - debug should be false due to env override
+            assert!(
+                !config.app.debug,
+                "Debug should be false due to PROXEMIC_DEBUG=false"
+            );
             assert_eq!(config.security.max_file_size, 1048576);
         }
 
+        // Clean up
         std::env::remove_var("PROXEMIC_DEBUG");
         std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
+        std::env::remove_var("PROXEMIC_ENV");
     }
 
     #[test]

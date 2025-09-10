@@ -261,6 +261,13 @@ impl StartupValidator {
             }
         }
     }
+    /// Legacy compatibility method for backward compatibility
+    /// This bridges the old validate_startup_environment naming
+    pub fn validate_startup_environment(
+        &self,
+    ) -> Result<StartupValidationResult, SecurityConfigError> {
+        self.validate_startup_configuration()
+    }
 }
 
 impl Default for StartupValidator {
