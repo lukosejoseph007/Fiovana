@@ -340,6 +340,23 @@ mod tests {
 
     #[test]
     fn test_critical_security_check() {
+        // Clear ALL environment variables that could interfere with security level detection
+        let env_vars_to_clear = [
+            "PROXEMIC_ENV",
+            "RUST_ENV",
+            "NODE_ENV",
+            "PRODUCTION",
+            "PROD",
+            "CI",
+            "GITHUB_ACTIONS",
+            "RUST_LOG",
+            "PROXEMIC_DEBUG",
+        ];
+
+        for var in &env_vars_to_clear {
+            env::remove_var(var);
+        }
+
         // Set production mode with default encryption key (should fail)
         env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
         env::set_var(
@@ -353,12 +370,25 @@ mod tests {
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
 
-        // Should fail due to default encryption key (either from environment validator or startup validator)
-        assert!(!result.success);
-        assert!(result
-            .errors
-            .iter()
-            .any(|e| e.contains("encryption key") || e.contains("Encryption key")));
+        // Debug output to understand what's happening
+        println!("Security level: {:?}", result.security_level);
+        println!("Success: {}", result.success);
+        println!("Errors: {:?}", result.errors);
+        println!("Warnings: {:?}", result.warnings);
+
+        // Should fail due to default encryption key
+        assert!(
+            !result.success,
+            "Expected validation to fail due to default encryption key"
+        );
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.contains("encryption key") || e.contains("Encryption key")),
+            "Expected error about encryption key, but got: {:?}",
+            result.errors
+        );
 
         // Clean up
         env::remove_var("PROXEMIC_SECURITY_LEVEL");
@@ -366,6 +396,8 @@ mod tests {
         env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
         env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
         env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+
+        // Restore any cleared variables if needed for other tests
     }
 
     #[test]

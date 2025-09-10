@@ -424,6 +424,13 @@ mod tests {
 
     #[test]
     fn test_insecure_production_config_blocks_startup() {
+        // Save original environment variables
+        let original_security_level = env::var("PROXEMIC_SECURITY_LEVEL").ok();
+        let original_encryption_key = env::var("PROXEMIC_ENCRYPTION_KEY").ok();
+        let original_magic_validation = env::var("PROXEMIC_ENABLE_MAGIC_VALIDATION").ok();
+        let original_workspace_boundaries = env::var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES").ok();
+        let original_audit_logging = env::var("PROXEMIC_AUDIT_LOGGING_ENABLED").ok();
+
         // Test that insecure production config prevents startup
         env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
         env::set_var(
@@ -445,12 +452,36 @@ mod tests {
                 .any(|e| e.contains("Default encryption key")));
         }
 
-        // Clean up
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("PROXEMIC_ENCRYPTION_KEY");
-        env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+        // Restore original environment variables
+        if let Some(val) = original_security_level {
+            env::set_var("PROXEMIC_SECURITY_LEVEL", val);
+        } else {
+            env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        }
+
+        if let Some(val) = original_encryption_key {
+            env::set_var("PROXEMIC_ENCRYPTION_KEY", val);
+        } else {
+            env::remove_var("PROXEMIC_ENCRYPTION_KEY");
+        }
+
+        if let Some(val) = original_magic_validation {
+            env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", val);
+        } else {
+            env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
+        }
+
+        if let Some(val) = original_workspace_boundaries {
+            env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", val);
+        } else {
+            env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
+        }
+
+        if let Some(val) = original_audit_logging {
+            env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", val);
+        } else {
+            env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+        }
     }
 
     #[tokio::test]
