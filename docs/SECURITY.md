@@ -28,6 +28,7 @@
 
 ## Security Configuration
 
+### Configuration Structure
 ```rust
 pub struct SecurityConfig {
     pub allowed_extensions: HashSet<String>,  // Allowed file extensions
@@ -36,8 +37,80 @@ pub struct SecurityConfig {
     pub max_file_size: u64,                   // Max file size in bytes
     pub prohibited_filename_chars: HashSet<char>, // Dangerous characters
     pub enable_magic_number_validation: bool, // File signature checking
+    pub security_level: SecurityLevel,        // Security level enum
+    pub enforce_workspace_boundaries: bool,   // Workspace boundary enforcement
+    pub max_concurrent_operations: u32,       // Max concurrent operations
+    pub audit_logging_enabled: bool,         // Audit logging status
 }
 ```
+
+### Environment Variables Configuration
+
+Security settings can be configured via environment variables for deployment flexibility:
+
+#### Core Security Settings
+- `PROXEMIC_SECURITY_LEVEL`: Security level (`development`, `production`, `high_security`)
+- `PROXEMIC_MAX_FILE_SIZE`: Maximum file size in bytes (default: 100MB)
+- `PROXEMIC_MAX_PATH_LENGTH`: Maximum path length in characters (default: 260)
+- `PROXEMIC_MAX_CONCURRENT_OPERATIONS`: Maximum concurrent operations (default: 10)
+
+#### Critical Security Features
+- `PROXEMIC_ENABLE_MAGIC_VALIDATION`: Enable magic number validation (`true`/`false`)
+- `PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES`: Enforce workspace boundaries (`true`/`false`)
+- `PROXEMIC_AUDIT_LOGGING_ENABLED`: Enable audit logging (`true`/`false`)
+
+#### Advanced Security Options
+- `PROXEMIC_ENABLE_CONTENT_SCANNING`: Enable content scanning (`true`/`false`)
+- `PROXEMIC_SUSPICIOUS_FILE_AGE_THRESHOLD`: Suspicious file age threshold in seconds
+- `PROXEMIC_RATE_LIMIT_PER_MINUTE`: Rate limiting threshold
+- `PROXEMIC_CONFIG_VALIDATION`: Configuration validation strictness
+
+### JSON Schema Validation
+
+The security configuration is validated using JSON Schema for structural integrity:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Security Configuration Schema",
+  "type": "object",
+  "properties": {
+    "max_file_size": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 2147483648,
+      "description": "Maximum file size in bytes"
+    },
+    "security_level": {
+      "type": "string",
+      "enum": ["development", "production", "high_security"],
+      "description": "Security level"
+    }
+  },
+  "required": ["max_file_size", "security_level", "allowed_extensions"],
+  "additionalProperties": false
+}
+```
+
+### Configuration Validation Levels
+
+The system supports multiple validation levels:
+
+1. **JSON Schema Validation**: Structural validation using Draft 7 JSON Schema
+2. **Programmatic Validation**: Business logic validation with custom rules
+3. **Environment Validation**: Environment variable parsing and validation
+4. **Security Level Constraints**: Production/high-security specific requirements
+
+### Production Security Hardening
+
+For production deployments, the following constraints are automatically enforced:
+
+- Magic number validation must be enabled
+- Workspace boundaries must be enforced
+- Audit logging must be enabled
+- File size limits are stricter (max 100MB)
+- Concurrent operations are limited (max 10)
+- Path traversal protection is maximized
 
 ## Validation Workflow
 

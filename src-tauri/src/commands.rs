@@ -79,7 +79,12 @@ pub async fn greet(name: String) -> Result<String, String> {
 pub async fn validate_file_for_import(path: String) -> Result<String, CommandError> {
     let validator = create_default_validator();
     let result = validator.validate_import_path(Path::new(&path));
-    SecurityAuditor::log_file_access_attempt(Path::new(&path), "validate_import", &result);
+    SecurityAuditor::log_file_access_attempt(
+        Path::new(&path),
+        "validate_import",
+        &result,
+        "development",
+    );
     result
         .map(|p| p.to_string_lossy().to_string())
         .map_err(|e| e.into())
@@ -116,7 +121,7 @@ pub async fn validate_file_for_import_with_validator(
     validator: &PathValidator,
 ) -> Result<PathBuf, SecurityError> {
     let result = validator.validate_import_path(path);
-    SecurityAuditor::log_file_access_attempt(path, "validate_import", &result);
+    SecurityAuditor::log_file_access_attempt(path, "validate_import", &result, "development");
     result
 }
 
