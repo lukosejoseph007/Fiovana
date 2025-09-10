@@ -11,14 +11,16 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  # Set consistent environment for tests
+  # Set consistent environment for tests - CRITICAL: Must be development for tests
   PROXEMIC_ENV: development
   RUST_ENV: test
+  PROXEMIC_SECURITY_LEVEL: development
   # Ensure debug mode for tests
   PROXEMIC_DEBUG: true
-  PROXEMIC_SECURITY_LEVEL: development
   # Mock user directories for headless CI
   HOME: /tmp/mock_home
+  # Set rust log level to avoid environment confusion
+  RUST_LOG: info
 
 jobs:
   test-rust:
@@ -33,10 +35,17 @@ jobs:
           mkdir -p /tmp/mock_home/Desktop
           mkdir -p /tmp/mock_home/Documents
           mkdir -p /tmp/mock_home/Downloads
+          # Ensure the directories exist and are accessible
+          chmod 755 /tmp/mock_home/Desktop
+          chmod 755 /tmp/mock_home/Documents
+          chmod 755 /tmp/mock_home/Downloads
           # Set XDG directories that the dirs crate looks for
           echo "XDG_DESKTOP_DIR=/tmp/mock_home/Desktop" >> $GITHUB_ENV
           echo "XDG_DOCUMENTS_DIR=/tmp/mock_home/Documents" >> $GITHUB_ENV
           echo "XDG_DOWNLOAD_DIR=/tmp/mock_home/Downloads" >> $GITHUB_ENV
+          # Additional environment variables for test isolation
+          echo "CI=true" >> $GITHUB_ENV
+          echo "GITHUB_ACTIONS=true" >> $GITHUB_ENV
 
       - name: Install Tauri dependencies (Linux)
         run: |
@@ -62,11 +71,17 @@ jobs:
         run: |
           echo "PWD: $PWD"
           echo "HOME: $HOME"
+          echo "CI: $CI"
+          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
           echo "PROXEMIC_ENV: $PROXEMIC_ENV"
           echo "RUST_ENV: $RUST_ENV"
+          echo "PROXEMIC_SECURITY_LEVEL: $PROXEMIC_SECURITY_LEVEL"
+          echo "PROXEMIC_DEBUG: $PROXEMIC_DEBUG"
+          echo "RUST_LOG: $RUST_LOG"
           echo "XDG_DESKTOP_DIR: $XDG_DESKTOP_DIR"
           echo "XDG_DOCUMENTS_DIR: $XDG_DOCUMENTS_DIR"
           echo "XDG_DOWNLOAD_DIR: $XDG_DOWNLOAD_DIR"
+          ls -la /tmp/mock_home/ || true
         working-directory: src-tauri
 
       - name: Check formatting
@@ -78,14 +93,22 @@ jobs:
         working-directory: src-tauri
 
       - name: Run tests
-        run: cargo test
+        run: cargo test -- --nocapture
         working-directory: src-tauri
         env:
-          # Additional test-specific environment variables
+          # Test-specific environment variables - ensure consistent test environment
           PROXEMIC_ENV: development
           RUST_ENV: test
           PROXEMIC_SECURITY_LEVEL: development
           PROXEMIC_DEBUG: true
+          RUST_LOG: info
+          CI: true
+          GITHUB_ACTIONS: true
+          # Mock directories
+          XDG_DESKTOP_DIR: /tmp/mock_home/Desktop
+          XDG_DOCUMENTS_DIR: /tmp/mock_home/Documents
+          XDG_DOWNLOAD_DIR: /tmp/mock_home/Downloads
+          HOME: /tmp/mock_home
 
   test-frontend:
     name: Test Frontend

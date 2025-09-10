@@ -4,43 +4,45 @@ mod tests {
     use crate::filesystem::security::security_config::SecurityConfig;
     use std::path::{Path, PathBuf};
 
-    #[cfg(test)]
-    fn get_mock_user_dirs() -> Vec<PathBuf> {
-        // Create predictable test directories for CI/headless environments
-        vec![
-            PathBuf::from("/tmp/test_desktop"),
-            PathBuf::from("/tmp/test_documents"),
-            PathBuf::from("/tmp/test_downloads"),
-        ]
-    }
-
     fn get_test_allowed_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
-        // Try to get real user directories, fall back to mock directories for CI
-        if let Some(desktop) = dirs::desktop_dir() {
-            paths.push(desktop);
+        // In CI/headless environments, use the mock directories set up by the CI script
+        if std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok() {
+            // Use the XDG directories set by the CI environment
+            if let Ok(desktop) = std::env::var("XDG_DESKTOP_DIR") {
+                paths.push(PathBuf::from(desktop));
+            }
+            if let Ok(documents) = std::env::var("XDG_DOCUMENTS_DIR") {
+                paths.push(PathBuf::from(documents));
+            }
+            if let Ok(downloads) = std::env::var("XDG_DOWNLOAD_DIR") {
+                paths.push(PathBuf::from(downloads));
+            }
+        } else {
+            // Try to get real user directories for local testing
+            if let Some(desktop) = dirs::desktop_dir() {
+                paths.push(desktop);
+            }
+            if let Some(documents) = dirs::document_dir() {
+                paths.push(documents);
+            }
+            if let Some(downloads) = dirs::download_dir() {
+                paths.push(downloads);
+            }
         }
 
-        if let Some(documents) = dirs::document_dir() {
-            paths.push(documents);
-        }
-
-        if let Some(downloads) = dirs::download_dir() {
-            paths.push(downloads);
-        }
-
-        // If no real directories found (CI environment), use mock directories
-        if paths.is_empty() {
-            paths = get_mock_user_dirs();
-        }
-
-        // Always include a guaranteed valid path for testing
+        // Always include temp directory as a guaranteed valid path
         if let Ok(temp_dir) = std::env::temp_dir().canonicalize() {
             paths.push(temp_dir);
         } else {
-            // Ultimate fallback
+            // Ultimate fallback for any environment
             paths.push(PathBuf::from("/tmp"));
+        }
+
+        // Ensure we have at least one path
+        if paths.is_empty() {
+            paths.push(PathBuf::from("."));
         }
 
         paths

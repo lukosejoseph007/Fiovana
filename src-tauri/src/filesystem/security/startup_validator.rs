@@ -286,30 +286,56 @@ mod tests {
 
     #[test]
     fn test_development_mode_startup() {
-        // Set up clean test environment
-        env::remove_var("PROXEMIC_ENV");
-        env::remove_var("RUST_ENV");
-        env::remove_var("NODE_ENV");
-        env::remove_var("PRODUCTION");
-        env::remove_var("PROD");
+        // Set up clean test environment - clear ALL environment variables that could affect detection
+        let env_vars_to_clear = [
+            "PROXEMIC_ENV",
+            "RUST_ENV",
+            "NODE_ENV",
+            "PRODUCTION",
+            "PROD",
+            "PROXEMIC_SECURITY_LEVEL",
+            "CI",
+            "GITHUB_ACTIONS",
+            "RUST_LOG",
+        ];
 
-        // Explicitly set development mode
+        for var in &env_vars_to_clear {
+            env::remove_var(var);
+        }
+
+        // Explicitly set development mode with all necessary variables
         env::set_var("PROXEMIC_ENV", "development");
         env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        env::set_var("RUST_ENV", "test"); // Explicitly set to test
 
         // Set non-debug log to avoid environment detection confusion
         env::set_var("RUST_LOG", "info");
 
+        // Force debug mode to ensure development environment
+        env::set_var("PROXEMIC_DEBUG", "true");
+
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
+
+        // Debug information if assertion fails
+        if result.security_level != SecurityLevel::Development {
+            eprintln!("Expected Development, got {:?}", result.security_level);
+            eprintln!("Environment variables:");
+            for var in &env_vars_to_clear {
+                eprintln!("  {}: {:?}", var, env::var(var));
+            }
+            eprintln!("Errors: {:?}", result.errors);
+            eprintln!("Warnings: {:?}", result.warnings);
+        }
 
         assert_eq!(result.security_level, SecurityLevel::Development);
         assert!(!result.production_ready); // Should not be production ready in dev mode
 
-        // Clean up
-        env::remove_var("PROXEMIC_ENV");
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("RUST_LOG");
+        // Clean up all variables we set
+        for var in &env_vars_to_clear {
+            env::remove_var(var);
+        }
+        env::remove_var("PROXEMIC_DEBUG");
     }
 
     #[test]
