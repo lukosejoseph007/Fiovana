@@ -84,6 +84,7 @@ pub async fn validate_file_for_import(path: String) -> Result<String, CommandErr
         "validate_import",
         &result,
         "development",
+        None,
     );
     result
         .map(|p| p.to_string_lossy().to_string())
@@ -121,7 +122,7 @@ pub async fn validate_file_for_import_with_validator(
     validator: &PathValidator,
 ) -> Result<PathBuf, SecurityError> {
     let result = validator.validate_import_path(path);
-    SecurityAuditor::log_file_access_attempt(path, "validate_import", &result, "development");
+    SecurityAuditor::log_file_access_attempt(path, "validate_import", &result, "development", None);
     result
 }
 

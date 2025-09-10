@@ -3,6 +3,16 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use tracing::{error, info, warn};
+use uuid::Uuid;
+
+/// Standardized security levels for audit logging
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+pub enum SecurityLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
 
 /// Security event types for audit logging
 #[derive(Debug, Clone, Serialize)]
@@ -29,21 +39,38 @@ pub struct SecurityEvent {
     pub file_path: Option<PathBuf>,
     pub operation: Option<String>,
     pub user: Option<String>,
-    pub security_level: Option<String>,
+    pub security_level: SecurityLevel,
     pub error_details: Option<String>,
     pub error_code: Option<String>,
     pub metadata: serde_json::Value,
+    pub correlation_id: Uuid,
 }
 
 pub struct SecurityAuditor;
 
 impl SecurityAuditor {
+    /// Helper function to convert string security level to SecurityLevel enum
+    pub fn parse_security_level(level: &str) -> SecurityLevel {
+        match level.to_uppercase().as_str() {
+            "LOW" => SecurityLevel::Low,
+            "MEDIUM" => SecurityLevel::Medium,
+            "HIGH" => SecurityLevel::High,
+            "CRITICAL" => SecurityLevel::Critical,
+            _ => SecurityLevel::Medium, // Default to Medium for unknown levels
+        }
+    }
+
+    /// Creates a new correlation ID for tracking security incidents
+    pub fn new_correlation_id() -> Uuid {
+        Uuid::new_v4()
+    }
     /// Logs a file access attempt, successful or denied.
     pub fn log_file_access_attempt(
         path: &Path,
         operation: &str,
         result: &Result<PathBuf, SecurityError>,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -54,10 +81,11 @@ impl SecurityAuditor {
             file_path: Some(path.to_path_buf()),
             operation: Some(operation.to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: result.as_ref().err().map(|e| e.to_string()),
             error_code: result.as_ref().err().map(|e| e.code().to_string()),
             metadata: serde_json::json!({}),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -71,6 +99,7 @@ impl SecurityAuditor {
         file_path: Option<&Path>,
         operation: Option<&str>,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -78,13 +107,14 @@ impl SecurityAuditor {
             file_path: file_path.map(|p| p.to_path_buf()),
             operation: operation.map(|s| s.to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: Some(details.to_string()),
             error_code: Some(violation_type.to_string()),
             metadata: serde_json::json!({
                 "violation_type": violation_type,
                 "details": details
             }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -97,6 +127,7 @@ impl SecurityAuditor {
         old_value: &str,
         new_value: &str,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -104,7 +135,7 @@ impl SecurityAuditor {
             file_path: None,
             operation: Some("configuration_update".to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: None,
             error_code: None,
             metadata: serde_json::json!({
@@ -112,6 +143,7 @@ impl SecurityAuditor {
                 "old_value": old_value,
                 "new_value": new_value
             }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -119,20 +151,26 @@ impl SecurityAuditor {
 
     /// Logs environment variable overrides
     #[allow(dead_code)]
-    pub fn log_environment_override(env_var: &str, value: &str, security_level: &str) {
+    pub fn log_environment_override(
+        env_var: &str,
+        value: &str,
+        security_level: &str,
+        correlation_id: Option<Uuid>,
+    ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
             event_type: SecurityEventType::EnvironmentOverride,
             file_path: None,
             operation: Some("environment_override".to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: None,
             error_code: None,
             metadata: serde_json::json!({
                 "environment_variable": env_var,
                 "value": value
             }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -144,6 +182,7 @@ impl SecurityAuditor {
         errors: &[String],
         config: &serde_json::Value,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -151,13 +190,14 @@ impl SecurityAuditor {
             file_path: None,
             operation: Some("schema_validation".to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: Some(errors.join("; ")),
             error_code: None,
             metadata: serde_json::json!({
                 "validation_errors": errors,
                 "config_snapshot": config
             }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -217,6 +257,7 @@ impl SecurityAuditor {
         operation: &str,
         target_path: &Path,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -224,10 +265,11 @@ impl SecurityAuditor {
             file_path: Some(target_path.to_path_buf()),
             operation: Some(operation.to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: Some("Permission escalation attempt detected".to_string()),
             error_code: Some("PERMISSION_ESCALATION".to_string()),
             metadata: serde_json::json!({}),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);
@@ -240,6 +282,7 @@ impl SecurityAuditor {
         current_usage: u64,
         max_limit: u64,
         security_level: &str,
+        correlation_id: Option<Uuid>,
     ) {
         let event = SecurityEvent {
             timestamp: Utc::now(),
@@ -247,7 +290,7 @@ impl SecurityAuditor {
             file_path: None,
             operation: Some("resource_usage".to_string()),
             user: Some(Self::get_current_user()),
-            security_level: Some(security_level.to_string()),
+            security_level: Self::parse_security_level(security_level),
             error_details: Some(format!(
                 "{} usage: {}/{}",
                 resource_type, current_usage, max_limit
@@ -258,6 +301,7 @@ impl SecurityAuditor {
                 "current_usage": current_usage,
                 "max_limit": max_limit
             }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
         };
 
         Self::log_event(event);

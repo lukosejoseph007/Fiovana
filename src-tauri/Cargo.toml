@@ -20,7 +20,7 @@ tauri-plugin-dialog = "2.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json", "registry"] }
 dirs = "5.0"
 tempfile = "3.3"
 tauri-plugin-log = { version = "2.0", features = ["colored"] }
@@ -44,6 +44,9 @@ mime_guess = "2.0"
 # Path manipulation
 path-clean = "1.0"
 dunce = "1.0"
+
+# Log rotation and file logging
+tracing-appender = "0.2"
 
 # Validation
 regex = "1.0"
