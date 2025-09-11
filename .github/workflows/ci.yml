@@ -50,68 +50,13 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install Rust 1.89.0 (matching local)
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: '1.89.0'
           components: rustfmt, clippy
 
-      - name: Nuclear option - Completely recreate Cargo.toml dependencies
-        working-directory: src-tauri
-        run: |
-          echo "=== Before: Dependencies in Cargo.toml ==="
-          grep -A20 "\[dependencies\]" Cargo.toml
-          echo ""
-          echo "=== Forcing dependency recreation ==="
-          sed -i '/^rand = /d' Cargo.toml
-          sed -i '/^once_cell = /d' Cargo.toml
-          sed -i '/^jsonschema = /d' Cargo.toml
-
-          # Add dependencies using individual sed commands
-          sed -i '/^\[dependencies\]/a rand = { version = "0.9.2", features = ["std", "std_rng"] }' Cargo.toml
-          sed -i '/^\[dependencies\]/a once_cell = "1.21.3"' Cargo.toml
-          sed -i '/^\[dependencies\]/a jsonschema = "0.16"' Cargo.toml
-
-          echo "=== After: Dependencies in Cargo.toml ==="
-          grep -A25 "\[dependencies\]" Cargo.toml
-          echo ""
-          echo "=== Clean everything ==="
-          rm -rf target/
-          rm -f Cargo.lock
-
-      - name: Force dependency installation with cargo-edit
-        working-directory: src-tauri
-        run: |
-          cargo install cargo-edit --force || echo "cargo-edit install failed, continuing..."
-
-          cargo remove rand once_cell jsonschema 2>/dev/null || echo "Remove failed, continuing..."
-
-          cargo add rand@0.9.2 --features std,std_rng
-          cargo add once_cell@1.21.3
-          cargo add jsonschema@0.16
-
-          echo "=== Final Cargo.toml dependencies section ==="
-          sed -n '/\[dependencies\]/,/\[.*\]/p' Cargo.toml
-
-      - name: Generate fresh lockfile and fetch
-        working-directory: src-tauri
-        run: |
-          cargo generate-lockfile --verbose
-          cargo fetch --verbose
-          echo "=== Verify dependencies are in cargo tree ==="
-          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "CRITICAL: Dependencies still missing from tree!"
-
-      - name: Test dependency resolution with cargo metadata
-        working-directory: src-tauri
-        run: |
-          echo "=== Cargo metadata check ==="
-          cargo metadata --format-version 1 | jq -r '.packages[] | select(.name | test("rand|once_cell|jsonschema")) | "\(.name) \(.version)"' || echo "jq not available, skipping metadata check"
-
-      - name: Check if dependencies resolve in compilation
-        working-directory: src-tauri
-        run: |
-          echo "=== Testing compilation with verbose output ==="
-          timeout 300 cargo check --verbose 2>&1 | head -100
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Check formatting
         working-directory: src-tauri
@@ -125,6 +70,15 @@ jobs:
         working-directory: src-tauri
         run: cargo test -- --test-threads=1 --nocapture
 
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-test-logs-${{ github.sha }}
+          path: |
+            src-tauri/target/debug/deps/*.log
+            src-tauri/target/debug/*.log
+
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
@@ -137,6 +91,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
@@ -153,6 +115,15 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-logs-${{ github.sha }}
+          path: |
+            dist/
+            npm-debug.log
+
   build-tauri:
     name: Build Tauri App
     needs: [test-rust, test-frontend]
@@ -165,38 +136,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust 1.89.0
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: '1.89.0'
 
-      - name: Force dependency resolution (Unix)
-        if: matrix.platform != 'windows-latest'
-        working-directory: src-tauri
-        run: |
-          cargo install cargo-edit --force || echo "cargo-edit install failed"
-          cargo remove rand once_cell jsonschema 2>/dev/null || true
-          cargo add rand@0.9.2 --features std,std_rng
-          cargo add once_cell@1.21.3
-          cargo add jsonschema@0.16
-          cargo clean
-          rm -f Cargo.lock
-          cargo generate-lockfile
-          cargo fetch
-
-      - name: Force dependency resolution (Windows)
-        if: matrix.platform == 'windows-latest'
-        working-directory: src-tauri
-        run: |
-          cargo install cargo-edit --force || echo "cargo-edit install failed"
-          cargo remove rand once_cell jsonschema 2>NUL || true
-          cargo add rand@0.9.2 --features std,std_rng
-          cargo add once_cell@1.21.3
-          cargo add jsonschema@0.16
-          cargo clean
-          rm -f Cargo.lock
-          cargo generate-lockfile
-          cargo fetch
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -220,3 +164,11 @@ jobs:
 
       - name: Build Tauri app
         run: npm run tauri build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-build-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            src-tauri/target/release/
+            src-tauri/target/debug/
