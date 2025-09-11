@@ -11,13 +11,11 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  # Set consistent environment for tests
   PROXEMIC_ENV: development
   RUST_ENV: test
   RUST_LOG: info
   CI: true
   GITHUB_ACTIONS: true
-  # Mock user directories for headless CI - CRITICAL FOR TESTS
   HOME: /tmp/mock_home
   XDG_DESKTOP_DIR: /tmp/mock_home/Desktop
   XDG_DOCUMENTS_DIR: /tmp/mock_home/Documents
@@ -52,53 +50,38 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install Rust
+      # Use the exact same Rust version as your rust-toolchain.toml
+      - name: Install Rust 1.89.0 (matching local)
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: '1.89.0'
           components: rustfmt, clippy
 
-      # FIXED: Clear cache and force dependency resolution
-      - name: Clean Rust cache and dependencies
+      # Clear everything and start fresh
+      - name: Clean slate approach
         run: |
-          cargo clean
+          rm -rf target/
           rm -f Cargo.lock
+          # Verify Cargo.toml has the dependencies
+          echo "=== Verifying dependencies in Cargo.toml ==="
+          grep -A5 -B5 "rand.*=" Cargo.toml
+          grep -A5 -B5 "once_cell.*=" Cargo.toml
+          grep -A5 -B5 "jsonschema.*=" Cargo.toml
         working-directory: src-tauri
 
-      # FIXED: Cache after cleaning, with better cache key
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-          # Add cache key that includes Cargo.toml hash
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.toml') }}
-
-      # FIXED: Force dependency update before any compilation
-      - name: Update dependencies
+      # Don't use cache at all for now
+      - name: Generate Cargo.lock and fetch dependencies
         run: |
-          cargo update
-          cargo fetch
+          cargo generate-lockfile
+          cargo fetch --verbose
+          echo "=== Verifying dependencies were fetched ==="
+          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "FAILED TO FIND DEPENDENCIES"
         working-directory: src-tauri
 
-      - name: Debug environment and dependencies
+      - name: Check if dependencies resolve
         run: |
-          echo "=== Environment Debug ==="
-          echo "PWD: $PWD"
-          echo "HOME: $HOME"
-          echo "CI: $CI"
-          echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
-          echo "PROXEMIC_ENV: $PROXEMIC_ENV"
-          echo "RUST_ENV: $RUST_ENV"
-          echo "RUST_LOG: $RUST_LOG"
-          echo ""
-          echo "=== Rust/Cargo Debug ==="
-          cargo version
-          rustc --version
-          echo ""
-          echo "=== Dependencies Check ==="
-          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "Dependencies not found in tree"
-          echo ""
-          echo "=== Cargo.toml content ==="
-          cat Cargo.toml | grep -E "(rand|once_cell|jsonschema)" || echo "Dependencies not found in Cargo.toml"
+          echo "=== Testing dependency compilation ==="
+          cargo check --verbose
         working-directory: src-tauri
 
       - name: Check formatting
@@ -153,25 +136,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
+      - name: Install Rust 1.89.0
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.89.0'
 
-      # FIXED: Clean cache for build job too
-      - name: Clean dependencies
+      - name: Clean and prepare
         run: |
           cargo clean
           rm -f Cargo.lock
-        working-directory: src-tauri
-
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      # FIXED: Update dependencies in build job
-      - name: Update dependencies
-        run: |
-          cargo update
+          cargo generate-lockfile
           cargo fetch
         working-directory: src-tauri
 
