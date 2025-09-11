@@ -36,11 +36,9 @@ jobs:
           mkdir -p /tmp/mock_home/Desktop
           mkdir -p /tmp/mock_home/Documents
           mkdir -p /tmp/mock_home/Downloads
-          # Ensure the directories exist and are accessible
           chmod 755 /tmp/mock_home/Desktop
           chmod 755 /tmp/mock_home/Documents
           chmod 755 /tmp/mock_home/Downloads
-          # Create some test files if needed
           touch /tmp/mock_home/Documents/test.txt
           touch /tmp/mock_home/Downloads/test.csv
 
@@ -59,12 +57,29 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      # FIXED: Clear cache and force dependency resolution
+      - name: Clean Rust cache and dependencies
+        run: |
+          cargo clean
+          rm -f Cargo.lock
+        working-directory: src-tauri
+
+      # FIXED: Cache after cleaning, with better cache key
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          # Add cache key that includes Cargo.toml hash
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.toml') }}
 
-      - name: Debug environment
+      # FIXED: Force dependency update before any compilation
+      - name: Update dependencies
+        run: |
+          cargo update
+          cargo fetch
+        working-directory: src-tauri
+
+      - name: Debug environment and dependencies
         run: |
           echo "=== Environment Debug ==="
           echo "PWD: $PWD"
@@ -73,18 +88,17 @@ jobs:
           echo "GITHUB_ACTIONS: $GITHUB_ACTIONS"
           echo "PROXEMIC_ENV: $PROXEMIC_ENV"
           echo "RUST_ENV: $RUST_ENV"
-          echo "PROXEMIC_SECURITY_LEVEL: $PROXEMIC_SECURITY_LEVEL"
-          echo "PROXEMIC_DEBUG: $PROXEMIC_DEBUG"
           echo "RUST_LOG: $RUST_LOG"
-          echo "XDG_DESKTOP_DIR: $XDG_DESKTOP_DIR"
-          echo "XDG_DOCUMENTS_DIR: $XDG_DOCUMENTS_DIR"
-          echo "XDG_DOWNLOAD_DIR: $XDG_DOWNLOAD_DIR"
           echo ""
-          echo "=== Directory Contents ==="
-          ls -la /tmp/mock_home/ || true
-          ls -la /tmp/mock_home/Desktop/ || true
-          ls -la /tmp/mock_home/Documents/ || true
-          ls -la /tmp/mock_home/Downloads/ || true
+          echo "=== Rust/Cargo Debug ==="
+          cargo version
+          rustc --version
+          echo ""
+          echo "=== Dependencies Check ==="
+          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "Dependencies not found in tree"
+          echo ""
+          echo "=== Cargo.toml content ==="
+          cat Cargo.toml | grep -E "(rand|once_cell|jsonschema)" || echo "Dependencies not found in Cargo.toml"
         working-directory: src-tauri
 
       - name: Check formatting
@@ -98,7 +112,6 @@ jobs:
       - name: Run tests with isolation
         run: cargo test -- --test-threads=1 --nocapture
         working-directory: src-tauri
-        # NO env section here - use global env vars to avoid override issues
 
   test-frontend:
     name: Test Frontend
@@ -143,8 +156,24 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # FIXED: Clean cache for build job too
+      - name: Clean dependencies
+        run: |
+          cargo clean
+          rm -f Cargo.lock
+        working-directory: src-tauri
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # FIXED: Update dependencies in build job
+      - name: Update dependencies
+        run: |
+          cargo update
+          cargo fetch
+        working-directory: src-tauri
 
       - name: Install Node.js
         uses: actions/setup-node@v4

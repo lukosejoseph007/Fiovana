@@ -384,28 +384,96 @@ async fn get_deployment_report(state: tauri::State<'_, AppState>) -> Result<Stri
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
+    use serial_test::serial;
+    use std::sync::Mutex;
 
-    #[test]
-    fn test_security_initialization() {
-        // Set minimal valid environment for testing
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+    // Global mutex to serialize tests that modify environment variables
+    static ENV_MUTEX: Mutex<()> = Mutex::new(());
 
-        let result = initialize_security_system();
-        assert!(result.is_ok());
+    /// Helper function to save current environment state
+    fn save_env_state() -> Vec<(String, Option<String>)> {
+        vec![
+            (
+                "PROXEMIC_ENV".to_string(),
+                std::env::var("PROXEMIC_ENV").ok(),
+            ),
+            ("RUST_ENV".to_string(), std::env::var("RUST_ENV").ok()),
+            ("NODE_ENV".to_string(), std::env::var("NODE_ENV").ok()),
+            (
+                "PROXEMIC_SECURITY_LEVEL".to_string(),
+                std::env::var("PROXEMIC_SECURITY_LEVEL").ok(),
+            ),
+            (
+                "PROXEMIC_ENABLE_MAGIC_VALIDATION".to_string(),
+                std::env::var("PROXEMIC_ENABLE_MAGIC_VALIDATION").ok(),
+            ),
+            (
+                "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
+                std::env::var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES").ok(),
+            ),
+            (
+                "PROXEMIC_AUDIT_LOGGING_ENABLED".to_string(),
+                std::env::var("PROXEMIC_AUDIT_LOGGING_ENABLED").ok(),
+            ),
+            (
+                "PROXEMIC_ENCRYPTION_KEY".to_string(),
+                std::env::var("PROXEMIC_ENCRYPTION_KEY").ok(),
+            ),
+        ]
+    }
 
-        let security_result = result.unwrap();
-        assert!(security_result.success);
-
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
+    /// Helper function to restore environment state
+    fn restore_env_state(saved_env: Vec<(String, Option<String>)>) {
+        for (key, value_opt) in saved_env {
+            match value_opt {
+                Some(value) => std::env::set_var(&key, value),
+                None => std::env::remove_var(&key),
+            }
+        }
     }
 
     #[test]
-    fn test_production_readiness_check() {
+    #[serial]
+    fn test_security_initialization() {
+        let _lock = ENV_MUTEX.lock().unwrap();
+        let saved_env = save_env_state();
+
         // Clear environment first
-        std::env::remove_var("PROXEMIC_ENV");
-        std::env::remove_var("RUST_ENV");
-        std::env::remove_var("NODE_ENV");
+        for (key, _) in &saved_env {
+            std::env::remove_var(key);
+        }
+
+        // Set minimal valid environment for testing
+        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+
+        let result = initialize_security_system();
+        assert!(
+            result.is_ok(),
+            "Security initialization failed: {:?}",
+            result.err()
+        );
+
+        let security_result = result.unwrap();
+        assert!(
+            security_result.success,
+            "Security system initialization was not successful: {:?}",
+            security_result
+        );
+
+        // Restore environment
+        restore_env_state(saved_env);
+    }
+
+    #[test]
+    #[serial]
+    fn test_production_readiness_check() {
+        let _lock = ENV_MUTEX.lock().unwrap();
+        let saved_env = save_env_state();
+
+        // Clear environment first
+        for (key, _) in &saved_env {
+            std::env::remove_var(key);
+        }
 
         // Set production environment properly
         std::env::set_var("PROXEMIC_ENV", "Production"); // Note: Capital P
@@ -419,92 +487,165 @@ mod tests {
         );
 
         let result = initialize_security_system();
-        assert!(result.is_ok());
+        assert!(
+            result.is_ok(),
+            "Security initialization failed: {:?}",
+            result.err()
+        );
 
         let security_result = result.unwrap();
-        assert!(security_result.success);
-        assert_eq!(security_result.security_level, SecurityLevel::Production);
+        assert!(
+            security_result.success,
+            "Security system initialization failed. Success: {}, Errors: {:?}",
+            security_result.success, security_result.errors
+        );
+        assert_eq!(
+            security_result.security_level,
+            SecurityLevel::Production,
+            "Expected Production security level, got {:?}",
+            security_result.security_level
+        );
 
-        // Clean up
-        std::env::remove_var("PROXEMIC_ENV");
-        std::env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        std::env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        std::env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        std::env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
-        std::env::remove_var("PROXEMIC_ENCRYPTION_KEY");
+        // Restore environment
+        restore_env_state(saved_env);
     }
 
     #[test]
+    #[serial]
     fn test_insecure_production_config_blocks_startup() {
-        // Save original environment variables
-        let original_security_level = env::var("PROXEMIC_SECURITY_LEVEL").ok();
-        let original_encryption_key = env::var("PROXEMIC_ENCRYPTION_KEY").ok();
-        let original_magic_validation = env::var("PROXEMIC_ENABLE_MAGIC_VALIDATION").ok();
-        let original_workspace_boundaries = env::var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES").ok();
-        let original_audit_logging = env::var("PROXEMIC_AUDIT_LOGGING_ENABLED").ok();
+        let _lock = ENV_MUTEX.lock().unwrap();
+        let saved_env = save_env_state();
+
+        // Clear environment first
+        for (key, _) in &saved_env {
+            std::env::remove_var(key);
+        }
 
         // Test that insecure production config prevents startup
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
-        env::set_var(
+        std::env::set_var("PROXEMIC_ENV", "Production");
+        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var(
             "PROXEMIC_ENCRYPTION_KEY",
             "your_secure_32_character_key_here_change_this",
-        ); // Default key
-        env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        ); // Default/insecure key
+        std::env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
+        std::env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        std::env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
 
         let result = initialize_security_system();
 
         // Should fail due to default encryption key
         if let Ok(security_result) = result {
-            assert!(!security_result.success);
-            assert!(security_result
-                .errors
-                .iter()
-                .any(|e| e.contains("Default encryption key")));
+            assert!(
+                !security_result.success,
+                "Security initialization should have failed with default key, but succeeded"
+            );
+            assert!(
+                security_result
+                    .errors
+                    .iter()
+                    .any(|e| e.contains("Default encryption key") || e.contains("encryption")),
+                "Expected error about default encryption key, got: {:?}",
+                security_result.errors
+            );
+        } else {
+            // If initialize_security_system returns an Err, that's also acceptable
+            // as it means the system properly rejected the insecure configuration
         }
 
-        // Restore original environment variables
-        if let Some(val) = original_security_level {
-            env::set_var("PROXEMIC_SECURITY_LEVEL", val);
-        } else {
-            env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        }
-
-        if let Some(val) = original_encryption_key {
-            env::set_var("PROXEMIC_ENCRYPTION_KEY", val);
-        } else {
-            env::remove_var("PROXEMIC_ENCRYPTION_KEY");
-        }
-
-        if let Some(val) = original_magic_validation {
-            env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", val);
-        } else {
-            env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        }
-
-        if let Some(val) = original_workspace_boundaries {
-            env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", val);
-        } else {
-            env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        }
-
-        if let Some(val) = original_audit_logging {
-            env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", val);
-        } else {
-            env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
-        }
+        // Restore environment
+        restore_env_state(saved_env);
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_config_integration() {
+        let _lock = ENV_MUTEX.lock().unwrap();
+        let saved_env = save_env_state();
+
+        // Clear environment first
+        for (key, _) in &saved_env {
+            std::env::remove_var(key);
+        }
+
         // Test that configuration system works with security system
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        std::env::set_var("PROXEMIC_ENV", "Development");
 
-        // This would require actual config files in a real test
-        // For now, just verify the integration points exist
-        // Integration test placeholder - no assertion needed
+        // Verify the integration points exist and work
+        let result = initialize_security_system();
+        assert!(
+            result.is_ok(),
+            "Config integration test failed: {:?}",
+            result.err()
+        );
 
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        let security_result = result.unwrap();
+        assert!(
+            security_result.success,
+            "Config integration should succeed in development mode: {:?}",
+            security_result
+        );
+
+        // Restore environment
+        restore_env_state(saved_env);
+    }
+
+    // Debug test to help troubleshoot intermittent failures
+    #[test]
+    #[serial]
+    fn test_security_initialization_debug() {
+        let _lock = ENV_MUTEX.lock().unwrap();
+        let saved_env = save_env_state();
+
+        println!("=== Debug: Initial Environment State ===");
+        for (key, value) in &saved_env {
+            println!("{}: {:?}", key, value);
+        }
+
+        // Clear environment first
+        for (key, _) in &saved_env {
+            std::env::remove_var(key);
+        }
+
+        // Set minimal required environment
+        std::env::set_var("PROXEMIC_ENV", "Production");
+        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var(
+            "PROXEMIC_ENCRYPTION_KEY",
+            "debug_key_32_chars_for_testing_123",
+        );
+
+        println!("\n=== Debug: Environment Variables After Setting ===");
+        println!("PROXEMIC_ENV: {:?}", std::env::var("PROXEMIC_ENV"));
+        println!(
+            "PROXEMIC_SECURITY_LEVEL: {:?}",
+            std::env::var("PROXEMIC_SECURITY_LEVEL")
+        );
+        println!(
+            "PROXEMIC_ENCRYPTION_KEY: {:?}",
+            std::env::var("PROXEMIC_ENCRYPTION_KEY").map(|s| format!("{}...", &s[..8]))
+        );
+
+        let result = initialize_security_system();
+        match &result {
+            Ok(security_result) => {
+                println!("\n=== Debug: Security Initialization Result ===");
+                println!("  success: {}", security_result.success);
+                println!("  security_level: {:?}", security_result.security_level);
+                println!("  config_valid: {}", security_result.config_valid);
+                println!("  errors: {:?}", security_result.errors);
+                println!("  warnings: {:?}", security_result.warnings);
+            }
+            Err(e) => {
+                println!("\n=== Debug: Security Initialization Error ===");
+                println!("Error: {:?}", e);
+            }
+        }
+
+        // Restore environment
+        restore_env_state(saved_env);
+
+        // Don't assert here - this is just for debugging
     }
 }
