@@ -72,7 +72,7 @@ opt-level = 3           # Maximum optimization
 lto = true              # Link-time optimization
 codegen-units = 1       # Better optimization, slower compile
 panic = "abort"         # Smaller binary size
-strip = true            # Strip debug symbols
+# strip = true          # Disabled due to macOS linker issues with duplicate -z flags
 
 # Development profile (keep existing)
 [profile.dev]

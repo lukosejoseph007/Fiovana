@@ -718,6 +718,7 @@ impl DeploymentChecker {
         {
             // Linux - check for GPG signatures or other signing mechanisms
             // For now, assume true for Linux as signing is less common
+            let _ = path; // Mark path as intentionally unused
             true
         }
     }
