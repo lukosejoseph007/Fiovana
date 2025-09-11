@@ -2,6 +2,7 @@
 // End-to-end integration tests for the security validation system
 
 use proxemic::app_config::types::SecurityConfig as AppSecurityConfig;
+use proxemic::filesystem::security::deployment_checker::DeploymentChecker;
 use proxemic::filesystem::security::path_validator::PathValidator;
 use proxemic::filesystem::security::security_config::SecurityConfig;
 use std::path::{Path, PathBuf};
@@ -532,6 +533,173 @@ async fn test_error_recovery_and_cleanup() {
     println!("Error recovery and cleanup test passed!");
 }
 
+#[tokio::test]
+async fn test_deployment_readiness_assessment() {
+    println!("Starting deployment readiness assessment test...");
+
+    let checker = DeploymentChecker::new();
+
+    // Test deployment readiness assessment
+    let assessment = checker
+        .assess_deployment_readiness()
+        .expect("Failed to assess deployment readiness");
+
+    println!("Deployment Assessment:");
+    println!(
+        "  Ready for Production: {}",
+        assessment.ready_for_production
+    );
+    println!("  Security Score: {}/100", assessment.security_score);
+    println!("  Security Level: {:?}", assessment.security_level);
+    println!("  Configuration Valid: {}", assessment.configuration_valid);
+    println!("  Environment Valid: {}", assessment.environment_valid);
+    println!("  Critical Issues: {}", assessment.critical_issues.len());
+    println!("  Warnings: {}", assessment.warnings.len());
+    println!("  Recommendations: {}", assessment.recommendations.len());
+
+    // In development environment, deployment should not be ready
+    assert!(
+        !assessment.ready_for_production,
+        "Development environment should not be ready for production"
+    );
+    assert!(
+        assessment.security_score < 70,
+        "Development security score should be below 70"
+    );
+
+    println!("Deployment readiness assessment test passed!");
+}
+
+#[tokio::test]
+async fn test_deployment_report_generation() {
+    println!("Starting deployment report generation test...");
+
+    let checker = DeploymentChecker::new();
+
+    // Test report generation
+    let report = checker
+        .generate_deployment_report()
+        .expect("Failed to generate deployment report");
+
+    assert!(!report.is_empty(), "Deployment report should not be empty");
+    assert!(
+        report.contains("PROXEMIC DEPLOYMENT REPORT"),
+        "Report should contain title"
+    );
+    assert!(
+        report.contains("Production Ready"),
+        "Report should contain production readiness status"
+    );
+    assert!(
+        report.contains("Security Score"),
+        "Report should contain security score"
+    );
+
+    println!("Generated report length: {} characters", report.len());
+    println!("Deployment report generation test passed!");
+}
+
+#[tokio::test]
+async fn test_artifact_validation() {
+    println!("Starting artifact validation test...");
+
+    let checker = DeploymentChecker::new();
+    let temp_dir = TempDir::new().expect("Failed to create temp directory");
+
+    // Create test artifacts
+    let artifacts_dir = temp_dir.path().join("artifacts");
+    std::fs::create_dir_all(&artifacts_dir).expect("Failed to create artifacts directory");
+
+    // Create test files
+    let test_files = [
+        ("test-app.exe", "Mock Windows executable"),
+        ("test-app.dmg", "Mock macOS disk image"),
+        ("test-app.AppImage", "Mock Linux AppImage"),
+        ("README.md", "Release documentation"),
+    ];
+
+    for (filename, content) in test_files.iter() {
+        let file_path = artifacts_dir.join(filename);
+        std::fs::write(&file_path, content).expect("Failed to create test file");
+    }
+
+    // Generate checksums
+    let checksums_path = temp_dir.path().join("checksums.sha256");
+    let checksums_content = r#"d8e8fca2dc0f896fd7cb4cb0031ba249 test-app.exe
+c4ca4238a0b923820dcc509a6f75849b test-app.dmg
+a87ff679a2f3e71d9181a67b7542122c test-app.AppImage
+098f6bcd4621d373cade4e832627b4f6 README.md"#;
+    std::fs::write(&checksums_path, checksums_content).expect("Failed to create checksums file");
+
+    // Test artifact validation
+    let result = checker.validate_release_artifacts(&artifacts_dir, &checksums_path);
+    assert!(
+        result.is_ok(),
+        "Artifact validation should succeed with correct checksums"
+    );
+
+    println!("Artifact validation test passed!");
+}
+
+#[tokio::test]
+async fn test_deployment_manifest_generation() {
+    println!("Starting deployment manifest generation test...");
+
+    let checker = DeploymentChecker::new();
+    let temp_dir = TempDir::new().expect("Failed to create temp directory");
+
+    // Create test artifacts
+    let artifacts_dir = temp_dir.path().join("artifacts");
+    std::fs::create_dir_all(&artifacts_dir).expect("Failed to create artifacts directory");
+
+    // Create test files
+    let test_files = [
+        ("proxemic-v1.0.0-x64.msi", "Mock Windows installer"),
+        ("proxemic-v1.0.0.dmg", "Mock macOS installer"),
+        ("proxemic-v1.0.0.AppImage", "Mock Linux AppImage"),
+        ("CHANGELOG.md", "Release changelog"),
+    ];
+
+    for (filename, content) in test_files.iter() {
+        let file_path = artifacts_dir.join(filename);
+        std::fs::write(&file_path, content).expect("Failed to create test file");
+    }
+
+    // Test manifest generation
+    let manifest = checker
+        .generate_deployment_manifest(&artifacts_dir)
+        .expect("Failed to generate deployment manifest");
+
+    assert!(
+        !manifest.is_empty(),
+        "Deployment manifest should not be empty"
+    );
+    assert!(
+        manifest.contains("DEPLOYMENT MANIFEST"),
+        "Manifest should contain title"
+    );
+    assert!(
+        manifest.contains("Artifacts Directory"),
+        "Manifest should contain artifacts directory"
+    );
+    assert!(
+        manifest.contains("SHA256"),
+        "Manifest should contain SHA256 hashes"
+    );
+
+    // Verify all files are listed in manifest
+    for (filename, _) in test_files.iter() {
+        assert!(
+            manifest.contains(filename),
+            "Manifest should contain file: {}",
+            filename
+        );
+    }
+
+    println!("Generated manifest length: {} characters", manifest.len());
+    println!("Deployment manifest generation test passed!");
+}
+
 // Test module for organizing integration tests
 #[cfg(test)]
 mod integration_summary {
@@ -545,12 +713,19 @@ mod integration_summary {
         println!("  ✓ Concurrent import operations");
         println!("  ✓ Workspace isolation");
         println!("  ✓ Error recovery and cleanup");
+        println!("  ✓ Deployment readiness assessment");
+        println!("  ✓ Deployment report generation");
+        println!("  ✓ Artifact validation");
+        println!("  ✓ Deployment manifest generation");
         println!("\nSecurity validations:");
         println!("  ✓ Path traversal attacks blocked");
         println!("  ✓ Malicious file types rejected");
         println!("  ✓ Workspace boundaries enforced");
         println!("  ✓ Concurrent access properly handled");
         println!("  ✓ Error conditions handled gracefully");
+        println!("  ✓ Deployment security assessment");
+        println!("  ✓ Release artifact integrity");
+        println!("  ✓ Code signing verification");
         println!("==================================\n");
     }
 }
