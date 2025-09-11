@@ -3,6 +3,7 @@ use crate::filesystem::security::log_rotation;
 use chrono::{DateTime, Utc};
 use once_cell::sync::OnceCell;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tracing::{error, info, warn};
@@ -86,6 +87,7 @@ impl SecurityAuditor {
     pub fn new_correlation_id() -> Uuid {
         Uuid::new_v4()
     }
+
     /// Logs a file access attempt, successful or denied.
     pub fn log_file_access_attempt(
         path: &Path,
@@ -375,5 +377,107 @@ impl SecurityAuditor {
         };
 
         Self::log_event(event);
+    }
+
+    /// Verifies integrity of all log files
+    #[allow(dead_code)]
+    pub fn verify_log_integrity() -> Result<HashMap<PathBuf, bool>, String> {
+        if let Some(manager) = LOG_ROTATION_MANAGER.get() {
+            let manager = manager
+                .lock()
+                .map_err(|e| format!("Failed to acquire lock on log manager: {}", e))?;
+            manager
+                .verify_all_logs_integrity()
+                .map_err(|e| format!("Failed to verify log integrity: {}", e))
+        } else {
+            Err("Log rotation manager not initialized".to_string())
+        }
+    }
+
+    /// Generates checksum for a specific log file
+    #[allow(dead_code)]
+    pub fn generate_log_checksum(file_path: &PathBuf) -> Result<String, String> {
+        if let Some(manager) = LOG_ROTATION_MANAGER.get() {
+            let manager = manager
+                .lock()
+                .map_err(|e| format!("Failed to acquire lock on log manager: {}", e))?;
+            manager
+                .generate_checksum(file_path)
+                .map_err(|e| format!("Failed to generate checksum: {}", e))
+        } else {
+            Err("Log rotation manager not initialized".to_string())
+        }
+    }
+
+    /// Logs integrity verification results as a security event
+    pub fn log_integrity_verification(
+        results: &HashMap<PathBuf, bool>,
+        security_level: &str,
+        correlation_id: Option<Uuid>,
+    ) {
+        let mut valid_files = 0;
+        let mut invalid_files = 0;
+        let mut details = Vec::new();
+
+        for (file_path, is_valid) in results {
+            if *is_valid {
+                valid_files += 1;
+            } else {
+                invalid_files += 1;
+                details.push(format!("File compromised: {}", file_path.display()));
+            }
+        }
+
+        let event = SecurityEvent {
+            timestamp: Utc::now(),
+            event_type: SecurityEventType::SecurityViolation,
+            file_path: None,
+            operation: Some("integrity_verification".to_string()),
+            user: Some(Self::get_current_user()),
+            security_level: Self::parse_security_level(security_level),
+            error_details: if invalid_files > 0 {
+                Some(format!(
+                    "{} files compromised, {} files valid",
+                    invalid_files, valid_files
+                ))
+            } else {
+                Some(format!(
+                    "All {} log files verified successfully",
+                    valid_files
+                ))
+            },
+            error_code: if invalid_files > 0 {
+                Some("LOG_TAMPERING_DETECTED".to_string())
+            } else {
+                Some("INTEGRITY_VERIFIED".to_string())
+            },
+            metadata: serde_json::json!({
+                "valid_files": valid_files,
+                "invalid_files": invalid_files,
+                "details": details,
+                "total_files": results.len()
+            }),
+            correlation_id: correlation_id.unwrap_or_else(Self::new_correlation_id),
+        };
+
+        Self::log_event(event);
+    }
+
+    /// Performs scheduled integrity check and logs results
+    #[allow(dead_code)]
+    pub fn perform_scheduled_integrity_check() {
+        match Self::verify_log_integrity() {
+            Ok(results) => {
+                let security_level = if results.values().any(|&valid| !valid) {
+                    "HIGH"
+                } else {
+                    "LOW"
+                };
+                Self::log_integrity_verification(&results, security_level, None);
+            }
+            Err(e) => {
+                tracing::error!("Failed to perform integrity check: {}", e);
+            }
+        }
     }
 }

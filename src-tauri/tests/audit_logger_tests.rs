@@ -1,5 +1,6 @@
 use proxemic::filesystem::security::audit_logger::SecurityAuditor;
 use proxemic::filesystem::security::audit_logger::SecurityLevel;
+use std::path::PathBuf;
 use uuid::Uuid;
 
 #[test]
@@ -130,4 +131,43 @@ fn test_permission_escalation_logging() {
 fn test_resource_exhaustion_logging() {
     // Test that the function compiles and runs without panicking
     SecurityAuditor::log_resource_exhaustion("memory", 1024, 512, "HIGH", Some(Uuid::new_v4()));
+}
+
+#[test]
+fn test_log_integrity_verification_logging() {
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
+    let mut results = HashMap::new();
+    results.insert(PathBuf::from("/var/log/audit.log"), true);
+    results.insert(PathBuf::from("/var/log/security.log"), false);
+
+    // Test that the function compiles and runs without panicking
+    SecurityAuditor::log_integrity_verification(&results, "HIGH", Some(Uuid::new_v4()));
+}
+
+#[test]
+fn test_perform_scheduled_integrity_check() {
+    // Test that the function compiles and runs without panicking
+    SecurityAuditor::perform_scheduled_integrity_check();
+}
+
+#[test]
+fn test_verify_log_integrity_error_case() {
+    // Test error case when log rotation manager is not initialized
+    let result = SecurityAuditor::verify_log_integrity();
+    assert!(result.is_err());
+    assert!(result
+        .unwrap_err()
+        .contains("Log rotation manager not initialized"));
+}
+
+#[test]
+fn test_generate_log_checksum_error_case() {
+    // Test error case when log rotation manager is not initialized
+    let result = SecurityAuditor::generate_log_checksum(&PathBuf::from("/var/log/test.log"));
+    assert!(result.is_err());
+    assert!(result
+        .unwrap_err()
+        .contains("Log rotation manager not initialized"));
 }

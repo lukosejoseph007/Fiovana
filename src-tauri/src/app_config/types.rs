@@ -361,6 +361,24 @@ pub struct LoggingConfig {
     pub max_file_size_mb: u64,
     pub max_files: u32,
     pub structured_logging: bool,
+
+    // New fields for log management
+    pub aggregation_enabled: bool,
+    pub aggregation_endpoints: Vec<String>,
+    pub aggregation_protocol: String, // "http", "https", "tcp", "udp"
+    pub aggregation_timeout_ms: u64,
+    pub aggregation_batch_size: usize,
+
+    // Integrity verification
+    pub integrity_checks_enabled: bool,
+    pub checksum_algorithm: String, // "sha256", "sha512"
+    pub signing_enabled: bool,
+    pub signing_key: Option<String>,
+
+    // Security features
+    pub encryption_enabled: bool,
+    pub encryption_key: Option<String>,
+    pub compress_logs: bool,
 }
 
 impl Default for LoggingConfig {
@@ -374,6 +392,22 @@ impl Default for LoggingConfig {
             max_file_size_mb: 10,
             max_files: 5,
             structured_logging: false,
+
+            // Default values for new log management fields
+            aggregation_enabled: false,
+            aggregation_endpoints: Vec::new(),
+            aggregation_protocol: "https".to_string(),
+            aggregation_timeout_ms: 5000,
+            aggregation_batch_size: 100,
+
+            integrity_checks_enabled: false,
+            checksum_algorithm: "sha256".to_string(),
+            signing_enabled: false,
+            signing_key: None,
+
+            encryption_enabled: false,
+            encryption_key: None,
+            compress_logs: false,
         }
     }
 }
@@ -462,6 +496,10 @@ impl ProxemicConfig {
                 },
                 structured_logging: env.is_production(),
                 file_enabled: env.is_production(),
+                // Production-specific log management settings
+                aggregation_enabled: env.is_production(),
+                integrity_checks_enabled: env.is_production(),
+                compress_logs: env.is_production(),
                 ..Default::default()
             },
             database: DatabaseConfig {

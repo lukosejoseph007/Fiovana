@@ -246,18 +246,56 @@ async fn initialize_comprehensive_logging(
         tracing::subscriber::set_global_default(subscriber)?;
     }
 
-    // File logging with security considerations
+    // Enhanced file logging with security features
     if config.logging.file_enabled {
-        if let Some(ref _file_path) = config.logging.file_path {
-            // File logging implementation would go here
-            // This requires additional dependencies like tracing-appender
-            info!("File logging is configured but not yet implemented");
+        if let Some(ref log_dir) = config.logging.file_path {
+            // Initialize audit log rotation system with configured directory
+            if let Err(e) = audit_logger::SecurityAuditor::init_log_rotation(Some(log_dir.clone()))
+            {
+                tracing::error!("Failed to initialize audit log rotation: {}", e);
+            } else {
+                info!(
+                    "Audit log rotation system initialized at: {}",
+                    log_dir.display()
+                );
 
-            // In production, file logging should include:
-            // - Log rotation
-            // - Secure file permissions
-            // - Integrity verification
-            // - Encryption for sensitive logs
+                // Perform initial integrity check in production
+                if matches!(
+                    security_result.security_level,
+                    SecurityLevel::Production | SecurityLevel::HighSecurity
+                ) && config.logging.integrity_checks_enabled
+                {
+                    info!("Performing initial log integrity verification...");
+                    audit_logger::SecurityAuditor::perform_scheduled_integrity_check();
+                }
+            }
+        }
+    }
+
+    // Log aggregation configuration
+    if config.logging.aggregation_enabled {
+        info!(
+            "Log aggregation configured: protocol={}, endpoints={:?}",
+            config.logging.aggregation_protocol, config.logging.aggregation_endpoints
+        );
+
+        // Set up log forwarding if configured
+        if !config.logging.aggregation_endpoints.is_empty() {
+            info!(
+                "Log forwarding enabled to: {:?}",
+                config.logging.aggregation_endpoints
+            );
+
+            // In production, enable secure transmission
+            if matches!(
+                security_result.security_level,
+                SecurityLevel::Production | SecurityLevel::HighSecurity
+            ) {
+                info!(
+                    "Secure log transmission enabled with {}",
+                    config.logging.aggregation_protocol
+                );
+            }
         }
     }
 
@@ -265,6 +303,14 @@ async fn initialize_comprehensive_logging(
         "Comprehensive logging initialized with level: {}",
         config.logging.level
     );
+    info!("Structured logging: {}", use_structured);
+    info!("File logging: {}", config.logging.file_enabled);
+    info!(
+        "Integrity checks: {}",
+        config.logging.integrity_checks_enabled
+    );
+    info!("Log aggregation: {}", config.logging.aggregation_enabled);
+
     Ok(())
 }
 

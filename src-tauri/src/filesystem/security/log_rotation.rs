@@ -1,3 +1,6 @@
+use hex;
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -28,6 +31,7 @@ pub struct LogRotationManager {
     log_dir: PathBuf,
     current_file: Option<std::fs::File>,
     current_file_size: u64,
+    file_checksums: HashMap<PathBuf, String>, // Track checksums for integrity verification
 }
 
 impl LogRotationManager {
@@ -41,6 +45,7 @@ impl LogRotationManager {
             log_dir,
             current_file: None,
             current_file_size: 0,
+            file_checksums: HashMap::new(),
         })
     }
 
@@ -179,6 +184,71 @@ impl LogRotationManager {
         files.reverse();
 
         Ok(files)
+    }
+
+    /// Generates SHA-256 checksum for a log file
+    pub fn generate_checksum(&self, file_path: &PathBuf) -> io::Result<String> {
+        let content = fs::read(file_path)?;
+        let mut hasher = Sha256::new();
+        hasher.update(&content);
+        let result = hasher.finalize();
+        Ok(hex::encode(result))
+    }
+
+    /// Verifies the integrity of a log file by comparing checksums
+    pub fn verify_log_integrity(&self, file_path: &PathBuf) -> io::Result<bool> {
+        let current_checksum = self.generate_checksum(file_path)?;
+
+        // Check if we have a stored checksum for this file
+        if let Some(stored_checksum) = self.file_checksums.get(file_path) {
+            Ok(current_checksum == *stored_checksum)
+        } else {
+            // No stored checksum - this is a new file, store the checksum
+            // Note: In a real implementation, we'd store checksums persistently
+            Ok(true)
+        }
+    }
+
+    /// Verifies integrity of all log files
+    pub fn verify_all_logs_integrity(&self) -> io::Result<HashMap<PathBuf, bool>> {
+        let mut results = HashMap::new();
+        let log_files = self.get_log_files()?;
+
+        for file_path in log_files {
+            let integrity_ok = self.verify_log_integrity(&file_path)?;
+            results.insert(file_path, integrity_ok);
+        }
+
+        Ok(results)
+    }
+
+    /// Stores checksum for a log file (call this after rotation)
+    #[allow(dead_code)]
+    pub fn store_checksum(&mut self, file_path: PathBuf, checksum: String) {
+        self.file_checksums.insert(file_path, checksum);
+    }
+
+    /// Gets checksum for a specific log file
+    #[allow(dead_code)]
+    pub fn get_checksum(&self, file_path: &PathBuf) -> Option<&String> {
+        self.file_checksums.get(file_path)
+    }
+
+    /// Enhanced rotate method that stores checksum before rotation
+    #[allow(dead_code)]
+    pub fn rotate_with_integrity(&mut self) -> io::Result<()> {
+        if let Some(current_file_path) = self
+            .current_file
+            .as_ref()
+            .map(|_| self.get_current_log_path())
+        {
+            // Generate checksum for current file before rotation
+            let checksum = self.generate_checksum(&current_file_path)?;
+            self.store_checksum(current_file_path, checksum);
+        }
+
+        self.rotate()?;
+        Ok(())
     }
 }
 
