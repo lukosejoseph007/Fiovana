@@ -50,38 +50,72 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      # Use the exact same Rust version as your rust-toolchain.toml
       - name: Install Rust 1.89.0 (matching local)
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.89.0'
           components: rustfmt, clippy
 
-      # Clear everything and start fresh
-      - name: Clean slate approach
+      - name: Nuclear option - Completely recreate Cargo.toml dependencies
         run: |
-          rm -rf target/
-          rm -f Cargo.lock
-          # Verify Cargo.toml has the dependencies
-          echo "=== Verifying dependencies in Cargo.toml ==="
-          grep -A5 -B5 "rand.*=" Cargo.toml
-          grep -A5 -B5 "once_cell.*=" Cargo.toml
-          grep -A5 -B5 "jsonschema.*=" Cargo.toml
+          echo "=== Before: Dependencies in Cargo.toml ==="
+          grep -A20 "\[dependencies\]" Cargo.toml
+          echo ""
+          echo "=== Forcing dependency recreation ==="
+          # Remove the problematic dependencies and re-add them
+          sed -i '/^rand = /d' Cargo.toml
+          sed -i '/^once_cell = /d' Cargo.toml
+          sed -i '/^jsonschema = /d' Cargo.toml
+
+          # Add them back at the end of [dependencies] section
+          sed -i '/^\[dependencies\]/a\
+          rand = { version = "0.9.2", features = ["std", "std_rng"] }\
+          once_cell = "1.21.3"\
+          jsonschema = "0.16"' Cargo.toml
+
+                    echo "=== After: Dependencies in Cargo.toml ==="
+                    grep -A25 "\[dependencies\]" Cargo.toml
+                    echo ""
+                    echo "=== Clean everything ==="
+                    rm -rf target/
+                    rm -f Cargo.lock
+                  working-directory: src-tauri
+
+                - name: Force dependency installation with cargo-edit
+                  run: |
+          # Install cargo-edit if not available
+          cargo install cargo-edit --force || echo "cargo-edit install failed, continuing..."
+
+          # Remove and re-add dependencies using cargo-edit
+          cargo remove rand once_cell jsonschema 2>/dev/null || echo "Remove failed, continuing..."
+
+          # Add them back
+          cargo add rand@0.9.2 --features std,std_rng
+          cargo add once_cell@1.21.3
+          cargo add jsonschema@0.16
+
+          echo "=== Final Cargo.toml dependencies section ==="
+          sed -n '/\[dependencies\]/,/\[.*\]/p' Cargo.toml
         working-directory: src-tauri
 
-      # Don't use cache at all for now
-      - name: Generate Cargo.lock and fetch dependencies
+      - name: Generate fresh lockfile and fetch
         run: |
-          cargo generate-lockfile
+          cargo generate-lockfile --verbose
           cargo fetch --verbose
-          echo "=== Verifying dependencies were fetched ==="
-          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "FAILED TO FIND DEPENDENCIES"
+          echo "=== Verify dependencies are in cargo tree ==="
+          cargo tree --depth=1 | grep -E "(rand|once_cell|jsonschema)" || echo "CRITICAL: Dependencies still missing from tree!"
         working-directory: src-tauri
 
-      - name: Check if dependencies resolve
+      - name: Test dependency resolution with cargo metadata
         run: |
-          echo "=== Testing dependency compilation ==="
-          cargo check --verbose
+          echo "=== Cargo metadata check ==="
+          cargo metadata --format-version 1 | jq -r '.packages[] | select(.name | test("rand|once_cell|jsonschema")) | "\(.name) \(.version)"' || echo "jq not available, skipping metadata check"
+        working-directory: src-tauri
+
+      - name: Check if dependencies resolve in compilation
+        run: |
+          echo "=== Testing compilation with verbose output ==="
+          timeout 300 cargo check --verbose 2>&1 | head -100
         working-directory: src-tauri
 
       - name: Check formatting
@@ -141,8 +175,13 @@ jobs:
         with:
           toolchain: '1.89.0'
 
-      - name: Clean and prepare
+      - name: Force dependency resolution
         run: |
+          cargo install cargo-edit --force || echo "cargo-edit install failed"
+          cargo remove rand once_cell jsonschema 2>/dev/null || true
+          cargo add rand@0.9.2 --features std,std_rng
+          cargo add once_cell@1.21.3
+          cargo add jsonschema@0.16
           cargo clean
           rm -f Cargo.lock
           cargo generate-lockfile
