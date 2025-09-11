@@ -3,9 +3,13 @@
 
 pub mod access_control;
 pub mod audit_logger;
+pub mod backup_manager;
+pub mod circuit_breaker;
 pub mod config_validator;
 pub mod deployment_checker;
+pub mod emergency_procedures;
 pub mod env_validator;
+pub mod fallback_validator;
 pub mod file_guard;
 pub mod json_schema_validator;
 pub mod log_rotation;
@@ -13,6 +17,7 @@ pub mod magic_number_validator;
 pub mod path_validator;
 pub mod permissions;
 pub mod permissions_escalation;
+pub mod safe_mode;
 pub mod scope;
 pub mod scope_restrictions;
 pub mod scope_validator;

@@ -2,7 +2,12 @@
 // Enhanced operations with production-safe security integration and performance monitoring
 
 use crate::filesystem::errors::SecurityError;
+use crate::filesystem::security::backup_manager::BackupManager;
+use crate::filesystem::security::circuit_breaker::{CircuitBreakerConfig, CircuitBreakerManager};
+use crate::filesystem::security::emergency_procedures::EmergencyManager;
+use crate::filesystem::security::fallback_validator::{FallbackValidator, ValidationResult};
 use crate::filesystem::security::path_validator::PathValidator;
+use crate::filesystem::security::safe_mode::SafeModeManager;
 use crate::filesystem::security::security_config::SecurityConfig;
 use once_cell::sync::Lazy;
 use std::path::Path;
@@ -96,9 +101,63 @@ pub fn validate_file_for_import_with_metrics(path: &str) -> Result<String, Secur
     result
 }
 
-// Legacy compatibility function - uses PathValidator directly
+// Global circuit breaker manager for file operations
+static CIRCUIT_BREAKER_MANAGER: Lazy<CircuitBreakerManager> = Lazy::new(CircuitBreakerManager::new);
+
+// Global backup manager for configuration backups
+static BACKUP_MANAGER: Lazy<BackupManager> =
+    Lazy::new(|| BackupManager::new().expect("Failed to initialize backup manager"));
+
+/// Backup security configurations after important operations
+/// This is called automatically after validation operations
+fn backup_security_configurations() {
+    if let Ok(metadata) = BACKUP_MANAGER.create_manual_backup("security") {
+        if metadata.success {
+            log::info!("Security configuration backup completed successfully");
+        } else {
+            log::warn!(
+                "Security configuration backup failed: {:?}",
+                metadata.error_message
+            );
+        }
+    } else {
+        log::error!("Failed to initiate security configuration backup");
+    }
+}
+
+// Enhanced validation with circuit breaker protection
 #[allow(dead_code)]
 pub fn validate_file_for_import(path: &str) -> Result<String, SecurityError> {
+    // First check emergency restrictions
+    let emergency_manager =
+        EmergencyManager::new().map_err(|e| SecurityError::PathOutsideWorkspace {
+            path: format!("Emergency system error: {}", e),
+        })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "Kill switch active - all operations disabled".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("validate") {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "Operation blocked by emergency restrictions".to_string(),
+        });
+    }
+
+    // Then check safe mode restrictions
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(path))
+        .map_err(|e| SecurityError::PathOutsideWorkspace {
+            path: e.to_string(),
+        })?
+    {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "File blocked by safe mode restrictions".to_string(),
+        });
+    }
+
     let validator = PathValidator::new(
         SecurityConfig::default(),
         vec![
@@ -109,9 +168,90 @@ pub fn validate_file_for_import(path: &str) -> Result<String, SecurityError> {
         ],
     );
 
-    validator
-        .validate_import_path(Path::new(path))
-        .map(|p| p.to_string_lossy().to_string())
+    // Use circuit breaker for validation
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "file_validation",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 5,
+            recovery_timeout: std::time::Duration::from_secs(60),
+            success_threshold: 3,
+        }),
+    );
+
+    let result = breaker.call(|| {
+        validator
+            .validate_import_path(Path::new(path))
+            .map(|p| p.to_string_lossy().to_string())
+            .map_err(|e| anyhow::anyhow!("{}", e))
+    });
+
+    let final_result = result.map_err(|e| SecurityError::PathOutsideWorkspace {
+        path: e.to_string(),
+    });
+
+    // Backup security configurations after successful validation
+    if final_result.is_ok() {
+        backup_security_configurations();
+    }
+
+    final_result
+}
+
+// Enhanced validation with fallback mechanisms
+#[allow(dead_code)]
+pub fn validate_file_for_import_with_fallback(path: &str) -> Result<String, SecurityError> {
+    // First check emergency restrictions
+    let emergency_manager =
+        EmergencyManager::new().map_err(|e| SecurityError::PathOutsideWorkspace {
+            path: format!("Emergency system error: {}", e),
+        })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "Kill switch active - all operations disabled".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("validate") {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "Operation blocked by emergency restrictions".to_string(),
+        });
+    }
+
+    // Then check safe mode restrictions
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(path))
+        .map_err(|e| SecurityError::PathOutsideWorkspace {
+            path: e.to_string(),
+        })?
+    {
+        return Err(SecurityError::PathOutsideWorkspace {
+            path: "File blocked by safe mode restrictions".to_string(),
+        });
+    }
+
+    let fallback_validator = FallbackValidator::new();
+    let result = fallback_validator.validate_file(Path::new(path));
+
+    let final_result = match result {
+        Ok(ValidationResult::Approved(_)) | Ok(ValidationResult::Fallback(_)) => {
+            // File is approved or validated via fallback
+            Ok(path.to_string())
+        }
+        Ok(ValidationResult::Rejected(reason)) => {
+            Err(SecurityError::PathOutsideWorkspace { path: reason })
+        }
+        Err(e) => Err(SecurityError::PathOutsideWorkspace {
+            path: e.to_string(),
+        }),
+    };
+
+    // Backup security configurations after successful validation
+    if final_result.is_ok() {
+        backup_security_configurations();
+    }
+
+    final_result
 }
 
 #[cfg(test)]
