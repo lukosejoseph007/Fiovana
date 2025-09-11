@@ -1,10 +1,10 @@
 [package]
 name = "proxemic"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "AI-powered content transformation system for training materials"
+authors = ["Proxemic Team"]
+license = "MIT"
+repository = "https://github.com/your-org/proxemic"
 edition = "2021"
 
 [build-dependencies]
@@ -63,9 +63,24 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3.8"
 serial_test = "2"
 
+# Production release optimization
+[profile.release]
+opt-level = 3           # Maximum optimization
+lto = true              # Link-time optimization
+codegen-units = 1       # Better optimization, slower compile
+panic = "abort"         # Smaller binary size
+strip = true            # Strip debug symbols
+
+# Development profile (keep existing)
+[profile.dev]
+opt-level = 0
+debug = true
+overflow-checks = true
+
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+production = ["custom-protocol"]
 
 [[test]]
 name = "performance_benchmarks"

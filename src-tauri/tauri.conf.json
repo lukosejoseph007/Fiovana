@@ -20,7 +20,8 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:",
+      "devCsp": null
     }
   },
   "bundle": {
@@ -32,6 +33,11 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "Proxemic",
+    "copyright": "Copyright © 2025 Proxemic. All rights reserved.",
+    "category": "Productivity",
+    "shortDescription": "AI-powered content transformation for training materials",
+    "longDescription": "Transform training materials with AI-powered document comparison, style preservation, and multi-format output generation."
   }
 }

@@ -1,0 +1,21 @@
+[build]
+rustflags = [
+    # Security hardening flags for production
+    "-C", "relro-level=full",      # Full RELRO (Read-Only Relocations)
+    "-C", "strip=symbols",         # Strip debug symbols
+    "-C", "control-flow-guard=yes" # Control Flow Guard (Windows)
+]
+
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+    "-C", "target-feature=+crt-static", # Static CRT linking
+    "-C", "link-arg=/GUARD:CF",         # Control Flow Guard
+    "-C", "link-arg=/DYNAMICBASE",      # ASLR support
+    "-C", "link-arg=/NXCOMPAT"          # DEP support
+]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-Wl,-pie",          # Position Independent Executable
+    "-C", "target-feature=+aes,+sse4.2" # Hardware acceleration
+]

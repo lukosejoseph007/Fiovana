@@ -14,7 +14,10 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "tw:init": "tailwindcss init -p"
+    "tw:init": "tailwindcss init -p",
+    "build:prod": "npm run build && npm run tauri build -- --features production",
+    "build:release": "NODE_ENV=production npm run build:prod",
+    "tauri:prod": "tauri build --features production"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.85.9",
