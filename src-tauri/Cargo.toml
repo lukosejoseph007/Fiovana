@@ -64,7 +64,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3.8"
 serial_test = "2"
 cargo-audit = "0.18"
-cargo-deny = "0.14"
+cargo-deny = "0.17"
 
 # Production release optimization
 [profile.release]
