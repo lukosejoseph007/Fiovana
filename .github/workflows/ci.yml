@@ -127,6 +127,9 @@ jobs:
   security-checks:
     name: Security Checks
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
     steps:
       - uses: actions/checkout@v4
 

@@ -1,6 +1,0 @@
-2025-09-12T07:48:09.129692Z  INFO rust_mcp_server: Starting Rust MCP Server args=Args { timeout: 600, log_level: "info", log_file: Some("log/folder/rust-mcp-server.log"), disabled_tools: [], workspace: None }
-2025-09-12T07:48:09.129890Z  INFO rust_mcp_server: Long timeout set; some requests (e.g., cargo-build) may take a while timeout=600
-2025-09-12T07:48:09.129949Z  INFO rust_mcp_server: Server version version="0.2.5.410890b"
-2025-09-12T07:48:09.129980Z  INFO rust_mcp_server: No workspace root specified, using current directory
-2025-09-12T07:48:09.131946Z  INFO rust_mcp_server::handler: Starting MCP Server enabled_tools=["cargo-build", "cargo-clean", "cargo-fmt", "cargo-check", "cargo-clippy", "cargo-doc", "cargo-generate_lockfile", "cargo-hack", "cargo-hack-install", "cargo-machete", "cargo-machete-install", "cargo-deny-check", "cargo-deny-init", "cargo-deny-list", "cargo-deny-install", "cargo-add", "cargo-remove", "cargo-new", "cargo-list", "cargo-package", "cargo-update", "cargo-test", "cargo-metadata", "rustc-explain", "rustup-show", "rustup-toolchain-add", "rustup-update", "cargo-search", "cargo-info"] disabled_tools=[]
-2025-09-12T07:48:09.147486Z  INFO rust_mcp_server::resources: Listing available Cargo Book resources

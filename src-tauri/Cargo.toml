@@ -69,8 +69,8 @@ clap = { version = "4.0", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3.8"
 serial_test = "2"
-cargo-audit = "0.18"
-cargo-deny = "0.17"
+cargo-audit = "0.21"
+cargo-deny = "0.18"
 
 # Production release optimization
 [profile.release]
