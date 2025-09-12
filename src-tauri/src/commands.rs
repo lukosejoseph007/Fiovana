@@ -9,6 +9,9 @@ use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::safe_mode::SafeModeManager;
 use crate::filesystem::security::security_config::SecurityConfig;
 use once_cell::sync::Lazy;
+use serde::Serialize;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
@@ -102,9 +105,13 @@ pub fn get_validation_metrics() -> &'static ValidationMetrics {
     &VALIDATION_METRICS
 }
 
-use serde::Serialize;
-use std::fs;
-use std::path::{Path, PathBuf};
+use crate::filesystem::watcher::{DocumentWatcher, FileEvent, WatcherConfig};
+use tokio::sync::{mpsc, Mutex};
+
+// Global file watcher instance
+static FILE_WATCHER: Lazy<Mutex<Option<DocumentWatcher>>> = Lazy::new(|| Mutex::new(None));
+static EVENT_RECEIVER: Lazy<Mutex<Option<mpsc::UnboundedReceiver<FileEvent>>>> =
+    Lazy::new(|| Mutex::new(None));
 
 #[derive(Debug, Serialize, serde::Deserialize)]
 pub enum CommandError {
@@ -507,4 +514,250 @@ pub async fn import_file_with_validator(
     validator: &PathValidator,
 ) -> Result<PathBuf, SecurityError> {
     validator.validate_import_path(path)
+}
+
+// ---------------- File Watcher Commands ----------------
+
+#[tauri::command]
+pub async fn start_file_watching(workspace_path: String) -> Result<(), CommandError> {
+    let mut watcher_guard = FILE_WATCHER.lock().await;
+    let mut receiver_guard = EVENT_RECEIVER.lock().await;
+
+    // If watcher already exists, stop it first
+    if watcher_guard.is_some() {
+        *watcher_guard = None;
+        *receiver_guard = None;
+    }
+
+    // Create new watcher with default config
+    let config = WatcherConfig::default();
+    let (mut watcher, receiver) = DocumentWatcher::new(config);
+
+    // Start the watcher
+    watcher
+        .start()
+        .await
+        .map_err(|e| CommandError::Custom(format!("Failed to start file watcher: {}", e)))?;
+
+    // Add the workspace path with security validation
+    watcher
+        .add_path(&workspace_path)
+        .await
+        .map_err(|e| CommandError::Custom(format!("Failed to add workspace path: {}", e)))?;
+
+    // Store the watcher and receiver
+    *watcher_guard = Some(watcher);
+    *receiver_guard = Some(receiver);
+
+    tracing::info!("File watcher started for workspace: {}", workspace_path);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn pause_file_watching() -> Result<(), CommandError> {
+    let watcher_guard = FILE_WATCHER.lock().await;
+
+    if let Some(watcher) = watcher_guard.as_ref() {
+        watcher.pause().await;
+        tracing::info!("File watching paused");
+        Ok(())
+    } else {
+        Err(CommandError::Custom("File watcher not running".to_string()))
+    }
+}
+
+#[tauri::command]
+pub async fn resume_file_watching() -> Result<(), CommandError> {
+    let watcher_guard = FILE_WATCHER.lock().await;
+
+    if let Some(watcher) = watcher_guard.as_ref() {
+        watcher.resume().await;
+        tracing::info!("File watching resumed");
+        Ok(())
+    } else {
+        Err(CommandError::Custom("File watcher not running".to_string()))
+    }
+}
+
+#[tauri::command]
+pub async fn stop_file_watching() -> Result<(), CommandError> {
+    let mut watcher_guard = FILE_WATCHER.lock().await;
+    let mut receiver_guard = EVENT_RECEIVER.lock().await;
+
+    *watcher_guard = None;
+    *receiver_guard = None;
+
+    tracing::info!("File watching stopped");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_watched_paths() -> Result<Vec<String>, CommandError> {
+    let watcher_guard = FILE_WATCHER.lock().await;
+
+    if let Some(watcher) = watcher_guard.as_ref() {
+        let paths = watcher.watched_paths().await;
+        let path_strings = paths
+            .iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
+        Ok(path_strings)
+    } else {
+        Err(CommandError::Custom("File watcher not running".to_string()))
+    }
+}
+
+#[tauri::command]
+pub async fn add_watch_path(path: String) -> Result<(), CommandError> {
+    let mut watcher_guard = FILE_WATCHER.lock().await;
+
+    if let Some(watcher) = watcher_guard.as_mut() {
+        watcher
+            .add_path(&path)
+            .await
+            .map_err(|e| CommandError::Custom(format!("Failed to add path: {}", e)))?;
+        tracing::info!("Added path to watch: {}", path);
+        Ok(())
+    } else {
+        Err(CommandError::Custom("File watcher not running".to_string()))
+    }
+}
+
+#[tauri::command]
+pub async fn remove_watch_path(path: String) -> Result<(), CommandError> {
+    let mut watcher_guard = FILE_WATCHER.lock().await;
+
+    if let Some(watcher) = watcher_guard.as_mut() {
+        watcher
+            .remove_path(&path)
+            .await
+            .map_err(|e| CommandError::Custom(format!("Failed to remove path: {}", e)))?;
+        tracing::info!("Removed path from watch: {}", path);
+        Ok(())
+    } else {
+        Err(CommandError::Custom("File watcher not running".to_string()))
+    }
+}
+
+#[tauri::command]
+pub async fn emit_file_event(event: FileEvent) -> Result<(), CommandError> {
+    // This command is used by the frontend to emit file events
+    // that will be processed by the watcher system
+    tracing::debug!("File event emitted: {:?}", event);
+    Ok(())
+}
+
+// ---------------- Tests ----------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn test_file_watcher_lifecycle() {
+        // Create a temporary directory for testing
+        let temp_dir = tempdir().expect("Failed to create temp directory");
+        let test_path = temp_dir.path().to_string_lossy().to_string();
+
+        // Test starting the watcher
+        let result = start_file_watching(test_path.clone()).await;
+        assert!(
+            result.is_ok(),
+            "Failed to start file watching: {:?}",
+            result
+        );
+
+        // Test getting watched paths
+        let paths = get_watched_paths().await;
+        assert!(paths.is_ok(), "Failed to get watched paths: {:?}", paths);
+        let paths = paths.unwrap();
+        assert!(paths.contains(&test_path), "Test path not in watched paths");
+
+        // Test adding another path
+        let another_path = temp_dir.path().join("subdir").to_string_lossy().to_string();
+        std::fs::create_dir(&another_path).expect("Failed to create subdirectory");
+        let add_result = add_watch_path(another_path.clone()).await;
+        assert!(
+            add_result.is_ok(),
+            "Failed to add watch path: {:?}",
+            add_result
+        );
+
+        // Test getting updated paths
+        let updated_paths = get_watched_paths().await.unwrap();
+        assert_eq!(updated_paths.len(), 2, "Should have 2 watched paths");
+        assert!(
+            updated_paths.contains(&another_path),
+            "Second path not found"
+        );
+
+        // Test removing a path
+        let remove_result = remove_watch_path(another_path.clone()).await;
+        assert!(
+            remove_result.is_ok(),
+            "Failed to remove watch path: {:?}",
+            remove_result
+        );
+
+        // Test getting final paths
+        let final_paths = get_watched_paths().await.unwrap();
+        assert_eq!(
+            final_paths.len(),
+            1,
+            "Should have 1 watched path after removal"
+        );
+        assert!(
+            final_paths.contains(&test_path),
+            "Original path not preserved"
+        );
+
+        // Test stopping the watcher
+        let stop_result = stop_file_watching().await;
+        assert!(
+            stop_result.is_ok(),
+            "Failed to stop file watching: {:?}",
+            stop_result
+        );
+
+        // Test that watcher is no longer running
+        let paths_after_stop = get_watched_paths().await;
+        assert!(paths_after_stop.is_err(), "Watcher should be stopped");
+    }
+
+    #[tokio::test]
+    async fn test_pause_resume_watcher() {
+        let temp_dir = tempdir().expect("Failed to create temp directory");
+        let test_path = temp_dir.path().to_string_lossy().to_string();
+
+        // Start the watcher
+        start_file_watching(test_path.clone()).await.unwrap();
+
+        // Pause the watcher
+        let pause_result = pause_file_watching().await;
+        assert!(
+            pause_result.is_ok(),
+            "Failed to pause file watching: {:?}",
+            pause_result
+        );
+
+        // Resume the watcher
+        let resume_result = resume_file_watching().await;
+        assert!(
+            resume_result.is_ok(),
+            "Failed to resume file watching: {:?}",
+            resume_result
+        );
+
+        // Clean up
+        stop_file_watching().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_emit_file_event() {
+        let event = FileEvent::Created(PathBuf::from("/test/path/file.txt"));
+
+        let result = emit_file_event(event).await;
+        assert!(result.is_ok(), "Failed to emit file event: {:?}", result);
+    }
 }

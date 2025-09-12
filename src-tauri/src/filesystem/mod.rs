@@ -3,6 +3,7 @@
 pub mod errors;
 pub mod operations;
 pub mod security;
+pub mod watcher;
 
 pub use errors::SecurityError;
 pub use security::path_validator::PathValidator;

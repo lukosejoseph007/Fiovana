@@ -131,6 +131,15 @@ async fn main() {
             commands::validate_file_for_import,
             commands::import_file,
             commands::get_file_info_secure,
+            // File watcher commands
+            commands::start_file_watching,
+            commands::stop_file_watching,
+            commands::pause_file_watching,
+            commands::resume_file_watching,
+            commands::get_watched_paths,
+            commands::add_watch_path,
+            commands::remove_watch_path,
+            commands::emit_file_event,
             // Security status commands
             get_security_status,
             get_deployment_report,

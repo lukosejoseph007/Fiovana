@@ -41,6 +41,11 @@ aes = "0.8"            # Low-level AES backend
 # Security & File Operations
 mime_guess = "2.0"
 
+# File watching and event processing
+notify = "6.1"
+crossbeam-channel = "0.5"
+tokio-util = { version = "0.7", features = ["time"] }
+
 # Windows API for memory monitoring
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["psapi", "processthreadsapi"] }
