@@ -124,9 +124,36 @@ jobs:
             dist/
             npm-debug.log
 
+  security-checks:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Install latest cargo-audit
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-audit
+          version: 0.21.2
+
+      # Install latest cargo-deny
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-deny
+          version: 0.18.4
+
+      - name: Run cargo audit
+        run: cargo audit --deny warnings
+
+      - name: Run cargo deny
+        run: cargo deny check advisories
+
   build-tauri:
     name: Build Tauri App
-    needs: [test-rust, test-frontend]
+    needs: [test-rust, test-frontend, security-checks]
     strategy:
       matrix:
         platform: [macos-latest, ubuntu-latest, windows-latest]

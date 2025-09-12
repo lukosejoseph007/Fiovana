@@ -625,10 +625,7 @@ async fn test_artifact_validation() {
 
     // Generate checksums
     let checksums_path = temp_dir.path().join("checksums.sha256");
-    let checksums_content = r#"d8e8fca2dc0f896fd7cb4cb0031ba249 test-app.exe
-c4ca4238a0b923820dcc509a6f75849b test-app.dmg
-a87ff679a2f3e71d9181a67b7542122c test-app.AppImage
-098f6bcd4621d373cade4e832627b4f6 README.md"#;
+    let checksums_content = "68e4b552889293dc66a542f2e1b25286997bab3ad5dff5da259dc183ae0d8947 test-app.exe\n6e1dbcf79d29f24e92a9653b360e4b76337c5cc897fad593d16e0b564d4071d9 test-app.dmg\nd636fbfbe1e2465ff71abdae9fbb86e3bce6fb28cb150f3f6f1b2a1d618ff40c test-app.AppImage\n5558ca0c3ebe1fd6cae9fec9aa055e8ee593d2397c8812b22f53d0e499f5a4de README.md";
     std::fs::write(&checksums_path, checksums_content).expect("Failed to create checksums file");
 
     // Test artifact validation
