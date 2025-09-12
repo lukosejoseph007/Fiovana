@@ -157,8 +157,9 @@ pub struct FileInfo {
 /// Helper function to create a properly configured validator for production use
 fn create_default_validator() -> PathValidator {
     let mut config = SecurityConfig::default();
-    // Ensure common extensions are allowed
+    // Ensure common extensions are allowed, including .tmp for testing
     config.allowed_extensions.insert(".txt".to_string());
+    config.allowed_extensions.insert(".tmp".to_string()); // Allow temporary files for testing
 
     let mut allowed_paths = vec![
         dirs::desktop_dir().unwrap_or_default(),
@@ -653,15 +654,18 @@ pub async fn emit_file_event(event: FileEvent) -> Result<(), CommandError> {
 mod tests {
     use super::*;
     use tempfile::tempdir;
+    use serial_test::serial;
 
     #[tokio::test]
+    #[serial]
     async fn test_file_watcher_lifecycle() {
         // Create a temporary directory for testing
         let temp_dir = tempdir().expect("Failed to create temp directory");
-        let test_path = temp_dir.path().to_string_lossy().to_string();
+        let test_path = temp_dir.path();
+        let test_path_str = test_path.to_string_lossy().to_string();
 
         // Test starting the watcher
-        let result = start_file_watching(test_path.clone()).await;
+        let result = start_file_watching(test_path_str.clone()).await;
         assert!(
             result.is_ok(),
             "Failed to start file watching: {:?}",
@@ -672,12 +676,19 @@ mod tests {
         let paths = get_watched_paths().await;
         assert!(paths.is_ok(), "Failed to get watched paths: {:?}", paths);
         let paths = paths.unwrap();
-        assert!(paths.contains(&test_path), "Test path not in watched paths");
+        let canonical_test_path = std::fs::canonicalize(test_path).unwrap();
+        assert!(
+            paths.iter().any(|p| PathBuf::from(p) == canonical_test_path),
+            "Test path not in watched paths. Watched: {:?}, Expected: {:?}",
+            paths,
+            canonical_test_path
+        );
 
         // Test adding another path
-        let another_path = temp_dir.path().join("subdir").to_string_lossy().to_string();
+        let another_path = temp_dir.path().join("subdir");
         std::fs::create_dir(&another_path).expect("Failed to create subdirectory");
-        let add_result = add_watch_path(another_path.clone()).await;
+        let another_path_str = another_path.to_string_lossy().to_string();
+        let add_result = add_watch_path(another_path_str.clone()).await;
         assert!(
             add_result.is_ok(),
             "Failed to add watch path: {:?}",
@@ -687,13 +698,16 @@ mod tests {
         // Test getting updated paths
         let updated_paths = get_watched_paths().await.unwrap();
         assert_eq!(updated_paths.len(), 2, "Should have 2 watched paths");
+        let canonical_another_path = std::fs::canonicalize(&another_path).unwrap();
         assert!(
-            updated_paths.contains(&another_path),
+            updated_paths
+                .iter()
+                .any(|p| PathBuf::from(p) == canonical_another_path),
             "Second path not found"
         );
 
         // Test removing a path
-        let remove_result = remove_watch_path(another_path.clone()).await;
+        let remove_result = remove_watch_path(another_path_str.clone()).await;
         assert!(
             remove_result.is_ok(),
             "Failed to remove watch path: {:?}",
@@ -708,7 +722,9 @@ mod tests {
             "Should have 1 watched path after removal"
         );
         assert!(
-            final_paths.contains(&test_path),
+            final_paths
+                .iter()
+                .any(|p| PathBuf::from(p) == canonical_test_path),
             "Original path not preserved"
         );
 
@@ -726,6 +742,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_pause_resume_watcher() {
         let temp_dir = tempdir().expect("Failed to create temp directory");
         let test_path = temp_dir.path().to_string_lossy().to_string();

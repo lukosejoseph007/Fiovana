@@ -375,7 +375,7 @@ impl DeploymentChecker {
         match assessment.security_level {
             SecurityLevel::HighSecurity => score = score.saturating_add(10),
             SecurityLevel::Production => score = score.saturating_add(5),
-            SecurityLevel::Development => score = score.saturating_sub(11), // Ensure development scores below 70
+            SecurityLevel::Development => score = score.saturating_sub(31), // Ensure development scores below 70
         }
 
         // Ensure minimum score

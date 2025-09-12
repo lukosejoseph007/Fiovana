@@ -94,7 +94,7 @@ impl PathValidator {
         }
     }
 
-    fn safe_canonicalize(&self, path: &Path) -> PathBuf {
+    pub fn safe_canonicalize(&self, path: &Path) -> PathBuf {
         std::fs::canonicalize(path).unwrap_or_else(|_| {
             if path.is_absolute() {
                 path.to_path_buf()
@@ -247,6 +247,59 @@ impl PathValidator {
                     .validate_file_type(path, &filename_lower)
                     .map_err(|e| SecurityError::MagicNumberMismatch(e.to_string()))?;
             }
+        }
+
+        if !self.is_within_workspace(path) {
+            return Err(SecurityError::PathOutsideWorkspace {
+                path: path_str.to_string(),
+            });
+        }
+
+        Ok(self.safe_canonicalize(path))
+    }
+
+    /// Validate a directory path for watching operations
+    /// This is similar to validate_import_path but doesn't require file extensions
+    pub fn validate_directory_path(&self, path: &Path) -> Result<PathBuf, SecurityError> {
+        let path_str = path.to_string_lossy();
+
+        if path_str.len() > self.config.max_path_length {
+            return Err(SecurityError::PathTooLong {
+                length: path_str.len(),
+                max: self.config.max_path_length,
+            });
+        }
+
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+            if filename.ends_with("..") || filename.ends_with("...") || filename.ends_with(".") {
+                return Err(SecurityError::ProhibitedCharacters {
+                    filename: filename.to_string(),
+                });
+            }
+
+            let prohibited_chars = if self.config.prohibited_filename_chars.is_empty() {
+                vec!['<', '>', '"', ':', '/', '\\', '|', '?', '*']
+            } else {
+                self.config
+                    .prohibited_filename_chars
+                    .iter()
+                    .cloned()
+                    .collect()
+            };
+
+            for c in &prohibited_chars {
+                if filename.contains(*c) {
+                    return Err(SecurityError::ProhibitedCharacters {
+                        filename: filename.to_string(),
+                    });
+                }
+            }
+        }
+
+        if self.is_path_traversal_attempt(&path_str) {
+            return Err(SecurityError::PathTraversal {
+                path: path_str.to_string(),
+            });
         }
 
         if !self.is_within_workspace(path) {

@@ -6,6 +6,7 @@ authors = ["Proxemic Team"]
 license = "MIT"
 repository = "https://github.com/your-org/proxemic"
 edition = "2021"
+default-run = "proxemic"
 
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
@@ -101,6 +102,10 @@ path = "tests/integration_tests.rs"
 [[test]]
 name = "json_schema_validation"
 path = "tests/json_schema_validation.rs"
+
+[[bin]]
+name = "proxemic"
+path = "src/main.rs"
 
 [[bin]]
 name = "debug_hash"

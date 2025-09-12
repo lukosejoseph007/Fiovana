@@ -575,6 +575,7 @@ impl Default for EnvironmentValidator {
 mod tests {
     use super::*;
     use std::env;
+    use serial_test::serial;
 
     #[test]
     fn test_environment_validator_creation() {
@@ -583,6 +584,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_security_level_validation() {
         let validator = EnvironmentValidator::new();
 
@@ -669,6 +671,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_production_validation() {
         let validator = EnvironmentValidator::new();
 
@@ -697,6 +700,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_encryption_key_validation() {
         let validator = EnvironmentValidator::new();
 

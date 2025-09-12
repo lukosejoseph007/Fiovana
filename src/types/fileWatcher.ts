@@ -2,10 +2,12 @@
 // TypeScript types for file watcher functionality
 
 export interface FileEvent {
-  event_type: 'created' | 'modified' | 'deleted' | 'renamed'
+  type: 'file-created' | 'file-modified' | 'file-deleted' | 'file-renamed' | 'file-moved'
   path: string
-  from?: string // For rename events
-  to?: string // For rename events
+  old_path?: string // For rename/move events
+  timestamp: number
+  size?: number
+  is_directory: boolean
 }
 
 export interface FileWatcherConfig {
@@ -33,7 +35,7 @@ export interface FileSystemEvent {
 
 // Event types that can be emitted to the frontend
 export interface FrontendFileEvent {
-  type: 'file-created' | 'file-modified' | 'file-deleted' | 'file-renamed'
+  type: 'file-created' | 'file-modified' | 'file-deleted' | 'file-renamed' | 'file-moved'
   path: string
   oldPath?: string
   timestamp: number
@@ -76,6 +78,7 @@ export interface FileWatcherStats {
     modified: number
     deleted: number
     renamed: number
+    moved: number
   }
   watchedPaths: number
   isWatching: boolean

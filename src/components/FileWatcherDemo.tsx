@@ -49,15 +49,17 @@ const FileWatcherDemo: React.FC = () => {
   }
 
   const formatEvent = (event: FileEvent) => {
-    switch (event.event_type) {
-      case 'created':
-        return `📄 Created: ${event.path}`
-      case 'modified':
-        return `✏️ Modified: ${event.path}`
-      case 'deleted':
-        return `🗑️ Deleted: ${event.path}`
-      case 'renamed':
-        return `🔄 Renamed: ${event.from} → ${event.to}`
+    switch (event.type) {
+      case 'file-created':
+        return `📄 Created: ${event.path}${event.is_directory ? ' (directory)' : ''}`
+      case 'file-modified':
+        return `✏️ Modified: ${event.path}${event.size ? ` (${event.size} bytes)` : ''}`
+      case 'file-deleted':
+        return `🗑️ Deleted: ${event.path}${event.is_directory ? ' (directory)' : ''}`
+      case 'file-renamed':
+        return `🔄 Renamed: ${event.old_path} → ${event.path}`
+      case 'file-moved':
+        return `🚚 Moved: ${event.old_path} → ${event.path}`
       default:
         return `Unknown event: ${JSON.stringify(event)}`
     }

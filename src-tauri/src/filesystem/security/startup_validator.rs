@@ -280,8 +280,10 @@ impl Default for StartupValidator {
 mod tests {
     use super::*;
     use std::env;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn test_startup_validator_creation() {
         let validator = StartupValidator::new();
         // Basic smoke test - ensure validator can be created
@@ -292,6 +294,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_development_mode_startup() {
         // Set up clean test environment - clear ALL environment variables that could affect detection
         let env_vars_to_clear = [
@@ -346,6 +349,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_critical_security_check() {
         // Clear ALL environment variables that could interfere with security level detection
         let env_vars_to_clear = [
@@ -408,6 +412,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_safe_startup_check() {
         // Set up a minimal valid configuration
         env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
