@@ -1,0 +1,12 @@
+# Rustfmt configuration for Proxemic
+# Controls code formatting to ensure CI consistency
+
+# Formatting style (stable features only)
+hard_tabs = false
+tab_spaces = 4
+max_width = 100
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+# Disable import reordering to prevent CI failures
+# Import ordering features are only available in nightly Rust

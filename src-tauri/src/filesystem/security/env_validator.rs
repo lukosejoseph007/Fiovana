@@ -574,8 +574,8 @@ impl Default for EnvironmentValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use serial_test::serial;
+    use std::env;
 
     #[test]
     fn test_environment_validator_creation() {

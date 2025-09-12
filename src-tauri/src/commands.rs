@@ -653,8 +653,8 @@ pub async fn emit_file_event(event: FileEvent) -> Result<(), CommandError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use serial_test::serial;
+    use tempfile::tempdir;
 
     #[tokio::test]
     #[serial]
@@ -678,7 +678,9 @@ mod tests {
         let paths = paths.unwrap();
         let canonical_test_path = std::fs::canonicalize(test_path).unwrap();
         assert!(
-            paths.iter().any(|p| PathBuf::from(p) == canonical_test_path),
+            paths
+                .iter()
+                .any(|p| PathBuf::from(p) == canonical_test_path),
             "Test path not in watched paths. Watched: {:?}, Expected: {:?}",
             paths,
             canonical_test_path
