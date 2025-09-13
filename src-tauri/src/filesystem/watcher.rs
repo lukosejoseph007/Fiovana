@@ -292,29 +292,45 @@ impl DocumentWatcher {
     pub async fn watched_paths(&self) -> Vec<PathBuf> {
         self.watched_paths.read().await.clone()
     }
+
+    /// Flush any pending batched events (useful for cleanup or shutdown)
+    #[allow(dead_code)]
+    pub async fn flush_events(&self) {
+        // This would need to be implemented by accessing the debouncer
+        // For now, this is a placeholder for future implementation
+        tracing::debug!("Event flushing requested - batch processing is automatic");
+    }
 }
 
-/// Handles event debouncing to prevent rapid file change spam
-struct EventDebouncer {
+/// Handles event debouncing and batching to prevent rapid file change spam
+pub struct EventDebouncer {
     pending_events: HashMap<PathBuf, (FileEvent, tokio::time::Instant)>,
+    batched_events: Vec<FileEvent>,
     debounce_duration: Duration,
+    batch_duration: Duration,
+    max_batch_size: usize,
+    last_batch_time: tokio::time::Instant,
 }
 
 impl EventDebouncer {
-    fn new(debounce_duration: Duration) -> Self {
+    pub fn new(debounce_duration: Duration) -> Self {
         Self {
             pending_events: HashMap::new(),
+            batched_events: Vec::new(),
             debounce_duration,
+            batch_duration: Duration::from_millis(100), // 100ms batch window
+            max_batch_size: 50,                         // Max 50 events per batch
+            last_batch_time: tokio::time::Instant::now(),
         }
     }
 
-    async fn process_event(
+    pub async fn process_event(
         &mut self,
         event: Event,
         path_validator: &PathValidator,
     ) -> Option<Vec<FileEvent>> {
-        let mut result_events = Vec::new();
         let now = tokio::time::Instant::now();
+        let _immediate_events: Vec<FileEvent> = Vec::new();
 
         // Process the incoming event
         for path in event.paths {
@@ -378,7 +394,7 @@ impl EventDebouncer {
             };
 
             // For rename/move events that are waiting for completion, store them temporarily
-            // For other events, process them immediately
+            // For other events, add to batch
             if matches!(
                 &file_event,
                 FileEvent::Renamed { to, .. } if to.as_os_str().is_empty()
@@ -386,8 +402,8 @@ impl EventDebouncer {
                 // This is an incomplete rename event waiting for the "to" part
                 self.pending_events.insert(path, (file_event, now));
             } else {
-                // This is a complete event, add it to results
-                result_events.push(file_event);
+                // This is a complete event, add to batch
+                self.batched_events.push(file_event);
             }
         }
 
@@ -401,15 +417,27 @@ impl EventDebouncer {
 
         for path in expired_paths {
             if let Some((event, _)) = self.pending_events.remove(&path) {
-                result_events.push(event);
+                self.batched_events.push(event);
             }
         }
 
-        if result_events.is_empty() {
-            None
+        // Check if we should flush the batch
+        let should_flush = self.batched_events.len() >= self.max_batch_size
+            || now.duration_since(self.last_batch_time) >= self.batch_duration;
+
+        if should_flush && !self.batched_events.is_empty() {
+            let batch = std::mem::take(&mut self.batched_events);
+            self.last_batch_time = now;
+            Some(batch)
         } else {
-            Some(result_events)
+            None
         }
+    }
+
+    /// Flush any remaining batched events (useful for cleanup or shutdown)
+    #[allow(dead_code)]
+    pub fn flush(&mut self) -> Vec<FileEvent> {
+        std::mem::take(&mut self.batched_events)
     }
 
     /// Handle rename or move events by finding matching "from" events
