@@ -23,7 +23,6 @@ build/
 
 # Rust
 src-tauri/target/
-Cargo.lock
 
 # IDE directories and files
 .vscode/*
