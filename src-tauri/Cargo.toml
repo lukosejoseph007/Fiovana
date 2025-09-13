@@ -69,8 +69,6 @@ winapi = { version = "0.3", features = ["psapi", "processthreadsapi"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3.8"
 serial_test = "3.2"
-cargo-audit = "0.21"
-cargo-deny = "0.18"
 tauri = { version = "2.8", features = ["test"] }
 
 # Production release optimization

@@ -64,7 +64,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
           workspaces: src-tauri
 
-      # Debug step to verify dependencies
       - name: Debug Cargo dependencies
         run: |
           pwd
@@ -73,11 +72,6 @@ jobs:
           head -20 Cargo.toml
           echo "--- Cargo.lock exists? ---"
           ls -la Cargo.lock || echo "Cargo.lock not found"
-          echo "--- Cargo check ---"
-          cargo check --verbose
-
-      - name: Update dependencies
-        run: cargo update
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -154,20 +148,24 @@ jobs:
       - name: Install Rust 1.89.0
         uses: dtolnay/rust-toolchain@1.89.0
 
-      # Install cargo-audit using pre-built binary
       - name: Install cargo-audit
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-audit
 
-      # Install cargo-deny using pre-built binary
       - name: Install cargo-deny
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-deny
 
+      - name: Run cargo audit
+        run: cargo audit
+
       - name: Run cargo deny advisories check
         run: cargo deny check advisories
+
+      - name: Run cargo deny license check
+        run: cargo deny check licenses
 
   build-tauri:
     name: Build Tauri App
