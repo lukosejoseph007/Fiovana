@@ -259,3 +259,283 @@ mod batch_tests {
         assert!(event_types.contains(&"deleted"));
     }
 }
+
+// Tests for conflict detection functionality
+#[cfg(test)]
+mod conflict_tests {
+    use chrono::Utc;
+    use proxemic::filesystem::watcher::{
+        ConflictDetector, ConflictResult, ConflictType, FileSnapshot,
+    };
+    use std::fs::{self, File};
+    use std::io::Write;
+    use std::path::PathBuf;
+    use std::time::Duration;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_file_snapshot_creation() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        // Create snapshot
+        let snapshot = FileSnapshot::create(&file_path)?;
+
+        assert_eq!(snapshot.path, file_path);
+        assert_eq!(snapshot.size, 13);
+        assert!(!snapshot.hash.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_file_snapshot_hash_consistency() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file with specific content
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        // Create two snapshots - should have same hash
+        let snapshot1 = FileSnapshot::create(&file_path)?;
+        let snapshot2 = FileSnapshot::create(&file_path)?;
+
+        assert_eq!(snapshot1.hash, snapshot2.hash);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_file_snapshot_hash_different_content() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path1 = temp_dir.path().join("test1.txt");
+        let file_path2 = temp_dir.path().join("test2.txt");
+
+        // Create two files with different content
+        let mut file1 = File::create(&file_path1)?;
+        file1.write_all(b"Hello, world!")?;
+
+        let mut file2 = File::create(&file_path2)?;
+        file2.write_all(b"Hello, universe!")?;
+
+        // Create snapshots
+        let snapshot1 = FileSnapshot::create(&file_path1)?;
+        let snapshot2 = FileSnapshot::create(&file_path2)?;
+
+        assert_ne!(snapshot1.hash, snapshot2.hash);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_snapshot_comparison_no_conflict() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        // Create two identical snapshots
+        let snapshot1 = FileSnapshot::create(&file_path)?;
+        let snapshot2 = FileSnapshot::create(&file_path)?;
+
+        // Should not detect conflict
+        let conflict = snapshot1.compare(&snapshot2);
+        assert!(conflict.is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_snapshot_comparison_content_conflict() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create first version
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+        let snapshot1 = FileSnapshot::create(&file_path)?;
+
+        // Modify file content
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, universe!")?;
+        let snapshot2 = FileSnapshot::create(&file_path)?;
+
+        // Should detect content conflict
+        let conflict = snapshot1.compare(&snapshot2).unwrap();
+
+        assert_eq!(conflict.conflict_type, ConflictType::ContentConflict);
+        assert_eq!(conflict.file_path, file_path);
+        assert_eq!(conflict.severity, "high");
+        assert!(conflict.resolution_required);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_snapshot() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        let mut detector = ConflictDetector::new(Duration::from_secs(60));
+        let watched_paths = vec![file_path.clone()];
+
+        // Take snapshot
+        let results = detector.take_snapshot(&watched_paths).await;
+        assert_eq!(results.len(), 1);
+        assert!(results[0].is_ok());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_check_no_conflicts() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        let mut detector = ConflictDetector::new(Duration::from_secs(60));
+        let watched_paths = vec![file_path.clone()];
+
+        // Take snapshot
+        detector.take_snapshot(&watched_paths).await;
+
+        // Check for conflicts - should find none
+        let conflicts = detector.check_conflicts(&watched_paths).await;
+        assert!(conflicts.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_external_modification() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create initial version
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        let mut detector = ConflictDetector::new(Duration::from_secs(60));
+        let watched_paths = vec![file_path.clone()];
+
+        // Take snapshot
+        detector.take_snapshot(&watched_paths).await;
+
+        // Modify file externally (simulate external change)
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, universe!")?;
+
+        // Check for conflicts - should detect external modification
+        let conflicts = detector.check_conflicts(&watched_paths).await;
+        assert_eq!(conflicts.len(), 1);
+
+        let conflict = &conflicts[0];
+        assert_eq!(conflict.conflict_type, ConflictType::ContentConflict);
+        assert_eq!(conflict.file_path, file_path);
+        assert_eq!(conflict.severity, "high");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_external_deletion() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create initial file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        let mut detector = ConflictDetector::new(Duration::from_secs(60));
+        let watched_paths = vec![file_path.clone()];
+
+        // Take snapshot
+        detector.take_snapshot(&watched_paths).await;
+
+        // Delete file externally
+        fs::remove_file(&file_path)?;
+
+        // Check for conflicts - should detect external deletion
+        let conflicts = detector.check_conflicts(&watched_paths).await;
+        assert_eq!(conflicts.len(), 1);
+
+        let conflict = &conflicts[0];
+        assert_eq!(conflict.conflict_type, ConflictType::ExternalDeletion);
+        assert_eq!(conflict.file_path, file_path);
+        assert_eq!(conflict.severity, "high");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_should_check() {
+        let detector = ConflictDetector::new(Duration::from_secs(1));
+
+        // Should not check immediately after creation
+        assert!(!detector.should_check());
+
+        // Wait a bit and check again
+        tokio::time::sleep(Duration::from_millis(1100)).await;
+        assert!(detector.should_check());
+    }
+
+    #[tokio::test]
+    async fn test_conflict_detector_clear_snapshot() -> std::io::Result<()> {
+        let temp_dir = tempdir()?;
+        let file_path = temp_dir.path().join("test.txt");
+
+        // Create test file
+        let mut file = File::create(&file_path)?;
+        file.write_all(b"Hello, world!")?;
+
+        let mut detector = ConflictDetector::new(Duration::from_secs(60));
+        let watched_paths = vec![file_path.clone()];
+
+        // Take snapshot
+        detector.take_snapshot(&watched_paths).await;
+
+        // Clear snapshot
+        detector.clear_snapshot(&file_path);
+
+        // Check for conflicts - should find none since snapshot was cleared
+        let conflicts = detector.check_conflicts(&watched_paths).await;
+        assert!(conflicts.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_conflict_type_serialization() {
+        use serde_json;
+
+        let conflict_result = ConflictResult {
+            conflict_type: ConflictType::ContentConflict,
+            file_path: PathBuf::from("/test/file.txt"),
+            external_timestamp: Some(Utc::now()),
+            application_timestamp: Some(Utc::now()),
+            external_hash: Some("abc123".to_string()),
+            application_hash: Some("def456".to_string()),
+            severity: "high".to_string(),
+            resolution_required: true,
+        };
+
+        let serialized = serde_json::to_string(&conflict_result).unwrap();
+        assert!(serialized.contains("ContentConflict"));
+        assert!(serialized.contains("high"));
+        assert!(serialized.contains("resolution_required"));
+    }
+}

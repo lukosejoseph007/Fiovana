@@ -4,10 +4,14 @@
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
+use chrono::{DateTime, Utc};
 use notify::event::{ModifyKind, RenameMode};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -489,5 +493,308 @@ impl EventDebouncer {
             || path_str.ends_with(".ds_store")
             || path_str.ends_with("thumbs.db")
             || path_str.ends_with("desktop.ini")
+    }
+}
+
+/// Conflict detection types for simultaneous external changes
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ConflictType {
+    /// File modified externally while application was running
+    ExternalModification,
+    /// File deleted externally while application was running
+    ExternalDeletion,
+    /// File created externally with same name as modified file
+    ExternalCreationConflict,
+    /// File content conflict between application and external changes
+    ContentConflict,
+    /// Timestamp conflict (external modification has newer timestamp)
+    TimestampConflict,
+}
+
+/// Conflict detection result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConflictResult {
+    pub conflict_type: ConflictType,
+    pub file_path: PathBuf,
+    pub external_timestamp: Option<DateTime<Utc>>,
+    pub application_timestamp: Option<DateTime<Utc>>,
+    pub external_hash: Option<String>,
+    pub application_hash: Option<String>,
+    pub severity: String, // "low", "medium", "high", "critical"
+    pub resolution_required: bool,
+}
+
+/// File metadata snapshot for conflict detection
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub struct FileSnapshot {
+    pub path: PathBuf,
+    pub size: u64,
+    pub modified_time: DateTime<Utc>,
+    pub hash: String,
+    pub created_time: DateTime<Utc>,
+}
+
+impl FileSnapshot {
+    /// Create a snapshot of a file's current state
+    #[allow(dead_code)]
+    pub fn create(path: &Path) -> io::Result<Self> {
+        let metadata = std::fs::metadata(path)?;
+
+        let modified_time: DateTime<Utc> = metadata.modified()?.into();
+        let created_time: DateTime<Utc> = metadata.created()?.into();
+
+        let hash = Self::calculate_file_hash(path)?;
+
+        Ok(Self {
+            path: path.to_path_buf(),
+            size: metadata.len(),
+            modified_time,
+            hash,
+            created_time,
+        })
+    }
+
+    /// Calculate SHA-256 hash of file content
+    #[allow(dead_code)]
+    fn calculate_file_hash(path: &Path) -> io::Result<String> {
+        let mut file = File::open(path)?;
+        let mut hasher = Sha256::new();
+        let mut buffer = [0; 8192];
+
+        loop {
+            let bytes_read = file.read(&mut buffer)?;
+            if bytes_read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..bytes_read]);
+        }
+
+        Ok(format!("{:x}", hasher.finalize()))
+    }
+
+    /// Compare two snapshots to detect conflicts
+    #[allow(dead_code)]
+    pub fn compare(&self, other: &Self) -> Option<ConflictResult> {
+        if self.path != other.path {
+            return None;
+        }
+
+        // Check for external modification
+        if self.modified_time != other.modified_time {
+            let conflict_type = if self.hash != other.hash {
+                ConflictType::ContentConflict
+            } else {
+                ConflictType::TimestampConflict
+            };
+
+            let severity = if conflict_type == ConflictType::ContentConflict {
+                "high"
+            } else {
+                "medium"
+            };
+
+            return Some(ConflictResult {
+                conflict_type,
+                file_path: self.path.clone(),
+                external_timestamp: Some(other.modified_time),
+                application_timestamp: Some(self.modified_time),
+                external_hash: Some(other.hash.clone()),
+                application_hash: Some(self.hash.clone()),
+                severity: severity.to_string(),
+                resolution_required: true,
+            });
+        }
+
+        None
+    }
+}
+
+/// Conflict detector for simultaneous external changes
+#[derive(Clone)]
+#[allow(dead_code)]
+pub struct ConflictDetector {
+    pub file_snapshots: HashMap<PathBuf, FileSnapshot>,
+    last_check_time: DateTime<Utc>,
+    check_interval: Duration,
+}
+
+impl ConflictDetector {
+    #[allow(dead_code)]
+    pub fn new(check_interval: Duration) -> Self {
+        Self {
+            file_snapshots: HashMap::new(),
+            last_check_time: Utc::now(),
+            check_interval,
+        }
+    }
+
+    /// Take a snapshot of watched files for conflict detection
+    #[allow(dead_code)]
+    pub async fn take_snapshot(
+        &mut self,
+        watched_paths: &[PathBuf],
+    ) -> Vec<io::Result<FileSnapshot>> {
+        let mut results = Vec::new();
+
+        for path in watched_paths {
+            // Only snapshot files, not directories
+            if path.is_file() {
+                match FileSnapshot::create(path) {
+                    Ok(snapshot) => {
+                        self.file_snapshots.insert(path.clone(), snapshot.clone());
+                        results.push(Ok(snapshot));
+                    }
+                    Err(e) => {
+                        if e.kind() == io::ErrorKind::NotFound {
+                            // File doesn't exist (may have been deleted)
+                            results.push(Err(e));
+                        } else {
+                            // Other error
+                            results.push(Err(e));
+                        }
+                    }
+                }
+            }
+        }
+
+        self.last_check_time = Utc::now();
+        results
+    }
+
+    /// Check for conflicts between current state and stored snapshots
+    #[allow(dead_code)]
+    pub async fn check_conflicts(&self, watched_paths: &[PathBuf]) -> Vec<ConflictResult> {
+        let mut conflicts = Vec::new();
+
+        for path in watched_paths {
+            // Check if we have a snapshot for this path (indicating it was previously a file)
+            if let Some(stored_snapshot) = self.file_snapshots.get(path) {
+                // Try to create a current snapshot - this will fail if the file was deleted
+                match FileSnapshot::create(path) {
+                    Ok(current_snapshot) => {
+                        // File still exists, check for content/timestamp conflicts
+                        if let Some(conflict) = stored_snapshot.compare(&current_snapshot) {
+                            conflicts.push(conflict);
+                        }
+                    }
+                    Err(e) => {
+                        if e.kind() == io::ErrorKind::NotFound {
+                            // File was deleted externally
+                            conflicts.push(ConflictResult {
+                                conflict_type: ConflictType::ExternalDeletion,
+                                file_path: path.clone(),
+                                external_timestamp: Some(Utc::now()),
+                                application_timestamp: Some(stored_snapshot.modified_time),
+                                external_hash: None,
+                                application_hash: Some(stored_snapshot.hash.clone()),
+                                severity: "high".to_string(),
+                                resolution_required: true,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        conflicts
+    }
+
+    /// Check if it's time for the next conflict detection scan
+    #[allow(dead_code)]
+    pub fn should_check(&self) -> bool {
+        Utc::now().signed_duration_since(self.last_check_time)
+            >= chrono::Duration::from_std(self.check_interval).unwrap()
+    }
+
+    /// Clear snapshots for a specific path
+    #[allow(dead_code)]
+    pub fn clear_snapshot(&mut self, path: &Path) {
+        self.file_snapshots.remove(path);
+    }
+
+    /// Clear all snapshots
+    #[allow(dead_code)]
+    pub fn clear_all_snapshots(&mut self) {
+        self.file_snapshots.clear();
+    }
+}
+
+/// Integrate conflict detection with the file watcher
+#[allow(dead_code)]
+pub struct WatcherWithConflictDetection {
+    watcher: Arc<RwLock<DocumentWatcher>>,
+    conflict_detector: ConflictDetector,
+    pub conflict_sender: Option<mpsc::UnboundedSender<Vec<ConflictResult>>>,
+}
+
+impl WatcherWithConflictDetection {
+    /// Create a new watcher with conflict detection
+    #[allow(dead_code)]
+    pub fn new(
+        config: WatcherConfig,
+        check_interval: Duration,
+    ) -> (Self, mpsc::UnboundedReceiver<FileEvent>) {
+        let (watcher, event_receiver) = DocumentWatcher::new(config);
+        let conflict_detector = ConflictDetector::new(check_interval);
+
+        (
+            Self {
+                watcher: Arc::new(RwLock::new(watcher)),
+                conflict_detector,
+                conflict_sender: None,
+            },
+            event_receiver,
+        )
+    }
+
+    /// Set up conflict notification channel
+    #[allow(dead_code)]
+    pub fn set_conflict_channel(&mut self, sender: mpsc::UnboundedSender<Vec<ConflictResult>>) {
+        self.conflict_sender = Some(sender);
+    }
+
+    /// Start the watcher with periodic conflict detection
+    #[allow(dead_code)]
+    pub async fn start_with_conflict_detection(&mut self) -> Result<()> {
+        self.watcher.write().await.start().await?;
+
+        // Start conflict detection background task
+        let conflict_detector = self.conflict_detector.clone();
+        let watcher = self.watcher.clone();
+        let conflict_sender = self.conflict_sender.clone();
+
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(30)).await; // Check every 30 seconds
+
+                if conflict_detector.should_check() {
+                    let watched_paths = watcher.read().await.watched_paths().await;
+                    let conflicts = conflict_detector.check_conflicts(&watched_paths).await;
+
+                    if !conflicts.is_empty() {
+                        if let Some(sender) = &conflict_sender {
+                            let _ = sender.send(conflicts);
+                        }
+                    }
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Take a manual snapshot of watched files
+    #[allow(dead_code)]
+    pub async fn take_snapshot(&mut self) -> Vec<io::Result<FileSnapshot>> {
+        let watched_paths = self.watcher.read().await.watched_paths().await;
+        self.conflict_detector.take_snapshot(&watched_paths).await
+    }
+
+    /// Check for conflicts manually
+    #[allow(dead_code)]
+    pub async fn check_conflicts_manual(&self) -> Vec<ConflictResult> {
+        let watched_paths = self.watcher.read().await.watched_paths().await;
+        self.conflict_detector.check_conflicts(&watched_paths).await
     }
 }
