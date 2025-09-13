@@ -25,7 +25,7 @@ jobs:
         run: cargo install cargo-audit cargo-deny
 
       - name: Security audit
-        run: cargo audit --deny warnings
+        run: cargo deny check advisories
 
       - name: License and dependency check
         run: cargo deny check
