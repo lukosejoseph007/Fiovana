@@ -1,0 +1,22 @@
+[advisories]
+ignore = [
+    # fxhash is unmaintained, but not a critical vulnerability
+    "RUSTSEC-2025-0057",
+    # paste is unmaintained
+    "RUSTSEC-2024-0436",
+    # proc-macro-error is unmaintained
+    "RUSTSEC-2024-0370",
+    # GTK3 bindings - all are unmaintained but required by wry 0.53.3
+    "RUSTSEC-2024-0413",  # atk
+    "RUSTSEC-2024-0416",  # atk-sys
+    "RUSTSEC-2024-0412",  # gdk
+    "RUSTSEC-2024-0418",  # gdk-sys
+    "RUSTSEC-2024-0411",  # gdkwayland-sys
+    "RUSTSEC-2024-0417",  # gdkx11
+    "RUSTSEC-2024-0414",  # gdkx11-sys
+    "RUSTSEC-2024-0415",  # gtk
+    "RUSTSEC-2024-0420",  # gtk-sys
+    "RUSTSEC-2024-0419",  # gtk3-macros
+    # glib unsoundness advisory
+    "RUSTSEC-2024-0429",
+]

@@ -2,13 +2,13 @@
 // JSON Schema validation for security configuration using jsonschema crate
 
 use crate::filesystem::security::config_validator::ValidationError;
-use jsonschema::JSONSchema;
+use jsonschema::Validator;
 use serde_json::Value;
 
 /// JSON Schema validator for security configuration
 #[allow(dead_code)]
 pub struct JsonSchemaValidator {
-    schema: JSONSchema,
+    schema: Validator,
 }
 
 impl JsonSchemaValidator {
@@ -16,10 +16,11 @@ impl JsonSchemaValidator {
     #[allow(dead_code)]
     pub fn new() -> Result<Self, ValidationError> {
         let schema_value = Self::create_schema_value();
-        let schema =
-            JSONSchema::compile(&schema_value).map_err(|e| ValidationError::SchemaValidation {
+        let schema = jsonschema::validator_for(&schema_value).map_err(|e| {
+            ValidationError::SchemaValidation {
                 errors: vec![format!("Failed to compile JSON Schema: {}", e)],
-            })?;
+            }
+        })?;
 
         Ok(Self { schema })
     }
@@ -27,22 +28,16 @@ impl JsonSchemaValidator {
     /// Validate a configuration against the JSON Schema
     #[allow(dead_code)]
     pub fn validate(&self, config: &Value) -> Result<(), ValidationError> {
-        let result = self.schema.validate(config);
-
-        if let Err(errors) = result {
-            let error_messages: Vec<String> = errors
-                .map(|error| {
-                    let instance_path = error.instance_path.to_string();
-                    let schema_path = error.schema_path.to_string();
-                    format!(
-                        "{}: {} (schema path: {})",
-                        instance_path, error, schema_path
-                    )
-                })
-                .collect();
+        if let Err(error) = self.schema.validate(config) {
+            let instance_path = error.instance_path.to_string();
+            let schema_path = error.schema_path.to_string();
+            let error_message = format!(
+                "{}: {} (schema path: {})",
+                instance_path, error, schema_path
+            );
 
             return Err(ValidationError::SchemaValidation {
-                errors: error_messages,
+                errors: vec![error_message],
             });
         }
 

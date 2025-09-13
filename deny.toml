@@ -22,11 +22,10 @@ ignore = [
 
     # Unmaintained crates (pulled in by tauri/gtk)
     "RUSTSEC-2025-0056", # adler
-    "RUSTSEC-2025-0057", # fxhash
     "RUSTSEC-2021-0145", # atty
     "RUSTSEC-2025-0055", # atk
     "RUSTSEC-2025-0054", # gdk
 ]
 
 # Optional: control freshness of advisory DB
-maximum-db-staleness = "7d"
+maximum-db-staleness = "P7d"
