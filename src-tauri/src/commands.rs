@@ -108,9 +108,18 @@ pub fn get_validation_metrics() -> &'static ValidationMetrics {
 use crate::filesystem::watcher::{DocumentWatcher, FileEvent, WatcherConfig};
 use tokio::sync::{mpsc, Mutex};
 
-// Global file watcher instance
-static FILE_WATCHER: Lazy<Mutex<Option<DocumentWatcher>>> = Lazy::new(|| Mutex::new(None));
+// Global file watcher instance (production use with Wry runtime)
+static FILE_WATCHER: Lazy<Mutex<Option<DocumentWatcher<tauri::Wry>>>> =
+    Lazy::new(|| Mutex::new(None));
 static EVENT_RECEIVER: Lazy<Mutex<Option<mpsc::UnboundedReceiver<FileEvent>>>> =
+    Lazy::new(|| Mutex::new(None));
+
+// Test-specific watcher storage (only used in tests)
+#[cfg(test)]
+static TEST_FILE_WATCHER: Lazy<Mutex<Option<Box<dyn std::any::Any + Send + Sync>>>> =
+    Lazy::new(|| Mutex::new(None));
+#[cfg(test)]
+static TEST_EVENT_RECEIVER: Lazy<Mutex<Option<mpsc::UnboundedReceiver<FileEvent>>>> =
     Lazy::new(|| Mutex::new(None));
 
 #[derive(Debug, Serialize, serde::Deserialize)]
@@ -520,7 +529,18 @@ pub async fn import_file_with_validator(
 // ---------------- File Watcher Commands ----------------
 
 #[tauri::command]
-pub async fn start_file_watching(workspace_path: String) -> Result<(), CommandError> {
+pub async fn start_file_watching(
+    workspace_path: String,
+    app_handle: tauri::AppHandle<tauri::Wry>,
+) -> Result<(), CommandError> {
+    start_file_watching_internal(workspace_path, app_handle).await
+}
+
+/// Internal implementation for production use with Wry runtime
+async fn start_file_watching_internal(
+    workspace_path: String,
+    app_handle: tauri::AppHandle<tauri::Wry>,
+) -> Result<(), CommandError> {
     let mut watcher_guard = FILE_WATCHER.lock().await;
     let mut receiver_guard = EVENT_RECEIVER.lock().await;
 
@@ -532,7 +552,7 @@ pub async fn start_file_watching(workspace_path: String) -> Result<(), CommandEr
 
     // Create new watcher with default config
     let config = WatcherConfig::default();
-    let (mut watcher, receiver) = DocumentWatcher::new(config);
+    let (mut watcher, receiver) = DocumentWatcher::new(config, app_handle);
 
     // Start the watcher
     watcher
@@ -554,89 +574,272 @@ pub async fn start_file_watching(workspace_path: String) -> Result<(), CommandEr
     Ok(())
 }
 
+/// Test-specific implementation that can be used with different runtime types
+#[cfg(test)]
+async fn start_file_watching_test_internal<R: tauri::Runtime>(
+    workspace_path: String,
+    app_handle: tauri::AppHandle<R>,
+) -> Result<(), CommandError> {
+    let mut watcher_guard = TEST_FILE_WATCHER.lock().await;
+    let mut receiver_guard = TEST_EVENT_RECEIVER.lock().await;
+
+    // If watcher already exists, stop it first
+    if watcher_guard.is_some() {
+        *watcher_guard = None;
+        *receiver_guard = None;
+    }
+
+    // Create new watcher with default config
+    let config = WatcherConfig::default();
+    let (mut watcher, receiver) = DocumentWatcher::new(config, app_handle);
+
+    // Start the watcher
+    watcher
+        .start()
+        .await
+        .map_err(|e| CommandError::Custom(format!("Failed to start file watcher: {}", e)))?;
+
+    // Add the workspace path with security validation
+    watcher
+        .add_path(&workspace_path)
+        .await
+        .map_err(|e| CommandError::Custom(format!("Failed to add workspace path: {}", e)))?;
+
+    // Store the watcher and receiver
+    *watcher_guard = Some(Box::new(watcher));
+    *receiver_guard = Some(receiver);
+
+    tracing::info!("File watcher started for workspace: {}", workspace_path);
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn pause_file_watching() -> Result<(), CommandError> {
-    let watcher_guard = FILE_WATCHER.lock().await;
+    #[cfg(not(test))]
+    {
+        let watcher_guard = FILE_WATCHER.lock().await;
 
-    if let Some(watcher) = watcher_guard.as_ref() {
-        watcher.pause().await;
-        tracing::info!("File watching paused");
-        Ok(())
-    } else {
-        Err(CommandError::Custom("File watcher not running".to_string()))
+        if let Some(watcher) = watcher_guard.as_ref() {
+            watcher.pause().await;
+            tracing::info!("File watching paused");
+            Ok(())
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
+    }
+
+    #[cfg(test)]
+    {
+        let watcher_guard = TEST_FILE_WATCHER.lock().await;
+
+        if let Some(watcher) = watcher_guard.as_ref() {
+            if let Some(watcher) =
+                watcher.downcast_ref::<DocumentWatcher<tauri::test::MockRuntime>>()
+            {
+                watcher.pause().await;
+                tracing::info!("File watching paused");
+                Ok(())
+            } else {
+                Err(CommandError::Custom(
+                    "File watcher type mismatch".to_string(),
+                ))
+            }
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
     }
 }
 
 #[tauri::command]
 pub async fn resume_file_watching() -> Result<(), CommandError> {
-    let watcher_guard = FILE_WATCHER.lock().await;
+    #[cfg(not(test))]
+    {
+        let watcher_guard = FILE_WATCHER.lock().await;
 
-    if let Some(watcher) = watcher_guard.as_ref() {
-        watcher.resume().await;
-        tracing::info!("File watching resumed");
-        Ok(())
-    } else {
-        Err(CommandError::Custom("File watcher not running".to_string()))
+        if let Some(watcher) = watcher_guard.as_ref() {
+            watcher.resume().await;
+            tracing::info!("File watching resumed");
+            Ok(())
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
+    }
+
+    #[cfg(test)]
+    {
+        let watcher_guard = TEST_FILE_WATCHER.lock().await;
+
+        if let Some(watcher) = watcher_guard.as_ref() {
+            if let Some(watcher) =
+                watcher.downcast_ref::<DocumentWatcher<tauri::test::MockRuntime>>()
+            {
+                watcher.resume().await;
+                tracing::info!("File watching resumed");
+                Ok(())
+            } else {
+                Err(CommandError::Custom(
+                    "File watcher type mismatch".to_string(),
+                ))
+            }
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
     }
 }
 
 #[tauri::command]
 pub async fn stop_file_watching() -> Result<(), CommandError> {
-    let mut watcher_guard = FILE_WATCHER.lock().await;
-    let mut receiver_guard = EVENT_RECEIVER.lock().await;
+    #[cfg(not(test))]
+    {
+        let mut watcher_guard = FILE_WATCHER.lock().await;
+        let mut receiver_guard = EVENT_RECEIVER.lock().await;
 
-    *watcher_guard = None;
-    *receiver_guard = None;
+        *watcher_guard = None;
+        *receiver_guard = None;
 
-    tracing::info!("File watching stopped");
-    Ok(())
+        tracing::info!("File watching stopped");
+        Ok(())
+    }
+
+    #[cfg(test)]
+    {
+        let mut watcher_guard = TEST_FILE_WATCHER.lock().await;
+        let mut receiver_guard = TEST_EVENT_RECEIVER.lock().await;
+
+        *watcher_guard = None;
+        *receiver_guard = None;
+
+        tracing::info!("File watching stopped");
+        Ok(())
+    }
 }
 
 #[tauri::command]
 pub async fn get_watched_paths() -> Result<Vec<String>, CommandError> {
-    let watcher_guard = FILE_WATCHER.lock().await;
+    #[cfg(not(test))]
+    {
+        let watcher_guard = FILE_WATCHER.lock().await;
 
-    if let Some(watcher) = watcher_guard.as_ref() {
-        let paths = watcher.watched_paths().await;
-        let path_strings = paths
-            .iter()
-            .map(|p| p.to_string_lossy().to_string())
-            .collect();
-        Ok(path_strings)
-    } else {
-        Err(CommandError::Custom("File watcher not running".to_string()))
+        if let Some(watcher) = watcher_guard.as_ref() {
+            let paths = watcher.watched_paths().await;
+            let path_strings = paths
+                .iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect();
+            Ok(path_strings)
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
+    }
+
+    #[cfg(test)]
+    {
+        let watcher_guard = TEST_FILE_WATCHER.lock().await;
+
+        if let Some(watcher) = watcher_guard.as_ref() {
+            if let Some(watcher) =
+                watcher.downcast_ref::<DocumentWatcher<tauri::test::MockRuntime>>()
+            {
+                let paths = watcher.watched_paths().await;
+                let path_strings = paths
+                    .iter()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect();
+                Ok(path_strings)
+            } else {
+                Err(CommandError::Custom(
+                    "File watcher type mismatch".to_string(),
+                ))
+            }
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
     }
 }
 
 #[tauri::command]
 pub async fn add_watch_path(path: String) -> Result<(), CommandError> {
-    let mut watcher_guard = FILE_WATCHER.lock().await;
+    #[cfg(not(test))]
+    {
+        let mut watcher_guard = FILE_WATCHER.lock().await;
 
-    if let Some(watcher) = watcher_guard.as_mut() {
-        watcher
-            .add_path(&path)
-            .await
-            .map_err(|e| CommandError::Custom(format!("Failed to add path: {}", e)))?;
-        tracing::info!("Added path to watch: {}", path);
-        Ok(())
-    } else {
-        Err(CommandError::Custom("File watcher not running".to_string()))
+        if let Some(watcher) = watcher_guard.as_mut() {
+            watcher
+                .add_path(&path)
+                .await
+                .map_err(|e| CommandError::Custom(format!("Failed to add path: {}", e)))?;
+            tracing::info!("Added path to watch: {}", path);
+            Ok(())
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
+    }
+
+    #[cfg(test)]
+    {
+        let mut watcher_guard = TEST_FILE_WATCHER.lock().await;
+
+        if let Some(watcher) = watcher_guard.as_mut() {
+            if let Some(watcher) =
+                watcher.downcast_mut::<DocumentWatcher<tauri::test::MockRuntime>>()
+            {
+                watcher
+                    .add_path(&path)
+                    .await
+                    .map_err(|e| CommandError::Custom(format!("Failed to add path: {}", e)))?;
+                tracing::info!("Added path to watch: {}", path);
+                Ok(())
+            } else {
+                Err(CommandError::Custom(
+                    "File watcher type mismatch".to_string(),
+                ))
+            }
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
     }
 }
 
 #[tauri::command]
 pub async fn remove_watch_path(path: String) -> Result<(), CommandError> {
-    let mut watcher_guard = FILE_WATCHER.lock().await;
+    #[cfg(not(test))]
+    {
+        let mut watcher_guard = FILE_WATCHER.lock().await;
 
-    if let Some(watcher) = watcher_guard.as_mut() {
-        watcher
-            .remove_path(&path)
-            .await
-            .map_err(|e| CommandError::Custom(format!("Failed to remove path: {}", e)))?;
-        tracing::info!("Removed path from watch: {}", path);
-        Ok(())
-    } else {
-        Err(CommandError::Custom("File watcher not running".to_string()))
+        if let Some(watcher) = watcher_guard.as_mut() {
+            watcher
+                .remove_path(&path)
+                .await
+                .map_err(|e| CommandError::Custom(format!("Failed to remove path: {}", e)))?;
+            tracing::info!("Removed path from watch: {}", path);
+            Ok(())
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
+    }
+
+    #[cfg(test)]
+    {
+        let mut watcher_guard = TEST_FILE_WATCHER.lock().await;
+
+        if let Some(watcher) = watcher_guard.as_mut() {
+            if let Some(watcher) =
+                watcher.downcast_mut::<DocumentWatcher<tauri::test::MockRuntime>>()
+            {
+                watcher
+                    .remove_path(&path)
+                    .await
+                    .map_err(|e| CommandError::Custom(format!("Failed to remove path: {}", e)))?;
+                tracing::info!("Removed path from watch: {}", path);
+                Ok(())
+            } else {
+                Err(CommandError::Custom(
+                    "File watcher type mismatch".to_string(),
+                ))
+            }
+        } else {
+            Err(CommandError::Custom("File watcher not running".to_string()))
+        }
     }
 }
 
@@ -664,8 +867,12 @@ mod tests {
         let test_path = temp_dir.path();
         let test_path_str = test_path.to_string_lossy().to_string();
 
-        // Test starting the watcher
-        let result = start_file_watching(test_path_str.clone()).await;
+        // Create a mock AppHandle for testing
+        let app = tauri::test::mock_app();
+        let app_handle = app.handle().clone();
+
+        // Test starting the watcher using the internal function that handles mock runtime
+        let result = start_file_watching_test_internal(test_path_str.clone(), app_handle).await;
         assert!(
             result.is_ok(),
             "Failed to start file watching: {:?}",
@@ -749,8 +956,14 @@ mod tests {
         let temp_dir = tempdir().expect("Failed to create temp directory");
         let test_path = temp_dir.path().to_string_lossy().to_string();
 
-        // Start the watcher
-        start_file_watching(test_path.clone()).await.unwrap();
+        // Create a mock AppHandle for testing
+        let app = tauri::test::mock_app();
+        let app_handle = app.handle().clone();
+
+        // Start the watcher using the internal function that handles mock runtime
+        start_file_watching_test_internal(test_path.clone(), app_handle)
+            .await
+            .unwrap();
 
         // Pause the watcher
         let pause_result = pause_file_watching().await;

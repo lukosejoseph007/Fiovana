@@ -232,6 +232,9 @@ impl SecurityAuditor {
         let event_json = serde_json::to_string(&event)
             .unwrap_or_else(|_| "Failed to serialize event".to_string());
 
+        // Emit notification for security events
+        Self::emit_security_notification(&event);
+
         // Try to log to file first, fall back to console if file logging fails
         if let Some(manager) = LOG_ROTATION_MANAGER.get() {
             if let Ok(mut manager) = manager.lock() {
@@ -321,6 +324,43 @@ impl SecurityAuditor {
         std::env::var("USER")
             .or_else(|_| std::env::var("USERNAME"))
             .unwrap_or_else(|_| "unknown".to_string())
+    }
+
+    /// Emit security notification using the global notification emitter
+    fn emit_security_notification(event: &SecurityEvent) {
+        // Convert SecurityLevel enum to string
+        let security_level_str = match event.security_level {
+            SecurityLevel::Low => "low",
+            SecurityLevel::Medium => "medium",
+            SecurityLevel::High => "high",
+            SecurityLevel::Critical => "critical",
+        };
+
+        // Get operation description
+        let operation = event.operation.as_deref().unwrap_or("unknown_operation");
+
+        // Get file path if available
+        let path = event.file_path.clone().unwrap_or_default();
+
+        // Get error details or default message
+        let reason = event
+            .error_details
+            .as_deref()
+            .unwrap_or(match event.event_type {
+                SecurityEventType::FileAccessGranted => "File access granted",
+                SecurityEventType::FileAccessDenied => "File access denied",
+                SecurityEventType::SecurityViolation => "Security violation detected",
+                SecurityEventType::ConfigurationChange => "Configuration changed",
+                SecurityEventType::EnvironmentOverride => "Environment variable overridden",
+                SecurityEventType::SchemaValidationFailed => "Schema validation failed",
+                SecurityEventType::PermissionEscalationAttempt => "Permission escalation attempt",
+                SecurityEventType::ResourceExhaustion => "Resource exhaustion detected",
+            });
+
+        // Use global notification emitter if available
+        if let Some(emitter) = crate::notifications::get_global_emitter() {
+            let _ = emitter.emit_security(security_level_str, operation, &path, reason);
+        }
     }
 
     /// Logs permission escalation attempts

@@ -4,6 +4,7 @@
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
+// NotificationEmitter will be created in the event processing task
 use chrono::{DateTime, Utc};
 use notify::event::{ModifyKind, RenameMode};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Result, Watcher};
@@ -16,6 +17,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::AppHandle;
 use tokio::sync::{mpsc, RwLock};
 use tracing;
 
@@ -142,18 +144,22 @@ impl Default for WatcherConfig {
 }
 
 /// Main file watcher that manages watching directories with security integration
-pub struct DocumentWatcher {
+pub struct DocumentWatcher<R: tauri::Runtime> {
     watcher: Option<RecommendedWatcher>,
     event_sender: mpsc::UnboundedSender<FileEvent>,
     watched_paths: Arc<RwLock<Vec<PathBuf>>>,
     config: WatcherConfig,
     is_paused: Arc<RwLock<bool>>,
     path_validator: PathValidator,
+    app_handle: AppHandle<R>,
 }
 
-impl DocumentWatcher {
+impl<R: tauri::Runtime> DocumentWatcher<R> {
     /// Create a new DocumentWatcher with the given configuration
-    pub fn new(config: WatcherConfig) -> (Self, mpsc::UnboundedReceiver<FileEvent>) {
+    pub fn new(
+        config: WatcherConfig,
+        app_handle: AppHandle<R>,
+    ) -> (Self, mpsc::UnboundedReceiver<FileEvent>) {
         let (event_sender, event_receiver) = mpsc::unbounded_channel();
 
         // Create path validator with security config
@@ -175,6 +181,7 @@ impl DocumentWatcher {
                 config,
                 is_paused: Arc::new(RwLock::new(false)),
                 path_validator,
+                app_handle,
             },
             event_receiver,
         )
@@ -189,6 +196,7 @@ impl DocumentWatcher {
         let path_validator = self.path_validator.clone();
 
         // Spawn debounced event processor
+        let _app_handle_clone = self.app_handle.clone();
         tokio::spawn(async move {
             let mut debouncer = EventDebouncer::new(config.debounce_duration);
 
@@ -215,6 +223,7 @@ impl DocumentWatcher {
                             None::<uuid::Uuid>,
                         );
 
+                        // Send file event to channel for UI updates
                         if event_sender.send(file_event).is_err() {
                             // If the receiver is dropped, stop the loop
                             break;
@@ -722,20 +731,21 @@ impl ConflictDetector {
 
 /// Integrate conflict detection with the file watcher
 #[allow(dead_code)]
-pub struct WatcherWithConflictDetection {
-    watcher: Arc<RwLock<DocumentWatcher>>,
+pub struct WatcherWithConflictDetection<R: tauri::Runtime> {
+    watcher: Arc<RwLock<DocumentWatcher<R>>>,
     conflict_detector: ConflictDetector,
     pub conflict_sender: Option<mpsc::UnboundedSender<Vec<ConflictResult>>>,
 }
 
-impl WatcherWithConflictDetection {
+impl<R: tauri::Runtime> WatcherWithConflictDetection<R> {
     /// Create a new watcher with conflict detection
     #[allow(dead_code)]
     pub fn new(
         config: WatcherConfig,
+        app_handle: AppHandle<R>,
         check_interval: Duration,
     ) -> (Self, mpsc::UnboundedReceiver<FileEvent>) {
-        let (watcher, event_receiver) = DocumentWatcher::new(config);
+        let (watcher, event_receiver) = DocumentWatcher::new(config, app_handle);
         let conflict_detector = ConflictDetector::new(check_interval);
 
         (

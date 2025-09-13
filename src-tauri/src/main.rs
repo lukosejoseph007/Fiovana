@@ -13,6 +13,7 @@ mod commands;
 mod db;
 mod document;
 mod filesystem;
+mod notifications;
 mod vector;
 
 use app_config::ConfigManager;
@@ -154,6 +155,11 @@ async fn main() {
             } else {
                 info!("Using default configuration");
             }
+
+            // Initialize notification system
+            let emitter = crate::notifications::NotificationEmitter::new(app.handle().clone());
+            crate::notifications::set_global_emitter(emitter);
+            info!("Notification system initialized");
 
             // Additional security monitoring setup
             setup_security_monitoring(app)?;

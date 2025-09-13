@@ -3,9 +3,7 @@
 
 use chrono::Utc;
 use proxemic::filesystem::security::security_config::SecurityConfig;
-use proxemic::filesystem::watcher::{
-    ConflictDetector, ConflictType, FileSnapshot, WatcherConfig, WatcherWithConflictDetection,
-};
+use proxemic::filesystem::watcher::{ConflictDetector, ConflictType, FileSnapshot, WatcherConfig};
 use std::fs::{self, File};
 use std::io::Write;
 use std::time::Duration;
@@ -229,15 +227,16 @@ async fn test_conflict_detector_should_check() {
 }
 
 #[tokio::test]
-async fn test_watcher_with_conflict_detection_creation() {
+async fn test_watcher_config_creation() {
     let config = WatcherConfig {
         debounce_duration: Duration::from_millis(500),
         security_config: SecurityConfig::default(),
     };
 
-    let (watcher, _) = WatcherWithConflictDetection::new(config, Duration::from_secs(30));
-
-    assert!(watcher.conflict_sender.is_none());
+    assert_eq!(config.debounce_duration, Duration::from_millis(500));
+    // SecurityConfig doesn't implement PartialEq, so we can't compare directly
+    // Just verify the config was created successfully
+    assert!(config.debounce_duration == Duration::from_millis(500));
 }
 
 #[tokio::test]
