@@ -154,17 +154,17 @@ jobs:
       - name: Install Rust 1.89.0
         uses: dtolnay/rust-toolchain@1.89.0
 
-      # Install latest cargo-audit
-      - uses: actions-rs/install@v0.1
+      # Install cargo-audit using pre-built binary
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
         with:
-          crate: cargo-audit
-          version: 0.21.2
+          tool: cargo-audit
 
-      # Install latest cargo-deny
-      - uses: actions-rs/install@v0.1
+      # Install cargo-deny using pre-built binary
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
         with:
-          crate: cargo-deny
-          version: 0.18.4
+          tool: cargo-deny
 
       - name: Run cargo deny advisories check
         run: cargo deny check advisories
