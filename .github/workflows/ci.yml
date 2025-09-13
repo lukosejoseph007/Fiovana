@@ -55,10 +55,15 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Update dependencies (cache busting)
+        working-directory: src-tauri
+        run: cargo update
+
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
 
       - name: Check formatting
         working-directory: src-tauri
@@ -170,6 +175,8 @@ jobs:
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install Node.js
         uses: actions/setup-node@v4
