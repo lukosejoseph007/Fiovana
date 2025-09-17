@@ -215,7 +215,16 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Build Tauri app
+      - name: Reset RUSTFLAGS on macOS
+        if: matrix.platform == 'macos-latest'
+        run: echo "RUSTFLAGS=" >> $GITHUB_ENV
+
+      - name: Build Tauri app (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: npm run tauri build -- --target aarch64-apple-darwin
+
+      - name: Build Tauri app (Linux/Windows)
+        if: matrix.platform != 'macos-latest'
         run: npm run tauri build
 
       - name: Upload build artifacts
@@ -225,3 +234,4 @@ jobs:
           path: |
             src-tauri/target/release/
             src-tauri/target/debug/
+
