@@ -3,3 +3,7 @@ dist
 build
 src-tauri/target
 *.md
+.github/
+src-tauri/
+Cargo.toml
+Cargo.lock
