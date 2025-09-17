@@ -589,28 +589,30 @@ impl FileSnapshot {
             return None;
         }
 
-        // Check for external modification
-        if self.modified_time != other.modified_time {
-            let conflict_type = if self.hash != other.hash {
-                ConflictType::ContentConflict
-            } else {
-                ConflictType::TimestampConflict
-            };
-
-            let severity = if conflict_type == ConflictType::ContentConflict {
-                "high"
-            } else {
-                "medium"
-            };
-
+        // Check for content conflicts (hash mismatch) regardless of timestamp
+        if self.hash != other.hash {
             return Some(ConflictResult {
-                conflict_type,
+                conflict_type: ConflictType::ContentConflict,
                 file_path: self.path.clone(),
                 external_timestamp: Some(other.modified_time),
                 application_timestamp: Some(self.modified_time),
                 external_hash: Some(other.hash.clone()),
                 application_hash: Some(self.hash.clone()),
-                severity: severity.to_string(),
+                severity: "high".to_string(),
+                resolution_required: true,
+            });
+        }
+
+        // Check for timestamp conflicts (timestamp mismatch but same content)
+        if self.modified_time != other.modified_time {
+            return Some(ConflictResult {
+                conflict_type: ConflictType::TimestampConflict,
+                file_path: self.path.clone(),
+                external_timestamp: Some(other.modified_time),
+                application_timestamp: Some(self.modified_time),
+                external_hash: Some(other.hash.clone()),
+                application_hash: Some(self.hash.clone()),
+                severity: "medium".to_string(),
                 resolution_required: true,
             });
         }
