@@ -53,8 +53,11 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install Rust (from rust-toolchain.toml)
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -143,8 +146,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust (from rust-toolchain.toml)
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
 
       - name: Install cargo-audit
         uses: taiki-e/install-action@v2
@@ -177,8 +183,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust (from rust-toolchain.toml)
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
