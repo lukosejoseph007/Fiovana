@@ -1,6 +1,7 @@
 // src-tauri/src/filesystem/mod.rs
 
 pub mod errors;
+pub mod event_persistence;
 pub mod operations;
 pub mod security;
 pub mod watcher;

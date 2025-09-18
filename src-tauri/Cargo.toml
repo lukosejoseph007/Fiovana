@@ -61,6 +61,8 @@ sha2 = "0.10"
 mime_guess = "2.0"
 filetime = "0.2"
 
+# Event persistence - now using file-based storage
+
 # Windows API for memory monitoring
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["psapi", "processthreadsapi"] }
@@ -101,6 +103,10 @@ path = "tests/integration_tests.rs"
 [[test]]
 name = "json_schema_validation"
 path = "tests/json_schema_validation.rs"
+
+[[test]]
+name = "event_persistence_tests"
+path = "tests/event_persistence_tests.rs"
 
 [[bin]]
 name = "proxemic"

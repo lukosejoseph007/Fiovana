@@ -1,6 +1,7 @@
 // src-tauri/src/filesystem/watcher.rs
 // File watcher system with debouncing, filtering, and security integration
 
+use crate::filesystem::event_persistence::{EventPersistence, OfflineReconciliation, PersistenceConfig};
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
@@ -17,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tokio::sync::{mpsc, RwLock};
 use tracing;
 
@@ -132,6 +133,9 @@ pub struct FrontendFileEvent {
 pub struct WatcherConfig {
     pub debounce_duration: Duration,
     pub security_config: SecurityConfig,
+    pub enable_persistence: bool,
+    pub persistence_config: PersistenceConfig,
+    pub workspace_id: Option<String>,
 }
 
 impl Default for WatcherConfig {
@@ -139,6 +143,9 @@ impl Default for WatcherConfig {
         Self {
             debounce_duration: Duration::from_millis(500),
             security_config: SecurityConfig::default(),
+            enable_persistence: false,
+            persistence_config: PersistenceConfig::default(),
+            workspace_id: None,
         }
     }
 }
@@ -152,6 +159,9 @@ pub struct DocumentWatcher<R: tauri::Runtime> {
     is_paused: Arc<RwLock<bool>>,
     path_validator: PathValidator,
     app_handle: AppHandle<R>,
+    persistence: Option<Arc<EventPersistence>>,
+    #[allow(dead_code)] // Used for offline reconciliation when persistence is enabled
+    reconciliation: Option<Arc<OfflineReconciliation>>,
 }
 
 impl<R: tauri::Runtime> DocumentWatcher<R> {
@@ -173,6 +183,33 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             ],
         );
 
+        // Initialize persistence if enabled
+        let (persistence, reconciliation) = if config.enable_persistence {
+            let app_data_dir = app_handle.path().app_data_dir()
+                .unwrap_or_else(|_| std::env::temp_dir().join("proxemic"));
+
+            // Ensure the directory exists
+            if let Err(e) = std::fs::create_dir_all(&app_data_dir) {
+                tracing::error!("Failed to create app data directory: {}", e);
+                (None, None)
+            } else {
+                let events_file = app_data_dir.join("file_events.jsonl");
+                match EventPersistence::new(events_file, config.persistence_config.clone()) {
+                    Ok(persistence) => {
+                        let persistence_arc = Arc::new(persistence);
+                        let reconciliation_arc = Arc::new(OfflineReconciliation::new((*persistence_arc).clone()));
+                        (Some(persistence_arc), Some(reconciliation_arc))
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to initialize event persistence: {}", e);
+                        (None, None)
+                    }
+                }
+            }
+        } else {
+            (None, None)
+        };
+
         (
             Self {
                 watcher: None,
@@ -182,6 +219,8 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                 is_paused: Arc::new(RwLock::new(false)),
                 path_validator,
                 app_handle,
+                persistence,
+                reconciliation,
             },
             event_receiver,
         )
@@ -197,6 +236,8 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
 
         // Spawn debounced event processor
         let _app_handle_clone = self.app_handle.clone();
+        let persistence_clone = self.persistence.clone();
+        let workspace_id = self.config.workspace_id.clone();
         tokio::spawn(async move {
             let mut debouncer = EventDebouncer::new(config.debounce_duration);
 
@@ -222,6 +263,14 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                             "development",
                             None::<uuid::Uuid>,
                         );
+
+                        // Store event in persistence if enabled
+                        if let Some(ref persistence) = persistence_clone {
+                            if let Err(e) = persistence.store_event(file_event.clone(), workspace_id.clone()).await {
+                                tracing::warn!("Failed to persist file event: {}", e);
+                                // Continue processing even if persistence fails
+                            }
+                        }
 
                         // Send file event to channel for UI updates
                         if event_sender.send(file_event).is_err() {
@@ -309,9 +358,63 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
     /// Flush any pending batched events (useful for cleanup or shutdown)
     #[allow(dead_code)]
     pub async fn flush_events(&self) {
-        // This would need to be implemented by accessing the debouncer
-        // For now, this is a placeholder for future implementation
-        tracing::debug!("Event flushing requested - batch processing is automatic");
+        // Flush any pending events in persistence
+        if let Some(ref persistence) = self.persistence {
+            if let Err(e) = persistence.flush_pending_events().await {
+                tracing::error!("Failed to flush pending events to persistence: {}", e);
+            }
+        }
+        tracing::debug!("Event flushing completed");
+    }
+
+    /// Start persistence maintenance tasks
+    #[allow(dead_code)] // Part of the persistence API for maintenance
+    pub async fn start_persistence_maintenance(&self) -> Option<mpsc::UnboundedReceiver<String>> {
+        if let Some(ref persistence) = self.persistence {
+            Some(persistence.start_maintenance_tasks().await)
+        } else {
+            None
+        }
+    }
+
+    /// Reconcile offline events
+    #[allow(dead_code)] // Part of the persistence API for offline reconciliation
+    pub async fn reconcile_offline_events(&self) -> std::result::Result<Vec<crate::filesystem::event_persistence::PersistedFileEvent>, Box<dyn std::error::Error + Send + Sync>> {
+        if let Some(ref reconciliation) = self.reconciliation {
+            reconciliation.reconcile_offline_events(self.config.workspace_id.as_deref()).await
+        } else {
+            Ok(Vec::new())
+        }
+    }
+
+    /// Get persistence statistics
+    #[allow(dead_code)] // Part of the persistence API for monitoring
+    pub async fn get_persistence_statistics(&self) -> Option<crate::filesystem::event_persistence::PersistenceStatistics> {
+        if let Some(ref persistence) = self.persistence {
+            persistence.get_statistics().await.ok()
+        } else {
+            None
+        }
+    }
+
+    /// Get unprocessed events for manual reconciliation
+    #[allow(dead_code)] // Part of the persistence API for manual reconciliation
+    pub async fn get_unprocessed_events(&self, limit: Option<usize>) -> std::result::Result<Vec<crate::filesystem::event_persistence::PersistedFileEvent>, Box<dyn std::error::Error + Send + Sync>> {
+        if let Some(ref persistence) = self.persistence {
+            persistence.get_unprocessed_events(self.config.workspace_id.as_deref(), limit).await
+        } else {
+            Ok(Vec::new())
+        }
+    }
+
+    /// Mark events as processed
+    #[allow(dead_code)] // Part of the persistence API for marking events as processed
+    pub async fn mark_events_processed(&self, event_ids: &[i64]) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if let Some(ref persistence) = self.persistence {
+            persistence.mark_events_processed(event_ids).await
+        } else {
+            Ok(())
+        }
     }
 }
 

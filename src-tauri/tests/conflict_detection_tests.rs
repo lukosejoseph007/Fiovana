@@ -2,6 +2,7 @@
 // Tests for conflict detection functionality
 
 use chrono::Utc;
+use proxemic::filesystem::event_persistence::PersistenceConfig;
 use proxemic::filesystem::security::security_config::SecurityConfig;
 use proxemic::filesystem::watcher::{ConflictDetector, ConflictType, FileSnapshot, WatcherConfig};
 use std::fs::{self, File};
@@ -231,6 +232,9 @@ async fn test_watcher_config_creation() {
     let config = WatcherConfig {
         debounce_duration: Duration::from_millis(500),
         security_config: SecurityConfig::default(),
+        enable_persistence: false,
+        persistence_config: PersistenceConfig::default(),
+        workspace_id: None,
     };
 
     assert_eq!(config.debounce_duration, Duration::from_millis(500));
