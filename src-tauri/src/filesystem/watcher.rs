@@ -7,6 +7,7 @@ use crate::filesystem::event_persistence::{
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
+use crate::resource_monitor::{ResourceMonitor, ResourceMonitorConfig, ResourceSnapshot};
 // NotificationEmitter will be created in the event processing task
 use chrono::{DateTime, Utc};
 use notify::event::{ModifyKind, RenameMode};
@@ -138,6 +139,8 @@ pub struct WatcherConfig {
     pub enable_persistence: bool,
     pub persistence_config: PersistenceConfig,
     pub workspace_id: Option<String>,
+    pub enable_resource_monitoring: bool,
+    pub resource_monitor_config: ResourceMonitorConfig,
 }
 
 impl Default for WatcherConfig {
@@ -148,6 +151,8 @@ impl Default for WatcherConfig {
             enable_persistence: false,
             persistence_config: PersistenceConfig::default(),
             workspace_id: None,
+            enable_resource_monitoring: true,
+            resource_monitor_config: ResourceMonitorConfig::default(),
         }
     }
 }
@@ -164,6 +169,7 @@ pub struct DocumentWatcher<R: tauri::Runtime> {
     persistence: Option<Arc<EventPersistence>>,
     #[allow(dead_code)] // Used for offline reconciliation when persistence is enabled
     reconciliation: Option<Arc<OfflineReconciliation>>,
+    resource_monitor: Option<Arc<ResourceMonitor>>,
 }
 
 impl<R: tauri::Runtime> DocumentWatcher<R> {
@@ -215,6 +221,15 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             (None, None)
         };
 
+        // Initialize resource monitoring if enabled
+        let resource_monitor = if config.enable_resource_monitoring {
+            Some(Arc::new(ResourceMonitor::with_config(
+                config.resource_monitor_config.clone(),
+            )))
+        } else {
+            None
+        };
+
         (
             Self {
                 watcher: None,
@@ -226,6 +241,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                 app_handle,
                 persistence,
                 reconciliation,
+                resource_monitor,
             },
             event_receiver,
         )
@@ -242,6 +258,8 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
         // Spawn debounced event processor
         let _app_handle_clone = self.app_handle.clone();
         let persistence_clone = self.persistence.clone();
+        let resource_monitor_clone = self.resource_monitor.clone();
+        let watched_paths_clone = self.watched_paths.clone();
         let workspace_id = self.config.workspace_id.clone();
         tokio::spawn(async move {
             let mut debouncer = EventDebouncer::new(config.debounce_duration);
@@ -284,6 +302,17 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                         if event_sender.send(file_event).is_err() {
                             // If the receiver is dropped, stop the loop
                             break;
+                        }
+                    }
+
+                    // Sample resource usage after processing events
+                    if let Some(ref monitor) = resource_monitor_clone {
+                        let watched_count = watched_paths_clone.read().await.len();
+                        if let Err(e) = monitor.sample_resources(watched_count).await {
+                            // Log error but continue processing
+                            if !e.contains("Sampling interval not reached") {
+                                tracing::debug!("Resource monitoring sample failed: {}", e);
+                            }
                         }
                     }
                 }
@@ -442,6 +471,47 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             persistence.mark_events_processed(event_ids).await
         } else {
             Ok(())
+        }
+    }
+
+    /// Get current resource usage statistics
+    #[allow(dead_code)]
+    pub async fn get_resource_usage(&self) -> Option<ResourceSnapshot> {
+        if let Some(ref monitor) = self.resource_monitor {
+            monitor.get_latest_snapshot().await
+        } else {
+            None
+        }
+    }
+
+    /// Get resource usage history
+    #[allow(dead_code)]
+    pub async fn get_resource_history(&self) -> Vec<ResourceSnapshot> {
+        if let Some(ref monitor) = self.resource_monitor {
+            monitor.get_resource_history().await
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Check if resource usage is healthy
+    #[allow(dead_code)]
+    pub async fn is_resource_usage_healthy(&self) -> bool {
+        if let Some(ref monitor) = self.resource_monitor {
+            monitor.is_resource_usage_healthy().await
+        } else {
+            true // No monitoring, assume healthy
+        }
+    }
+
+    /// Force a resource monitoring sample
+    #[allow(dead_code)]
+    pub async fn sample_resource_usage_now(&self) -> std::result::Result<(), String> {
+        if let Some(ref monitor) = self.resource_monitor {
+            let watched_count = self.watched_paths.read().await.len();
+            monitor.sample_resources(watched_count).await.map(|_| ())
+        } else {
+            Err("Resource monitoring not enabled".to_string())
         }
     }
 }

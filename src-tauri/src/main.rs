@@ -13,7 +13,9 @@ mod commands;
 mod db;
 mod document;
 mod filesystem;
+mod memory_monitor;
 mod notifications;
+mod resource_monitor;
 mod vector;
 
 use app_config::ConfigManager;

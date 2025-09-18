@@ -34,11 +34,13 @@ impl MemoryStats {
     }
 
     /// Get peak memory usage in KB
+    #[allow(dead_code)]
     pub fn peak_memory_kb(&self) -> u64 {
         self.peak_memory_kb.load(Ordering::Relaxed)
     }
 
     /// Get total number of samples taken
+    #[allow(dead_code)]
     pub fn sample_count(&self) -> u64 {
         self.sample_count.load(Ordering::Relaxed)
     }

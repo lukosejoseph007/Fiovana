@@ -380,6 +380,8 @@ mod integration_tests {
             enable_persistence: false, // Disable persistence for mock app to avoid path issues
             persistence_config: PersistenceConfig::default(),
             workspace_id: Some("integration_test".to_string()),
+            enable_resource_monitoring: false,
+            resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
         };
 
         let (mut watcher, _event_receiver) =

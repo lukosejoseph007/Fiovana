@@ -235,6 +235,8 @@ async fn test_watcher_config_creation() {
         enable_persistence: false,
         persistence_config: PersistenceConfig::default(),
         workspace_id: None,
+        enable_resource_monitoring: false,
+        resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
     };
 
     assert_eq!(config.debounce_duration, Duration::from_millis(500));
