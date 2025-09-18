@@ -512,9 +512,7 @@ impl OptimizedEventProcessor {
         }
 
         // Handle deduplication
-        if self.config.enable_deduplication
-            && self.deduplicate_event(&prioritized_event).await
-        {
+        if self.config.enable_deduplication && self.deduplicate_event(&prioritized_event).await {
             self.metrics.record_deduplication_hit();
             return Ok(());
         }

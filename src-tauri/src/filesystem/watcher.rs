@@ -780,7 +780,9 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
     pub async fn get_health_metrics(
         &self,
     ) -> Option<crate::filesystem::health_monitor::HealthMetrics> {
-        self.health_monitor.as_ref().map(|health_monitor| health_monitor.get_metrics())
+        self.health_monitor
+            .as_ref()
+            .map(|health_monitor| health_monitor.get_metrics())
     }
 
     /// Get health history
