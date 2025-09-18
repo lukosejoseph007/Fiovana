@@ -153,7 +153,8 @@ impl CircuitBreaker {
                 // Check if we should transition to half-open
                 if let Some(last_failure) = *self.last_failure_time.read().await {
                     if last_failure.elapsed() >= self.config.recovery_timeout {
-                        self.state.store(CircuitBreakerState::HalfOpen as u64, Ordering::Relaxed);
+                        self.state
+                            .store(CircuitBreakerState::HalfOpen as u64, Ordering::Relaxed);
                         self.success_count.store(0, Ordering::Relaxed);
                     } else {
                         return Err(CircuitBreakerError::CircuitOpen);
@@ -186,7 +187,8 @@ impl CircuitBreaker {
             CircuitBreakerState::HalfOpen => {
                 let success_count = self.success_count.fetch_add(1, Ordering::Relaxed) + 1;
                 if success_count >= self.config.success_threshold {
-                    self.state.store(CircuitBreakerState::Closed as u64, Ordering::Relaxed);
+                    self.state
+                        .store(CircuitBreakerState::Closed as u64, Ordering::Relaxed);
                     self.failure_count.store(0, Ordering::Relaxed);
                     self.success_count.store(0, Ordering::Relaxed);
                     info!("Circuit breaker closed after successful recovery");
@@ -227,9 +229,13 @@ impl CircuitBreaker {
         // Check if we should open the circuit
         let failure_times = self.failure_times.read().await;
         if failure_times.len() >= self.config.failure_threshold {
-            self.state.store(CircuitBreakerState::Open as u64, Ordering::Relaxed);
-            warn!("Circuit breaker opened due to {} failures in {}s",
-                  failure_times.len(), self.config.failure_window.as_secs());
+            self.state
+                .store(CircuitBreakerState::Open as u64, Ordering::Relaxed);
+            warn!(
+                "Circuit breaker opened due to {} failures in {}s",
+                failure_times.len(),
+                self.config.failure_window.as_secs()
+            );
         }
     }
 
@@ -359,8 +365,12 @@ impl WatcherHealthMonitor {
         let (shutdown_sender, _) = mpsc::unbounded_channel();
 
         Self {
-            watcher_circuit_breaker: Arc::new(CircuitBreaker::new(config.circuit_breaker_config.clone())),
-            processor_circuit_breaker: Arc::new(CircuitBreaker::new(config.circuit_breaker_config.clone())),
+            watcher_circuit_breaker: Arc::new(CircuitBreaker::new(
+                config.circuit_breaker_config.clone(),
+            )),
+            processor_circuit_breaker: Arc::new(CircuitBreaker::new(
+                config.circuit_breaker_config.clone(),
+            )),
             config,
             health_history: Arc::new(RwLock::new(VecDeque::new())),
             total_checks: Arc::new(AtomicU64::new(0)),
@@ -391,16 +401,14 @@ impl WatcherHealthMonitor {
 
                 // Create simple health check results (in a real implementation,
                 // this would use actual callbacks or channels to get health data)
-                let results = vec![
-                    HealthCheckResult {
-                        check_type: HealthCheckType::SystemConnectivity,
-                        status: HealthStatus::Healthy,
-                        message: "System connectivity check passed".to_string(),
-                        timestamp: Utc::now(),
-                        details: serde_json::json!({}),
-                        recovery_actions: vec![],
-                    }
-                ];
+                let results = vec![HealthCheckResult {
+                    check_type: HealthCheckType::SystemConnectivity,
+                    status: HealthStatus::Healthy,
+                    message: "System connectivity check passed".to_string(),
+                    timestamp: Utc::now(),
+                    details: serde_json::json!({}),
+                    recovery_actions: vec![],
+                }];
 
                 total_checks.fetch_add(1, Ordering::Relaxed);
 
@@ -442,7 +450,10 @@ impl WatcherHealthMonitor {
     }
 
     /// Perform immediate health check
-    pub async fn check_health(&self, resource_monitor: Option<&ResourceMonitor>) -> Vec<HealthCheckResult> {
+    pub async fn check_health(
+        &self,
+        resource_monitor: Option<&ResourceMonitor>,
+    ) -> Vec<HealthCheckResult> {
         let mut results = Vec::new();
         let now = Utc::now();
 
@@ -465,13 +476,19 @@ impl WatcherHealthMonitor {
         results
     }
 
-    fn check_resource_health(&self, snapshot: &ResourceSnapshot, timestamp: DateTime<Utc>) -> HealthCheckResult {
+    fn check_resource_health(
+        &self,
+        snapshot: &ResourceSnapshot,
+        timestamp: DateTime<Utc>,
+    ) -> HealthCheckResult {
         let cpu_usage = snapshot.cpu_percent;
         let memory_usage_mb = snapshot.memory_kb as f64 / 1024.0;
         // Assume 8GB system for percentage calculation (this should come from system info in practice)
         let memory_usage = (memory_usage_mb / 8192.0) * 100.0;
 
-        let status = if cpu_usage > self.config.cpu_threshold || memory_usage > self.config.memory_threshold {
+        let status = if cpu_usage > self.config.cpu_threshold
+            || memory_usage > self.config.memory_threshold
+        {
             if cpu_usage > 95.0 || memory_usage > 95.0 {
                 HealthStatus::Critical
             } else if cpu_usage > 90.0 || memory_usage > 90.0 {
@@ -517,8 +534,12 @@ impl WatcherHealthMonitor {
 
         let status = match (watcher_state, processor_state) {
             (CircuitBreakerState::Closed, CircuitBreakerState::Closed) => HealthStatus::Healthy,
-            (CircuitBreakerState::HalfOpen, _) | (_, CircuitBreakerState::HalfOpen) => HealthStatus::Degraded,
-            (CircuitBreakerState::Open, _) | (_, CircuitBreakerState::Open) => HealthStatus::Critical,
+            (CircuitBreakerState::HalfOpen, _) | (_, CircuitBreakerState::HalfOpen) => {
+                HealthStatus::Degraded
+            }
+            (CircuitBreakerState::Open, _) | (_, CircuitBreakerState::Open) => {
+                HealthStatus::Critical
+            }
         };
 
         let recovery_actions = if status.requires_action() {
@@ -534,7 +555,10 @@ impl WatcherHealthMonitor {
         HealthCheckResult {
             check_type: HealthCheckType::WatcherResponsiveness,
             status,
-            message: format!("Watcher: {:?}, Processor: {:?}", watcher_state, processor_state),
+            message: format!(
+                "Watcher: {:?}, Processor: {:?}",
+                watcher_state, processor_state
+            ),
             timestamp,
             details: serde_json::json!({
                 "watcher_circuit_state": watcher_state,
@@ -550,8 +574,12 @@ impl WatcherHealthMonitor {
 
         let status = match (watcher_metrics.state, processor_metrics.state) {
             (CircuitBreakerState::Closed, CircuitBreakerState::Closed) => HealthStatus::Healthy,
-            (CircuitBreakerState::HalfOpen, _) | (_, CircuitBreakerState::HalfOpen) => HealthStatus::Degraded,
-            (CircuitBreakerState::Open, _) | (_, CircuitBreakerState::Open) => HealthStatus::Unhealthy,
+            (CircuitBreakerState::HalfOpen, _) | (_, CircuitBreakerState::HalfOpen) => {
+                HealthStatus::Degraded
+            }
+            (CircuitBreakerState::Open, _) | (_, CircuitBreakerState::Open) => {
+                HealthStatus::Unhealthy
+            }
         };
 
         HealthCheckResult {
@@ -585,7 +613,8 @@ impl WatcherHealthMonitor {
         let error_rate = if recent_checks.is_empty() {
             0.0
         } else {
-            let errors = recent_checks.iter()
+            let errors = recent_checks
+                .iter()
                 .filter(|result| !result.status.is_healthy())
                 .count();
             (errors as f64 / recent_checks.len() as f64) * 100.0
@@ -682,11 +711,7 @@ impl WatcherHealthMonitor {
         let history = self.health_history.read().await;
         let limit = limit.unwrap_or(self.config.history_size);
 
-        history.iter()
-            .rev()
-            .take(limit)
-            .cloned()
-            .collect()
+        history.iter().rev().take(limit).cloned().collect()
     }
 
     /// Get circuit breaker for watcher operations

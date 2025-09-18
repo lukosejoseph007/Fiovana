@@ -2,10 +2,10 @@
 // Integration tests for the comprehensive health monitoring and recovery system
 
 use proxemic::filesystem::health_monitor::{
-    WatcherHealthMonitor, HealthMonitorConfig, HealthStatus, HealthCheckType,
-    RecoveryAction, CircuitBreakerConfig,
+    CircuitBreakerConfig, HealthCheckType, HealthMonitorConfig, HealthStatus, RecoveryAction,
+    WatcherHealthMonitor,
 };
-use proxemic::filesystem::watcher::{WatcherConfig, DocumentWatcher};
+use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
 use proxemic::resource_monitor::{ResourceMonitor, ResourceMonitorConfig};
 use std::time::Duration;
 use tempfile::tempdir;
@@ -49,7 +49,8 @@ async fn test_health_monitor_basic_functionality() {
     assert!(!results_with_monitor.is_empty());
 
     // Should have basic health checks even without resource data
-    let check_types_with_monitor: Vec<_> = results_with_monitor.iter().map(|r| r.check_type).collect();
+    let check_types_with_monitor: Vec<_> =
+        results_with_monitor.iter().map(|r| r.check_type).collect();
     assert!(check_types_with_monitor.contains(&HealthCheckType::WatcherResponsiveness));
     assert!(check_types_with_monitor.contains(&HealthCheckType::ErrorRate));
 }
@@ -96,7 +97,10 @@ async fn test_watcher_with_health_monitoring() {
 
     // Test health monitoring startup
     let result = watcher.start_health_monitoring().await;
-    assert!(result.is_ok(), "Health monitoring should start successfully");
+    assert!(
+        result.is_ok(),
+        "Health monitoring should start successfully"
+    );
 
     // Test health status retrieval
     let health_status = watcher.get_health_status().await;
@@ -105,7 +109,10 @@ async fn test_watcher_with_health_monitoring() {
 
     // Test manual health check
     let health_results = watcher.check_health().await;
-    assert!(!health_results.is_empty(), "Should return health check results");
+    assert!(
+        !health_results.is_empty(),
+        "Should return health check results"
+    );
 
     // Test health metrics
     let metrics = watcher.get_health_metrics().await;
@@ -117,13 +124,22 @@ async fn test_watcher_with_health_monitoring() {
         RecoveryAction::GarbageCollection,
     ];
     let recovery_result = watcher.trigger_recovery(recovery_actions).await;
-    assert!(recovery_result.is_ok(), "Recovery actions should execute successfully");
+    assert!(
+        recovery_result.is_ok(),
+        "Recovery actions should execute successfully"
+    );
 
     // Test circuit breaker access
     let watcher_circuit = watcher.get_watcher_circuit_breaker();
     let processor_circuit = watcher.get_processor_circuit_breaker();
-    assert!(watcher_circuit.is_some(), "Should have watcher circuit breaker");
-    assert!(processor_circuit.is_some(), "Should have processor circuit breaker");
+    assert!(
+        watcher_circuit.is_some(),
+        "Should have watcher circuit breaker"
+    );
+    assert!(
+        processor_circuit.is_some(),
+        "Should have processor circuit breaker"
+    );
 }
 
 #[tokio::test]
@@ -155,7 +171,8 @@ async fn test_health_monitoring_with_resource_monitor() {
     assert!(check_types.contains(&HealthCheckType::ErrorRate));
 
     // May or may not have resource usage check depending on data availability
-    let resource_check = results.iter()
+    let resource_check = results
+        .iter()
         .find(|r| r.check_type == HealthCheckType::ResourceUsage);
 
     if let Some(check) = resource_check {
@@ -216,5 +233,8 @@ async fn test_recovery_action_execution() {
     ];
 
     let result = watcher.trigger_recovery(all_recovery_actions).await;
-    assert!(result.is_ok(), "All recovery actions should execute without errors");
+    assert!(
+        result.is_ok(),
+        "All recovery actions should execute without errors"
+    );
 }
