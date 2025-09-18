@@ -1,11 +1,11 @@
 // src/commands/health_commands.rs
 // Tauri commands for exposing health monitoring and performance metrics to the frontend
 
-use crate::filesystem::health_monitor::{HealthCheckResult, HealthMetrics, HealthStatus, RecoveryAction};
+use crate::filesystem::health_monitor::{HealthCheckResult, HealthStatus};
 use crate::filesystem::watcher::DocumentWatcher;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 use tokio::sync::RwLock;
 
 /// Health summary for frontend display
@@ -139,9 +139,18 @@ pub async fn get_health_report<R: tauri::Runtime>(
     ];
 
     let recent_events = vec![
-        format!("{}: Health check completed successfully", chrono::Utc::now().format("%H:%M:%S")),
-        format!("{}: Performance metrics updated", chrono::Utc::now().format("%H:%M:%S")),
-        format!("{}: All systems operational", chrono::Utc::now().format("%H:%M:%S")),
+        format!(
+            "{}: Health check completed successfully",
+            chrono::Utc::now().format("%H:%M:%S")
+        ),
+        format!(
+            "{}: Performance metrics updated",
+            chrono::Utc::now().format("%H:%M:%S")
+        ),
+        format!(
+            "{}: All systems operational",
+            chrono::Utc::now().format("%H:%M:%S")
+        ),
     ];
 
     let report = DetailedHealthReport {
@@ -231,7 +240,11 @@ pub async fn get_health_history<R: tauri::Runtime>(
 
         history.push(HealthCheckResult {
             check_type: crate::filesystem::health_monitor::HealthCheckType::WatcherResponsiveness,
-            status: if i % 10 == 0 { HealthStatus::Degraded } else { HealthStatus::Healthy },
+            status: if i % 10 == 0 {
+                HealthStatus::Degraded
+            } else {
+                HealthStatus::Healthy
+            },
             message: format!("Health check #{}", i + 1),
             timestamp,
             details: serde_json::json!({
@@ -253,19 +266,25 @@ pub async fn get_circuit_breaker_status<R: tauri::Runtime>(
 ) -> Result<HashMap<String, serde_json::Value>, String> {
     let mut status = HashMap::new();
 
-    status.insert("watcher".to_string(), serde_json::json!({
-        "state": "Closed",
-        "failure_count": 0,
-        "success_count": 127,
-        "last_state_change": chrono::Utc::now() - chrono::Duration::hours(2)
-    }));
+    status.insert(
+        "watcher".to_string(),
+        serde_json::json!({
+            "state": "Closed",
+            "failure_count": 0,
+            "success_count": 127,
+            "last_state_change": chrono::Utc::now() - chrono::Duration::hours(2)
+        }),
+    );
 
-    status.insert("processor".to_string(), serde_json::json!({
-        "state": "Closed",
-        "failure_count": 2,
-        "success_count": 1248,
-        "last_state_change": chrono::Utc::now() - chrono::Duration::minutes(15)
-    }));
+    status.insert(
+        "processor".to_string(),
+        serde_json::json!({
+            "state": "Closed",
+            "failure_count": 2,
+            "success_count": 1248,
+            "last_state_change": chrono::Utc::now() - chrono::Duration::minutes(15)
+        }),
+    );
 
     Ok(status)
 }
@@ -347,9 +366,8 @@ pub async fn export_health_data<R: tauri::Runtime>(
 ) -> Result<String, String> {
     tracing::info!("Exporting health data in format: {}", format);
 
-    let _start = start_date.unwrap_or_else(|| {
-        (chrono::Utc::now() - chrono::Duration::days(7)).to_rfc3339()
-    });
+    let _start =
+        start_date.unwrap_or_else(|| (chrono::Utc::now() - chrono::Duration::days(7)).to_rfc3339());
     let _end = end_date.unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
 
     // In a real implementation, this would:

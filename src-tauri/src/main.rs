@@ -127,7 +127,7 @@ async fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_log::Builder::new().build())
+        // .plugin(tauri_plugin_log::Builder::new().build()) // Commented out - using custom tracing instead
         .invoke_handler(tauri::generate_handler![
             // Existing commands
             commands::greet,
@@ -143,6 +143,17 @@ async fn main() {
             commands::add_watch_path,
             commands::remove_watch_path,
             commands::emit_file_event,
+            // Health monitoring commands
+            commands::get_health_status,
+            commands::get_performance_metrics,
+            commands::get_health_report,
+            commands::trigger_recovery,
+            commands::get_health_history,
+            commands::get_circuit_breaker_status,
+            commands::start_health_monitoring,
+            commands::stop_health_monitoring,
+            commands::subscribe_health_updates,
+            commands::export_health_data,
             // Security status commands
             get_security_status,
             get_deployment_report,
@@ -222,46 +233,29 @@ async fn initialize_comprehensive_logging(
         .read()
         .map_err(|_| "Failed to read configuration")?;
 
-    // Determine log level from config, but respect security requirements
-    let mut log_level = match config.logging.level.to_lowercase().as_str() {
-        "error" => tracing::Level::ERROR,
-        "warn" => tracing::Level::WARN,
-        "info" => tracing::Level::INFO,
-        "debug" => tracing::Level::DEBUG,
-        "trace" => tracing::Level::TRACE,
-        _ => tracing::Level::INFO,
-    };
+    // Skip setting global subscriber again as it was already set in early logging
+    // Just log the configuration that would have been applied
+    tracing::info!("Using existing tracing subscriber from early initialization");
 
-    // Override log level for production security
+    // Log what the configuration would have applied
+    let configured_level = &config.logging.level;
     if matches!(
         security_result.security_level,
         SecurityLevel::Production | SecurityLevel::HighSecurity
-    ) {
-        // In production, enforce minimum WARN level unless explicitly configured otherwise
-        if matches!(log_level, tracing::Level::DEBUG | tracing::Level::TRACE) {
-            log_level = tracing::Level::WARN;
-            tracing::warn!("Log level adjusted to WARN for production security");
-        }
+    ) && matches!(configured_level.to_lowercase().as_str(), "debug" | "trace")
+    {
+        tracing::warn!(
+            "Log level would be adjusted to WARN for production security (configured: {})",
+            configured_level
+        );
     }
 
-    let subscriber_builder = tracing_subscriber::FmtSubscriber::builder().with_max_level(log_level);
-
-    // Configure output based on settings and security level
+    // Store the structured logging setting for later reference
     let use_structured = config.logging.structured_logging
         || matches!(
             security_result.security_level,
             SecurityLevel::Production | SecurityLevel::HighSecurity
         );
-
-    if use_structured {
-        // Use JSON formatting for structured logging
-        let subscriber = subscriber_builder.json().finish();
-        tracing::subscriber::set_global_default(subscriber)?;
-    } else {
-        // Use pretty formatting for development
-        let subscriber = subscriber_builder.pretty().finish();
-        tracing::subscriber::set_global_default(subscriber)?;
-    }
 
     // Enhanced file logging with security features
     if config.logging.file_enabled {
