@@ -585,7 +585,7 @@ impl WatcherHealthMonitor {
         HealthCheckResult {
             check_type: HealthCheckType::ErrorRate,
             status,
-            message: format!("Circuit breakers operational"),
+            message: "Circuit breakers operational".to_string(),
             timestamp,
             details: serde_json::json!({
                 "watcher_circuit": watcher_metrics,

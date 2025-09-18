@@ -512,11 +512,11 @@ impl OptimizedEventProcessor {
         }
 
         // Handle deduplication
-        if self.config.enable_deduplication {
-            if self.deduplicate_event(&prioritized_event).await {
-                self.metrics.record_deduplication_hit();
-                return Ok(());
-            }
+        if self.config.enable_deduplication
+            && self.deduplicate_event(&prioritized_event).await
+        {
+            self.metrics.record_deduplication_hit();
+            return Ok(());
         }
 
         // Add to appropriate priority queue
@@ -547,13 +547,13 @@ impl OptimizedEventProcessor {
                 || existing_event.timestamp.elapsed() > self.config.debounce_duration
             {
                 dedup_map.insert(path, event.clone());
-                return false; // Process this event
+                false // Process this event
             } else {
-                return true; // Skip this event (duplicate)
+                true // Skip this event (duplicate)
             }
         } else {
             dedup_map.insert(path, event.clone());
-            return false; // Process this event
+            false // Process this event
         }
     }
 

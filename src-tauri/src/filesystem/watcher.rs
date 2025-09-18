@@ -529,6 +529,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
     }
 
     /// Start optimized event processing using the high-performance processor
+    #[allow(clippy::too_many_arguments)] // Complex system requires many parameters for proper initialization
     async fn start_optimized_processing(
         &self,
         _tx: crossbeam_channel::Sender<Event>,
@@ -642,6 +643,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
     }
 
     /// Start legacy event processing for backward compatibility
+    #[allow(clippy::too_many_arguments)] // Legacy system requires many parameters for compatibility
     async fn start_legacy_processing(
         &self,
         rx: crossbeam_channel::Receiver<Event>,
@@ -778,11 +780,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
     pub async fn get_health_metrics(
         &self,
     ) -> Option<crate::filesystem::health_monitor::HealthMetrics> {
-        if let Some(ref health_monitor) = self.health_monitor {
-            Some(health_monitor.get_metrics())
-        } else {
-            None
-        }
+        self.health_monitor.as_ref().map(|health_monitor| health_monitor.get_metrics())
     }
 
     /// Get health history
