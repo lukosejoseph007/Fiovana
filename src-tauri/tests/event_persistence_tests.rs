@@ -3,7 +3,9 @@
 
 #[cfg(test)]
 mod tests {
-    use proxemic::filesystem::event_persistence::{EventPersistence, OfflineReconciliation, PersistenceConfig};
+    use proxemic::filesystem::event_persistence::{
+        EventPersistence, OfflineReconciliation, PersistenceConfig,
+    };
     use proxemic::filesystem::watcher::FileEvent;
     use std::path::PathBuf;
     use std::time::Duration;
@@ -11,7 +13,8 @@ mod tests {
     use tokio::time::timeout;
 
     #[tokio::test]
-    async fn test_event_persistence_basic() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_event_persistence_basic() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+    {
         let temp_dir = tempdir()?;
         let events_file = temp_dir.path().join("test_events.jsonl");
 
@@ -27,29 +30,39 @@ mod tests {
 
         // Store some test events
         let test_event = FileEvent::Created(PathBuf::from("/test/file.txt"));
-        persistence.store_event(test_event.clone(), Some("test_workspace".to_string())).await?;
+        persistence
+            .store_event(test_event.clone(), Some("test_workspace".to_string()))
+            .await?;
 
         // Flush events to ensure they're written
         persistence.flush_pending_events().await?;
 
         // Get unprocessed events
-        let unprocessed = persistence.get_unprocessed_events(Some("test_workspace"), None).await?;
+        let unprocessed = persistence
+            .get_unprocessed_events(Some("test_workspace"), None)
+            .await?;
         assert_eq!(unprocessed.len(), 1);
-        assert_eq!(unprocessed[0].workspace_id, Some("test_workspace".to_string()));
+        assert_eq!(
+            unprocessed[0].workspace_id,
+            Some("test_workspace".to_string())
+        );
 
         // Mark as processed
         let event_ids: Vec<i64> = unprocessed.iter().map(|e| e.id).collect();
         persistence.mark_events_processed(&event_ids).await?;
 
         // Should have no unprocessed events now
-        let unprocessed_after = persistence.get_unprocessed_events(Some("test_workspace"), None).await?;
+        let unprocessed_after = persistence
+            .get_unprocessed_events(Some("test_workspace"), None)
+            .await?;
         assert_eq!(unprocessed_after.len(), 0);
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_batch_processing_limits() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_batch_processing_limits() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+    {
         let temp_dir = tempdir()?;
         let events_file = temp_dir.path().join("test_batch.jsonl");
 
@@ -66,7 +79,9 @@ mod tests {
         // Store more than batch_size events to test batch processing
         for i in 0..15 {
             let test_event = FileEvent::Created(PathBuf::from(format!("/test/file{}.txt", i)));
-            persistence.store_event(test_event, Some("test_workspace".to_string())).await?;
+            persistence
+                .store_event(test_event, Some("test_workspace".to_string()))
+                .await?;
 
             // Add a small delay to avoid overwhelming the system
             if i % 5 == 4 {
@@ -81,14 +96,17 @@ mod tests {
         persistence.flush_pending_events().await?;
 
         // Should have all events persisted (batch processing should have flushed them)
-        let unprocessed = persistence.get_unprocessed_events(Some("test_workspace"), Some(20)).await?; // Set limit higher than 15
+        let unprocessed = persistence
+            .get_unprocessed_events(Some("test_workspace"), Some(20))
+            .await?; // Set limit higher than 15
         assert_eq!(unprocessed.len(), 15); // Expect all 15 events
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_resource_exhaustion_protection() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_resource_exhaustion_protection(
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let temp_dir = tempdir()?;
         let events_file = temp_dir.path().join("test_resource.jsonl");
 
@@ -106,7 +124,10 @@ mod tests {
         let store_task = async {
             for i in 0..100 {
                 let test_event = FileEvent::Created(PathBuf::from(format!("/test/file{}.txt", i)));
-                if let Err(e) = persistence.store_event(test_event, Some("test_workspace".to_string())).await {
+                if let Err(e) = persistence
+                    .store_event(test_event, Some("test_workspace".to_string()))
+                    .await
+                {
                     eprintln!("Failed to store event {}: {}", i, e);
                 }
 
@@ -151,18 +172,25 @@ mod tests {
         let valid_event = FileEvent::Created(test_file.clone());
         let invalid_event = FileEvent::Created(PathBuf::from("/nonexistent/file.txt"));
 
-        persistence.store_event(valid_event, Some("test_workspace".to_string())).await?;
-        persistence.store_event(invalid_event, Some("test_workspace".to_string())).await?;
+        persistence
+            .store_event(valid_event, Some("test_workspace".to_string()))
+            .await?;
+        persistence
+            .store_event(invalid_event, Some("test_workspace".to_string()))
+            .await?;
         persistence.flush_pending_events().await?;
 
         // Reconcile events
-        let reconciled = reconciliation.reconcile_offline_events(Some("test_workspace")).await?;
+        let reconciled = reconciliation
+            .reconcile_offline_events(Some("test_workspace"))
+            .await?;
 
         // Should have at least the valid event
         assert!(!reconciled.is_empty());
 
         // Valid events should be in the reconciled list
-        let valid_reconciled: Vec<_> = reconciled.iter()
+        let valid_reconciled: Vec<_> = reconciled
+            .iter()
             .filter(|e| e.event.path() == test_file)
             .collect();
         assert!(!valid_reconciled.is_empty());
@@ -188,7 +216,9 @@ mod tests {
         // Store some events
         for i in 0..15 {
             let test_event = FileEvent::Created(PathBuf::from(format!("/test/file{}.txt", i)));
-            persistence.store_event(test_event, Some("test_workspace".to_string())).await?;
+            persistence
+                .store_event(test_event, Some("test_workspace".to_string()))
+                .await?;
         }
 
         persistence.flush_pending_events().await?;
@@ -223,7 +253,9 @@ mod tests {
         // Store some events
         for i in 0..5 {
             let test_event = FileEvent::Created(PathBuf::from(format!("/test/file{}.txt", i)));
-            persistence.store_event(test_event, Some("test_workspace".to_string())).await?;
+            persistence
+                .store_event(test_event, Some("test_workspace".to_string()))
+                .await?;
         }
 
         persistence.flush_pending_events().await?;
@@ -234,7 +266,9 @@ mod tests {
         assert_eq!(updated_stats.unprocessed_events, 5);
 
         // Process some events
-        let unprocessed = persistence.get_unprocessed_events(Some("test_workspace"), Some(3)).await?;
+        let unprocessed = persistence
+            .get_unprocessed_events(Some("test_workspace"), Some(3))
+            .await?;
         let event_ids: Vec<i64> = unprocessed.iter().map(|e| e.id).collect();
         persistence.mark_events_processed(&event_ids).await?;
 
@@ -261,8 +295,14 @@ mod tests {
             let persistence_clone = persistence.clone();
             let task = tokio::spawn(async move {
                 for i in 0..10 {
-                    let test_event = FileEvent::Created(PathBuf::from(format!("/test/task{}_file{}.txt", task_id, i)));
-                    if let Err(e) = persistence_clone.store_event(test_event, Some(format!("workspace_{}", task_id))).await {
+                    let test_event = FileEvent::Created(PathBuf::from(format!(
+                        "/test/task{}_file{}.txt",
+                        task_id, i
+                    )));
+                    if let Err(e) = persistence_clone
+                        .store_event(test_event, Some(format!("workspace_{}", task_id)))
+                        .await
+                    {
                         eprintln!("Task {} failed to store event {}: {}", task_id, i, e);
                     }
                 }
@@ -296,7 +336,9 @@ mod tests {
         // Store some events
         for i in 0..5 {
             let test_event = FileEvent::Created(PathBuf::from(format!("/test/file{}.txt", i)));
-            persistence.store_event(test_event, Some("test_workspace".to_string())).await?;
+            persistence
+                .store_event(test_event, Some("test_workspace".to_string()))
+                .await?;
         }
 
         persistence.flush_pending_events().await?;
@@ -307,7 +349,9 @@ mod tests {
         let persistence2 = EventPersistence::new(events_file, config2)?;
 
         // Should be able to read existing events
-        let unprocessed = persistence2.get_unprocessed_events(Some("test_workspace"), None).await?;
+        let unprocessed = persistence2
+            .get_unprocessed_events(Some("test_workspace"), None)
+            .await?;
         assert_eq!(unprocessed.len(), 5);
 
         Ok(())
@@ -318,14 +362,15 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use proxemic::filesystem::event_persistence::PersistenceConfig;
-    use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
     use proxemic::filesystem::security::security_config::SecurityConfig;
+    use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
     use std::time::Duration;
-    use tempfile::tempdir;
     use tauri::test::{mock_app, MockRuntime};
+    use tempfile::tempdir;
 
     #[tokio::test]
-    async fn test_watcher_with_persistence() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_watcher_with_persistence() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+    {
         let _temp_dir = tempdir()?;
         let app = mock_app();
 
@@ -337,7 +382,8 @@ mod integration_tests {
             workspace_id: Some("integration_test".to_string()),
         };
 
-        let (mut watcher, _event_receiver) = DocumentWatcher::<MockRuntime>::new(config, app.handle().clone());
+        let (mut watcher, _event_receiver) =
+            DocumentWatcher::<MockRuntime>::new(config, app.handle().clone());
 
         // Start the watcher
         watcher.start().await?;
@@ -358,7 +404,8 @@ mod integration_tests {
     }
 
     #[tokio::test]
-    async fn test_watcher_without_persistence() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_watcher_without_persistence(
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let app = mock_app();
 
         let config = WatcherConfig {
@@ -366,7 +413,8 @@ mod integration_tests {
             ..Default::default()
         };
 
-        let (mut watcher, _event_receiver) = DocumentWatcher::<MockRuntime>::new(config, app.handle().clone());
+        let (mut watcher, _event_receiver) =
+            DocumentWatcher::<MockRuntime>::new(config, app.handle().clone());
 
         // Start the watcher
         watcher.start().await?;

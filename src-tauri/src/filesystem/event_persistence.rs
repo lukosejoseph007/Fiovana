@@ -43,11 +43,11 @@ pub struct PersistenceConfig {
 impl Default for PersistenceConfig {
     fn default() -> Self {
         Self {
-            max_events: 10_000,           // Keep at most 10k events
-            retention_hours: 72,          // Keep events for 3 days
-            batch_size: 100,              // Process 100 events at a time
+            max_events: 10_000,                          // Keep at most 10k events
+            retention_hours: 72,                         // Keep events for 3 days
+            batch_size: 100,                             // Process 100 events at a time
             cleanup_interval: Duration::from_secs(3600), // Cleanup every hour
-            max_retries: 3,               // Retry failed events 3 times
+            max_retries: 3,                              // Retry failed events 3 times
         }
     }
 }
@@ -64,7 +64,10 @@ pub struct EventPersistence {
 #[allow(dead_code)] // These methods are part of the public API for future use
 impl EventPersistence {
     /// Create a new event persistence manager using file-based storage
-    pub fn new(events_file: PathBuf, config: PersistenceConfig) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn new(
+        events_file: PathBuf,
+        config: PersistenceConfig,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         // Ensure the parent directory exists
         if let Some(parent) = events_file.parent() {
             std::fs::create_dir_all(parent)?;
@@ -88,7 +91,10 @@ impl EventPersistence {
             file_lock: Arc::new(Mutex::new(())),
         };
 
-        info!("Event persistence initialized with file: {:?}", persistence.events_file);
+        info!(
+            "Event persistence initialized with file: {:?}",
+            persistence.events_file
+        );
         Ok(persistence)
     }
 
@@ -115,11 +121,15 @@ impl EventPersistence {
     }
 
     /// Append events to file
-    fn append_events_to_file(file_path: &PathBuf, events: &[PersistedFileEvent]) -> Result<(), String> {
+    fn append_events_to_file(
+        file_path: &PathBuf,
+        events: &[PersistedFileEvent],
+    ) -> Result<(), String> {
         let file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(file_path).map_err(|e| e.to_string())?;
+            .open(file_path)
+            .map_err(|e| e.to_string())?;
 
         let mut writer = BufWriter::new(file);
 
@@ -133,7 +143,10 @@ impl EventPersistence {
     }
 
     /// Rewrite the entire file with filtered events
-    fn rewrite_events_file(file_path: &PathBuf, events: &[PersistedFileEvent]) -> Result<(), String> {
+    fn rewrite_events_file(
+        file_path: &PathBuf,
+        events: &[PersistedFileEvent],
+    ) -> Result<(), String> {
         let temp_file = file_path.with_extension("tmp");
 
         {
@@ -166,7 +179,10 @@ impl EventPersistence {
         };
 
         if pending_count > self.config.batch_size * 2 {
-            warn!("Too many pending events ({}), dropping oldest", pending_count);
+            warn!(
+                "Too many pending events ({}), dropping oldest",
+                pending_count
+            );
             self.cleanup_pending_events().await;
         }
 
@@ -200,7 +216,9 @@ impl EventPersistence {
     }
 
     /// Flush pending events to file in batches
-    pub async fn flush_pending_events(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn flush_pending_events(
+        &self,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (events_to_write, events_count) = {
             let mut pending = self.pending_events.lock().await;
             if pending.is_empty() {
@@ -223,12 +241,13 @@ impl EventPersistence {
                     error!("Failed to write events to file: {}", e);
                 }
             });
-        }).await.map_err(|e| format!("File write task failed: {}", e))?;
+        })
+        .await
+        .map_err(|e| format!("File write task failed: {}", e))?;
 
         debug!("Flushed {} events to file", events_count);
         Ok(())
     }
-
 
     /// Get unprocessed events for offline reconciliation
     pub async fn get_unprocessed_events(
@@ -247,7 +266,9 @@ impl EventPersistence {
                 let _lock = file_lock.lock().await;
                 Self::read_events_from_file(&events_file)
             })
-        }).await.map_err(|e| format!("File read task failed: {}", e))??;
+        })
+        .await
+        .map_err(|e| format!("File read task failed: {}", e))??;
 
         // Filter unprocessed events for the specified workspace
         let filtered_events: Vec<_> = events
@@ -263,7 +284,6 @@ impl EventPersistence {
 
         Ok(filtered_events)
     }
-
 
     /// Mark events as processed
     pub async fn mark_events_processed(
@@ -284,8 +304,8 @@ impl EventPersistence {
                 let _lock = file_lock.lock().await;
 
                 // Read all events
-                let mut events = Self::read_events_from_file(&events_file)
-                    .unwrap_or_else(|_| Vec::new());
+                let mut events =
+                    Self::read_events_from_file(&events_file).unwrap_or_else(|_| Vec::new());
 
                 // Mark specified events as processed
                 for event in &mut events {
@@ -297,7 +317,9 @@ impl EventPersistence {
                 // Write back to file
                 Self::rewrite_events_file(&events_file, &events)
             })
-        }).await.map_err(|e| format!("File update task failed: {}", e))??;
+        })
+        .await
+        .map_err(|e| format!("File update task failed: {}", e))??;
 
         debug!("Marked {} events as processed", event_ids.len());
         Ok(())
@@ -316,16 +338,14 @@ impl EventPersistence {
                 let _lock = file_lock.lock().await;
 
                 // Read all events
-                let mut events = Self::read_events_from_file(&events_file)
-                    .unwrap_or_else(|_| Vec::new());
+                let mut events =
+                    Self::read_events_from_file(&events_file).unwrap_or_else(|_| Vec::new());
 
                 let initial_count = events.len();
                 let cutoff_time = Utc::now() - chrono::Duration::hours(retention_hours as i64);
 
                 // Remove old processed events
-                events.retain(|event| {
-                    !(event.processed && event.timestamp < cutoff_time)
-                });
+                events.retain(|event| !(event.processed && event.timestamp < cutoff_time));
 
                 let after_retention_cleanup = events.len();
 
@@ -348,12 +368,17 @@ impl EventPersistence {
                 }
 
                 if deleted_old > 0 || deleted_excess > 0 {
-                    info!("File cleanup: removed {} old events, {} excess events", deleted_old, deleted_excess);
+                    info!(
+                        "File cleanup: removed {} old events, {} excess events",
+                        deleted_old, deleted_excess
+                    );
                 }
 
                 Ok(())
             })
-        }).await.map_err(|e| format!("File cleanup task failed: {}", e))??;
+        })
+        .await
+        .map_err(|e| format!("File cleanup task failed: {}", e))??;
 
         Ok(())
     }
@@ -412,7 +437,9 @@ impl EventPersistence {
     }
 
     /// Get file statistics
-    pub async fn get_statistics(&self) -> Result<PersistenceStatistics, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get_statistics(
+        &self,
+    ) -> Result<PersistenceStatistics, Box<dyn std::error::Error + Send + Sync>> {
         let events_file = self.events_file.clone();
         let file_lock = self.file_lock.clone();
 
@@ -421,8 +448,8 @@ impl EventPersistence {
             rt.block_on(async {
                 let _lock = file_lock.lock().await;
 
-                let events = Self::read_events_from_file(&events_file)
-                    .unwrap_or_else(|_| Vec::new());
+                let events =
+                    Self::read_events_from_file(&events_file).unwrap_or_else(|_| Vec::new());
 
                 let total_events = events.len();
                 let unprocessed_events = events.iter().filter(|e| !e.processed).count();
@@ -440,10 +467,12 @@ impl EventPersistence {
                     total_events,
                     unprocessed_events,
                     failed_events,
-                    file_size_mb: file_size_mb,
+                    file_size_mb,
                 })
             })
-        }).await.map_err(|e| format!("File statistics task failed: {}", e))?
+        })
+        .await
+        .map_err(|e| format!("File statistics task failed: {}", e))?
     }
 }
 
@@ -486,17 +515,26 @@ impl OfflineReconciliation {
         &self,
         workspace_id: Option<&str>,
     ) -> Result<Vec<PersistedFileEvent>, Box<dyn std::error::Error + Send + Sync>> {
-        info!("Starting offline event reconciliation for workspace: {:?}", workspace_id);
+        info!(
+            "Starting offline event reconciliation for workspace: {:?}",
+            workspace_id
+        );
 
         // Get all unprocessed events
-        let unprocessed_events = self.persistence.get_unprocessed_events(workspace_id, None).await?;
+        let unprocessed_events = self
+            .persistence
+            .get_unprocessed_events(workspace_id, None)
+            .await?;
 
         if unprocessed_events.is_empty() {
             debug!("No unprocessed events found for reconciliation");
             return Ok(Vec::new());
         }
 
-        info!("Found {} unprocessed events for reconciliation", unprocessed_events.len());
+        info!(
+            "Found {} unprocessed events for reconciliation",
+            unprocessed_events.len()
+        );
 
         // Filter events that still need reconciliation (file exists, etc.)
         let mut reconciled_events = Vec::new();
@@ -522,15 +560,23 @@ impl OfflineReconciliation {
 
         // Mark validated events as processed
         if !processed_ids.is_empty() {
-            self.persistence.mark_events_processed(&processed_ids).await?;
+            self.persistence
+                .mark_events_processed(&processed_ids)
+                .await?;
         }
 
-        info!("Reconciled {} valid events from offline queue", reconciled_events.len());
+        info!(
+            "Reconciled {} valid events from offline queue",
+            reconciled_events.len()
+        );
         Ok(reconciled_events)
     }
 
     /// Validate if an event is still relevant
-    async fn validate_event(&self, event: &PersistedFileEvent) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    async fn validate_event(
+        &self,
+        event: &PersistedFileEvent,
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         let path = event.event.path();
 
         // Check if the file/directory still exists for non-delete events
