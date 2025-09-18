@@ -382,6 +382,9 @@ mod integration_tests {
             workspace_id: Some("integration_test".to_string()),
             enable_resource_monitoring: false,
             resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
+            enable_optimized_processing: false,
+            event_processor_config:
+                proxemic::filesystem::event_processor::EventProcessorConfig::default(),
         };
 
         let (mut watcher, _event_receiver) =

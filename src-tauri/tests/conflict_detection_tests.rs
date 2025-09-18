@@ -237,6 +237,9 @@ async fn test_watcher_config_creation() {
         workspace_id: None,
         enable_resource_monitoring: false,
         resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
+        enable_optimized_processing: false,
+        event_processor_config:
+            proxemic::filesystem::event_processor::EventProcessorConfig::default(),
     };
 
     assert_eq!(config.debounce_duration, Duration::from_millis(500));

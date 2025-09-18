@@ -4,6 +4,9 @@
 use crate::filesystem::event_persistence::{
     EventPersistence, OfflineReconciliation, PersistenceConfig,
 };
+use crate::filesystem::event_processor::{
+    EventProcessorConfig, OptimizedEventProcessor, PrioritizedEvent,
+};
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
@@ -18,6 +21,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -141,6 +145,8 @@ pub struct WatcherConfig {
     pub workspace_id: Option<String>,
     pub enable_resource_monitoring: bool,
     pub resource_monitor_config: ResourceMonitorConfig,
+    pub enable_optimized_processing: bool,
+    pub event_processor_config: EventProcessorConfig,
 }
 
 impl Default for WatcherConfig {
@@ -153,6 +159,8 @@ impl Default for WatcherConfig {
             workspace_id: None,
             enable_resource_monitoring: true,
             resource_monitor_config: ResourceMonitorConfig::default(),
+            enable_optimized_processing: true,
+            event_processor_config: EventProcessorConfig::default(),
         }
     }
 }
@@ -165,11 +173,13 @@ pub struct DocumentWatcher<R: tauri::Runtime> {
     config: WatcherConfig,
     is_paused: Arc<RwLock<bool>>,
     path_validator: PathValidator,
+    #[allow(dead_code)] // Used for app-specific operations and notifications
     app_handle: AppHandle<R>,
     persistence: Option<Arc<EventPersistence>>,
     #[allow(dead_code)] // Used for offline reconciliation when persistence is enabled
     reconciliation: Option<Arc<OfflineReconciliation>>,
     resource_monitor: Option<Arc<ResourceMonitor>>,
+    event_processor: Option<Arc<RwLock<OptimizedEventProcessor>>>,
 }
 
 impl<R: tauri::Runtime> DocumentWatcher<R> {
@@ -230,6 +240,15 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             None
         };
 
+        // Initialize optimized event processor if enabled
+        let event_processor = if config.enable_optimized_processing {
+            Some(Arc::new(RwLock::new(OptimizedEventProcessor::new(
+                config.event_processor_config.clone(),
+            ))))
+        } else {
+            None
+        };
+
         (
             Self {
                 watcher: None,
@@ -242,6 +261,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                 persistence,
                 reconciliation,
                 resource_monitor,
+                event_processor,
             },
             event_receiver,
         )
@@ -255,69 +275,42 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
         let is_paused = self.is_paused.clone();
         let path_validator = self.path_validator.clone();
 
-        // Spawn debounced event processor
-        let _app_handle_clone = self.app_handle.clone();
+        // Clone necessary data before starting processing
         let persistence_clone = self.persistence.clone();
         let resource_monitor_clone = self.resource_monitor.clone();
         let watched_paths_clone = self.watched_paths.clone();
         let workspace_id = self.config.workspace_id.clone();
-        tokio::spawn(async move {
-            let mut debouncer = EventDebouncer::new(config.debounce_duration);
 
-            while let Ok(Ok(event)) = tokio::task::spawn_blocking({
-                let rx = rx.clone();
-                move || rx.recv()
-            })
-            .await
-            {
-                if *is_paused.read().await {
-                    continue;
-                }
-
-                if let Some(processed_events) =
-                    debouncer.process_event(event, &path_validator).await
-                {
-                    for file_event in processed_events {
-                        // Log security audit event
-                        SecurityAuditor::log_file_access_attempt(
-                            file_event.path(),
-                            "file_watch",
-                            &Ok(file_event.path().to_path_buf()),
-                            "development",
-                            None::<uuid::Uuid>,
-                        );
-
-                        // Store event in persistence if enabled
-                        if let Some(ref persistence) = persistence_clone {
-                            if let Err(e) = persistence
-                                .store_event(file_event.clone(), workspace_id.clone())
-                                .await
-                            {
-                                tracing::warn!("Failed to persist file event: {}", e);
-                                // Continue processing even if persistence fails
-                            }
-                        }
-
-                        // Send file event to channel for UI updates
-                        if event_sender.send(file_event).is_err() {
-                            // If the receiver is dropped, stop the loop
-                            break;
-                        }
-                    }
-
-                    // Sample resource usage after processing events
-                    if let Some(ref monitor) = resource_monitor_clone {
-                        let watched_count = watched_paths_clone.read().await.len();
-                        if let Err(e) = monitor.sample_resources(watched_count).await {
-                            // Log error but continue processing
-                            if !e.contains("Sampling interval not reached") {
-                                tracing::debug!("Resource monitoring sample failed: {}", e);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        // Check if optimized processing is enabled
+        if let Some(ref event_processor) = self.event_processor {
+            self.start_optimized_processing(
+                tx.clone(),
+                rx,
+                event_processor.clone(),
+                path_validator,
+                event_sender,
+                persistence_clone,
+                resource_monitor_clone,
+                watched_paths_clone,
+                workspace_id,
+                is_paused,
+            )
+            .await?;
+        } else {
+            // Fallback to legacy event processing
+            self.start_legacy_processing(
+                rx,
+                event_sender,
+                config,
+                path_validator,
+                persistence_clone,
+                resource_monitor_clone,
+                watched_paths_clone,
+                workspace_id,
+                is_paused,
+            )
+            .await;
+        }
 
         let watcher = RecommendedWatcher::new(
             move |res: Result<Event>| {
@@ -512,6 +505,205 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             monitor.sample_resources(watched_count).await.map(|_| ())
         } else {
             Err("Resource monitoring not enabled".to_string())
+        }
+    }
+
+    /// Start optimized event processing using the high-performance processor
+    async fn start_optimized_processing(
+        &self,
+        _tx: crossbeam_channel::Sender<Event>,
+        rx: crossbeam_channel::Receiver<Event>,
+        event_processor: Arc<RwLock<OptimizedEventProcessor>>,
+        path_validator: PathValidator,
+        event_sender: mpsc::UnboundedSender<FileEvent>,
+        persistence: Option<Arc<EventPersistence>>,
+        resource_monitor: Option<Arc<ResourceMonitor>>,
+        watched_paths: Arc<RwLock<Vec<PathBuf>>>,
+        workspace_id: Option<String>,
+        is_paused: Arc<RwLock<bool>>,
+    ) -> Result<()> {
+        // Start the optimized event processor
+        let mut processor = event_processor.write().await;
+
+        // Create the event handler closure
+        let event_handler = {
+            let event_sender = event_sender.clone();
+            let persistence = persistence.clone();
+            let resource_monitor = resource_monitor.clone();
+            let watched_paths = watched_paths.clone();
+            let workspace_id = workspace_id.clone();
+
+            move |prioritized_events: Vec<PrioritizedEvent>| {
+                let event_sender = event_sender.clone();
+                let persistence = persistence.clone();
+                let resource_monitor = resource_monitor.clone();
+                let watched_paths = watched_paths.clone();
+                let workspace_id = workspace_id.clone();
+
+                async move {
+                    for prioritized_event in prioritized_events {
+                        let file_event = prioritized_event.event;
+
+                        // Log security audit event
+                        SecurityAuditor::log_file_access_attempt(
+                            file_event.path(),
+                            "file_watch_optimized",
+                            &Ok(file_event.path().to_path_buf()),
+                            "development",
+                            None::<uuid::Uuid>,
+                        );
+
+                        // Store event in persistence if enabled
+                        if let Some(ref persistence) = persistence {
+                            if let Err(e) = persistence
+                                .store_event(file_event.clone(), workspace_id.clone())
+                                .await
+                            {
+                                tracing::warn!("Failed to persist file event: {}", e);
+                            }
+                        }
+
+                        // Send file event to channel for UI updates
+                        if event_sender.send(file_event).is_err() {
+                            tracing::warn!("Event receiver dropped, stopping event processing");
+                            break;
+                        }
+                    }
+
+                    // Sample resource usage after processing batch
+                    if let Some(ref monitor) = resource_monitor {
+                        let watched_count = watched_paths.read().await.len();
+                        if let Err(e) = monitor.sample_resources(watched_count).await {
+                            if !e.contains("Sampling interval not reached") {
+                                tracing::debug!("Resource monitoring sample failed: {}", e);
+                            }
+                        }
+                    }
+
+                    Ok(())
+                }
+            }
+        };
+
+        if let Err(e) = processor.start_processing(event_handler).await {
+            return Err(notify::Error::generic(&format!(
+                "Failed to start event processor: {}",
+                e
+            )));
+        }
+        drop(processor); // Release the write lock
+
+        // Spawn raw event forwarder
+        let event_processor_clone = event_processor.clone();
+        let path_validator_clone = path_validator.clone();
+        tokio::spawn(async move {
+            while let Ok(Ok(event)) = tokio::task::spawn_blocking({
+                let rx = rx.clone();
+                move || rx.recv()
+            })
+            .await
+            {
+                if *is_paused.read().await {
+                    continue;
+                }
+
+                // Submit raw event to optimized processor
+                let processor = event_processor_clone.read().await;
+                if let Err(e) = processor
+                    .submit_raw_event(event, &path_validator_clone)
+                    .await
+                {
+                    tracing::warn!("Failed to submit event to optimized processor: {}", e);
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Start legacy event processing for backward compatibility
+    async fn start_legacy_processing(
+        &self,
+        rx: crossbeam_channel::Receiver<Event>,
+        event_sender: mpsc::UnboundedSender<FileEvent>,
+        config: WatcherConfig,
+        path_validator: PathValidator,
+        persistence: Option<Arc<EventPersistence>>,
+        resource_monitor: Option<Arc<ResourceMonitor>>,
+        watched_paths: Arc<RwLock<Vec<PathBuf>>>,
+        workspace_id: Option<String>,
+        is_paused: Arc<RwLock<bool>>,
+    ) {
+        tokio::spawn(async move {
+            let mut debouncer = EventDebouncer::new(config.debounce_duration);
+
+            while let Ok(Ok(event)) = tokio::task::spawn_blocking({
+                let rx = rx.clone();
+                move || rx.recv()
+            })
+            .await
+            {
+                if *is_paused.read().await {
+                    continue;
+                }
+
+                if let Some(processed_events) =
+                    debouncer.process_event(event, &path_validator).await
+                {
+                    for file_event in processed_events {
+                        // Log security audit event
+                        SecurityAuditor::log_file_access_attempt(
+                            file_event.path(),
+                            "file_watch_legacy",
+                            &Ok(file_event.path().to_path_buf()),
+                            "development",
+                            None::<uuid::Uuid>,
+                        );
+
+                        // Store event in persistence if enabled
+                        if let Some(ref persistence) = persistence {
+                            if let Err(e) = persistence
+                                .store_event(file_event.clone(), workspace_id.clone())
+                                .await
+                            {
+                                tracing::warn!("Failed to persist file event: {}", e);
+                            }
+                        }
+
+                        // Send file event to channel for UI updates
+                        if event_sender.send(file_event).is_err() {
+                            break;
+                        }
+                    }
+
+                    // Sample resource usage after processing events
+                    if let Some(ref monitor) = resource_monitor {
+                        let watched_count = watched_paths.read().await.len();
+                        if let Err(e) = monitor.sample_resources(watched_count).await {
+                            if !e.contains("Sampling interval not reached") {
+                                tracing::debug!("Resource monitoring sample failed: {}", e);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /// Get event processing performance metrics
+    #[allow(dead_code)]
+    pub async fn get_event_processing_metrics(&self) -> Option<(u64, u64, u64, u64)> {
+        if let Some(ref processor) = self.event_processor {
+            let processor = processor.read().await;
+            let metrics = processor.get_metrics();
+            Some((
+                metrics.events_processed.load(Ordering::Relaxed),
+                metrics.events_dropped.load(Ordering::Relaxed),
+                metrics.backpressure_events.load(Ordering::Relaxed),
+                metrics.average_processing_time_us.load(Ordering::Relaxed),
+            ))
+        } else {
+            None
         }
     }
 }

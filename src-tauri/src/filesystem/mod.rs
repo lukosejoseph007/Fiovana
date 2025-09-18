@@ -2,6 +2,7 @@
 
 pub mod errors;
 pub mod event_persistence;
+pub mod event_processor;
 pub mod operations;
 pub mod security;
 pub mod watcher;

@@ -53,6 +53,7 @@ regex = "1.0"
 rand = { version = "0.9", features = ["std", "std_rng"] }
 jsonschema = "0.33"
 clap = { version = "4.0", features = ["derive"] }
+num_cpus = "1.0"
 
 # Security and encryption
 aes-gcm = "0.10"
