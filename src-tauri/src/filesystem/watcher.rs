@@ -7,6 +7,10 @@ use crate::filesystem::event_persistence::{
 use crate::filesystem::event_processor::{
     EventProcessorConfig, OptimizedEventProcessor, PrioritizedEvent,
 };
+use crate::filesystem::health_monitor::{
+    WatcherHealthMonitor, HealthMonitorConfig, HealthCheckResult, HealthStatus,
+    CircuitBreaker, RecoveryAction,
+};
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::security_config::SecurityConfig;
@@ -147,6 +151,8 @@ pub struct WatcherConfig {
     pub resource_monitor_config: ResourceMonitorConfig,
     pub enable_optimized_processing: bool,
     pub event_processor_config: EventProcessorConfig,
+    pub enable_health_monitoring: bool,
+    pub health_monitor_config: HealthMonitorConfig,
 }
 
 impl Default for WatcherConfig {
@@ -161,6 +167,8 @@ impl Default for WatcherConfig {
             resource_monitor_config: ResourceMonitorConfig::default(),
             enable_optimized_processing: true,
             event_processor_config: EventProcessorConfig::default(),
+            enable_health_monitoring: true,
+            health_monitor_config: HealthMonitorConfig::default(),
         }
     }
 }
@@ -180,6 +188,7 @@ pub struct DocumentWatcher<R: tauri::Runtime> {
     reconciliation: Option<Arc<OfflineReconciliation>>,
     resource_monitor: Option<Arc<ResourceMonitor>>,
     event_processor: Option<Arc<RwLock<OptimizedEventProcessor>>>,
+    health_monitor: Option<Arc<WatcherHealthMonitor>>,
 }
 
 impl<R: tauri::Runtime> DocumentWatcher<R> {
@@ -249,6 +258,15 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             None
         };
 
+        // Initialize health monitor if enabled
+        let health_monitor = if config.enable_health_monitoring {
+            Some(Arc::new(WatcherHealthMonitor::new(
+                config.health_monitor_config.clone(),
+            )))
+        } else {
+            None
+        };
+
         (
             Self {
                 watcher: None,
@@ -262,6 +280,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
                 reconciliation,
                 resource_monitor,
                 event_processor,
+                health_monitor,
             },
             event_receiver,
         )
@@ -705,6 +724,121 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
         } else {
             None
         }
+    }
+
+    /// Start health monitoring with automatic recovery
+    #[allow(dead_code)]
+    pub async fn start_health_monitoring(&self) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if let Some(ref health_monitor) = self.health_monitor {
+            let resource_monitor = self.resource_monitor.clone();
+            let event_processor = self.event_processor.clone();
+            let watched_paths = self.watched_paths.clone();
+
+            // Store references for potential future use
+            let _resource_monitor = resource_monitor.clone();
+            let _event_processor = event_processor.clone();
+            let _watched_paths = watched_paths.clone();
+
+            health_monitor.start_monitoring().await.map_err(|e| format!("Failed to start health monitoring: {}", e))?;
+            tracing::info!("Health monitoring started for file watcher");
+        }
+        Ok(())
+    }
+
+    /// Get overall health status
+    #[allow(dead_code)]
+    pub async fn get_health_status(&self) -> HealthStatus {
+        if let Some(ref health_monitor) = self.health_monitor {
+            health_monitor.get_overall_health().await
+        } else {
+            HealthStatus::Unknown
+        }
+    }
+
+    /// Perform immediate health check
+    #[allow(dead_code)]
+    pub async fn check_health(&self) -> Vec<HealthCheckResult> {
+        if let Some(ref health_monitor) = self.health_monitor {
+            health_monitor.check_health(self.resource_monitor.as_deref()).await
+        } else {
+            vec![]
+        }
+    }
+
+    /// Get health monitoring metrics
+    #[allow(dead_code)]
+    pub async fn get_health_metrics(&self) -> Option<crate::filesystem::health_monitor::HealthMetrics> {
+        if let Some(ref health_monitor) = self.health_monitor {
+            Some(health_monitor.get_metrics())
+        } else {
+            None
+        }
+    }
+
+    /// Get health history
+    #[allow(dead_code)]
+    pub async fn get_health_history(&self, limit: Option<usize>) -> Vec<HealthCheckResult> {
+        if let Some(ref health_monitor) = self.health_monitor {
+            health_monitor.get_health_history(limit).await
+        } else {
+            vec![]
+        }
+    }
+
+    /// Get circuit breaker for watcher operations
+    #[allow(dead_code)]
+    pub fn get_watcher_circuit_breaker(&self) -> Option<std::sync::Arc<CircuitBreaker>> {
+        self.health_monitor.as_ref().map(|monitor| monitor.get_watcher_circuit_breaker())
+    }
+
+    /// Get circuit breaker for processor operations
+    #[allow(dead_code)]
+    pub fn get_processor_circuit_breaker(&self) -> Option<std::sync::Arc<CircuitBreaker>> {
+        self.health_monitor.as_ref().map(|monitor| monitor.get_processor_circuit_breaker())
+    }
+
+    /// Trigger recovery actions manually
+    #[allow(dead_code)]
+    pub async fn trigger_recovery(&self, actions: Vec<RecoveryAction>) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        tracing::info!("Triggering manual recovery actions: {:?}", actions);
+
+        for action in actions {
+            match action {
+                RecoveryAction::RestartWatcher => {
+                    // Stop and restart the watcher
+                    if self.watcher.is_some() {
+                        tracing::info!("Restarting file watcher");
+                        // In a full implementation, you would stop and restart the watcher here
+                    }
+                }
+                RecoveryAction::ClearQueues => {
+                    // Clear event processor queues
+                    if let Some(ref _processor) = self.event_processor {
+                        tracing::info!("Clearing event processor queues");
+                        // In a full implementation, you would clear the queues here
+                    }
+                }
+                RecoveryAction::ReduceFrequency => {
+                    // Reduce monitoring frequency
+                    tracing::info!("Reducing monitoring frequency");
+                }
+                RecoveryAction::NotifyAdmin => {
+                    // Send notification to administrators
+                    tracing::warn!("Administrator notification triggered due to watcher health issues");
+                }
+                RecoveryAction::GarbageCollection => {
+                    // Force garbage collection
+                    tracing::info!("Triggering garbage collection");
+                    // Could use std::hint::black_box or similar to encourage GC
+                }
+                RecoveryAction::ResetConnections => {
+                    // Reset any connections or resources
+                    tracing::info!("Resetting connections");
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

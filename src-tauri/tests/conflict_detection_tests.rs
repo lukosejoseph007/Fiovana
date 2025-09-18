@@ -240,6 +240,8 @@ async fn test_watcher_config_creation() {
         enable_optimized_processing: false,
         event_processor_config:
             proxemic::filesystem::event_processor::EventProcessorConfig::default(),
+        enable_health_monitoring: false,
+        health_monitor_config: proxemic::filesystem::health_monitor::HealthMonitorConfig::default(),
     };
 
     assert_eq!(config.debounce_duration, Duration::from_millis(500));

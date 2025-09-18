@@ -385,6 +385,8 @@ mod integration_tests {
             enable_optimized_processing: false,
             event_processor_config:
                 proxemic::filesystem::event_processor::EventProcessorConfig::default(),
+            enable_health_monitoring: false,
+            health_monitor_config: proxemic::filesystem::health_monitor::HealthMonitorConfig::default(),
         };
 
         let (mut watcher, _event_receiver) =
