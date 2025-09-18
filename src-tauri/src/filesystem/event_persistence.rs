@@ -277,7 +277,7 @@ impl EventPersistence {
                 !event.processed
                     && workspace_filter
                         .as_ref()
-                        .map_or(true, |ws| event.workspace_id.as_ref() == Some(ws))
+                        .is_none_or(|ws| event.workspace_id.as_ref() == Some(ws))
             })
             .take(limit)
             .collect();
