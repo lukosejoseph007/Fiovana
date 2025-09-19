@@ -10,7 +10,6 @@ interface FileInfo {
 
 const App: React.FC = () => {
   const [droppedFiles, setDroppedFiles] = useState<FileInfo[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const isListenerSetupRef = useRef(false)
@@ -343,15 +342,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {isProcessing && (
-                <div className="mt-4 text-center">
-                  <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-400 rounded-md">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                    <span className="text-blue-700">Processing files...</span>
-                  </div>
-                </div>
-              )}
             </section>
 
             {/* File List Section */}
@@ -411,7 +401,7 @@ const App: React.FC = () => {
             )}
 
             {/* Instructions */}
-            {droppedFiles.length === 0 && !isProcessing && (
+            {droppedFiles.length === 0 && (
               <section className="text-center py-12">
                 <div className="max-w-md mx-auto">
                   <h3 className="text-xl font-medium text-gray-600 dark:text-gray-300 mb-4">
