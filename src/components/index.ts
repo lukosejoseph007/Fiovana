@@ -1,2 +1,3 @@
-// Component exports will be added here as components are created
-export {}
+// Component exports
+export { default as DropZone } from './DropZone'
+export { default as FileWatcherDemo } from './FileWatcherDemo'

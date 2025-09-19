@@ -100,6 +100,66 @@ button {
   margin-right: 5px;
 }
 
+/* DropZone custom animations and styles */
+@keyframes dropzone-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes dropzone-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4);
+  }
+}
+
+.dropzone-active {
+  animation: dropzone-pulse 1.5s ease-in-out infinite;
+}
+
+.dropzone-glow {
+  animation: dropzone-glow 2s ease-in-out infinite;
+}
+
+/* File upload progress animation */
+@keyframes file-upload-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.file-upload-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: file-upload-progress 1.5s ease-in-out infinite;
+}
+
+/* Smooth transitions for all interactive elements */
+.transition-all-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -117,5 +177,19 @@ button {
   }
   button:active {
     background-color: #0f0f0f69;
+  }
+
+  /* Dark mode glow effect */
+  .dropzone-glow {
+    animation: dropzone-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes dropzone-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(96, 165, 250, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(96, 165, 250, 0.7), 0 0 30px rgba(96, 165, 250, 0.5);
+    }
   }
 }
