@@ -39,6 +39,7 @@ tokio-util = { version = "0.7", features = ["time"] }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"
 
 # Path manipulation
 path-clean = "1.0"
@@ -73,6 +74,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tempfile = "3.8"
 serial_test = "3.2"
 tauri = { version = "2.8", features = ["test"] }
+futures = "0.3"
 
 # Production release optimization
 [profile.release]

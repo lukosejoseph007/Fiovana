@@ -3521,6 +3521,7 @@ dependencies = [
  "dirs",
  "dunce",
  "filetime",
+ "futures",
  "hex",
  "infer",
  "jsonschema",

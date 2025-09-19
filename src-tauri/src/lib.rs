@@ -1,5 +1,6 @@
 pub mod app_config;
 pub mod commands;
+pub mod document;
 pub mod filesystem;
 pub mod memory_monitor;
 pub mod notifications;

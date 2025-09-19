@@ -8,6 +8,9 @@ use crate::filesystem::security::emergency_procedures::EmergencyManager;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::safe_mode::SafeModeManager;
 use crate::filesystem::security::security_config::SecurityConfig;
+use crate::document::{ContentHash, MetadataExtractor, FileProcessor, BatchHasher, DuplicateCheckResult,
+    FileValidationResult, CorruptionCheckResult, EnhancedMetadata, ProgressManager, ImportProgress,
+    ImportNotificationManager, ImportNotification, ImportError, ImportErrorInfo};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::fs;
@@ -486,6 +489,557 @@ pub async fn import_file(path: PathBuf) -> Result<PathBuf, CommandError> {
     }
 
     final_result
+}
+
+// ---------------- Document Processing Commands ----------------
+
+#[tauri::command]
+pub async fn validate_file_comprehensive(path: String) -> Result<FileValidationResult, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("validate") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "tauri_file_validation_comprehensive",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 5,
+            recovery_timeout: std::time::Duration::from_secs(60),
+            success_threshold: 3,
+        }),
+    );
+
+    let validator = create_default_validator();
+    let result = breaker.call(|| {
+        // First validate path security
+        let validated_path = validator
+            .validate_import_path(Path::new(&path))
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Then perform comprehensive file validation
+        FileProcessor::validate_file(&validated_path)
+            .map_err(|e| anyhow::anyhow!("File validation failed: {}", e))
+    });
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => VALIDATION_METRICS.record_success(duration),
+        Err(_) => VALIDATION_METRICS.record_failure(duration),
+    }
+
+    let final_result = result.map_err(|e| CommandError::Custom(e.to_string()));
+
+    if final_result.is_ok() {
+        backup_security_configurations();
+    }
+
+    final_result
+}
+
+#[tauri::command]
+pub async fn check_file_corruption(path: String) -> Result<CorruptionCheckResult, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("validate") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "tauri_corruption_check",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 3,
+            recovery_timeout: std::time::Duration::from_secs(30),
+            success_threshold: 2,
+        }),
+    );
+
+    let validator = create_default_validator();
+    let result = breaker.call(|| {
+        // First validate path security
+        let validated_path = validator
+            .validate_import_path(Path::new(&path))
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Then check for corruption
+        FileProcessor::check_corruption(&validated_path)
+            .map_err(|e| anyhow::anyhow!("Corruption check failed: {}", e))
+    });
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => VALIDATION_METRICS.record_success(duration),
+        Err(_) => VALIDATION_METRICS.record_failure(duration),
+    }
+
+    result.map_err(|e| CommandError::Custom(e.to_string()))
+}
+
+#[tauri::command]
+pub async fn extract_file_metadata(path: String) -> Result<EnhancedMetadata, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("read") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "tauri_metadata_extraction",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 3,
+            recovery_timeout: std::time::Duration::from_secs(30),
+            success_threshold: 2,
+        }),
+    );
+
+    let validator = create_default_validator();
+    let result = breaker.call(|| {
+        // First validate path security
+        let validated_path = validator
+            .validate_import_path(Path::new(&path))
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Then extract metadata
+        MetadataExtractor::extract(&validated_path)
+            .map_err(|e| anyhow::anyhow!("Metadata extraction failed: {}", e))
+    });
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => VALIDATION_METRICS.record_success(duration),
+        Err(_) => VALIDATION_METRICS.record_failure(duration),
+    }
+
+    result.map_err(|e| CommandError::Custom(e.to_string()))
+}
+
+#[tauri::command]
+pub async fn calculate_file_hash(path: String) -> Result<ContentHash, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("read") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "tauri_file_hashing",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 3,
+            recovery_timeout: std::time::Duration::from_secs(30),
+            success_threshold: 2,
+        }),
+    );
+
+    let validator = create_default_validator();
+    let result = breaker.call(|| {
+        // First validate path security
+        let validated_path = validator
+            .validate_import_path(Path::new(&path))
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Then calculate hash
+        ContentHash::from_file(&validated_path)
+            .map_err(|e| anyhow::anyhow!("Hash calculation failed: {}", e))
+    });
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => VALIDATION_METRICS.record_success(duration),
+        Err(_) => VALIDATION_METRICS.record_failure(duration),
+    }
+
+    result.map_err(|e| CommandError::Custom(e.to_string()))
+}
+
+// Global batch hasher for duplicate detection across multiple files
+static BATCH_HASHER: Lazy<Mutex<BatchHasher>> = Lazy::new(|| Mutex::new(BatchHasher::new()));
+
+// Global progress manager for tracking import operations
+static PROGRESS_MANAGER: Lazy<Mutex<ProgressManager>> = Lazy::new(|| Mutex::new(ProgressManager::new()));
+
+// Global notification manager for import operations
+static NOTIFICATION_MANAGER: Lazy<Mutex<ImportNotificationManager>> =
+    Lazy::new(|| Mutex::new(ImportNotificationManager::new()));
+
+#[tauri::command]
+pub async fn check_file_duplicates(path: String) -> Result<DuplicateCheckResult, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("read") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker
+    let breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "tauri_duplicate_check",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 3,
+            recovery_timeout: std::time::Duration::from_secs(30),
+            success_threshold: 2,
+        }),
+    );
+
+    let validator = create_default_validator();
+    let result = breaker.call(|| {
+        // First validate path security
+        let validated_path = validator
+            .validate_import_path(Path::new(&path))
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Then process file for duplicates using global hasher
+        // We need to use a blocking operation here since we're inside a sync closure
+        let hasher_future = BATCH_HASHER.lock();
+        let mut hasher = tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(hasher_future)
+        });
+        hasher.process_file(&validated_path)
+            .map_err(|e| anyhow::anyhow!("Duplicate check failed: {}", e))
+    });
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => VALIDATION_METRICS.record_success(duration),
+        Err(_) => VALIDATION_METRICS.record_failure(duration),
+    }
+
+    result.map_err(|e| CommandError::Custom(e.to_string()))
+}
+
+#[tauri::command]
+pub async fn clear_duplicate_cache() -> Result<(), CommandError> {
+    let mut hasher = BATCH_HASHER.lock().await;
+    hasher.clear();
+    Ok(())
+}
+
+// ---------------- Progress Tracking Commands ----------------
+
+#[tauri::command]
+pub async fn start_import_operation(file_count: u64) -> Result<String, CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    let tracker = manager.start_operation(file_count).await;
+
+    // Set initial steps
+    tracker.add_step("validation".to_string(), "Validating files for import".to_string()).await;
+    tracker.add_step("processing".to_string(), "Processing file contents".to_string()).await;
+    tracker.add_step("storage".to_string(), "Storing processed files".to_string()).await;
+    tracker.add_step("indexing".to_string(), "Updating search index".to_string()).await;
+
+    Ok(tracker.operation_id().to_string())
+}
+
+#[tauri::command]
+pub async fn get_import_progress(operation_id: String) -> Result<Option<ImportProgress>, CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    Ok(manager.get_operation_progress(&operation_id).await)
+}
+
+#[tauri::command]
+pub async fn cancel_import_operation(operation_id: String) -> Result<bool, CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    Ok(manager.cancel_operation(&operation_id).await)
+}
+
+#[tauri::command]
+pub async fn get_all_import_operations() -> Result<Vec<ImportProgress>, CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    Ok(manager.get_all_operations().await)
+}
+
+#[tauri::command]
+pub async fn cleanup_import_operation(operation_id: String) -> Result<(), CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    manager.cleanup_operation(&operation_id).await;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn cleanup_old_import_operations(max_age_hours: u64) -> Result<(), CommandError> {
+    let manager = PROGRESS_MANAGER.lock().await;
+    let max_age = std::time::Duration::from_secs(max_age_hours * 3600);
+    manager.cleanup_old_operations(max_age).await;
+    Ok(())
+}
+
+// ---------------- Error Handling and Notification Commands ----------------
+
+#[tauri::command]
+pub async fn report_import_error(
+    file_path: Option<String>,
+    error_type: String,
+    details: String
+) -> Result<(), CommandError> {
+    let path = file_path.map(PathBuf::from);
+
+    // Create appropriate error type based on error_type string
+    let import_error = match error_type.as_str() {
+        "file_not_found" => ImportError::FileNotFound {
+            path: path.unwrap_or_else(|| PathBuf::from("unknown"))
+        },
+        "permission_denied" => ImportError::PermissionDenied {
+            path: path.unwrap_or_else(|| PathBuf::from("unknown"))
+        },
+        "file_too_large" => ImportError::FileTooLarge {
+            path: path.unwrap_or_else(|| PathBuf::from("unknown")),
+            size: 0, // Would be provided in real scenario
+            max_size: 0, // Would be provided in real scenario
+        },
+        "unsupported_type" => ImportError::UnsupportedFileType {
+            path: path.unwrap_or_else(|| PathBuf::from("unknown")),
+            detected_type: None,
+            expected_types: vec!["pdf".to_string(), "docx".to_string()],
+        },
+        "corrupted" => ImportError::FileCorrupted {
+            path: path.unwrap_or_else(|| PathBuf::from("unknown")),
+            details: details.clone(),
+        },
+        "cancelled" => ImportError::OperationCancelled,
+        _ => ImportError::Unknown { details },
+    };
+
+    let error_info = import_error.to_error_info();
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    manager.notify_error(&error_info).await;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn notify_import_success(
+    title: String,
+    message: String,
+    file_count: Option<u32>
+) -> Result<(), CommandError> {
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    manager.notify_success(title, message, file_count).await;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn notify_import_info(title: String, message: String) -> Result<(), CommandError> {
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    manager.notify_info(title, message).await;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_import_notifications() -> Result<Vec<ImportNotification>, CommandError> {
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    Ok(manager.get_notifications().await)
+}
+
+#[tauri::command]
+pub async fn clear_import_notifications() -> Result<(), CommandError> {
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    manager.clear_notifications().await;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn remove_import_notification(index: usize) -> Result<(), CommandError> {
+    let manager = NOTIFICATION_MANAGER.lock().await;
+    manager.remove_notification(index).await;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn convert_error_to_info(error_message: String) -> Result<ImportErrorInfo, CommandError> {
+    // Parse common error types and convert to structured error info
+    let import_error = if error_message.contains("Permission denied") {
+        ImportError::PermissionDenied {
+            path: PathBuf::from("unknown")
+        }
+    } else if error_message.contains("No such file") {
+        ImportError::FileNotFound {
+            path: PathBuf::from("unknown")
+        }
+    } else if error_message.contains("too large") {
+        ImportError::FileTooLarge {
+            path: PathBuf::from("unknown"),
+            size: 0,
+            max_size: 0,
+        }
+    } else {
+        ImportError::Unknown {
+            details: error_message
+        }
+    };
+
+    Ok(import_error.to_error_info())
 }
 
 // ---------------- Testable Variants with Custom Validator ----------------

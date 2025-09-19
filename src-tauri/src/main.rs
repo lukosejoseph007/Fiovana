@@ -134,6 +134,28 @@ async fn main() {
             commands::validate_file_for_import,
             commands::import_file,
             commands::get_file_info_secure,
+            // Document processing commands
+            commands::validate_file_comprehensive,
+            commands::check_file_corruption,
+            commands::extract_file_metadata,
+            commands::calculate_file_hash,
+            commands::check_file_duplicates,
+            commands::clear_duplicate_cache,
+            // Progress tracking commands
+            commands::start_import_operation,
+            commands::get_import_progress,
+            commands::cancel_import_operation,
+            commands::get_all_import_operations,
+            commands::cleanup_import_operation,
+            commands::cleanup_old_import_operations,
+            // Error handling and notification commands
+            commands::report_import_error,
+            commands::notify_import_success,
+            commands::notify_import_info,
+            commands::get_import_notifications,
+            commands::clear_import_notifications,
+            commands::remove_import_notification,
+            commands::convert_error_to_info,
             // File watcher commands
             commands::start_file_watching,
             commands::stop_file_watching,
