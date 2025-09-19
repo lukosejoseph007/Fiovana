@@ -5,6 +5,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum ConfigError {
     #[error("Configuration file not found at path: {path}")]
+    #[allow(dead_code)]
     FileNotFound { path: PathBuf },
 
     #[error("Failed to read configuration file: {source}")]
@@ -20,9 +21,11 @@ pub enum ConfigError {
     ValidationError { field: String, message: String },
 
     #[error("Environment variable error: {name} - {message}")]
+    #[allow(dead_code)]
     EnvironmentError { name: String, message: String },
 
     #[error("Invalid environment: {message}")]
+    #[allow(dead_code)]
     InvalidEnvironment { message: String },
 
     #[error("Encryption/decryption failed: {message}")]

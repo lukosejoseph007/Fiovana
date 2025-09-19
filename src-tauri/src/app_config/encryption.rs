@@ -109,6 +109,7 @@ impl ConfigEncryption {
     }
 
     /// Encrypt sensitive fields
+    #[allow(dead_code)]
     pub fn encrypt_sensitive_config(
         config: &mut crate::app_config::types::ProxemicConfig,
     ) -> ConfigResult<()> {

@@ -9,6 +9,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod ai;
 mod app_config;
+mod app_state;
 mod commands;
 mod db;
 mod document;
@@ -17,21 +18,12 @@ mod memory_monitor;
 mod notifications;
 mod resource_monitor;
 mod vector;
+mod workspace;
 
 use app_config::ConfigManager;
+use app_state::{AppState, SecurityState};
 use filesystem::security::{audit_logger, SecurityLevel, StartupValidationResult};
-
-// Enhanced application state to hold both configuration and security information
-pub struct AppState {
-    pub config_manager: Arc<ConfigManager>,
-    pub security_state: SecurityState,
-}
-
-// Security state to store security information
-#[derive(Clone)]
-pub struct SecurityState {
-    pub validation_result: StartupValidationResult,
-}
+use workspace::WorkspaceManager;
 
 #[tokio::main]
 async fn main() {
@@ -113,12 +105,25 @@ async fn main() {
     info!("Starting Proxemic application...");
     info!("Environment: {:?}", config_manager.environment());
 
+    // Initialize workspace manager
+    let workspace_manager = match WorkspaceManager::new(Arc::clone(&config_manager)) {
+        Ok(manager) => {
+            info!("Workspace manager initialized successfully");
+            Arc::new(manager)
+        }
+        Err(e) => {
+            eprintln!("Failed to initialize workspace manager: {}", e);
+            std::process::exit(1);
+        }
+    };
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
         security_state: SecurityState {
             validation_result: security_result.clone(),
         },
+        workspace_manager,
     };
 
     // Build and run the Tauri application
@@ -198,6 +203,16 @@ async fn main() {
             // Security status commands
             get_security_status,
             get_deployment_report,
+            // Workspace management commands
+            commands::create_workspace,
+            commands::load_workspace,
+            commands::is_workspace,
+            commands::validate_workspace,
+            commands::list_workspaces,
+            commands::get_workspace_config,
+            commands::update_workspace_config,
+            commands::get_workspace_templates,
+            commands::repair_workspace,
         ])
         .setup(move |app| {
             info!("Application setup complete");

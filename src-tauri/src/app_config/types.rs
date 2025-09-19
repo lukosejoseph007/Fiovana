@@ -25,6 +25,7 @@ impl FromStr for Environment {
 
 impl Environment {
     /// Like FromStr, but falls back to Development instead of Err
+    #[allow(dead_code)]
     pub fn from_str_fallback(s: &str) -> Self {
         Self::from_str(s).unwrap_or(Self::Development)
     }

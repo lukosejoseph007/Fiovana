@@ -16,6 +16,7 @@ pub mod types;
 /// Handles loading, validation, and management of application configuration
 pub struct ConfigManager {
     config: Arc<RwLock<ProxemicConfig>>,
+    #[allow(dead_code)]
     config_paths: Vec<PathBuf>,
     environment: Environment,
 }
@@ -119,6 +120,7 @@ impl ConfigManager {
     }
 
     /// Reload configuration from disk with full validation
+    #[allow(dead_code)]
     pub async fn reload(&self) -> ConfigResult<()> {
         // Create new configuration with environment-appropriate defaults
         let mut new_config = ProxemicConfig::for_environment(&self.environment);
@@ -178,6 +180,7 @@ impl ConfigManager {
     }
 
     /// Save current configuration to disk (with sensitive values encrypted)
+    #[allow(dead_code)]
     pub async fn save_configuration(&self, path: Option<PathBuf>) -> ConfigResult<()> {
         // Scope the lock so it's released ASAP
         let config_to_save = {
@@ -437,10 +440,12 @@ impl ConfigManager {
         &self.environment
     }
 
+    #[allow(dead_code)]
     pub fn is_production(&self) -> bool {
         self.environment.is_production()
     }
 
+    #[allow(dead_code)]
     pub fn is_development(&self) -> bool {
         self.environment.is_development()
     }
@@ -450,6 +455,7 @@ impl ConfigManager {
         config_guard.config_file_path.clone()
     }
 
+    #[allow(dead_code)]
     pub fn loaded_at(&self) -> Option<chrono::DateTime<chrono::Utc>> {
         let config_guard = self.config.read().ok()?;
         config_guard.loaded_at
@@ -462,6 +468,7 @@ impl ConfigManager {
     }
 
     /// Update a specific configuration section
+    #[allow(dead_code)]
     pub fn update_security_config(&self, new_security_config: SecurityConfig) -> ConfigResult<()> {
         let mut config_guard = self
             .config
@@ -484,6 +491,7 @@ impl ConfigManager {
     }
 
     /// Check if configuration is stale and needs reloading
+    #[allow(dead_code)]
     pub fn is_stale(&self, max_age_hours: u64) -> bool {
         if let Some(loaded_at) = self.loaded_at() {
             let age = chrono::Utc::now().signed_duration_since(loaded_at);

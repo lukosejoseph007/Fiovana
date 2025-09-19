@@ -1,4 +1,5 @@
 pub mod app_config;
+pub mod app_state;
 pub mod commands;
 pub mod document;
 pub mod filesystem;
@@ -6,7 +7,9 @@ pub mod memory_monitor;
 pub mod notifications;
 pub mod resource_monitor;
 pub mod vector;
+pub mod workspace;
 
+pub use app_state::{AppState, SecurityState};
 pub use commands::*;
 pub use vector::{EmbeddingEngine, VectorStore};
 
