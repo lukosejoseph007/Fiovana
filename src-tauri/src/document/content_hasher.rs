@@ -3,7 +3,7 @@
 
 use sha2::{Sha256, Digest};
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::Read;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
 use anyhow::{Result, Context};
@@ -19,6 +19,7 @@ pub struct ContentHash {
     pub extension: Option<String>,
 }
 
+#[allow(dead_code)]
 impl ContentHash {
     /// Create a new content hash from file
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
@@ -100,6 +101,7 @@ pub struct BatchHasher {
     known_hashes: std::collections::HashMap<String, Vec<ContentHash>>,
 }
 
+#[allow(dead_code)]
 impl BatchHasher {
     /// Create a new batch hasher
     pub fn new() -> Self {
@@ -175,6 +177,7 @@ pub struct DuplicateCheckResult {
     pub duplicates: Vec<ContentHash>,
 }
 
+#[allow(dead_code)]
 impl DuplicateCheckResult {
     /// Get the file path
     pub fn file_path(&self) -> &Path {

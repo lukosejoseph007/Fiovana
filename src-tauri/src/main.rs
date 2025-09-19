@@ -156,6 +156,16 @@ async fn main() {
             commands::clear_import_notifications,
             commands::remove_import_notification,
             commands::convert_error_to_info,
+            // Progress persistence commands
+            commands::initialize_progress_persistence,
+            commands::persist_operation_progress,
+            commands::load_persisted_progress,
+            commands::list_resumable_operations,
+            commands::mark_operation_completed,
+            commands::mark_file_processed,
+            commands::cleanup_persisted_operations,
+            commands::get_progress_storage_stats,
+            commands::remove_persisted_progress,
             // File watcher commands
             commands::start_file_watching,
             commands::stop_file_watching,

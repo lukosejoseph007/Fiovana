@@ -2,8 +2,8 @@
 // Deep file metadata extraction beyond basic properties
 
 use std::collections::HashMap;
-use std::fs::{File, Metadata};
-use std::io::{Read, Seek, SeekFrom};
+use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
@@ -150,6 +150,7 @@ pub struct DocumentMetadata {
 /// Metadata extractor
 pub struct MetadataExtractor;
 
+#[allow(dead_code)]
 impl MetadataExtractor {
     /// Extract enhanced metadata from file
     pub fn extract<P: AsRef<Path>>(path: P) -> Result<EnhancedMetadata> {

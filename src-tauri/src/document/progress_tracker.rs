@@ -87,6 +87,7 @@ pub struct ProgressTracker {
     progress_sender: Option<mpsc::UnboundedSender<ImportProgress>>,
 }
 
+#[allow(dead_code)]
 impl ProgressTracker {
     /// Create a new progress tracker
     pub fn new(operation_id: String, total_files: u64) -> Self {
@@ -305,6 +306,7 @@ pub struct ProgressManager {
     event_sender: Option<mpsc::UnboundedSender<ImportProgress>>,
 }
 
+#[allow(dead_code)]
 impl ProgressManager {
     /// Create a new progress manager
     pub fn new() -> Self {

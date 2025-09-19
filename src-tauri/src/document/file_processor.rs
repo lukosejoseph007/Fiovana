@@ -2,7 +2,7 @@
 // File processing with corruption detection using header validation
 
 use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use serde::{Deserialize, Serialize};
 use anyhow::{Result, Context, bail};
@@ -137,6 +137,7 @@ impl MagicNumbers {
 /// File processor for corruption detection and validation
 pub struct FileProcessor;
 
+#[allow(dead_code)]
 impl FileProcessor {
     /// Check file for corruption using header validation
     pub fn check_corruption<P: AsRef<Path>>(path: P) -> Result<CorruptionCheckResult> {
