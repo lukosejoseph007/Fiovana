@@ -116,10 +116,7 @@ impl BatchHasher {
     /// Add a known hash to check against
     pub fn add_known_hash(&mut self, hash: ContentHash) {
         let hash_key = hash.hash().to_string();
-        self.known_hashes
-            .entry(hash_key)
-            .or_insert_with(Vec::new)
-            .push(hash);
+        self.known_hashes.entry(hash_key).or_default().push(hash);
     }
 
     /// Process a file and check for duplicates

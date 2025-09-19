@@ -166,6 +166,12 @@ async fn main() {
             commands::cleanup_persisted_operations,
             commands::get_progress_storage_stats,
             commands::remove_persisted_progress,
+            // Batch processing commands
+            commands::initialize_batch_processor,
+            commands::process_files_batch,
+            commands::get_batch_processing_stats,
+            commands::clear_batch_processing_queue,
+            commands::process_single_file_with_validation,
             // File watcher commands
             commands::start_file_watching,
             commands::stop_file_watching,

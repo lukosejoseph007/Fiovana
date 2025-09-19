@@ -1,10 +1,12 @@
 // src-tauri/src/commands.rs
 
 use crate::document::{
-    BatchHasher, ContentHash, CorruptionCheckResult, DuplicateCheckResult, EnhancedMetadata,
-    FileProcessor, FileValidationResult, ImportError, ImportErrorInfo, ImportNotification,
+    BatchConfig, BatchHasher, BatchProcessingResult, BatchProcessor, ContentHash,
+    CorruptionCheckResult, DuplicateCheckResult, EnhancedMetadata, FileProcessor,
+    FileValidationResult, ImportError, ImportErrorInfo, ImportNotification,
     ImportNotificationManager, ImportProgress, MetadataExtractor, PersistedProgress,
-    ProgressManager, ProgressPersistenceManager, ProgressStorageStats,
+    ProcessingPriority, ProgressManager, ProgressPersistenceManager, ProgressStorageStats,
+    QueueStats,
 };
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::audit_logger::SecurityAuditor;
@@ -1221,6 +1223,209 @@ pub async fn remove_persisted_progress(operation_id: String) -> Result<(), Comma
         .map_err(|e| CommandError::Custom(format!("Failed to remove progress: {}", e)))?;
 
     Ok(())
+}
+
+// ---------------- Batch Processing Commands ----------------
+
+// Global batch processor instance
+#[allow(dead_code)]
+static BATCH_PROCESSOR: Lazy<tokio::sync::Mutex<Option<BatchProcessor>>> =
+    Lazy::new(|| tokio::sync::Mutex::new(None));
+
+#[allow(dead_code)]
+#[tauri::command]
+pub async fn initialize_batch_processor(
+    max_parallel_files: Option<usize>,
+    max_concurrent_bytes: Option<u64>,
+    file_timeout_seconds: Option<u64>,
+    continue_on_failure: Option<bool>,
+    max_retries: Option<u32>,
+) -> Result<(), CommandError> {
+    let mut config = BatchConfig::default();
+
+    if let Some(max_parallel) = max_parallel_files {
+        config.max_parallel_files = max_parallel.clamp(1, 16); // Cap at reasonable limits
+    }
+
+    if let Some(max_bytes) = max_concurrent_bytes {
+        config.max_concurrent_bytes = max_bytes.max(64 * 1024 * 1024); // Minimum 64MB
+    }
+
+    if let Some(timeout) = file_timeout_seconds {
+        config.file_timeout = std::time::Duration::from_secs(timeout.clamp(10, 3600));
+        // 10s to 1h
+    }
+
+    if let Some(continue_fail) = continue_on_failure {
+        config.continue_on_failure = continue_fail;
+    }
+
+    if let Some(retries) = max_retries {
+        config.max_retries = retries.min(10); // Cap at 10 retries
+    }
+
+    let validator = create_default_validator();
+    let processor = BatchProcessor::with_config(config, validator);
+
+    let mut batch_processor_guard = BATCH_PROCESSOR.lock().await;
+    *batch_processor_guard = Some(processor);
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+#[tauri::command]
+pub async fn process_files_batch(
+    file_paths: Vec<String>,
+    priority: String,
+    operation_id: String,
+) -> Result<BatchProcessingResult, CommandError> {
+    let batch_processor_guard = BATCH_PROCESSOR.lock().await;
+    let processor = batch_processor_guard
+        .as_ref()
+        .ok_or_else(|| CommandError::Custom("Batch processor not initialized".to_string()))?;
+
+    // Convert priority string to enum
+    let processing_priority = match priority.as_str() {
+        "low" => ProcessingPriority::Low,
+        "normal" => ProcessingPriority::Normal,
+        "high" => ProcessingPriority::High,
+        "critical" => ProcessingPriority::Critical,
+        _ => ProcessingPriority::Normal,
+    };
+
+    // Convert string paths to PathBuf
+    let files: Vec<PathBuf> = file_paths.into_iter().map(PathBuf::from).collect();
+    let file_count = files.len() as u64;
+
+    // Get or create progress tracker
+    let progress_manager = PROGRESS_MANAGER.lock().await;
+    let tracker = if let Some(_existing_progress) =
+        progress_manager.get_operation_progress(&operation_id).await
+    {
+        // Use existing tracker - get it from the manager
+        // For now, create a new one as we can't easily extract the tracker
+        progress_manager.start_operation(file_count).await
+    } else {
+        progress_manager.start_operation(file_count).await
+    };
+
+    // Release the progress manager lock before long-running operation
+    drop(progress_manager);
+
+    // Process the batch
+    let result = processor
+        .process_batch(files, processing_priority, tracker.clone())
+        .await
+        .map_err(|e| CommandError::Custom(format!("Batch processing failed: {}", e)))?;
+
+    Ok(result)
+}
+
+#[allow(dead_code)]
+#[tauri::command]
+pub async fn get_batch_processing_stats() -> Result<QueueStats, CommandError> {
+    let batch_processor_guard = BATCH_PROCESSOR.lock().await;
+    let processor = batch_processor_guard
+        .as_ref()
+        .ok_or_else(|| CommandError::Custom("Batch processor not initialized".to_string()))?;
+
+    Ok(processor.get_stats().await)
+}
+
+#[allow(dead_code)]
+#[tauri::command]
+pub async fn clear_batch_processing_queue() -> Result<(), CommandError> {
+    let batch_processor_guard = BATCH_PROCESSOR.lock().await;
+    let processor = batch_processor_guard
+        .as_ref()
+        .ok_or_else(|| CommandError::Custom("Batch processor not initialized".to_string()))?;
+
+    processor.clear_queue().await;
+    Ok(())
+}
+
+#[allow(dead_code)]
+#[tauri::command]
+pub async fn process_single_file_with_validation(
+    file_path: String,
+    retry_count: Option<u32>,
+) -> Result<bool, CommandError> {
+    let start_time = Instant::now();
+
+    // Security checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !SafeModeManager::global()
+        .is_file_allowed(Path::new(&file_path))
+        .map_err(|e| CommandError::SecurityError {
+            message: format!("Safe mode restriction: {}", e),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        })?
+    {
+        return Err(CommandError::SecurityError {
+            message: "File blocked by safe mode restrictions".to_string(),
+            code: "SAFE_MODE_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    let validator = create_default_validator();
+    let path = Path::new(&file_path);
+    let retry_count = retry_count.unwrap_or(0);
+
+    // Use the batch processor's internal method (but we need to make it public)
+    // For now, replicate the logic
+    let result = async {
+        // Validate path security first
+        let validated_path = validator
+            .validate_import_path(path)
+            .map_err(|e| anyhow::anyhow!("Path validation failed: {}", e))?;
+
+        // Validate file integrity and structure
+        let validation_result = FileProcessor::validate_file(&validated_path)
+            .map_err(|e| anyhow::anyhow!("File validation failed: {}", e))?;
+
+        if !validation_result.is_valid {
+            anyhow::bail!("File validation failed: {}", validation_result.message);
+        }
+
+        // Calculate content hash for deduplication
+        let _hash = ContentHash::from_file(&validated_path)
+            .map_err(|e| anyhow::anyhow!("Hash calculation failed: {}", e))?;
+
+        Ok(())
+    }
+    .await;
+
+    let duration = start_time.elapsed();
+    match &result {
+        Ok(_) => {
+            VALIDATION_METRICS.record_success(duration);
+            Ok(true)
+        }
+        Err(e) => {
+            VALIDATION_METRICS.record_failure(duration);
+            Err(CommandError::Custom(format!(
+                "File processing failed (attempt {}): {}",
+                retry_count + 1,
+                e
+            )))
+        }
+    }
 }
 
 // ---------------- Testable Variants with Custom Validator ----------------

@@ -130,7 +130,7 @@ impl MagicNumbers {
         // Count printable ASCII characters
         let printable_count = header.iter()
             .take(512) // Check first 512 bytes
-            .filter(|&&b| (b >= 32 && b <= 126) || b == 9 || b == 10 || b == 13) // printable + tab + CR + LF
+            .filter(|&&b| (32..=126).contains(&b) || b == 9 || b == 10 || b == 13) // printable + tab + CR + LF
             .count();
 
         let total_checked = header.len().min(512);
@@ -199,7 +199,7 @@ impl FileProcessor {
         if detected_type.as_deref() == Some("zip")
             && expected_type
                 .as_deref()
-                .map_or(false, |ext| ["docx", "xlsx", "pptx"].contains(&ext))
+                .is_some_and(|ext| ["docx", "xlsx", "pptx"].contains(&ext))
         {
             if let Err(e) = Self::validate_office_document(&mut file) {
                 corruption_details.push(format!("Office document validation failed: {}", e));

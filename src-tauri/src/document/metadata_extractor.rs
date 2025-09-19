@@ -361,7 +361,7 @@ impl MetadataExtractor {
         let text_chars = buffer
             .iter()
             .take(1024)
-            .filter(|&&b| (b >= 32 && b <= 126) || b == 9 || b == 10 || b == 13)
+            .filter(|&&b| (32..=126).contains(&b) || b == 9 || b == 10 || b == 13)
             .count();
 
         let sample_size = buffer.len().min(1024);
