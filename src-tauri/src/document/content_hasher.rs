@@ -1,12 +1,12 @@
 // src-tauri/src/document/content_hasher.rs
 // Content hashing for duplicate file detection using SHA-256
 
-use sha2::{Sha256, Digest};
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
-use anyhow::{Result, Context};
 
 /// Content hash for file deduplication
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -24,16 +24,18 @@ impl ContentHash {
     /// Create a new content hash from file
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+        let mut file =
+            File::open(path).with_context(|| format!("Failed to open file: {}", path.display()))?;
 
-        let metadata = file.metadata()
+        let metadata = file
+            .metadata()
             .with_context(|| format!("Failed to get file metadata: {}", path.display()))?;
 
         let size = metadata.len();
 
         // Extract file extension
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
@@ -42,7 +44,8 @@ impl ContentHash {
         let mut buffer = [0u8; 8192]; // 8KB buffer for efficient reading
 
         loop {
-            let bytes_read = file.read(&mut buffer)
+            let bytes_read = file
+                .read(&mut buffer)
                 .with_context(|| format!("Failed to read file: {}", path.display()))?;
 
             if bytes_read == 0 {
@@ -113,7 +116,10 @@ impl BatchHasher {
     /// Add a known hash to check against
     pub fn add_known_hash(&mut self, hash: ContentHash) {
         let hash_key = hash.hash().to_string();
-        self.known_hashes.entry(hash_key).or_insert_with(Vec::new).push(hash);
+        self.known_hashes
+            .entry(hash_key)
+            .or_insert_with(Vec::new)
+            .push(hash);
     }
 
     /// Process a file and check for duplicates
@@ -124,7 +130,8 @@ impl BatchHasher {
 
         // Check for duplicates
         let duplicates = if let Some(existing_hashes) = self.known_hashes.get(content_hash.hash()) {
-            existing_hashes.iter()
+            existing_hashes
+                .iter()
                 .filter(|h| h.is_duplicate(&content_hash))
                 .cloned()
                 .collect()
@@ -203,8 +210,8 @@ impl DuplicateCheckResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_content_hash_creation() {

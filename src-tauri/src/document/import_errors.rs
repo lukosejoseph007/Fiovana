@@ -15,20 +15,27 @@ pub enum ImportError {
     PermissionDenied { path: PathBuf },
 
     #[error("File is too large: {path} ({size} bytes, max: {max_size} bytes)")]
-    FileTooLarge { path: PathBuf, size: u64, max_size: u64 },
+    FileTooLarge {
+        path: PathBuf,
+        size: u64,
+        max_size: u64,
+    },
 
     #[error("File type not supported: {path} (detected: {detected_type:?}, expected: {expected_types:?})")]
     UnsupportedFileType {
         path: PathBuf,
         detected_type: Option<String>,
-        expected_types: Vec<String>
+        expected_types: Vec<String>,
     },
 
     #[error("File appears to be corrupted: {path} - {details}")]
     FileCorrupted { path: PathBuf, details: String },
 
     #[error("Duplicate file detected: {path} (matches: {existing_path})")]
-    DuplicateFile { path: PathBuf, existing_path: PathBuf },
+    DuplicateFile {
+        path: PathBuf,
+        existing_path: PathBuf,
+    },
 
     #[error("File is empty: {path}")]
     EmptyFile { path: PathBuf },
@@ -152,24 +159,34 @@ impl ImportError {
     /// Get file path from error if available
     pub fn get_file_path(&self) -> Option<PathBuf> {
         match self {
-            ImportError::FileNotFound { path } |
-            ImportError::PermissionDenied { path } |
-            ImportError::FileTooLarge { path, .. } |
-            ImportError::UnsupportedFileType { path, .. } |
-            ImportError::FileCorrupted { path, .. } |
-            ImportError::DuplicateFile { path, .. } |
-            ImportError::EmptyFile { path } |
-            ImportError::InvalidPath { path } |
-            ImportError::FileLocked { path } |
-            ImportError::SecurityViolation { path, .. } |
-            ImportError::MetadataExtractionFailed { path, .. } |
-            ImportError::HashCalculationFailed { path, .. } => Some(path.clone()),
+            ImportError::FileNotFound { path }
+            | ImportError::PermissionDenied { path }
+            | ImportError::FileTooLarge { path, .. }
+            | ImportError::UnsupportedFileType { path, .. }
+            | ImportError::FileCorrupted { path, .. }
+            | ImportError::DuplicateFile { path, .. }
+            | ImportError::EmptyFile { path }
+            | ImportError::InvalidPath { path }
+            | ImportError::FileLocked { path }
+            | ImportError::SecurityViolation { path, .. }
+            | ImportError::MetadataExtractionFailed { path, .. }
+            | ImportError::HashCalculationFailed { path, .. } => Some(path.clone()),
             _ => None,
         }
     }
 
     /// Get detailed error information for user presentation
-    fn get_error_details(&self) -> (ErrorSeverity, ErrorCategory, String, String, Vec<String>, bool, bool) {
+    fn get_error_details(
+        &self,
+    ) -> (
+        ErrorSeverity,
+        ErrorCategory,
+        String,
+        String,
+        Vec<String>,
+        bool,
+        bool,
+    ) {
         match self {
             ImportError::FileNotFound { path } => (
                 ErrorSeverity::Error,
@@ -414,13 +431,11 @@ impl ImportNotificationManager {
             ErrorSeverity::Critical | ErrorSeverity::Fatal => NotificationType::Error,
         };
 
-        let mut actions = vec![
-            NotificationAction {
-                id: "dismiss".to_string(),
-                label: "Dismiss".to_string(),
-                action_type: ActionType::Dismiss,
-            }
-        ];
+        let mut actions = vec![NotificationAction {
+            id: "dismiss".to_string(),
+            label: "Dismiss".to_string(),
+            action_type: ActionType::Dismiss,
+        }];
 
         if error_info.retryable {
             actions.push(NotificationAction {
@@ -442,7 +457,10 @@ impl ImportNotificationManager {
             notification_type,
             title: error_info.title.clone(),
             message: error_info.message.clone(),
-            persistent: matches!(error_info.severity, ErrorSeverity::Critical | ErrorSeverity::Fatal),
+            persistent: matches!(
+                error_info.severity,
+                ErrorSeverity::Critical | ErrorSeverity::Fatal
+            ),
             duration_ms: Some(match error_info.severity {
                 ErrorSeverity::Warning => 5000,
                 ErrorSeverity::Error => 8000,
@@ -468,13 +486,11 @@ impl ImportNotificationManager {
             },
             persistent: false,
             duration_ms: Some(4000),
-            actions: vec![
-                NotificationAction {
-                    id: "dismiss".to_string(),
-                    label: "Dismiss".to_string(),
-                    action_type: ActionType::Dismiss,
-                }
-            ],
+            actions: vec![NotificationAction {
+                id: "dismiss".to_string(),
+                label: "Dismiss".to_string(),
+                action_type: ActionType::Dismiss,
+            }],
             file_path: None,
             timestamp: std::time::SystemTime::now(),
         };
@@ -490,13 +506,11 @@ impl ImportNotificationManager {
             message,
             persistent: false,
             duration_ms: Some(3000),
-            actions: vec![
-                NotificationAction {
-                    id: "dismiss".to_string(),
-                    label: "Dismiss".to_string(),
-                    action_type: ActionType::Dismiss,
-                }
-            ],
+            actions: vec![NotificationAction {
+                id: "dismiss".to_string(),
+                label: "Dismiss".to_string(),
+                action_type: ActionType::Dismiss,
+            }],
             file_path: None,
             timestamp: std::time::SystemTime::now(),
         };
@@ -550,7 +564,7 @@ mod tests {
     #[test]
     fn test_error_info_creation() {
         let error = ImportError::FileNotFound {
-            path: PathBuf::from("/test/file.txt")
+            path: PathBuf::from("/test/file.txt"),
         };
 
         let error_info = error.to_error_info();
@@ -585,15 +599,23 @@ mod tests {
         manager.notify_error(&error_info).await;
 
         // Test success notification
-        manager.notify_success(
-            "Import Complete".to_string(),
-            "Files imported successfully".to_string(),
-            Some(5),
-        ).await;
+        manager
+            .notify_success(
+                "Import Complete".to_string(),
+                "Files imported successfully".to_string(),
+                Some(5),
+            )
+            .await;
 
         let notifications = manager.get_notifications().await;
         assert_eq!(notifications.len(), 2);
-        assert!(matches!(notifications[0].notification_type, NotificationType::Warning));
-        assert!(matches!(notifications[1].notification_type, NotificationType::Success));
+        assert!(matches!(
+            notifications[0].notification_type,
+            NotificationType::Warning
+        ));
+        assert!(matches!(
+            notifications[1].notification_type,
+            NotificationType::Success
+        ));
     }
 }

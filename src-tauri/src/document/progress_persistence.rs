@@ -2,13 +2,13 @@
 // Progress persistence system for long-running import operations
 
 use crate::document::{ImportProgress, OperationStatus};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
 use tokio::sync::RwLock;
-use anyhow::{Result, Context};
 
 /// Persistent progress state for recovery after application restart
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,8 +46,12 @@ impl ProgressPersistenceManager {
 
         // Ensure storage directory exists
         if !storage_dir.exists() {
-            std::fs::create_dir_all(&storage_dir)
-                .with_context(|| format!("Failed to create storage directory: {}", storage_dir.display()))?;
+            std::fs::create_dir_all(&storage_dir).with_context(|| {
+                format!(
+                    "Failed to create storage directory: {}",
+                    storage_dir.display()
+                )
+            })?;
         }
 
         Ok(Self {
@@ -71,7 +75,10 @@ impl ProgressPersistenceManager {
             remaining_files,
             processed_files,
             failed_files,
-            resumable: matches!(progress.status, OperationStatus::Running | OperationStatus::Paused),
+            resumable: matches!(
+                progress.status,
+                OperationStatus::Running | OperationStatus::Paused
+            ),
             persisted_at: std::time::SystemTime::now(),
             app_version: env!("CARGO_PKG_VERSION").to_string(),
         };
@@ -81,7 +88,8 @@ impl ProgressPersistenceManager {
         let json_data = serde_json::to_string_pretty(&persisted)
             .with_context(|| "Failed to serialize progress data")?;
 
-        fs::write(&file_path, json_data).await
+        fs::write(&file_path, json_data)
+            .await
             .with_context(|| format!("Failed to write progress file: {}", file_path.display()))?;
 
         // Update cache
@@ -107,7 +115,8 @@ impl ProgressPersistenceManager {
             return Ok(None);
         }
 
-        let json_data = fs::read_to_string(&file_path).await
+        let json_data = fs::read_to_string(&file_path)
+            .await
             .with_context(|| format!("Failed to read progress file: {}", file_path.display()))?;
 
         let persisted: PersistedProgress = serde_json::from_str(&json_data)
@@ -125,8 +134,12 @@ impl ProgressPersistenceManager {
         let mut operations = Vec::new();
 
         // Read all .json files in storage directory
-        let mut dir_entries = fs::read_dir(&self.storage_dir).await
-            .with_context(|| format!("Failed to read storage directory: {}", self.storage_dir.display()))?;
+        let mut dir_entries = fs::read_dir(&self.storage_dir).await.with_context(|| {
+            format!(
+                "Failed to read storage directory: {}",
+                self.storage_dir.display()
+            )
+        })?;
 
         while let Some(entry) = dir_entries.next_entry().await? {
             let path = entry.path();
@@ -152,8 +165,9 @@ impl ProgressPersistenceManager {
         let file_path = self.get_progress_file_path(operation_id);
 
         if file_path.exists() {
-            fs::remove_file(&file_path).await
-                .with_context(|| format!("Failed to remove progress file: {}", file_path.display()))?;
+            fs::remove_file(&file_path).await.with_context(|| {
+                format!("Failed to remove progress file: {}", file_path.display())
+            })?;
         }
 
         // Remove from cache
@@ -170,8 +184,14 @@ impl ProgressPersistenceManager {
         let mut removed_count = 0;
 
         for operation in operations {
-            if operation.persisted_at < cutoff_time ||
-               matches!(operation.progress.status, OperationStatus::Completed | OperationStatus::Failed | OperationStatus::Cancelled) {
+            if operation.persisted_at < cutoff_time
+                || matches!(
+                    operation.progress.status,
+                    OperationStatus::Completed
+                        | OperationStatus::Failed
+                        | OperationStatus::Cancelled
+                )
+            {
                 if let Ok(()) = self.remove_progress(&operation.operation_id).await {
                     removed_count += 1;
                 }
@@ -201,7 +221,8 @@ impl ProgressPersistenceManager {
                 persisted.remaining_files,
                 persisted.processed_files,
                 persisted.failed_files,
-            ).await?;
+            )
+            .await?;
         }
 
         Ok(())
@@ -233,7 +254,8 @@ impl ProgressPersistenceManager {
             // Update progress
             persisted.progress.files_processed = persisted.processed_files.len() as u64;
             persisted.progress.progress_percentage = if persisted.progress.total_files > 0 {
-                (persisted.progress.files_processed as f64 / persisted.progress.total_files as f64) * 100.0
+                (persisted.progress.files_processed as f64 / persisted.progress.total_files as f64)
+                    * 100.0
             } else {
                 100.0
             };
@@ -247,7 +269,8 @@ impl ProgressPersistenceManager {
                 persisted.remaining_files,
                 persisted.processed_files,
                 persisted.failed_files,
-            ).await?;
+            )
+            .await?;
         }
 
         Ok(())
@@ -255,7 +278,8 @@ impl ProgressPersistenceManager {
 
     /// Get file path for progress storage
     fn get_progress_file_path(&self, operation_id: &str) -> PathBuf {
-        self.storage_dir.join(format!("progress_{}.json", operation_id))
+        self.storage_dir
+            .join(format!("progress_{}.json", operation_id))
     }
 
     /// Get storage statistics
@@ -263,12 +287,14 @@ impl ProgressPersistenceManager {
         let operations = self.list_persisted_operations().await?;
         let total_count = operations.len();
         let resumable_count = operations.iter().filter(|op| op.resumable).count();
-        let completed_count = operations.iter().filter(|op|
-            matches!(op.progress.status, OperationStatus::Completed)
-        ).count();
-        let failed_count = operations.iter().filter(|op|
-            matches!(op.progress.status, OperationStatus::Failed)
-        ).count();
+        let completed_count = operations
+            .iter()
+            .filter(|op| matches!(op.progress.status, OperationStatus::Completed))
+            .count();
+        let failed_count = operations
+            .iter()
+            .filter(|op| matches!(op.progress.status, OperationStatus::Failed))
+            .count();
 
         // Calculate storage size
         let mut total_size = 0u64;
@@ -304,8 +330,8 @@ pub struct ProgressStorageStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use crate::document::{OperationStatus, ProgressStep, StepStatus};
+    use tempfile::tempdir;
 
     #[tokio::test]
     async fn test_progress_persistence() -> Result<()> {
@@ -342,7 +368,15 @@ mod tests {
         let failed = vec![];
 
         // Persist progress
-        manager.persist_progress("test-op", &progress, remaining.clone(), processed.clone(), failed.clone()).await?;
+        manager
+            .persist_progress(
+                "test-op",
+                &progress,
+                remaining.clone(),
+                processed.clone(),
+                failed.clone(),
+            )
+            .await?;
 
         // Load progress
         let loaded = manager.load_progress("test-op").await?;
@@ -355,7 +389,9 @@ mod tests {
         assert_eq!(loaded.processed_files, processed);
 
         // Test file completion
-        manager.mark_file_completed("test-op", PathBuf::from("/test/file2.txt"), true, None).await?;
+        manager
+            .mark_file_completed("test-op", PathBuf::from("/test/file2.txt"), true, None)
+            .await?;
 
         let updated = manager.load_progress("test-op").await?.unwrap();
         assert_eq!(updated.processed_files.len(), 2);
@@ -391,7 +427,9 @@ mod tests {
             warnings: vec![],
         };
 
-        manager.persist_progress("test-stats", &progress, vec![], vec![], vec![]).await?;
+        manager
+            .persist_progress("test-stats", &progress, vec![], vec![], vec![])
+            .await?;
 
         let stats = manager.get_storage_stats().await?;
         assert_eq!(stats.total_operations, 1);

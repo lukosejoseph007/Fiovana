@@ -1,13 +1,13 @@
 // src-tauri/src/document/metadata_extractor.rs
 // Deep file metadata extraction beyond basic properties
 
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
-use anyhow::{Result, Context};
 
 /// Enhanced file metadata with deep analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -185,12 +185,14 @@ impl MetadataExtractor {
         let metadata = std::fs::metadata(path)
             .with_context(|| format!("Failed to get metadata for: {}", path.display()))?;
 
-        let file_name = path.file_name()
+        let file_name = path
+            .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or("unknown")
             .to_string();
 
-        let file_extension = path.extension()
+        let file_extension = path
+            .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
@@ -209,12 +211,13 @@ impl MetadataExtractor {
 
     /// Extract content metadata
     fn extract_content_metadata(path: &Path) -> Result<ContentMetadata> {
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+        let mut file =
+            File::open(path).with_context(|| format!("Failed to open file: {}", path.display()))?;
 
         // Read sample of file content for analysis
         let mut buffer = vec![0u8; 8192]; // 8KB sample
-        let bytes_read = file.read(&mut buffer)
+        let bytes_read = file
+            .read(&mut buffer)
             .with_context(|| format!("Failed to read file: {}", path.display()))?;
 
         buffer.truncate(bytes_read);
@@ -257,9 +260,7 @@ impl MetadataExtractor {
         #[cfg(unix)]
         let permissions = {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::metadata(path)
-                .ok()
-                .map(|m| m.permissions().mode())
+            std::fs::metadata(path).ok().map(|m| m.permissions().mode())
         };
 
         #[cfg(not(unix))]
@@ -305,7 +306,8 @@ impl MetadataExtractor {
 
     /// Extract document-specific metadata
     fn extract_document_metadata(path: &Path) -> Result<DocumentMetadata> {
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
@@ -356,7 +358,8 @@ impl MetadataExtractor {
             return false;
         }
 
-        let text_chars = buffer.iter()
+        let text_chars = buffer
+            .iter()
             .take(1024)
             .filter(|&&b| (b >= 32 && b <= 126) || b == 9 || b == 10 || b == 13)
             .count();
@@ -396,7 +399,9 @@ impl MetadataExtractor {
     }
 
     fn create_preview(text: &str) -> String {
-        text.chars().take(200).collect::<String>()
+        text.chars()
+            .take(200)
+            .collect::<String>()
             .lines()
             .take(5)
             .collect::<Vec<_>>()
@@ -434,7 +439,8 @@ impl MetadataExtractor {
             return 0.0;
         }
 
-        let binary_bytes = buffer.iter()
+        let binary_bytes = buffer
+            .iter()
             .filter(|&&b| b < 32 && b != 9 && b != 10 && b != 13)
             .count();
 
@@ -538,7 +544,7 @@ impl MetadataExtractor {
     }
 
     fn calculate_checksums(buffer: &[u8]) -> HashMap<String, String> {
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
 
         let mut checksums = HashMap::new();
 
@@ -552,19 +558,22 @@ impl MetadataExtractor {
     }
 
     fn analyze_file_structure(buffer: &[u8], path: &Path) -> FileStructure {
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
         match extension.as_deref() {
             Some("pdf") => Self::analyze_pdf_structure(buffer),
-            Some("zip") | Some("docx") | Some("xlsx") | Some("pptx") => Self::analyze_zip_structure(buffer),
+            Some("zip") | Some("docx") | Some("xlsx") | Some("pptx") => {
+                Self::analyze_zip_structure(buffer)
+            }
             _ => FileStructure {
                 has_structure: false,
                 format_version: None,
                 embedded_resources: 0,
                 sections: Vec::new(),
-            }
+            },
         }
     }
 
@@ -605,14 +614,12 @@ impl MetadataExtractor {
                 has_structure: true,
                 format_version: Some("2.0".to_string()), // ZIP 2.0 format
                 embedded_resources: 1, // Simplified - would need proper ZIP parsing
-                sections: vec![
-                    FileSection {
-                        name: "Local File Header".to_string(),
-                        offset: 0,
-                        size: 30, // Minimum local file header size
-                        section_type: "header".to_string(),
-                    }
-                ],
+                sections: vec![FileSection {
+                    name: "Local File Header".to_string(),
+                    offset: 0,
+                    size: 30, // Minimum local file header size
+                    section_type: "header".to_string(),
+                }],
             }
         } else {
             FileStructure {
@@ -664,7 +671,9 @@ impl MetadataExtractor {
         file.read_to_string(&mut content)?;
 
         // Try to extract title from first line
-        let title = content.lines().next()
+        let title = content
+            .lines()
+            .next()
             .filter(|line| !line.trim().is_empty())
             .map(|line| line.trim().to_string());
 
@@ -687,8 +696,8 @@ impl MetadataExtractor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_basic_metadata_extraction() -> Result<()> {
@@ -711,7 +720,10 @@ mod tests {
 
         let metadata = MetadataExtractor::extract(temp_file.path())?;
 
-        assert_eq!(metadata.content.detected_mime_type, Some("text/plain".to_string()));
+        assert_eq!(
+            metadata.content.detected_mime_type,
+            Some("text/plain".to_string())
+        );
         assert!(metadata.content.stats.char_count.is_some());
         assert!(metadata.content.stats.word_count.is_some());
         assert!(metadata.content.stats.line_count.is_some());

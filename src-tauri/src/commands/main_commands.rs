@@ -1,5 +1,11 @@
 // src-tauri/src/commands.rs
 
+use crate::document::{
+    BatchHasher, ContentHash, CorruptionCheckResult, DuplicateCheckResult, EnhancedMetadata,
+    FileProcessor, FileValidationResult, ImportError, ImportErrorInfo, ImportNotification,
+    ImportNotificationManager, ImportProgress, MetadataExtractor, PersistedProgress,
+    ProgressManager, ProgressPersistenceManager, ProgressStorageStats,
+};
 use crate::filesystem::errors::SecurityError;
 use crate::filesystem::security::audit_logger::SecurityAuditor;
 use crate::filesystem::security::backup_manager::BackupManager;
@@ -8,10 +14,6 @@ use crate::filesystem::security::emergency_procedures::EmergencyManager;
 use crate::filesystem::security::path_validator::PathValidator;
 use crate::filesystem::security::safe_mode::SafeModeManager;
 use crate::filesystem::security::security_config::SecurityConfig;
-use crate::document::{ContentHash, MetadataExtractor, FileProcessor, BatchHasher, DuplicateCheckResult,
-    FileValidationResult, CorruptionCheckResult, EnhancedMetadata, ProgressManager, ImportProgress,
-    ImportNotificationManager, ImportNotification, ImportError, ImportErrorInfo,
-    ProgressPersistenceManager, PersistedProgress, ProgressStorageStats};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::fs;
@@ -495,7 +497,9 @@ pub async fn import_file(path: PathBuf) -> Result<PathBuf, CommandError> {
 // ---------------- Document Processing Commands ----------------
 
 #[tauri::command]
-pub async fn validate_file_comprehensive(path: String) -> Result<FileValidationResult, CommandError> {
+pub async fn validate_file_comprehensive(
+    path: String,
+) -> Result<FileValidationResult, CommandError> {
     let start_time = Instant::now();
 
     // Emergency and safe mode checks
@@ -796,7 +800,8 @@ pub async fn calculate_file_hash(path: String) -> Result<ContentHash, CommandErr
 static BATCH_HASHER: Lazy<Mutex<BatchHasher>> = Lazy::new(|| Mutex::new(BatchHasher::new()));
 
 // Global progress manager for tracking import operations
-static PROGRESS_MANAGER: Lazy<Mutex<ProgressManager>> = Lazy::new(|| Mutex::new(ProgressManager::new()));
+static PROGRESS_MANAGER: Lazy<Mutex<ProgressManager>> =
+    Lazy::new(|| Mutex::new(ProgressManager::new()));
 
 // Global notification manager for import operations
 static NOTIFICATION_MANAGER: Lazy<Mutex<ImportNotificationManager>> =
@@ -871,7 +876,8 @@ pub async fn check_file_duplicates(path: String) -> Result<DuplicateCheckResult,
         let mut hasher = tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(hasher_future)
         });
-        hasher.process_file(&validated_path)
+        hasher
+            .process_file(&validated_path)
             .map_err(|e| anyhow::anyhow!("Duplicate check failed: {}", e))
     });
 
@@ -899,16 +905,32 @@ pub async fn start_import_operation(file_count: u64) -> Result<String, CommandEr
     let tracker = manager.start_operation(file_count).await;
 
     // Set initial steps
-    tracker.add_step("validation".to_string(), "Validating files for import".to_string()).await;
-    tracker.add_step("processing".to_string(), "Processing file contents".to_string()).await;
-    tracker.add_step("storage".to_string(), "Storing processed files".to_string()).await;
-    tracker.add_step("indexing".to_string(), "Updating search index".to_string()).await;
+    tracker
+        .add_step(
+            "validation".to_string(),
+            "Validating files for import".to_string(),
+        )
+        .await;
+    tracker
+        .add_step(
+            "processing".to_string(),
+            "Processing file contents".to_string(),
+        )
+        .await;
+    tracker
+        .add_step("storage".to_string(), "Storing processed files".to_string())
+        .await;
+    tracker
+        .add_step("indexing".to_string(), "Updating search index".to_string())
+        .await;
 
     Ok(tracker.operation_id().to_string())
 }
 
 #[tauri::command]
-pub async fn get_import_progress(operation_id: String) -> Result<Option<ImportProgress>, CommandError> {
+pub async fn get_import_progress(
+    operation_id: String,
+) -> Result<Option<ImportProgress>, CommandError> {
     let manager = PROGRESS_MANAGER.lock().await;
     Ok(manager.get_operation_progress(&operation_id).await)
 }
@@ -946,21 +968,21 @@ pub async fn cleanup_old_import_operations(max_age_hours: u64) -> Result<(), Com
 pub async fn report_import_error(
     file_path: Option<String>,
     error_type: String,
-    details: String
+    details: String,
 ) -> Result<(), CommandError> {
     let path = file_path.map(PathBuf::from);
 
     // Create appropriate error type based on error_type string
     let import_error = match error_type.as_str() {
         "file_not_found" => ImportError::FileNotFound {
-            path: path.unwrap_or_else(|| PathBuf::from("unknown"))
+            path: path.unwrap_or_else(|| PathBuf::from("unknown")),
         },
         "permission_denied" => ImportError::PermissionDenied {
-            path: path.unwrap_or_else(|| PathBuf::from("unknown"))
+            path: path.unwrap_or_else(|| PathBuf::from("unknown")),
         },
         "file_too_large" => ImportError::FileTooLarge {
             path: path.unwrap_or_else(|| PathBuf::from("unknown")),
-            size: 0, // Would be provided in real scenario
+            size: 0,     // Would be provided in real scenario
             max_size: 0, // Would be provided in real scenario
         },
         "unsupported_type" => ImportError::UnsupportedFileType {
@@ -987,7 +1009,7 @@ pub async fn report_import_error(
 pub async fn notify_import_success(
     title: String,
     message: String,
-    file_count: Option<u32>
+    file_count: Option<u32>,
 ) -> Result<(), CommandError> {
     let manager = NOTIFICATION_MANAGER.lock().await;
     manager.notify_success(title, message, file_count).await;
@@ -1026,11 +1048,11 @@ pub async fn convert_error_to_info(error_message: String) -> Result<ImportErrorI
     // Parse common error types and convert to structured error info
     let import_error = if error_message.contains("Permission denied") {
         ImportError::PermissionDenied {
-            path: PathBuf::from("unknown")
+            path: PathBuf::from("unknown"),
         }
     } else if error_message.contains("No such file") {
         ImportError::FileNotFound {
-            path: PathBuf::from("unknown")
+            path: PathBuf::from("unknown"),
         }
     } else if error_message.contains("too large") {
         ImportError::FileTooLarge {
@@ -1040,7 +1062,7 @@ pub async fn convert_error_to_info(error_message: String) -> Result<ImportErrorI
         }
     } else {
         ImportError::Unknown {
-            details: error_message
+            details: error_message,
         }
     };
 
@@ -1051,8 +1073,9 @@ pub async fn convert_error_to_info(error_message: String) -> Result<ImportErrorI
 
 #[tauri::command]
 pub async fn initialize_progress_persistence(storage_dir: String) -> Result<(), CommandError> {
-    let manager = ProgressPersistenceManager::new(&storage_dir)
-        .map_err(|e| CommandError::Custom(format!("Failed to initialize progress persistence: {}", e)))?;
+    let manager = ProgressPersistenceManager::new(&storage_dir).map_err(|e| {
+        CommandError::Custom(format!("Failed to initialize progress persistence: {}", e))
+    })?;
 
     let mut persistence = PROGRESS_PERSISTENCE.lock().await;
     *persistence = Some(manager);
@@ -1068,54 +1091,71 @@ pub async fn persist_operation_progress(
     failed_files: Vec<(String, String)>,
 ) -> Result<(), CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
     // Get current progress
     let progress_manager = PROGRESS_MANAGER.lock().await;
-    let progress = progress_manager.get_operation_progress(&operation_id).await
+    let progress = progress_manager
+        .get_operation_progress(&operation_id)
+        .await
         .ok_or_else(|| CommandError::Custom("Operation not found".to_string()))?;
 
     // Convert string paths to PathBuf
     let remaining: Vec<PathBuf> = remaining_files.into_iter().map(PathBuf::from).collect();
     let processed: Vec<PathBuf> = processed_files.into_iter().map(PathBuf::from).collect();
-    let failed: Vec<(PathBuf, String)> = failed_files.into_iter()
+    let failed: Vec<(PathBuf, String)> = failed_files
+        .into_iter()
         .map(|(path, error)| (PathBuf::from(path), error))
         .collect();
 
-    persistence.persist_progress(&operation_id, &progress, remaining, processed, failed).await
+    persistence
+        .persist_progress(&operation_id, &progress, remaining, processed, failed)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to persist progress: {}", e)))?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn load_persisted_progress(operation_id: String) -> Result<Option<PersistedProgress>, CommandError> {
+pub async fn load_persisted_progress(
+    operation_id: String,
+) -> Result<Option<PersistedProgress>, CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.load_progress(&operation_id).await
+    persistence
+        .load_progress(&operation_id)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to load progress: {}", e)))
 }
 
 #[tauri::command]
 pub async fn list_resumable_operations() -> Result<Vec<PersistedProgress>, CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.get_resumable_operations().await
+    persistence
+        .get_resumable_operations()
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to get resumable operations: {}", e)))
 }
 
 #[tauri::command]
 pub async fn mark_operation_completed(operation_id: String) -> Result<(), CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.mark_completed(&operation_id).await
+    persistence
+        .mark_completed(&operation_id)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to mark operation completed: {}", e)))?;
 
     Ok(())
@@ -1129,10 +1169,13 @@ pub async fn mark_file_processed(
     error: Option<String>,
 ) -> Result<(), CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.mark_file_completed(&operation_id, PathBuf::from(file_path), success, error).await
+    persistence
+        .mark_file_completed(&operation_id, PathBuf::from(file_path), success, error)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to mark file processed: {}", e)))?;
 
     Ok(())
@@ -1141,31 +1184,40 @@ pub async fn mark_file_processed(
 #[tauri::command]
 pub async fn cleanup_persisted_operations(max_age_hours: u64) -> Result<u32, CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
     let max_age = std::time::Duration::from_secs(max_age_hours * 3600);
-    persistence.cleanup_old_operations(max_age).await
+    persistence
+        .cleanup_old_operations(max_age)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to cleanup operations: {}", e)))
 }
 
 #[tauri::command]
 pub async fn get_progress_storage_stats() -> Result<ProgressStorageStats, CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.get_storage_stats().await
+    persistence
+        .get_storage_stats()
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to get storage stats: {}", e)))
 }
 
 #[tauri::command]
 pub async fn remove_persisted_progress(operation_id: String) -> Result<(), CommandError> {
     let persistence_guard = PROGRESS_PERSISTENCE.lock().await;
-    let persistence = persistence_guard.as_ref()
+    let persistence = persistence_guard
+        .as_ref()
         .ok_or_else(|| CommandError::Custom("Progress persistence not initialized".to_string()))?;
 
-    persistence.remove_progress(&operation_id).await
+    persistence
+        .remove_progress(&operation_id)
+        .await
         .map_err(|e| CommandError::Custom(format!("Failed to remove progress: {}", e)))?;
 
     Ok(())

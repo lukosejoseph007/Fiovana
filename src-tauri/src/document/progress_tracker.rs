@@ -391,8 +391,10 @@ impl ProgressManager {
         operations.retain(|_, tracker| {
             // Keep operations that are still running or recently completed
             let progress = futures::executor::block_on(tracker.get_progress());
-            matches!(progress.status, OperationStatus::Running | OperationStatus::Pending) ||
-                progress.started_at > cutoff_time
+            matches!(
+                progress.status,
+                OperationStatus::Running | OperationStatus::Pending
+            ) || progress.started_at > cutoff_time
         });
     }
 }
@@ -451,8 +453,12 @@ mod tests {
         let tracker = ProgressTracker::new("test-steps".to_string(), 3);
 
         // Add steps
-        tracker.add_step("validation".to_string(), "Validating files".to_string()).await;
-        tracker.add_step("processing".to_string(), "Processing files".to_string()).await;
+        tracker
+            .add_step("validation".to_string(), "Validating files".to_string())
+            .await;
+        tracker
+            .add_step("processing".to_string(), "Processing files".to_string())
+            .await;
 
         // Start and complete steps
         tracker.start_step("validation").await;
@@ -460,7 +466,9 @@ mod tests {
         tracker.complete_step("validation").await;
 
         tracker.start_step("processing").await;
-        tracker.fail_step("processing", "Test error".to_string()).await;
+        tracker
+            .fail_step("processing", "Test error".to_string())
+            .await;
 
         let progress = tracker.get_progress().await;
         assert_eq!(progress.steps.len(), 2);

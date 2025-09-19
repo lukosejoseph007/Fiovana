@@ -1,11 +1,11 @@
 // src-tauri/src/document/file_processor.rs
 // File processing with corruption detection using header validation
 
+use anyhow::{bail, Context, Result};
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
-use serde::{Deserialize, Serialize};
-use anyhow::{Result, Context, bail};
 
 /// File corruption check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,25 +74,32 @@ impl MagicNumbers {
         vec![
             // PDF files
             (vec![0x25, 0x50, 0x44, 0x46], "pdf", "PDF document"),
-
             // Microsoft Office formats (ZIP-based)
-            (vec![0x50, 0x4B, 0x03, 0x04], "zip", "ZIP archive (may be Office doc)"),
+            (
+                vec![0x50, 0x4B, 0x03, 0x04],
+                "zip",
+                "ZIP archive (may be Office doc)",
+            ),
             (vec![0x50, 0x4B, 0x05, 0x06], "zip", "ZIP archive (empty)"),
             (vec![0x50, 0x4B, 0x07, 0x08], "zip", "ZIP archive (spanned)"),
-
             // Plain text files
             (vec![0xEF, 0xBB, 0xBF], "txt", "UTF-8 BOM text"),
             (vec![0xFF, 0xFE], "txt", "UTF-16 LE BOM text"),
             (vec![0xFE, 0xFF], "txt", "UTF-16 BE BOM text"),
-
             // Rich Text Format
-            (vec![0x7B, 0x5C, 0x72, 0x74, 0x66], "rtf", "Rich Text Format"),
-
+            (
+                vec![0x7B, 0x5C, 0x72, 0x74, 0x66],
+                "rtf",
+                "Rich Text Format",
+            ),
             // JPEG images (sometimes embedded in documents)
             (vec![0xFF, 0xD8, 0xFF], "jpg", "JPEG image"),
-
             // PNG images
-            (vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], "png", "PNG image"),
+            (
+                vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+                "png",
+                "PNG image",
+            ),
         ]
     }
 
@@ -144,16 +151,18 @@ impl FileProcessor {
         let path = path.as_ref();
 
         // Get expected type from file extension
-        let expected_type = path.extension()
+        let expected_type = path
+            .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
         // Read file header for magic number detection
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+        let mut file =
+            File::open(path).with_context(|| format!("Failed to open file: {}", path.display()))?;
 
         let mut header = vec![0u8; 512]; // Read first 512 bytes
-        let bytes_read = file.read(&mut header)
+        let bytes_read = file
+            .read(&mut header)
             .with_context(|| format!("Failed to read file header: {}", path.display()))?;
 
         if bytes_read == 0 {
@@ -187,8 +196,11 @@ impl FileProcessor {
         }
 
         // ZIP-based Office document validation
-        if detected_type.as_deref() == Some("zip") &&
-           expected_type.as_deref().map_or(false, |ext| ["docx", "xlsx", "pptx"].contains(&ext)) {
+        if detected_type.as_deref() == Some("zip")
+            && expected_type
+                .as_deref()
+                .map_or(false, |ext| ["docx", "xlsx", "pptx"].contains(&ext))
+        {
             if let Err(e) = Self::validate_office_document(&mut file) {
                 corruption_details.push(format!("Office document validation failed: {}", e));
                 is_corrupted = true;
@@ -260,9 +272,10 @@ impl FileProcessor {
         let mut signature = [0u8; 4];
         file.read_exact(&mut signature)?;
 
-        if signature != [0x50, 0x4B, 0x03, 0x04] &&
-           signature != [0x50, 0x4B, 0x05, 0x06] &&
-           signature != [0x50, 0x4B, 0x07, 0x08] {
+        if signature != [0x50, 0x4B, 0x03, 0x04]
+            && signature != [0x50, 0x4B, 0x05, 0x06]
+            && signature != [0x50, 0x4B, 0x07, 0x08]
+        {
             bail!("Invalid ZIP/Office document signature");
         }
 
@@ -333,11 +346,15 @@ impl FileProcessor {
 
         // Check if file exists and is readable
         if !path.exists() {
-            return Ok(FileValidationResult::invalid("File does not exist".to_string()));
+            return Ok(FileValidationResult::invalid(
+                "File does not exist".to_string(),
+            ));
         }
 
         if !path.is_file() {
-            return Ok(FileValidationResult::invalid("Path is not a file".to_string()));
+            return Ok(FileValidationResult::invalid(
+                "Path is not a file".to_string(),
+            ));
         }
 
         let metadata = std::fs::metadata(path)
@@ -414,20 +431,29 @@ impl FileValidationResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_magic_number_detection() {
         // Test PDF detection
         let pdf_header = b"%PDF-1.4\n";
         let result = MagicNumbers::detect_type(pdf_header);
-        assert_eq!(result, Some(("pdf".to_string(), "PDF document".to_string())));
+        assert_eq!(
+            result,
+            Some(("pdf".to_string(), "PDF document".to_string()))
+        );
 
         // Test ZIP detection
         let zip_header = &[0x50, 0x4B, 0x03, 0x04];
         let result = MagicNumbers::detect_type(zip_header);
-        assert_eq!(result, Some(("zip".to_string(), "ZIP archive (may be Office doc)".to_string())));
+        assert_eq!(
+            result,
+            Some((
+                "zip".to_string(),
+                "ZIP archive (may be Office doc)".to_string()
+            ))
+        );
 
         // Test text detection
         let text_header = b"This is plain text content";
