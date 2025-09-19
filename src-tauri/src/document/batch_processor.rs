@@ -576,8 +576,7 @@ impl BatchProcessor {
 mod tests {
     use super::*;
     use crate::filesystem::security::security_config::SecurityConfig;
-    use std::io::Write;
-    use tempfile::{tempdir, NamedTempFile};
+    use tempfile::tempdir;
 
     fn create_test_validator() -> PathValidator {
         let config = SecurityConfig::default();
@@ -616,12 +615,12 @@ mod tests {
     async fn test_batch_processing_success() {
         let temp_dir = tempdir().unwrap();
 
-        // Create test files
+        // Create test files with proper extensions
         let mut files = Vec::new();
         for i in 0..3 {
-            let mut file = NamedTempFile::new_in(&temp_dir).unwrap();
-            writeln!(file, "Test content for file {}", i).unwrap();
-            files.push(file.path().to_path_buf());
+            let file_path = temp_dir.path().join(format!("test_file_{}.txt", i));
+            std::fs::write(&file_path, format!("Test content for file {}", i)).unwrap();
+            files.push(file_path);
         }
 
         let validator = create_test_validator();
