@@ -1,11 +1,72 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core'
 
 interface FileInfo {
   name: string
   size: number
   type: string
   lastModified: number
+  path?: string
+  validation?: {
+    is_valid: boolean
+    message: string
+    warnings: string[]
+  }
+  hash?: {
+    sha256: string
+    algorithm: string
+  }
+  duplicate_check?: {
+    is_duplicate: boolean
+    existing_paths: string[]
+  }
+  metadata?: {
+    file_type: string
+    mime_type: string
+    page_count?: number
+    word_count?: number
+    creation_date?: string
+    author?: string
+    language?: string
+    binary_ratio?: number
+    entropy?: number
+    text_preview?: string
+  }
+  error?: string
+}
+
+interface BackendFileResult {
+  name?: string
+  size?: number
+  modified?: number
+  path?: string
+  validation?: {
+    is_valid: boolean
+    message: string
+    warnings: string[]
+  }
+  hash?: {
+    sha256: string
+    algorithm: string
+  }
+  duplicate_check?: {
+    is_duplicate: boolean
+    existing_paths: string[]
+  }
+  metadata?: {
+    file_type: string
+    mime_type: string
+    page_count?: number
+    word_count?: number
+    creation_date?: string
+    author?: string
+    language?: string
+    binary_ratio?: number
+    entropy?: number
+    text_preview?: string
+  }
+  error?: string
 }
 
 const App: React.FC = () => {
@@ -81,87 +142,57 @@ const App: React.FC = () => {
                 return
               }
               lastDropTimeRef.current = currentTime
-              // Convert file paths to File objects with metadata
-              const promises = event.payload.paths.map(async (path: string) => {
-                try {
-                  // Extract filename from path
-                  const fileName = path.split('/').pop() || path.split('\\').pop() || 'unknown'
 
-                  // Determine file type from extension
-                  const getFileType = (filename: string): string => {
-                    const ext = filename.toLowerCase().split('.').pop() || ''
-                    const mimeTypes: { [key: string]: string } = {
-                      txt: 'text/plain',
-                      md: 'text/markdown',
-                      pdf: 'application/pdf',
-                      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                      doc: 'application/msword',
-                      json: 'application/json',
-                      csv: 'text/csv',
-                      xml: 'text/xml',
-                      html: 'text/html',
-                      htm: 'text/html',
-                    }
-                    return mimeTypes[ext] || 'application/octet-stream'
-                  }
-
-                  // Estimate file size based on file type (placeholder until fs permissions are configured)
-                  const estimateFileSize = (filename: string): number => {
-                    const ext = filename.toLowerCase().split('.').pop() || ''
-                    const baseSizes: { [key: string]: number } = {
-                      txt: 2048, // ~2KB for text files
-                      md: 4096, // ~4KB for markdown
-                      pdf: 102400, // ~100KB for PDFs
-                      docx: 51200, // ~50KB for Word docs
-                      doc: 40960, // ~40KB for old Word docs
-                      json: 1024, // ~1KB for JSON
-                      csv: 8192, // ~8KB for CSV
-                      xml: 3072, // ~3KB for XML
-                      html: 5120, // ~5KB for HTML
-                      htm: 5120, // ~5KB for HTM
-                    }
-                    const baseSize = baseSizes[ext] || 10240 // Default ~10KB
-                    // Add some randomness to make it more realistic
-                    return Math.floor(baseSize * (0.5 + Math.random()))
-                  }
-
-                  const fileSize = estimateFileSize(fileName)
-
-                  return {
-                    name: fileName,
-                    size: fileSize,
-                    type: getFileType(fileName),
-                    lastModified: Date.now(),
-                  }
-                } catch (error) {
-                  console.error('Error processing file:', path, error)
-                  return null
-                }
+              // Process files using the backend pipeline
+              invoke('process_dropped_files', {
+                filePaths: event.payload.paths,
+                checkDuplicates: true,
+                extractMetadata: true,
               })
-
-              Promise.all(promises).then(fileInfos => {
-                const validFiles = fileInfos.filter(f => f !== null) as FileInfo[]
-
-                if (validFiles.length > 0) {
-                  setDroppedFiles(prev => {
-                    // Additional deduplication: check if files already exist
-                    const newFiles = validFiles.filter(
-                      newFile =>
-                        !prev.some(
-                          existingFile =>
-                            existingFile.name === newFile.name &&
-                            Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
-                        )
-                    )
-
-                    if (newFiles.length === 0) {
-                      return prev
+                .then((results: unknown) => {
+                  const typedResults = results as BackendFileResult[]
+                  const processedFiles: FileInfo[] = typedResults.map(
+                    (result: BackendFileResult) => {
+                      // Convert backend result to FileInfo format
+                      const fileInfo: FileInfo = {
+                        name: result.name || 'unknown',
+                        size: result.size || 0,
+                        type: result.metadata?.mime_type || 'application/octet-stream',
+                        lastModified: result.modified ? result.modified * 1000 : Date.now(), // Convert to milliseconds
+                        path: result.path,
+                        validation: result.validation,
+                        hash: result.hash,
+                        duplicate_check: result.duplicate_check,
+                        metadata: result.metadata,
+                        error: result.error,
+                      }
+                      return fileInfo
                     }
+                  )
 
-                    return [...prev, ...newFiles]
-                  })
-                }
-              })
+                  if (processedFiles.length > 0) {
+                    setDroppedFiles(prev => {
+                      // Additional deduplication: check if files already exist
+                      const newFiles = processedFiles.filter(
+                        newFile =>
+                          !prev.some(
+                            existingFile =>
+                              existingFile.name === newFile.name &&
+                              Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
+                          )
+                      )
+
+                      if (newFiles.length === 0) {
+                        return prev
+                      }
+
+                      return [...prev, ...newFiles]
+                    })
+                  }
+                })
+                .catch(error => {
+                  console.error('Error processing dropped files:', error)
+                })
             }
           }
         })
@@ -180,20 +211,82 @@ const App: React.FC = () => {
     }
   }, []) // Empty dependency array to run only once
 
-  // Handle file input change (for click-to-browse functionality)
+  // Handle click to browse files using Tauri file dialog
+  const handleBrowseFiles = useCallback(async () => {
+    try {
+      // Use Tauri's file dialog to get actual file paths
+      const selectedFiles = await invoke('open_file_dialog')
+
+      if (selectedFiles && Array.isArray(selectedFiles) && selectedFiles.length > 0) {
+        // Use the same backend processing pipeline as drag-and-drop
+        invoke('process_dropped_files', {
+          filePaths: selectedFiles,
+          checkDuplicates: true,
+          extractMetadata: true,
+        })
+          .then((results: unknown) => {
+            const typedResults = results as BackendFileResult[]
+            const processedFiles: FileInfo[] = typedResults.map((result: BackendFileResult) => {
+              // Convert backend result to FileInfo format
+              const fileInfo: FileInfo = {
+                name: result.name || 'unknown',
+                size: result.size || 0,
+                type: result.metadata?.mime_type || 'application/octet-stream',
+                lastModified: result.modified ? result.modified * 1000 : Date.now(), // Convert to milliseconds
+                path: result.path,
+                validation: result.validation,
+                hash: result.hash,
+                duplicate_check: result.duplicate_check,
+                metadata: result.metadata,
+                error: result.error,
+              }
+              return fileInfo
+            })
+
+            if (processedFiles.length > 0) {
+              setDroppedFiles(prev => {
+                // Additional deduplication: check if files already exist
+                const newFiles = processedFiles.filter(
+                  newFile =>
+                    !prev.some(
+                      existingFile =>
+                        existingFile.name === newFile.name &&
+                        Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
+                    )
+                )
+
+                if (newFiles.length === 0) {
+                  return prev
+                }
+
+                return [...prev, ...newFiles]
+              })
+            }
+          })
+          .catch(error => {
+            console.error('Error processing browsed files:', error)
+          })
+      }
+    } catch (error) {
+      console.error('Error opening file dialog:', error)
+    }
+  }, [])
+
+  // Handle file input change (fallback for non-Tauri environments)
   const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      const fileInfos: FileInfo[] = Array.from(files).map(file => ({
+      // Fallback to basic file info for browser environments
+      const basicFileInfos: FileInfo[] = Array.from(files).map(file => ({
         name: file.name,
         size: file.size,
         type: file.type,
         lastModified: file.lastModified,
+        error: 'Limited processing - drag and drop for full features',
       }))
 
       setDroppedFiles(prev => {
-        // Deduplication logic
-        const newFiles = fileInfos.filter(
+        const newFiles = basicFileInfos.filter(
           newFile =>
             !prev.some(
               existingFile =>
@@ -217,9 +310,15 @@ const App: React.FC = () => {
   }, [])
 
   // Handle click to browse files
-  const handleClick = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
+  const handleClick = useCallback(async () => {
+    try {
+      // Try to use Tauri file dialog first
+      await handleBrowseFiles()
+    } catch {
+      // Fallback to HTML file input for browser environments
+      fileInputRef.current?.click()
+    }
+  }, [handleBrowseFiles])
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes'
@@ -357,6 +456,46 @@ const App: React.FC = () => {
                   </button>
                 </div>
 
+                {/* File Processing Summary */}
+                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <h3 className="text-lg font-medium mb-3">Processing Summary</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {
+                          droppedFiles.filter(
+                            f =>
+                              f.validation?.is_valid && !f.error && !f.duplicate_check?.is_duplicate
+                          ).length
+                        }
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400">Valid Files</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {droppedFiles.filter(f => f.error).length}
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400">Errors</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {
+                          droppedFiles.filter(
+                            f => f.validation && !f.validation.is_valid && !f.error
+                          ).length
+                        }
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400">Warnings</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {droppedFiles.filter(f => f.duplicate_check?.is_duplicate).length}
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400">Duplicates</div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -378,9 +517,69 @@ const App: React.FC = () => {
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {droppedFiles.map((file, index) => (
-                          <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <tr
+                            key={index}
+                            className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                              file.error
+                                ? 'bg-red-50 dark:bg-red-900/20'
+                                : file.validation && !file.validation.is_valid
+                                  ? 'bg-yellow-50 dark:bg-yellow-900/20'
+                                  : file.duplicate_check?.is_duplicate
+                                    ? 'bg-orange-50 dark:bg-orange-900/20'
+                                    : ''
+                            }`}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {file.name}
+                              <div className="flex items-center">
+                                {file.error && (
+                                  <span className="mr-2 text-red-500" title={file.error}>
+                                    ❌
+                                  </span>
+                                )}
+                                {file.validation && !file.validation.is_valid && (
+                                  <span
+                                    className="mr-2 text-yellow-500"
+                                    title={file.validation.message}
+                                  >
+                                    ⚠️
+                                  </span>
+                                )}
+                                {file.duplicate_check?.is_duplicate && (
+                                  <span
+                                    className="mr-2 text-orange-500"
+                                    title="Duplicate file detected"
+                                  >
+                                    🔄
+                                  </span>
+                                )}
+                                {file.validation?.is_valid &&
+                                  !file.error &&
+                                  !file.duplicate_check?.is_duplicate && (
+                                    <span
+                                      className="mr-2 text-green-500"
+                                      title="File validated successfully"
+                                    >
+                                      ✅
+                                    </span>
+                                  )}
+                                {file.name}
+                              </div>
+                              {file.error && (
+                                <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                  Error: {file.error}
+                                </div>
+                              )}
+                              {file.validation && !file.validation.is_valid && (
+                                <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                                  Validation: {file.validation.message}
+                                </div>
+                              )}
+                              {file.duplicate_check?.is_duplicate && (
+                                <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                  Duplicate detected. Existing at:{' '}
+                                  {file.duplicate_check.existing_paths.join(', ')}
+                                </div>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                               {formatFileSize(file.size)}

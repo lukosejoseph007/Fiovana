@@ -141,6 +141,9 @@ async fn main() {
             commands::calculate_file_hash,
             commands::check_file_duplicates,
             commands::clear_duplicate_cache,
+            // File import pipeline commands
+            commands::process_dropped_files,
+            commands::open_file_dialog,
             // Progress tracking commands
             commands::start_import_operation,
             commands::get_import_progress,

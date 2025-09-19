@@ -415,7 +415,7 @@ mod tests {
         let tracker = ProgressTracker::new("test-op".to_string(), 5);
 
         // Initial state
-        assert_eq!(tracker.is_cancelled(), false);
+        assert!(!tracker.is_cancelled());
         let progress = tracker.get_progress().await;
         assert_eq!(progress.files_processed, 0);
         assert_eq!(progress.total_files, 5);
@@ -438,11 +438,11 @@ mod tests {
 
         // Start processing
         tracker.update_step("Starting").await;
-        assert_eq!(tracker.is_cancelled(), false);
+        assert!(!tracker.is_cancelled());
 
         // Cancel
         tracker.cancel().await;
-        assert_eq!(tracker.is_cancelled(), true);
+        assert!(tracker.is_cancelled());
 
         let progress = tracker.get_progress().await;
         assert!(matches!(progress.status, OperationStatus::Cancelled));

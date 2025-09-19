@@ -80,8 +80,10 @@ jobs:
       - name: Run Clippy
         run: cargo clippy -- -D warnings
 
-      - name: Run tests with isolation
-        run: cargo test -- --test-threads=1 --nocapture
+      - name: Run tests with safe runner (prevents infinite loops)
+        run: |
+          chmod +x prevent_test_loops.sh
+          ./prevent_test_loops.sh
 
       - name: Upload test artifacts on failure
         if: failure()

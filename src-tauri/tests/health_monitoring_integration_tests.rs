@@ -9,7 +9,6 @@ use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
 use proxemic::resource_monitor::{ResourceMonitor, ResourceMonitorConfig};
 use std::time::Duration;
 use tempfile::tempdir;
-use tokio;
 
 #[tokio::test]
 async fn test_health_monitor_basic_functionality() {
@@ -86,9 +85,14 @@ async fn test_watcher_with_health_monitoring() {
     let temp_dir = tempdir().expect("Failed to create temp directory");
     let _temp_path = temp_dir.path().to_path_buf();
 
-    let mut watcher_config = WatcherConfig::default();
-    watcher_config.enable_health_monitoring = true;
-    watcher_config.health_monitor_config.check_interval = Duration::from_millis(100);
+    let watcher_config = WatcherConfig {
+        enable_health_monitoring: true,
+        health_monitor_config: HealthMonitorConfig {
+            check_interval: Duration::from_millis(100),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
 
     let app = tauri::test::mock_app();
     let app_handle = app.handle().clone();

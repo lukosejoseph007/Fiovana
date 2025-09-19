@@ -1225,6 +1225,186 @@ pub async fn remove_persisted_progress(operation_id: String) -> Result<(), Comma
     Ok(())
 }
 
+// ---------------- File Import Pipeline Commands ----------------
+
+#[tauri::command]
+pub async fn process_dropped_files(
+    file_paths: Vec<String>,
+    check_duplicates: Option<bool>,
+    extract_metadata: Option<bool>,
+) -> Result<Vec<serde_json::Value>, CommandError> {
+    let start_time = Instant::now();
+    let mut results = Vec::new();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    let check_duplicates = check_duplicates.unwrap_or(true);
+    let extract_metadata = extract_metadata.unwrap_or(true);
+    let validator = create_default_validator();
+
+    for file_path in file_paths {
+        let file_result = async {
+            // 1. Validate file path and security
+            let validated_path = validator
+                .validate_import_path(Path::new(&file_path))
+                .map_err(|e| format!("Path validation failed: {}", e))?;
+
+            // 2. Comprehensive file validation
+            let validation_result = FileProcessor::validate_file(&validated_path)
+                .map_err(|e| format!("File validation failed: {}", e))?;
+
+            if !validation_result.is_valid {
+                return Err(format!("File validation failed: {}", validation_result.message));
+            }
+
+            // 3. Calculate hash for deduplication
+            let content_hash = if check_duplicates {
+                Some(ContentHash::from_file(&validated_path)
+                    .map_err(|e| format!("Hash calculation failed: {}", e))?)
+            } else {
+                None
+            };
+
+            // 4. Check for duplicates if requested
+            let duplicate_info = if check_duplicates {
+                let mut hasher = BATCH_HASHER.lock().await;
+                Some(hasher.process_file(&validated_path)
+                    .map_err(|e| format!("Duplicate check failed: {}", e))?)
+            } else {
+                None
+            };
+
+            // 5. Extract metadata if requested
+            let metadata = if extract_metadata {
+                Some(MetadataExtractor::extract(&validated_path)
+                    .map_err(|e| format!("Metadata extraction failed: {}", e))?)
+            } else {
+                None
+            };
+
+            // 6. Get file info
+            let file_metadata = fs::metadata(&validated_path)
+                .map_err(|e| format!("Failed to get file metadata: {}", e))?;
+
+            // 7. Build result object
+            let mut result = serde_json::json!({
+                "path": validated_path.to_string_lossy(),
+                "name": validated_path.file_name().unwrap_or_default().to_string_lossy(),
+                "size": file_metadata.len(),
+                "modified": file_metadata.modified().ok().map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()),
+                "validation": {
+                    "is_valid": validation_result.is_valid,
+                    "message": validation_result.message,
+                    "warnings": Vec::<String>::new() // FileValidationResult doesn't have warnings field
+                }
+            });
+
+            if let Some(hash) = content_hash {
+                result["hash"] = serde_json::json!({
+                    "sha256": hash.hash,
+                    "algorithm": "sha256" // ContentHash doesn't have algorithm field, using static value
+                });
+            }
+
+            if let Some(dup_info) = duplicate_info {
+                result["duplicate_check"] = serde_json::json!({
+                    "is_duplicate": dup_info.is_duplicate,
+                    "existing_paths": dup_info.duplicates.iter().map(|d| d.hash.clone()).collect::<Vec<_>>() // Map duplicates to their paths
+                });
+            }
+
+            if let Some(meta) = metadata {
+                result["metadata"] = serde_json::json!({
+                    "file_type": meta.basic.file_extension.clone().unwrap_or_default(),
+                    "mime_type": meta.content.detected_mime_type.clone().unwrap_or_default(),
+                    "page_count": meta.document.as_ref().and_then(|d| d.page_count),
+                    "word_count": meta.content.stats.word_count,
+                    "creation_date": meta.basic.created.map(|t| format!("{:?}", t)),
+                    "author": meta.document.as_ref().and_then(|d| d.author.clone()),
+                    "language": meta.content.language.clone(),
+                    "binary_ratio": meta.content.stats.binary_ratio,
+                    "entropy": meta.technical.entropy,
+                    "text_preview": meta.content.preview.clone()
+                });
+            }
+
+            Ok(result)
+        }.await;
+
+        match file_result {
+            Ok(result) => results.push(result),
+            Err(e) => {
+                // Add error result
+                results.push(serde_json::json!({
+                    "path": file_path,
+                    "error": e,
+                    "validation": {
+                        "is_valid": false,
+                        "message": e.clone(),
+                        "warnings": Vec::<String>::new()
+                    }
+                }));
+            }
+        }
+    }
+
+    let duration = start_time.elapsed();
+    VALIDATION_METRICS.record_success(duration);
+
+    Ok(results)
+}
+
+/// Open file dialog for selecting files to import
+#[tauri::command]
+pub async fn open_file_dialog() -> Result<Option<Vec<String>>, String> {
+    use std::process::Command;
+
+    // Use zenity for file dialog on Linux
+    let output = Command::new("zenity")
+        .arg("--file-selection")
+        .arg("--multiple")
+        .arg("--file-filter=Supported files | *.docx *.pdf *.md *.txt *.csv *.json")
+        .arg("--title=Select files to import")
+        .output();
+
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                let stdout = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
+                let paths: Vec<String> = stdout
+                    .trim()
+                    .split('|')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+
+                if paths.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(paths))
+                }
+            } else {
+                // User cancelled or error occurred
+                Ok(None)
+            }
+        }
+        Err(e) => Err(format!("Failed to open file dialog: {}", e)),
+    }
+}
+
 // ---------------- Batch Processing Commands ----------------
 
 // Global batch processor instance

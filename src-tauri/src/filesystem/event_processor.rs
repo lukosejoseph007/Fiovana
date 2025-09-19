@@ -829,9 +829,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_backpressure_detection() {
-        let mut config = EventProcessorConfig::default();
-        config.max_queue_size_per_priority = 10;
-        config.backpressure_threshold = 0.5;
+        let config = EventProcessorConfig {
+            max_queue_size_per_priority: 10,
+            backpressure_threshold: 0.5,
+            ..Default::default()
+        };
 
         let processor = OptimizedEventProcessor::new(config);
 
