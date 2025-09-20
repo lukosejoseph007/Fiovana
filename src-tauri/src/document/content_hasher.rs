@@ -99,6 +99,7 @@ impl ContentHash {
 }
 
 /// Batch content hasher for processing multiple files
+#[derive(Clone)]
 pub struct BatchHasher {
     /// Known hashes to check for duplicates
     known_hashes: std::collections::HashMap<String, Vec<ContentHash>>,

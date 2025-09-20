@@ -3,6 +3,7 @@
 
 pub mod batch_processor;
 pub mod content_hasher;
+pub mod deduplication;
 pub mod file_processor;
 pub mod import_errors;
 pub mod metadata_extractor;
@@ -11,6 +12,7 @@ pub mod progress_tracker;
 
 pub use batch_processor::*;
 pub use content_hasher::*;
+// Note: deduplication module is available but not auto-imported to avoid unused warnings
 pub use file_processor::*;
 pub use import_errors::*;
 pub use metadata_extractor::*;
