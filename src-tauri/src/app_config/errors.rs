@@ -36,6 +36,9 @@ pub enum ConfigError {
         #[from]
         source: serde_json::Error,
     },
+
+    #[error("Configuration access error: unable to acquire lock")]
+    AccessError,
 }
 
 pub type ConfigResult<T> = Result<T, ConfigError>;

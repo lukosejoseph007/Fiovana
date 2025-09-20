@@ -1694,6 +1694,237 @@ async fn start_file_watching_internal(
     Ok(())
 }
 
+// ---------------- Import Wizard Batch Processing Commands ----------------
+
+#[derive(Debug, Clone, Serialize, serde::Deserialize)]
+pub struct ImportConfig {
+    pub preset: String,
+    pub settings: crate::workspace::ImportSettings,
+    pub ai_settings: crate::workspace::WorkspaceAISettings,
+    pub workspace_path: String,
+}
+
+#[tauri::command]
+pub async fn batch_import_files(
+    files: Vec<String>,
+    config: ImportConfig,
+) -> Result<BatchProcessingResult, CommandError> {
+    let start_time = Instant::now();
+
+    // Emergency and safe mode checks
+    let emergency_manager = EmergencyManager::new().map_err(|e| CommandError::SecurityError {
+        message: format!("Emergency system error: {}", e),
+        code: "EMERGENCY_ERROR".to_string(),
+        severity: "high".to_string(),
+    })?;
+
+    if emergency_manager.is_kill_switch_active() {
+        return Err(CommandError::SecurityError {
+            message: "Kill switch active - all operations disabled".to_string(),
+            code: "KILL_SWITCH_ACTIVE".to_string(),
+            severity: "critical".to_string(),
+        });
+    }
+
+    if !emergency_manager.can_perform_operation("write") {
+        return Err(CommandError::SecurityError {
+            message: "Operation blocked by emergency restrictions".to_string(),
+            code: "EMERGENCY_BLOCKED".to_string(),
+            severity: "high".to_string(),
+        });
+    }
+
+    // Use circuit breaker for batch operations
+    let _breaker = CIRCUIT_BREAKER_MANAGER.get_or_create(
+        "batch_import",
+        Some(CircuitBreakerConfig {
+            failure_threshold: 5,
+            recovery_timeout: std::time::Duration::from_secs(60),
+            success_threshold: 3,
+        }),
+    );
+
+    // Create validator with current security settings
+    let validator = create_default_validator();
+
+    // Convert string paths to PathBuf
+    let file_paths: Vec<PathBuf> = files.iter().map(PathBuf::from).collect();
+
+    // Create batch configuration based on import settings
+    let batch_config = BatchConfig {
+        max_parallel_files: 4,                             // Conservative default
+        max_concurrent_bytes: 256 * 1024 * 1024,           // 256MB
+        file_timeout: std::time::Duration::from_secs(300), // 5 minutes per file
+        batch_delay: std::time::Duration::from_millis(100),
+        continue_on_failure: true,
+        max_retries: 2,
+        retry_delay: std::time::Duration::from_secs(1),
+    };
+
+    // Create batch processor
+    let processor = BatchProcessor::with_config(batch_config, validator);
+
+    // Start progress tracking
+    let progress_manager = PROGRESS_MANAGER.lock().await;
+    let tracker = progress_manager
+        .start_operation(file_paths.len() as u64)
+        .await;
+
+    // Add processing steps
+    tracker
+        .add_step(
+            "validation".to_string(),
+            "Validating files for import".to_string(),
+        )
+        .await;
+    tracker
+        .add_step(
+            "processing".to_string(),
+            "Processing file contents".to_string(),
+        )
+        .await;
+    tracker
+        .add_step(
+            "storage".to_string(),
+            "Storing files in workspace".to_string(),
+        )
+        .await;
+
+    // Process the batch with normal priority
+    let processing_result = processor
+        .process_batch(file_paths, ProcessingPriority::Normal, tracker.clone())
+        .await
+        .map_err(|e| CommandError::Custom(format!("Batch processing failed: {}", e)))?;
+
+    // Notify success or partial success
+    let notification_manager = NOTIFICATION_MANAGER.lock().await;
+    if processing_result.failed_files == 0 {
+        notification_manager
+            .notify_success(
+                "Import Completed".to_string(),
+                format!(
+                    "Successfully imported {} files using {} preset",
+                    processing_result.successful_files, config.preset
+                ),
+                Some(processing_result.successful_files as u32),
+            )
+            .await;
+    } else if processing_result.successful_files > 0 {
+        notification_manager
+            .notify_info(
+                "Import Partially Completed".to_string(),
+                format!(
+                    "Imported {} files, {} failed using {} preset",
+                    processing_result.successful_files,
+                    processing_result.failed_files,
+                    config.preset
+                ),
+            )
+            .await;
+    } else {
+        // Create error info with correct structure
+        let import_error = ImportError::Unknown {
+            details: format!(
+                "All {} files failed to import",
+                processing_result.total_files
+            ),
+        };
+        let error_info = import_error.to_error_info();
+        notification_manager.notify_error(&error_info).await;
+    }
+
+    let duration = start_time.elapsed();
+
+    // Record metrics
+    if processing_result.failed_files == 0 {
+        VALIDATION_METRICS.record_success(duration);
+    } else {
+        VALIDATION_METRICS.record_failure(duration);
+    }
+
+    Ok(processing_result)
+}
+
+#[tauri::command]
+pub async fn validate_import_files(
+    files: Vec<String>,
+    settings: crate::workspace::ImportSettings,
+) -> Result<Vec<FileValidationResult>, CommandError> {
+    let validator = create_default_validator();
+    let mut results = Vec::new();
+
+    for file_path in files {
+        let path = PathBuf::from(&file_path);
+
+        // Validate path security first
+        match validator.validate_import_path(&path) {
+            Ok(validated_path) => {
+                // Validate file against import settings
+                match FileProcessor::validate_file(&validated_path) {
+                    Ok(mut validation_result) => {
+                        // Additional checks based on import settings
+                        let file_size = std::fs::metadata(&validated_path)
+                            .map(|m| m.len())
+                            .unwrap_or(0);
+
+                        if file_size > settings.max_file_size {
+                            validation_result.is_valid = false;
+                            validation_result.message = format!(
+                                "File size ({} bytes) exceeds maximum allowed size ({} bytes)",
+                                file_size, settings.max_file_size
+                            );
+                        }
+
+                        // Check file extension
+                        if let Some(extension) = path.extension().and_then(|e| e.to_str()) {
+                            let ext_with_dot = format!(".{}", extension.to_lowercase());
+                            if !settings.allowed_extensions.contains(&ext_with_dot) {
+                                validation_result.is_valid = false;
+                                validation_result.message = format!(
+                                    "File extension '{}' not allowed. Allowed: {}",
+                                    ext_with_dot,
+                                    settings.allowed_extensions.join(", ")
+                                );
+                            }
+                        }
+
+                        results.push(validation_result);
+                    }
+                    Err(e) => {
+                        results.push(FileValidationResult {
+                            is_valid: false,
+                            status: crate::document::ValidationStatus::Invalid,
+                            message: format!("Validation failed: {}", e),
+                            corruption_check: None,
+                        });
+                    }
+                }
+            }
+            Err(e) => {
+                results.push(FileValidationResult {
+                    is_valid: false,
+                    status: crate::document::ValidationStatus::Invalid,
+                    message: format!("Path validation failed: {}", e),
+                    corruption_check: None,
+                });
+            }
+        }
+    }
+
+    Ok(results)
+}
+
+#[tauri::command]
+pub async fn get_import_preset_templates() -> Result<Vec<String>, CommandError> {
+    // Return available workspace templates for import presets
+    Ok(vec![
+        "Basic".to_string(),
+        "Research".to_string(),
+        "Documentation".to_string(),
+        "Collaboration".to_string(),
+    ])
+}
+
 /// Test-specific implementation that can be used with different runtime types
 #[cfg(test)]
 async fn start_file_watching_test_internal<R: tauri::Runtime>(

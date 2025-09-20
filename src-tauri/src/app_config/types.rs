@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+// Import workspace types for recent workspaces functionality
+use crate::workspace::types::RecentWorkspace;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Environment {
     Development,
@@ -461,6 +464,24 @@ impl Default for AIConfig {
     }
 }
 
+/// Workspace manager configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceManagerConfig {
+    pub recent_workspaces: Option<Vec<RecentWorkspace>>,
+    pub max_recent: usize,
+    pub auto_cleanup_days: u32,
+}
+
+impl Default for WorkspaceManagerConfig {
+    fn default() -> Self {
+        Self {
+            recent_workspaces: Some(Vec::new()),
+            max_recent: 20,
+            auto_cleanup_days: 30,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProxemicConfig {
     pub app: AppConfig,
@@ -468,6 +489,7 @@ pub struct ProxemicConfig {
     pub logging: LoggingConfig,
     pub database: DatabaseConfig,
     pub ai: AIConfig,
+    pub workspace: WorkspaceManagerConfig,
 
     // Additional runtime configuration
     #[serde(skip)]
@@ -522,6 +544,7 @@ impl ProxemicConfig {
                 enable_collaboration: false,
                 ..Default::default()
             },
+            workspace: WorkspaceManagerConfig::default(),
             config_file_path: None,
             loaded_at: None,
         };

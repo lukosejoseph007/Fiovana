@@ -90,3 +90,29 @@ pub struct WorkspaceStats {
     pub last_import: Option<DateTime<Utc>>,
     pub last_output: Option<DateTime<Utc>>,
 }
+
+/// Request for updating recent workspace access
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateRecentWorkspaceRequest {
+    pub path: PathBuf,
+    pub name: String,
+    pub template: WorkspaceTemplate,
+}
+
+/// Recent projects manager configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecentProjectsConfig {
+    pub max_recent: usize,
+    pub auto_cleanup_days: u32,
+    pub favorites: Vec<PathBuf>,
+}
+
+impl Default for RecentProjectsConfig {
+    fn default() -> Self {
+        Self {
+            max_recent: 20,
+            auto_cleanup_days: 30,
+            favorites: Vec::new(),
+        }
+    }
+}

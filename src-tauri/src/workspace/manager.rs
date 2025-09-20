@@ -469,14 +469,226 @@ This workspace is designed for creating, maintaining, and organizing documentati
     pub async fn list_workspaces(&self) -> WorkspaceResult<Vec<WorkspaceInfo>> {
         // This would typically scan common workspace locations
         // For now, we'll implement a basic version that can be extended
-        let workspaces = Vec::new();
+        let mut workspaces = Vec::new();
 
-        // TODO: Implement workspace discovery
-        // - Check recent workspaces from config
+        // Check recent workspaces from config
+        if let Ok(recent_workspaces) = self.get_recent_workspaces().await {
+            for recent in recent_workspaces {
+                if recent.path.exists() {
+                    if let Ok(workspace_info) = self.load_workspace(&recent.path).await {
+                        workspaces.push(workspace_info);
+                    }
+                }
+            }
+        }
+
+        // TODO: Implement additional workspace discovery
         // - Scan common directories
         // - Check registry/database of workspaces
 
         Ok(workspaces)
+    }
+
+    /// Get recent workspaces from configuration
+    pub async fn get_recent_workspaces(&self) -> WorkspaceResult<Vec<RecentWorkspace>> {
+        let config_guard = self.config_manager.get_config();
+        let config = config_guard
+            .read()
+            .map_err(|_| WorkspaceError::Config(ConfigError::AccessError))?;
+
+        // Get recent workspaces from config, defaulting to empty vec
+        Ok(config
+            .workspace
+            .recent_workspaces
+            .clone()
+            .unwrap_or_default())
+    }
+
+    /// Update recent workspace access
+    pub async fn update_recent_workspace(
+        &self,
+        request: UpdateRecentWorkspaceRequest,
+    ) -> WorkspaceResult<()> {
+        // Scope the lock to prevent holding it across await
+        {
+            let config_guard = self.config_manager.get_config();
+            let mut config = config_guard
+                .write()
+                .map_err(|_| WorkspaceError::Config(ConfigError::AccessError))?;
+
+            // Initialize recent workspaces if None
+            if config.workspace.recent_workspaces.is_none() {
+                config.workspace.recent_workspaces = Some(Vec::new());
+            }
+
+            let recent_workspaces = config.workspace.recent_workspaces.as_mut().unwrap();
+
+            // Check if workspace already exists in recent list
+            if let Some(existing) = recent_workspaces
+                .iter_mut()
+                .find(|w| w.path == request.path)
+            {
+                // Update existing entry
+                existing.last_accessed = chrono::Utc::now();
+                existing.access_count += 1;
+                existing.name = request.name;
+                existing.template = request.template;
+            } else {
+                // Add new entry
+                let new_recent = RecentWorkspace {
+                    path: request.path,
+                    name: request.name,
+                    last_accessed: chrono::Utc::now(),
+                    access_count: 1,
+                    is_favorite: false,
+                    template: request.template,
+                };
+                recent_workspaces.push(new_recent);
+            }
+
+            // Sort by last accessed (most recent first) and limit to max_recent
+            recent_workspaces.sort_by(|a, b| b.last_accessed.cmp(&a.last_accessed));
+            recent_workspaces.truncate(20); // Max 20 recent workspaces
+        } // Lock is dropped here
+
+        // Save configuration
+        self.config_manager
+            .save_configuration(None)
+            .await
+            .map_err(WorkspaceError::Config)?;
+
+        Ok(())
+    }
+
+    /// Toggle favorite status for a workspace
+    pub async fn toggle_workspace_favorite(&self, workspace_path: &Path) -> WorkspaceResult<bool> {
+        let is_favorite = {
+            let config_guard = self.config_manager.get_config();
+            let mut config = config_guard
+                .write()
+                .map_err(|_| WorkspaceError::Config(ConfigError::AccessError))?;
+
+            if let Some(recent_workspaces) = config.workspace.recent_workspaces.as_mut() {
+                if let Some(workspace) = recent_workspaces
+                    .iter_mut()
+                    .find(|w| w.path == workspace_path)
+                {
+                    workspace.is_favorite = !workspace.is_favorite;
+                    workspace.is_favorite
+                } else {
+                    return Err(WorkspaceError::NotFound);
+                }
+            } else {
+                return Err(WorkspaceError::NotFound);
+            }
+        }; // Lock is dropped here
+
+        // Save configuration
+        self.config_manager
+            .save_configuration(None)
+            .await
+            .map_err(WorkspaceError::Config)?;
+
+        Ok(is_favorite)
+    }
+
+    /// Remove workspace from recent list
+    pub async fn remove_from_recent(&self, workspace_path: &Path) -> WorkspaceResult<()> {
+        // Scope the lock to prevent holding it across await
+        {
+            let config_guard = self.config_manager.get_config();
+            let mut config = config_guard
+                .write()
+                .map_err(|_| WorkspaceError::Config(ConfigError::AccessError))?;
+
+            if let Some(recent_workspaces) = config.workspace.recent_workspaces.as_mut() {
+                recent_workspaces.retain(|w| w.path != workspace_path);
+            }
+        } // Lock is dropped here
+
+        // Save configuration
+        self.config_manager
+            .save_configuration(None)
+            .await
+            .map_err(WorkspaceError::Config)?;
+
+        Ok(())
+    }
+
+    /// Get workspace statistics
+    pub async fn get_workspace_stats(
+        &self,
+        workspace_path: &Path,
+    ) -> WorkspaceResult<WorkspaceStats> {
+        // Validate workspace exists
+        if !self.is_workspace(workspace_path).await? {
+            return Err(WorkspaceError::NotFound);
+        }
+
+        let mut stats = WorkspaceStats::default();
+        let mut total_size = 0u64;
+        let mut total_files = 0u64;
+
+        // Count files in each directory
+        let directories = [
+            workspace_path.join("sources/imports"),
+            workspace_path.join("sources/references"),
+            workspace_path.join("sources/archives"),
+            workspace_path.join("outputs/drafts"),
+            workspace_path.join("outputs/approved"),
+        ];
+
+        for dir in directories {
+            if dir.exists() {
+                let mut entries = tokio::fs::read_dir(&dir)
+                    .await
+                    .map_err(WorkspaceError::Io)?;
+
+                while let Some(entry) = entries.next_entry().await.map_err(WorkspaceError::Io)? {
+                    if let Ok(metadata) = entry.metadata().await {
+                        if metadata.is_file() {
+                            total_files += 1;
+                            total_size += metadata.len();
+
+                            // Count by directory type
+                            if dir.ends_with("imports") {
+                                stats.import_count += 1;
+                            } else if dir.ends_with("references") || dir.ends_with("archives") {
+                                stats.reference_count += 1;
+                            } else if dir.ends_with("drafts") || dir.ends_with("approved") {
+                                stats.output_count += 1;
+                            }
+
+                            // Track last import/output times
+                            if let Ok(modified) = metadata.modified() {
+                                let modified_utc = DateTime::<Utc>::from(modified);
+
+                                if dir.ends_with("imports") {
+                                    stats.last_import = Some(
+                                        stats
+                                            .last_import
+                                            .map(|last| last.max(modified_utc))
+                                            .unwrap_or(modified_utc),
+                                    );
+                                } else if dir.ends_with("drafts") || dir.ends_with("approved") {
+                                    stats.last_output = Some(
+                                        stats
+                                            .last_output
+                                            .map(|last| last.max(modified_utc))
+                                            .unwrap_or(modified_utc),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stats.total_files = total_files;
+        stats.total_size = total_size;
+
+        Ok(stats)
     }
 }
 

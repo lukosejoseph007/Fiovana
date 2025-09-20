@@ -127,6 +127,9 @@ pub enum WorkspaceError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
+    #[error("Workspace not found")]
+    NotFound,
+
     #[error("Workspace not found at: {path}")]
     WorkspaceNotFound { path: PathBuf },
 }

@@ -2,6 +2,9 @@
 export { default as DropZone } from './DropZone'
 export { default as FileWatcherDemo } from './FileWatcherDemo'
 
+// Workspace components
+export { default as WorkspaceSwitcher } from './workspace/WorkspaceSwitcher'
+
 // Deduplication components
 export { default as DuplicateDetectionDialog } from './DuplicateDetectionDialog'
 export { default as DuplicateFileComparison } from './DuplicateFileComparison'

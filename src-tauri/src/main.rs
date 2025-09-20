@@ -221,6 +221,12 @@ async fn main() {
             commands::update_workspace_config,
             commands::get_workspace_templates,
             commands::repair_workspace,
+            // Recent workspace management commands
+            commands::get_recent_workspaces,
+            commands::update_recent_workspace,
+            commands::toggle_workspace_favorite,
+            commands::remove_workspace_from_recent,
+            commands::get_workspace_stats,
             // Deduplication commands
             commands::deduplication_commands::initialize_deduplication,
             commands::deduplication_commands::deduplicate_file,
@@ -241,6 +247,11 @@ async fn main() {
             commands::get_operation_history,
             commands::get_estimated_completion_time,
             commands::update_operation_progress,
+            // Import Wizard commands
+            commands::batch_import_files,
+            commands::validate_import_files,
+            commands::get_import_preset_templates,
+            commands::get_batch_processing_stats,
         ])
         .setup(move |app| {
             info!("Application setup complete");

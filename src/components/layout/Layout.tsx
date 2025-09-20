@@ -1,6 +1,18 @@
 import React, { useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { FileText, Eye, Copy, Settings, Menu, X, Home, Upload, BarChart3 } from 'lucide-react'
+import {
+  FileText,
+  Eye,
+  Copy,
+  Settings,
+  Menu,
+  X,
+  Home,
+  Upload,
+  BarChart3,
+  FolderOpen,
+  FileUp,
+} from 'lucide-react'
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -20,6 +32,12 @@ const Layout: React.FC = () => {
       description: 'Upload and manage documents',
     },
     {
+      path: '/import-wizard',
+      label: 'Import Wizard',
+      icon: FileUp,
+      description: 'Guided file import with presets',
+    },
+    {
       path: '/file-watcher',
       label: 'File Watcher',
       icon: Eye,
@@ -36,6 +54,12 @@ const Layout: React.FC = () => {
       label: 'Progress',
       icon: BarChart3,
       description: 'Monitor import operations',
+    },
+    {
+      path: '/workspace',
+      label: 'Workspace',
+      icon: FolderOpen,
+      description: 'Manage project workspaces',
     },
     {
       path: '/settings',

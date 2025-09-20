@@ -2,7 +2,8 @@
 //! Tauri commands for workspace management
 
 use crate::workspace::{
-    CreateWorkspaceRequest, WorkspaceConfig, WorkspaceInfo, WorkspaceTemplate, WorkspaceValidation,
+    CreateWorkspaceRequest, RecentWorkspace, UpdateRecentWorkspaceRequest, WorkspaceConfig,
+    WorkspaceInfo, WorkspaceStats, WorkspaceTemplate, WorkspaceValidation,
 };
 use tauri::State;
 
@@ -179,6 +180,92 @@ pub async fn repair_workspace(
     state
         .workspace_manager
         .validate_workspace(&workspace_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get recent workspaces from configuration
+#[tauri::command]
+pub async fn get_recent_workspaces(
+    state: State<'_, crate::AppState>,
+) -> Result<Vec<RecentWorkspace>, String> {
+    state
+        .workspace_manager
+        .get_recent_workspaces()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Update recent workspace access
+#[tauri::command]
+pub async fn update_recent_workspace(
+    path: String,
+    name: String,
+    template: Option<String>,
+    state: State<'_, crate::AppState>,
+) -> Result<(), String> {
+    let template = match template.as_deref() {
+        Some("research") => WorkspaceTemplate::Research,
+        Some("documentation") => WorkspaceTemplate::Documentation,
+        Some("collaboration") => WorkspaceTemplate::Collaboration,
+        Some("basic") | None => WorkspaceTemplate::Basic,
+        Some(custom) => WorkspaceTemplate::Custom(custom.to_string()),
+    };
+
+    let request = UpdateRecentWorkspaceRequest {
+        path: std::path::PathBuf::from(path),
+        name,
+        template,
+    };
+
+    state
+        .workspace_manager
+        .update_recent_workspace(request)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Toggle favorite status for a workspace
+#[tauri::command]
+pub async fn toggle_workspace_favorite(
+    path: String,
+    state: State<'_, crate::AppState>,
+) -> Result<bool, String> {
+    let workspace_path = std::path::PathBuf::from(path);
+
+    state
+        .workspace_manager
+        .toggle_workspace_favorite(&workspace_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Remove workspace from recent list
+#[tauri::command]
+pub async fn remove_workspace_from_recent(
+    path: String,
+    state: State<'_, crate::AppState>,
+) -> Result<(), String> {
+    let workspace_path = std::path::PathBuf::from(path);
+
+    state
+        .workspace_manager
+        .remove_from_recent(&workspace_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get workspace statistics
+#[tauri::command]
+pub async fn get_workspace_stats(
+    path: String,
+    state: State<'_, crate::AppState>,
+) -> Result<WorkspaceStats, String> {
+    let workspace_path = std::path::PathBuf::from(path);
+
+    state
+        .workspace_manager
+        .get_workspace_stats(&workspace_path)
         .await
         .map_err(|e| e.to_string())
 }
