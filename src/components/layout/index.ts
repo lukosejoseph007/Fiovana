@@ -1,2 +1,2 @@
 // Custom layout exports
-export {}
+export { default as Layout } from './Layout'
