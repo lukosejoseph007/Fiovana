@@ -1,15 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import {
-  FileText,
-  Eye,
-  Copy,
-  Settings,
-  Menu,
-  X,
-  Home,
-  Upload
-} from 'lucide-react'
+import { FileText, Eye, Copy, Settings, Menu, X, Home, Upload, BarChart3 } from 'lucide-react'
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -20,32 +11,38 @@ const Layout: React.FC = () => {
       path: '/',
       label: 'Dashboard',
       icon: Home,
-      description: 'Overview and quick actions'
+      description: 'Overview and quick actions',
     },
     {
       path: '/file-management',
       label: 'File Management',
       icon: Upload,
-      description: 'Upload and manage documents'
+      description: 'Upload and manage documents',
     },
     {
       path: '/file-watcher',
       label: 'File Watcher',
       icon: Eye,
-      description: 'Monitor file system changes'
+      description: 'Monitor file system changes',
     },
     {
       path: '/deduplication',
       label: 'Deduplication',
       icon: Copy,
-      description: 'Find and manage duplicate files'
+      description: 'Find and manage duplicate files',
+    },
+    {
+      path: '/progress',
+      label: 'Progress',
+      icon: BarChart3,
+      description: 'Monitor import operations',
     },
     {
       path: '/settings',
       label: 'Settings',
       icon: Settings,
-      description: 'Application configuration'
-    }
+      description: 'Application configuration',
+    },
   ]
 
   const toggleSidebar = () => {
@@ -81,11 +78,13 @@ const Layout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed top-0 left-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg z-40 transition-transform duration-300 ease-in-out
         w-72
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      `}
+      >
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
@@ -101,7 +100,7 @@ const Layout: React.FC = () => {
 
         {/* Navigation */}
         <nav className="p-4 space-y-2">
-          {navigationItems.map((item) => {
+          {navigationItems.map(item => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
 
@@ -112,22 +111,23 @@ const Layout: React.FC = () => {
                 onClick={closeSidebar}
                 className={`
                   group flex items-center px-4 py-3 rounded-lg transition-colors duration-200
-                  ${isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ${
+                    isActive
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }
                 `}
               >
-                <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                <Icon
+                  className={`h-5 w-5 mr-3 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+                />
                 <div className="flex-1">
                   <div className="font-medium">{item.label}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {item.description}
                   </div>
                 </div>
-                {isActive && (
-                  <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full" />
-                )}
+                {isActive && <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full" />}
               </NavLink>
             )
           })}
@@ -135,9 +135,7 @@ const Layout: React.FC = () => {
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Version 0.1.0
-          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">Version 0.1.0</div>
         </div>
       </aside>
 
@@ -149,10 +147,12 @@ const Layout: React.FC = () => {
             <div className="flex items-center space-x-4 lg:ml-0 ml-12">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {navigationItems.find(item => item.path === location.pathname)?.label || 'Proxemic'}
+                  {navigationItems.find(item => item.path === location.pathname)?.label ||
+                    'Proxemic'}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {navigationItems.find(item => item.path === location.pathname)?.description || 'AI-Powered Document Intelligence Platform'}
+                  {navigationItems.find(item => item.path === location.pathname)?.description ||
+                    'AI-Powered Document Intelligence Platform'}
                 </p>
               </div>
             </div>

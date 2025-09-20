@@ -10,12 +10,12 @@ import {
   Palette,
   Monitor,
   Moon,
-  Sun
+  Sun,
 } from 'lucide-react'
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general')
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  // const [isDarkMode, setIsDarkMode] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [autoSave, setAutoSave] = useState(true)
 
@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'storage', label: 'Storage', icon: Database },
     { id: 'network', label: 'Network', icon: Globe },
-    { id: 'notifications', label: 'Notifications', icon: Bell }
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ]
 
   const handleSaveSettings = () => {
@@ -293,9 +293,7 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Settings
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Configure your Proxemic application preferences and security settings
         </p>
@@ -307,7 +305,7 @@ const Settings: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:w-64 bg-gray-50 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600">
             <nav className="p-4 space-y-1">
-              {tabs.map((tab) => {
+              {tabs.map(tab => {
                 const Icon = tab.icon
                 return (
                   <button

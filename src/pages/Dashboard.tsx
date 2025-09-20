@@ -8,7 +8,7 @@ import {
   Activity,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react'
 
 const Dashboard: React.FC = () => {
@@ -18,22 +18,22 @@ const Dashboard: React.FC = () => {
       description: 'Drag and drop files to analyze and process',
       icon: Upload,
       path: '/file-management',
-      color: 'blue'
+      color: 'blue',
     },
     {
       title: 'Watch Files',
       description: 'Monitor file system changes in real-time',
       icon: Eye,
       path: '/file-watcher',
-      color: 'green'
+      color: 'green',
     },
     {
       title: 'Find Duplicates',
       description: 'Detect and manage duplicate files',
       icon: Copy,
       path: '/deduplication',
-      color: 'purple'
-    }
+      color: 'purple',
+    },
   ]
 
   const recentActivity = [
@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
       file: 'user-guide.pdf',
       timestamp: '2 minutes ago',
       status: 'completed',
-      icon: FileText
+      icon: FileText,
     },
     {
       id: 2,
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
       file: 'training-manual.docx',
       timestamp: '15 minutes ago',
       status: 'completed',
-      icon: Copy
+      icon: Copy,
     },
     {
       id: 3,
@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
       file: '/workspace/documents',
       timestamp: '1 hour ago',
       status: 'active',
-      icon: Eye
+      icon: Eye,
     },
     {
       id: 4,
@@ -67,8 +67,8 @@ const Dashboard: React.FC = () => {
       file: 'policy-update.pdf',
       timestamp: '2 hours ago',
       status: 'processing',
-      icon: Activity
-    }
+      icon: Activity,
+    },
   ]
 
   const stats = [
@@ -77,29 +77,29 @@ const Dashboard: React.FC = () => {
       value: '1,247',
       change: '+12%',
       changeType: 'positive' as const,
-      icon: FileText
+      icon: FileText,
     },
     {
       label: 'Duplicates Found',
       value: '89',
       change: '-5%',
       changeType: 'positive' as const,
-      icon: Copy
+      icon: Copy,
     },
     {
       label: 'Active Watchers',
       value: '3',
       change: '+1',
       changeType: 'positive' as const,
-      icon: Eye
+      icon: Eye,
     },
     {
       label: 'Storage Saved',
       value: '2.4 GB',
       change: '+0.3 GB',
       changeType: 'positive' as const,
-      icon: Activity
-    }
+      icon: Activity,
+    },
   ]
 
   const getColorClasses = (color: string) => {
@@ -166,11 +166,13 @@ const Dashboard: React.FC = () => {
                   <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
                     {stat.value}
                   </p>
-                  <p className={`text-sm mt-2 ${
-                    stat.changeType === 'positive'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <p
+                    className={`text-sm mt-2 ${
+                      stat.changeType === 'positive'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
                     {stat.change}
                   </p>
                 </div>
@@ -210,12 +212,10 @@ const Dashboard: React.FC = () => {
       {/* Recent Activity */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Recent Activity
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
         </div>
         <div className="p-6 space-y-4">
-          {recentActivity.map((activity) => {
+          {recentActivity.map(activity => {
             const Icon = activity.icon
             return (
               <div key={activity.id} className="flex items-center space-x-4">

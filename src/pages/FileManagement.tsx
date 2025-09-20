@@ -336,9 +336,7 @@ const FileManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          File Management
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">File Management</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Upload and analyze documents with AI-powered intelligence
         </p>
@@ -346,7 +344,9 @@ const FileManagement: React.FC = () => {
 
       {/* Drop Zone Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload Documents</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Upload Documents
+        </h2>
 
         <div className="flex justify-center w-full">
           <div className="w-full max-w-2xl">
@@ -386,12 +386,7 @@ const FileManagement: React.FC = () => {
                       : 'bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400'
                 }`}
               >
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -421,7 +416,9 @@ const FileManagement: React.FC = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Supported formats: .docx, .pdf, .md, .txt, .csv, .json
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Max file size: 100MB | Max files: 10</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Max file size: 100MB | Max files: 10
+                </p>
               </div>
 
               {/* Drag overlay */}
@@ -436,7 +433,9 @@ const FileManagement: React.FC = () => {
               {/* Hover overlay for processing state */}
               {isHovered && !isDragOver && (
                 <div className="absolute inset-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 bg-opacity-30 rounded-lg">
-                  <div className="text-blue-600 dark:text-blue-300 font-medium">Click to browse files</div>
+                  <div className="text-blue-600 dark:text-blue-300 font-medium">
+                    Click to browse files
+                  </div>
                 </div>
               )}
             </div>
@@ -461,14 +460,15 @@ const FileManagement: React.FC = () => {
 
           {/* File Processing Summary */}
           <div className="p-6 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">Processing Summary</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">
+              Processing Summary
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {
                     droppedFiles.filter(
-                      f =>
-                        f.validation?.is_valid && !f.error && !f.duplicate_check?.is_duplicate
+                      f => f.validation?.is_valid && !f.error && !f.duplicate_check?.is_duplicate
                     ).length
                   }
                 </div>
@@ -483,9 +483,8 @@ const FileManagement: React.FC = () => {
               <div className="text-center">
                 <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                   {
-                    droppedFiles.filter(
-                      f => f.validation && !f.validation.is_valid && !f.error
-                    ).length
+                    droppedFiles.filter(f => f.validation && !f.validation.is_valid && !f.error)
+                      .length
                   }
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">Warnings</div>
@@ -539,18 +538,12 @@ const FileManagement: React.FC = () => {
                           </span>
                         )}
                         {file.validation && !file.validation.is_valid && (
-                          <span
-                            className="mr-2 text-yellow-500"
-                            title={file.validation.message}
-                          >
+                          <span className="mr-2 text-yellow-500" title={file.validation.message}>
                             ⚠️
                           </span>
                         )}
                         {file.duplicate_check?.is_duplicate && (
-                          <span
-                            className="mr-2 text-orange-500"
-                            title="Duplicate file detected"
-                          >
+                          <span className="mr-2 text-orange-500" title="Duplicate file detected">
                             🔄
                           </span>
                         )}
@@ -609,8 +602,8 @@ const FileManagement: React.FC = () => {
                 No documents uploaded yet
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Drag and drop files anywhere on this window, or click the drop zone to browse
-                and select files for AI-powered analysis.
+                Drag and drop files anywhere on this window, or click the drop zone to browse and
+                select files for AI-powered analysis.
               </p>
             </div>
           </div>

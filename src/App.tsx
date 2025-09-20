@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import FileManagement from './pages/FileManagement'
 import FileWatcher from './pages/FileWatcher'
 import Deduplication from './pages/Deduplication'
+import ProgressDashboard from './pages/ProgressDashboard'
 import Settings from './pages/Settings'
 
 const App: React.FC = () => {
@@ -16,6 +17,7 @@ const App: React.FC = () => {
           <Route path="/file-management" element={<FileManagement />} />
           <Route path="/file-watcher" element={<FileWatcher />} />
           <Route path="/deduplication" element={<Deduplication />} />
+          <Route path="/progress" element={<ProgressDashboard />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

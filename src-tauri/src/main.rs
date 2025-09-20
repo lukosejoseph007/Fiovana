@@ -120,6 +120,9 @@ async fn main() {
     // Initialize deduplication state
     let deduplication_state = commands::deduplication_commands::DeduplicationState::new();
 
+    // Initialize progress state
+    let progress_state = commands::progress_commands::ProgressState::new();
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
@@ -133,6 +136,7 @@ async fn main() {
     tauri::Builder::default()
         .manage(app_state)
         .manage(deduplication_state)
+        .manage(progress_state)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -227,6 +231,16 @@ async fn main() {
             commands::deduplication_commands::run_garbage_collection,
             commands::deduplication_commands::should_run_garbage_collection,
             commands::deduplication_commands::cleanup_deduplication,
+            // Progress tracking UI commands
+            commands::get_all_operations,
+            commands::get_operation_progress,
+            commands::cancel_operation,
+            commands::get_progress_summary,
+            commands::cleanup_completed_operations,
+            commands::subscribe_progress_updates,
+            commands::get_operation_history,
+            commands::get_estimated_completion_time,
+            commands::update_operation_progress,
         ])
         .setup(move |app| {
             info!("Application setup complete");
