@@ -1,2 +1,2 @@
 // Custom services exports
-export {}
+export { DeduplicationService } from './deduplicationService'

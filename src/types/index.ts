@@ -20,3 +20,6 @@ export interface AppState {
   isLoading: boolean
   error: string | null
 }
+
+// Re-export deduplication types
+export * from './deduplication'

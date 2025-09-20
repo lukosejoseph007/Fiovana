@@ -414,11 +414,10 @@ impl DeduplicationManager {
             Ok(())
         }
 
-        // On Windows, hard links require special handling
+        // On Windows, hard links are supported via std::fs::hard_link
         #[cfg(windows)]
         {
-            use std::os::windows::fs;
-            fs::hard_link(source, target).with_context(|| {
+            std::fs::hard_link(source, target).with_context(|| {
                 format!(
                     "Failed to create hard link from {} to {}",
                     source.display(),

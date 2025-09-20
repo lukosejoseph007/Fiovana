@@ -117,6 +117,9 @@ async fn main() {
         }
     };
 
+    // Initialize deduplication state
+    let deduplication_state = commands::deduplication_commands::DeduplicationState::new();
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
@@ -129,6 +132,7 @@ async fn main() {
     // Build and run the Tauri application
     tauri::Builder::default()
         .manage(app_state)
+        .manage(deduplication_state)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -213,6 +217,16 @@ async fn main() {
             commands::update_workspace_config,
             commands::get_workspace_templates,
             commands::repair_workspace,
+            // Deduplication commands
+            commands::deduplication_commands::initialize_deduplication,
+            commands::deduplication_commands::deduplicate_file,
+            commands::deduplication_commands::batch_deduplicate_files,
+            commands::deduplication_commands::check_file_deduplication,
+            commands::deduplication_commands::get_deduplication_stats,
+            commands::deduplication_commands::get_all_deduplication_stats,
+            commands::deduplication_commands::run_garbage_collection,
+            commands::deduplication_commands::should_run_garbage_collection,
+            commands::deduplication_commands::cleanup_deduplication,
         ])
         .setup(move |app| {
             info!("Application setup complete");
