@@ -6,6 +6,7 @@ pub mod health_commands;
 pub mod main_commands;
 pub mod progress_commands;
 pub mod workspace_commands;
+pub mod workspace_performance_commands;
 
 // Re-export all commands for easy access
 // Note: deduplication_commands are available but not auto-imported to avoid unused warnings

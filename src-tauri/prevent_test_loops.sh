@@ -150,6 +150,7 @@ main() {
         "cross_platform_compatibility_tests"
         "workspace_performance_benchmarks"
         "workspace_security_tests"
+        "workspace_edge_case_tests"
     )
 
     echo ""

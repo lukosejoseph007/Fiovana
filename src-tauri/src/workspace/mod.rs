@@ -9,8 +9,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
+pub mod backup;
 pub mod config;
 pub mod manager;
+pub mod performance;
 pub mod types;
 
 pub use config::*;

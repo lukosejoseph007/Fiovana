@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tokio::fs;
 
 /// Main workspace manager that coordinates workspace operations
+#[derive(Clone)]
 pub struct WorkspaceManager {
     config_manager: Arc<ConfigManager>,
     path_validator: PathValidator,
