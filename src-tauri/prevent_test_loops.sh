@@ -145,6 +145,11 @@ main() {
         "integration_tests"
         "monitoring_tests"
         "notification_tests"
+        "workspace_unit_tests"
+        "workspace_integration_tests"
+        "cross_platform_compatibility_tests"
+        "workspace_performance_benchmarks"
+        "workspace_security_tests"
     )
 
     echo ""
