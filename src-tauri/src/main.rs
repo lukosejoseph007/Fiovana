@@ -252,6 +252,12 @@ async fn main() {
             commands::validate_import_files,
             commands::get_import_preset_templates,
             commands::get_batch_processing_stats,
+            // Document parsing commands
+            commands::parse_docx_document,
+            commands::parse_pdf_document,
+            commands::parse_document,
+            commands::get_supported_document_formats,
+            commands::get_document_processing_stats,
         ])
         .setup(move |app| {
             info!("Application setup complete");

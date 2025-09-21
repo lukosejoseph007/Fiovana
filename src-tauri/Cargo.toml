@@ -63,6 +63,17 @@ sha2 = "0.10"
 mime_guess = "2.0"
 filetime = "0.2"
 
+# Document processing dependencies
+zip = "2.2"
+lopdf = "0.34"  # Pure Rust PDF parser as alternative to pdf-extract
+xml-rs = "0.8"  # For DOCX XML parsing
+
+# Vector processing dependencies
+candle-core = "0.8"
+candle-transformers = "0.8"
+candle-nn = "0.8"
+tokenizers = "0.20"
+
 # Event persistence - now using file-based storage
 
 # Windows API for memory monitoring

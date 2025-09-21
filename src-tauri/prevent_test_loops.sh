@@ -153,6 +153,16 @@ main() {
         "workspace_edge_case_tests"
     )
 
+    # Strategy 3: Run unit tests that are part of the lib crate
+    echo ""
+    echo "🔬 Running unit tests..."
+    if run_tests_safely "Unit Tests" "--lib -- docx_parser pdf_parser document_commands"; then
+        echo "✅ Document parsing unit tests passed"
+    else
+        echo "❌ Document parsing unit tests failed"
+        failed_tests+=("document_parsing_units")
+    fi
+
     echo ""
     echo "🔬 Running integration tests individually..."
 
