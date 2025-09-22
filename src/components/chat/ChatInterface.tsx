@@ -20,6 +20,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [aiStatus, setAiStatus] = useState<'unknown' | 'available' | 'unavailable'>('unknown')
+  const [currentProvider, setCurrentProvider] = useState<string>('local')
+  const [currentModel, setCurrentModel] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -32,16 +34,60 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   }, [messages])
 
   useEffect(() => {
-    // Check AI status on component mount
+    // Load AI settings and check status on component mount
+    loadAISettings()
     checkAIStatus()
     // Initialize AI system
     initializeAI()
+
+    // Set up storage listener for settings changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ai_settings') {
+        console.log('AI settings changed, reloading...')
+        loadAISettings()
+        // Reinitialize AI system with new settings
+        setTimeout(initializeAI, 100) // Small delay to ensure settings are loaded
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
+
+  const loadAISettings = async () => {
+    try {
+      // @ts-expect-error - Tauri command
+      const settings = await window.__TAURI__.invoke('get_ai_settings')
+      console.log('Loaded AI settings from backend:', settings)
+      setCurrentProvider(settings.provider || 'local')
+      setCurrentModel(settings.selectedModel || '')
+    } catch (error) {
+      console.error('Failed to load AI settings from backend:', error)
+      // Fallback to localStorage
+      try {
+        const stored = localStorage.getItem('ai_settings')
+        if (stored) {
+          const settings = JSON.parse(stored)
+          console.log('Loaded AI settings from localStorage:', settings)
+          setCurrentProvider(settings.provider || 'local')
+          setCurrentModel(settings.selectedModel || '')
+        } else {
+          console.log('No AI settings found in localStorage')
+        }
+      } catch (localError) {
+        console.error('Failed to load AI settings from localStorage:', localError)
+      }
+    }
+  }
 
   const checkAIStatus = async () => {
     try {
       // @ts-expect-error - Tauri command
       const status = await window.__TAURI__.invoke('get_ai_status')
+      console.log('AI Status check result:', status)
       setAiStatus(status.available ? 'available' : 'unavailable')
     } catch (error) {
       console.error('Failed to check AI status:', error)
@@ -51,9 +97,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
   const initializeAI = async () => {
     try {
+      console.log('Initializing AI system...')
+      // Initialize AI system with current settings
       // @ts-expect-error - Tauri command
-      await window.__TAURI__.invoke('init_ai_system')
-      setAiStatus('available')
+      const initialized = await window.__TAURI__.invoke('init_ai_system')
+      console.log('AI initialization result:', initialized)
+
+      if (initialized) {
+        // Double-check status after initialization
+        // @ts-expect-error - Tauri command
+        const status = await window.__TAURI__.invoke('get_ai_status')
+        console.log('AI status after initialization:', status)
+        setAiStatus(status.available ? 'available' : 'unavailable')
+      } else {
+        console.log('AI initialization failed')
+        setAiStatus('unavailable')
+      }
     } catch (error) {
       console.error('Failed to initialize AI:', error)
       setAiStatus('unavailable')
@@ -137,9 +196,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const getStatusText = () => {
     switch (aiStatus) {
       case 'available':
+        if (currentModel) {
+          const providerDisplay =
+            currentProvider === 'openrouter'
+              ? 'OpenRouter'
+              : currentProvider === 'anthropic'
+                ? 'Anthropic'
+                : 'Local'
+          return `${providerDisplay}: ${currentModel}`
+        }
         return 'AI Assistant Online'
       case 'unavailable':
-        return 'AI Assistant Offline'
+        return currentProvider === 'local'
+          ? 'Ollama not connected'
+          : `${currentProvider} not configured`
       default:
         return 'Checking AI Status...'
     }
@@ -296,7 +366,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         {aiStatus === 'unavailable' && (
           <div className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
             <AlertCircle className="h-4 w-4" />
-            <span>AI assistant is not available. Make sure Ollama is running and try again.</span>
+            <span>
+              {currentProvider === 'local'
+                ? 'AI assistant is not available. Make sure Ollama is running and try again.'
+                : `AI assistant is not available. Please check your ${currentProvider} configuration in Settings.`}
+            </span>
           </div>
         )}
       </div>

@@ -202,6 +202,7 @@ impl OllamaClient {
         Ok(response.message.content)
     }
 
+    #[allow(dead_code)]
     pub async fn system_chat(
         &self,
         model: &str,

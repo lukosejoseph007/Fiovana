@@ -292,6 +292,8 @@ async fn main() {
             commands::get_available_models,
             commands::pull_model,
             commands::test_ai_conversation,
+            commands::get_ai_settings,
+            commands::save_ai_settings,
             // Vector search commands
             commands::init_vector_system,
             commands::index_document,

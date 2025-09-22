@@ -41,10 +41,13 @@ pub struct ResponseMetadata {
     pub confidence_explanation: String,
 }
 
+#[allow(dead_code)]
 pub struct ResponseGenerator {
+    #[allow(dead_code)]
     system_prompts: std::collections::HashMap<Intent, String>,
 }
 
+#[allow(dead_code)]
 impl ResponseGenerator {
     pub fn new() -> Self {
         let mut system_prompts = std::collections::HashMap::new();
