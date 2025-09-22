@@ -1,40 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useCallback, useRef } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
-
-interface FileInfo {
-  name: string
-  size: number
-  type: string
-  lastModified: number
-  path?: string
-  validation?: {
-    is_valid: boolean
-    message: string
-    warnings: string[]
-  }
-  hash?: {
-    sha256: string
-    algorithm: string
-  }
-  duplicate_check?: {
-    is_duplicate: boolean
-    existing_paths: string[]
-  }
-  metadata?: {
-    file_type: string
-    mime_type: string
-    page_count?: number
-    word_count?: number
-    creation_date?: string
-    author?: string
-    language?: string
-    binary_ratio?: number
-    entropy?: number
-    text_preview?: string
-  }
-  error?: string
-}
+import { useAppState } from '../context/AppStateContext'
+import type { FileInfo } from '../context/types'
 
 interface BackendFileResult {
   name?: string
@@ -70,9 +38,9 @@ interface BackendFileResult {
 }
 
 const FileManagement: React.FC = () => {
-  const [droppedFiles, setDroppedFiles] = useState<FileInfo[]>([])
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
+  const { state, dispatch } = useAppState()
+  const { droppedFiles, isDragOver } = state.fileManagement
+  const [isHovered, setIsHovered] = React.useState(false)
   const isListenerSetupRef = useRef(false)
   const lastDropTimeRef = useRef<number>(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -129,11 +97,11 @@ const FileManagement: React.FC = () => {
         unlisten = await window.onDragDropEvent(event => {
           // Handle drag state for visual feedback
           if (event.payload.type === 'enter') {
-            setIsDragOver(true)
+            dispatch({ type: 'FILE_MANAGEMENT_SET_DRAG_OVER', payload: true })
           } else if (event.payload.type === 'leave') {
-            setIsDragOver(false)
+            dispatch({ type: 'FILE_MANAGEMENT_SET_DRAG_OVER', payload: false })
           } else if (event.payload.type === 'drop') {
-            setIsDragOver(false)
+            dispatch({ type: 'FILE_MANAGEMENT_SET_DRAG_OVER', payload: false })
 
             if ('paths' in event.payload) {
               const currentTime = Date.now()
@@ -144,6 +112,7 @@ const FileManagement: React.FC = () => {
               lastDropTimeRef.current = currentTime
 
               // Process files using the backend pipeline
+              dispatch({ type: 'FILE_MANAGEMENT_SET_PROCESSING', payload: true })
               invoke('process_dropped_files', {
                 filePaths: event.payload.paths,
                 checkDuplicates: true,
@@ -171,27 +140,27 @@ const FileManagement: React.FC = () => {
                   )
 
                   if (processedFiles.length > 0) {
-                    setDroppedFiles(prev => {
-                      // Additional deduplication: check if files already exist
-                      const newFiles = processedFiles.filter(
-                        newFile =>
-                          !prev.some(
-                            existingFile =>
-                              existingFile.name === newFile.name &&
-                              Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
-                          )
-                      )
+                    // Additional deduplication: check if files already exist
+                    const currentDroppedFiles = droppedFiles
+                    const newFiles = processedFiles.filter(
+                      newFile =>
+                        !currentDroppedFiles.some(
+                          existingFile =>
+                            existingFile.name === newFile.name &&
+                            Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
+                        )
+                    )
 
-                      if (newFiles.length === 0) {
-                        return prev
-                      }
-
-                      return [...prev, ...newFiles]
-                    })
+                    if (newFiles.length > 0) {
+                      dispatch({ type: 'FILE_MANAGEMENT_ADD_FILES', payload: newFiles })
+                    }
                   }
                 })
                 .catch(error => {
                   console.error('Error processing dropped files:', error)
+                })
+                .finally(() => {
+                  dispatch({ type: 'FILE_MANAGEMENT_SET_PROCESSING', payload: false })
                 })
             }
           }
@@ -209,7 +178,7 @@ const FileManagement: React.FC = () => {
         unlisten()
       }
     }
-  }, []) // Empty dependency array to run only once
+  }, [dispatch, droppedFiles]) // Include dependencies
 
   // Handle click to browse files using Tauri file dialog
   const handleBrowseFiles = useCallback(async () => {
@@ -219,6 +188,7 @@ const FileManagement: React.FC = () => {
 
       if (selectedFiles && Array.isArray(selectedFiles) && selectedFiles.length > 0) {
         // Use the same backend processing pipeline as drag-and-drop
+        dispatch({ type: 'FILE_MANAGEMENT_SET_PROCESSING', payload: true })
         invoke('process_dropped_files', {
           filePaths: selectedFiles,
           checkDuplicates: true,
@@ -244,70 +214,70 @@ const FileManagement: React.FC = () => {
             })
 
             if (processedFiles.length > 0) {
-              setDroppedFiles(prev => {
-                // Additional deduplication: check if files already exist
-                const newFiles = processedFiles.filter(
-                  newFile =>
-                    !prev.some(
-                      existingFile =>
-                        existingFile.name === newFile.name &&
-                        Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
-                    )
-                )
+              // Additional deduplication: check if files already exist
+              const currentDroppedFiles = droppedFiles
+              const newFiles = processedFiles.filter(
+                newFile =>
+                  !currentDroppedFiles.some(
+                    existingFile =>
+                      existingFile.name === newFile.name &&
+                      Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
+                  )
+              )
 
-                if (newFiles.length === 0) {
-                  return prev
-                }
-
-                return [...prev, ...newFiles]
-              })
+              if (newFiles.length > 0) {
+                dispatch({ type: 'FILE_MANAGEMENT_ADD_FILES', payload: newFiles })
+              }
             }
           })
           .catch(error => {
             console.error('Error processing browsed files:', error)
           })
+          .finally(() => {
+            dispatch({ type: 'FILE_MANAGEMENT_SET_PROCESSING', payload: false })
+          })
       }
     } catch (error) {
       console.error('Error opening file dialog:', error)
     }
-  }, [])
+  }, [dispatch, droppedFiles])
 
   // Handle file input change (fallback for non-Tauri environments)
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      // Fallback to basic file info for browser environments
-      const basicFileInfos: FileInfo[] = Array.from(files).map(file => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-        error: 'Limited processing - drag and drop for full features',
-      }))
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files
+      if (files && files.length > 0) {
+        // Fallback to basic file info for browser environments
+        const basicFileInfos: FileInfo[] = Array.from(files).map(file => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified,
+          error: 'Limited processing - drag and drop for full features',
+        }))
 
-      setDroppedFiles(prev => {
+        const currentDroppedFiles = droppedFiles
         const newFiles = basicFileInfos.filter(
           newFile =>
-            !prev.some(
+            !currentDroppedFiles.some(
               existingFile =>
                 existingFile.name === newFile.name &&
                 Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
             )
         )
 
-        if (newFiles.length === 0) {
-          return prev
+        if (newFiles.length > 0) {
+          dispatch({ type: 'FILE_MANAGEMENT_ADD_FILES', payload: newFiles })
         }
+      }
 
-        return [...prev, ...newFiles]
-      })
-    }
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }, [])
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    },
+    [dispatch, droppedFiles]
+  )
 
   // Handle click to browse files
   const handleClick = useCallback(async () => {
@@ -329,7 +299,7 @@ const FileManagement: React.FC = () => {
   }
 
   const clearFiles = () => {
-    setDroppedFiles([])
+    dispatch({ type: 'FILE_MANAGEMENT_CLEAR_FILES' })
   }
 
   return (

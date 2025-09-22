@@ -5,12 +5,12 @@ import type { AISettings, AIStatus, ChatResponse } from '../../types/ai'
 import { useChatContext } from '../../hooks/useChatContext'
 import type { ChatMessage } from '../../context/chatTypes'
 
-interface ChatInterfaceProps {
+interface SessionChatInterfaceProps {
   className?: string
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
-  const { state, dispatch, getActiveSession, addMessage } = useChatContext()
+const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className = '' }) => {
+  const { state, addMessage, getActiveSession, dispatch } = useChatContext()
   const { isLoading, aiStatus, currentProvider, currentModel } = state
   const [input, setInput] = React.useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -64,8 +64,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
       })
     } catch (error) {
       console.error('Failed to check AI status:', error)
-      // Update AI status in chat context
-      console.log('AI unavailable - check failed')
+      dispatch({ type: 'CHAT_SET_AI_STATUS', payload: 'unavailable' })
     }
   }, [dispatch])
 
@@ -86,13 +85,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         })
       } else {
         console.log('AI initialization failed')
-        // Update AI status in chat context
-        console.log('AI init failed')
+        dispatch({ type: 'CHAT_SET_AI_STATUS', payload: 'unavailable' })
       }
     } catch (error) {
       console.error('Failed to initialize AI:', error)
-      // Update AI status in chat context
-      console.log('AI init error')
+      dispatch({ type: 'CHAT_SET_AI_STATUS', payload: 'unavailable' })
     }
   }, [dispatch])
 
@@ -123,6 +120,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return
 
+    if (!activeSession) {
+      console.error('No active session to add message to')
+      return
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
@@ -130,9 +132,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
       timestamp: new Date(),
     }
 
-    if (activeSession) {
-      addMessage(activeSession.id, userMessage)
-    }
+    addMessage(activeSession.id, userMessage)
     setInput('')
     dispatch({ type: 'CHAT_SET_LOADING', payload: true })
 
@@ -156,9 +156,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         error: response.success ? undefined : response.error,
       }
 
-      if (activeSession) {
-        addMessage(activeSession.id, assistantMessage)
-      }
+      addMessage(activeSession.id, assistantMessage)
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage: ChatMessage = {
@@ -168,9 +166,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         timestamp: new Date(),
         error: String(error),
       }
-      if (activeSession) {
-        addMessage(activeSession.id, errorMessage)
-      }
+      addMessage(activeSession.id, errorMessage)
     } finally {
       dispatch({ type: 'CHAT_SET_LOADING', payload: false })
       inputRef.current?.focus()
@@ -221,6 +217,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     }
   }
 
+  if (!activeSession) {
+    return (
+      <div
+        className={`flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+      >
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div className="text-center">
+            <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No Active Chat Session</p>
+            <p className="text-sm">
+              Select a chat from the sidebar or create a new one to start chatting.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className={`flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
@@ -232,7 +246,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
             <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">AI Assistant</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">{activeSession.title}</h3>
             <div className="flex items-center space-x-2">
               {getStatusIcon()}
               <span className="text-sm text-gray-500 dark:text-gray-400">{getStatusText()}</span>
@@ -254,7 +268,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">Welcome to Proxemic AI Assistant</p>
+            <p className="text-lg font-medium mb-2">Start a conversation</p>
             <p className="text-sm">
               I can help you process documents, compare content, and answer questions about your
               files.
@@ -346,7 +360,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
+            onKeyPress={handleKeyPress}
             placeholder={
               aiStatus === 'available'
                 ? 'Ask me about your documents...'
@@ -384,4 +398,4 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   )
 }
 
-export default ChatInterface
+export default SessionChatInterface

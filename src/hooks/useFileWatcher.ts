@@ -20,6 +20,10 @@ export interface UseFileWatcherReturn {
 }
 
 export const useFileWatcher = (): UseFileWatcherReturn => {
+  // For backward compatibility, we'll provide a hook interface that uses the global state
+  // This is deprecated in favor of using useAppState directly
+  console.warn('useFileWatcher hook is deprecated. Use useAppState instead.')
+
   const [isWatching, setIsWatching] = useState(false)
   const [watchedPaths, setWatchedPaths] = useState<string[]>([])
   const [fileEvents, setFileEvents] = useState<FileEvent[]>([])

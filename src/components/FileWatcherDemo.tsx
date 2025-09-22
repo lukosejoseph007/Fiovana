@@ -2,34 +2,126 @@
 // Demo component for file watcher functionality
 
 import React, { useState } from 'react'
-import useFileWatcher from '../hooks/useFileWatcher'
+import { useAppState } from '../context/AppStateContext'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { FileEvent } from '../types/fileWatcher'
 import './FileWatcherDemo.css'
 
 const FileWatcherDemo: React.FC = () => {
-  const {
-    isWatching,
-    watchedPaths,
-    fileEvents,
-    startWatching,
-    stopWatching,
-    pauseWatching,
-    resumeWatching,
-    addWatchPath,
-    removeWatchPath,
-    clearEvents,
-  } = useFileWatcher()
-
-  const [workspacePath, setWorkspacePath] = useState('')
+  const { state, dispatch } = useAppState()
+  const { isWatching, watchedPaths, fileEvents, workspacePath } = state.fileWatcher
   const [newWatchPath, setNewWatchPath] = useState('')
 
+  // Listen for file events from the backend
+  React.useEffect(() => {
+    let unlisten: (() => void) | undefined
+
+    const setupEventListener = async () => {
+      try {
+        unlisten = await listen<FileEvent>('file-event', event => {
+          dispatch({ type: 'FILE_WATCHER_ADD_EVENT', payload: event.payload })
+        })
+      } catch (error) {
+        console.error('Failed to set up file event listener:', error)
+      }
+    }
+
+    setupEventListener()
+
+    return () => {
+      if (unlisten) {
+        unlisten()
+      }
+    }
+  }, [dispatch])
+
+  const startWatching = async (workspacePath: string) => {
+    try {
+      await invoke('start_file_watching', { workspacePath })
+      dispatch({ type: 'FILE_WATCHER_SET_WATCHING', payload: true })
+      dispatch({ type: 'FILE_WATCHER_SET_WORKSPACE_PATH', payload: workspacePath })
+
+      // Get initial watched paths
+      const paths = await invoke<string[]>('get_watched_paths')
+      dispatch({ type: 'FILE_WATCHER_SET_PATHS', payload: paths })
+    } catch (error) {
+      console.error('Failed to start file watching:', error)
+      throw error
+    }
+  }
+
+  const stopWatching = async () => {
+    try {
+      await invoke('stop_file_watching')
+      dispatch({ type: 'FILE_WATCHER_SET_WATCHING', payload: false })
+      dispatch({ type: 'FILE_WATCHER_SET_PATHS', payload: [] })
+      dispatch({ type: 'FILE_WATCHER_SET_WORKSPACE_PATH', payload: '' })
+    } catch (error) {
+      console.error('Failed to stop file watching:', error)
+      throw error
+    }
+  }
+
+  const pauseWatching = async () => {
+    try {
+      await invoke('pause_file_watching')
+      dispatch({ type: 'FILE_WATCHER_SET_WATCHING', payload: false })
+    } catch (error) {
+      console.error('Failed to pause file watching:', error)
+      throw error
+    }
+  }
+
+  const resumeWatching = async () => {
+    try {
+      await invoke('resume_file_watching')
+      dispatch({ type: 'FILE_WATCHER_SET_WATCHING', payload: true })
+    } catch (error) {
+      console.error('Failed to resume file watching:', error)
+      throw error
+    }
+  }
+
+  const addWatchPath = async (path: string) => {
+    try {
+      await invoke('add_watch_path', { path })
+
+      // Refresh watched paths
+      const paths = await invoke<string[]>('get_watched_paths')
+      dispatch({ type: 'FILE_WATCHER_SET_PATHS', payload: paths })
+    } catch (error) {
+      console.error('Failed to add watch path:', error)
+      throw error
+    }
+  }
+
+  const removeWatchPath = async (path: string) => {
+    try {
+      await invoke('remove_watch_path', { path })
+
+      // Refresh watched paths
+      const paths = await invoke<string[]>('get_watched_paths')
+      dispatch({ type: 'FILE_WATCHER_SET_PATHS', payload: paths })
+    } catch (error) {
+      console.error('Failed to remove watch path:', error)
+      throw error
+    }
+  }
+
+  const clearEvents = () => {
+    dispatch({ type: 'FILE_WATCHER_CLEAR_EVENTS' })
+  }
+
+  const [localWorkspacePath, setLocalWorkspacePath] = useState(workspacePath)
+
   const handleStartWatching = async () => {
-    if (!workspacePath.trim()) {
+    if (!localWorkspacePath.trim()) {
       alert('Please enter a workspace path')
       return
     }
     try {
-      await startWatching(workspacePath)
+      await startWatching(localWorkspacePath)
     } catch (error) {
       console.error('Failed to start watching:', error)
     }
@@ -74,8 +166,8 @@ const FileWatcherDemo: React.FC = () => {
           <input
             type="text"
             placeholder="Workspace path to watch"
-            value={workspacePath}
-            onChange={e => setWorkspacePath(e.target.value)}
+            value={localWorkspacePath}
+            onChange={e => setLocalWorkspacePath(e.target.value)}
             disabled={isWatching}
           />
           <button onClick={handleStartWatching} disabled={isWatching}>
