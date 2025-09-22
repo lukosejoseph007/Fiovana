@@ -1,19 +1,26 @@
 // src-tauri/src/ai/mod.rs
 
 pub mod anthropic;
+pub mod context;
 pub mod intent;
 pub mod ollama;
 pub mod openrouter;
+pub mod prompts;
 pub mod response;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 // Re-export key types
 pub use anthropic::{AnthropicClient, AnthropicConfig};
+pub use context::{DocumentContextManager, DocumentRef, UserPreferences};
 pub use intent::IntentClassifier;
 pub use ollama::{OllamaClient, OllamaConfig};
 pub use openrouter::{OpenRouterClient, OpenRouterConfig};
+#[allow(unused_imports)]
+pub use prompts::{PromptContext, PromptTemplates};
 pub use response::{AIResponse, ResponseGenerator};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,6 +55,7 @@ pub struct AIOrchestrator {
     intent_classifier: IntentClassifier,
     #[allow(dead_code)]
     response_generator: ResponseGenerator,
+    context_manager: Arc<Mutex<DocumentContextManager>>,
     config: AIConfig,
     #[allow(dead_code)]
     vector_search_enabled: bool,
@@ -114,6 +122,7 @@ impl AIOrchestrator {
             anthropic_client,
             intent_classifier,
             response_generator,
+            context_manager: Arc::new(Mutex::new(DocumentContextManager::new())),
             config,
             vector_search_enabled: true, // Enable vector search for document-aware AI
         })
@@ -124,25 +133,103 @@ impl AIOrchestrator {
         input: &str,
         context: Option<&str>,
     ) -> Result<AIResponse> {
+        self.process_conversation_with_session(input, context, "default")
+            .await
+    }
+
+    /// Process conversation with session-specific context management
+    pub async fn process_conversation_with_session(
+        &self,
+        input: &str,
+        context: Option<&str>,
+        session_id: &str,
+    ) -> Result<AIResponse> {
+        use prompts::{PromptContext, PromptTemplates};
+
         // Step 1: Classify intent
         let intent = self.intent_classifier.classify(input).await?;
 
-        // Step 2: Prepare input with context if available
-        let enhanced_input = if let Some(ctx) = context {
+        // Step 2: Get enhanced context from context manager and existing context
+        let enhanced_context = if let Some(ctx) = context {
             if ctx.starts_with("No relevant documents")
                 || ctx.starts_with("Vector search unavailable")
             {
-                // Use original input when no document context is available
-                input.to_string()
+                self.get_enhanced_context(session_id, input).await
             } else {
-                // Include document context in the prompt
-                format!("{}\n\nUser Question: {}", ctx, input)
+                // Combine external context with session context
+                let session_context = self.get_enhanced_context(session_id, input).await;
+                if session_context.contains("No document context available") {
+                    ctx.to_string()
+                } else {
+                    format!("{}\n\n{}", ctx, session_context)
+                }
             }
         } else {
-            input.to_string()
+            self.get_enhanced_context(session_id, input).await
         };
 
-        // Step 3: Generate response based on provider
+        // Step 3: Detect appropriate prompt type and build context-aware prompt
+        let prompt_type = PromptTemplates::detect_prompt_type(input);
+
+        let enhanced_input = if enhanced_context.contains("No document context available")
+            || enhanced_context.starts_with("No relevant documents")
+            || enhanced_context.starts_with("Vector search unavailable")
+        {
+            // Use original input when no document context is available
+            input.to_string()
+        } else {
+            // Extract conversation history from context manager
+            let conversation_history = {
+                let context_manager = self.context_manager.lock().await;
+                context_manager
+                    .contexts
+                    .get(session_id)
+                    .map(|ctx| ctx.conversation_history.clone())
+                    .unwrap_or_default()
+            };
+
+            // Build document-aware prompt using templates
+            let prompt_context = PromptContext {
+                document_content: Some(enhanced_context),
+                document_metadata: {
+                    let context_manager = self.context_manager.lock().await;
+                    context_manager.extract_document_metadata(session_id)
+                },
+                user_query: input.to_string(),
+                conversation_history,
+            };
+
+            match prompt_type {
+                prompts::PromptType::DocumentAnalysis => {
+                    PromptTemplates::build_document_analysis_prompt(&prompt_context)
+                }
+                prompts::PromptType::QuestionAnswering => {
+                    PromptTemplates::build_qa_prompt(&prompt_context)
+                }
+                prompts::PromptType::StructureAnalysis => {
+                    PromptTemplates::build_structure_analysis_prompt(
+                        &prompt_context.document_content.unwrap_or_default(),
+                        input,
+                    )
+                }
+                prompts::PromptType::ProcedureAnalysis => {
+                    PromptTemplates::build_procedure_analysis_prompt(
+                        &prompt_context.document_content.unwrap_or_default(),
+                        input,
+                    )
+                }
+                prompts::PromptType::StyleAnalysis => PromptTemplates::build_style_analysis_prompt(
+                    &prompt_context.document_content.unwrap_or_default(),
+                    input,
+                ),
+                _ => {
+                    // Default to question-answering for other types
+                    PromptTemplates::build_qa_prompt(&prompt_context)
+                }
+            }
+        };
+
+        // Step 4: Generate response based on provider
         let response_content = match self.config.provider.as_str() {
             "local" => {
                 if let Some(client) = &self.ollama_client {
@@ -179,6 +266,12 @@ impl AIOrchestrator {
             }
         };
 
+        // Step 5: Record conversation turn
+        let _ = self.add_conversation_turn(session_id, "user", input).await;
+        let _ = self
+            .add_conversation_turn(session_id, "assistant", &response_content)
+            .await;
+
         // Create AI response
         let response = AIResponse {
             response_type: response::ResponseType::Information,
@@ -190,7 +283,8 @@ impl AIOrchestrator {
                 processing_time_ms: 0,
                 model_used: self.config.default_model.clone(),
                 tokens_used: None,
-                confidence_explanation: "Direct provider response".to_string(),
+                confidence_explanation:
+                    "Document-aware response using context manager and prompt templates".to_string(),
             },
         };
 
@@ -252,6 +346,52 @@ impl AIOrchestrator {
             }
             _ => Ok(vec![]),
         }
+    }
+
+    /// Add documents to the context for a session
+    #[allow(dead_code)]
+    pub async fn add_documents_to_context(
+        &self,
+        session_id: &str,
+        documents: Vec<DocumentRef>,
+    ) -> Result<()> {
+        let mut context_manager = self.context_manager.lock().await;
+        context_manager.add_relevant_documents(session_id, documents)
+    }
+
+    /// Add a conversation turn to the history
+    pub async fn add_conversation_turn(
+        &self,
+        session_id: &str,
+        role: &str,
+        content: &str,
+    ) -> Result<()> {
+        let mut context_manager = self.context_manager.lock().await;
+        context_manager.add_conversation_turn(session_id, role, content)
+    }
+
+    /// Get enhanced context for AI processing
+    pub async fn get_enhanced_context(&self, session_id: &str, query: &str) -> String {
+        let context_manager = self.context_manager.lock().await;
+        context_manager.get_relevant_context(session_id, query)
+    }
+
+    /// Update user preferences for a session
+    #[allow(dead_code)]
+    pub async fn update_user_preferences(
+        &self,
+        session_id: &str,
+        preferences: UserPreferences,
+    ) -> Result<()> {
+        let mut context_manager = self.context_manager.lock().await;
+        context_manager.update_preferences(session_id, preferences)
+    }
+
+    /// Clear session context
+    #[allow(dead_code)]
+    pub async fn clear_session_context(&self, session_id: &str) {
+        let mut context_manager = self.context_manager.lock().await;
+        context_manager.clear_session(session_id);
     }
 }
 
