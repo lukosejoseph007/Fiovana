@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { invoke } from '@tauri-apps/api/core'
 
 interface Message {
   id: string
@@ -59,11 +60,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
   const loadAISettings = async () => {
     try {
-      // @ts-expect-error - Tauri command
-      const settings = await window.__TAURI__.invoke('get_ai_settings')
+      // Try to use Tauri API first
+      const settings = await invoke('get_ai_settings')
       console.log('Loaded AI settings from backend:', settings)
       setCurrentProvider(settings.provider || 'local')
       setCurrentModel(settings.selectedModel || '')
+      return
     } catch (error) {
       console.error('Failed to load AI settings from backend:', error)
       // Fallback to localStorage
@@ -85,8 +87,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
   const checkAIStatus = async () => {
     try {
-      // @ts-expect-error - Tauri command
-      const status = await window.__TAURI__.invoke('get_ai_status')
+      const status = await invoke('get_ai_status')
       console.log('AI Status check result:', status)
       setAiStatus(status.available ? 'available' : 'unavailable')
     } catch (error) {
@@ -99,14 +100,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     try {
       console.log('Initializing AI system...')
       // Initialize AI system with current settings
-      // @ts-expect-error - Tauri command
-      const initialized = await window.__TAURI__.invoke('init_ai_system')
+      const initialized = await invoke('init_ai_system')
       console.log('AI initialization result:', initialized)
 
       if (initialized) {
         // Double-check status after initialization
-        // @ts-expect-error - Tauri command
-        const status = await window.__TAURI__.invoke('get_ai_status')
+        const status = await invoke('get_ai_status')
         console.log('AI status after initialization:', status)
         setAiStatus(status.available ? 'available' : 'unavailable')
       } else {
@@ -134,8 +133,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     setIsLoading(true)
 
     try {
-      // @ts-expect-error - Tauri command
-      const response = await window.__TAURI__.invoke('chat_with_ai', {
+      const response = await invoke('chat_with_ai', {
         request: {
           message: userMessage.content,
           context: null,

@@ -21,6 +21,13 @@ let mockAISettings = {
 let mockAIInitialized = false
 
 export function initializeMockTauri() {
+  // Check if we're running in actual Tauri environment
+  // In Tauri, the window object has __TAURI__ or __TAURI_INTERNALS__ properties
+  if (typeof window !== 'undefined' && (window.__TAURI_INTERNALS__ || window.__TAURI__)) {
+    console.log('🔧 Running in actual Tauri environment - skipping mock initialization')
+    return
+  }
+
   if (typeof window !== 'undefined' && !(window as MockTauriWindow).__TAURI__) {
     console.log('🔧 Initializing Mock Tauri for browser development')
     ;(window as MockTauriWindow).__TAURI__ = {
@@ -111,7 +118,10 @@ export function initializeMockTauri() {
   }
 }
 
-// Auto-initialize when imported
+// Auto-initialize when imported, but wait for Tauri to load first
 if (typeof window !== 'undefined') {
-  initializeMockTauri()
+  // Wait a bit for Tauri APIs to be injected in development mode
+  setTimeout(() => {
+    initializeMockTauri()
+  }, 100)
 }

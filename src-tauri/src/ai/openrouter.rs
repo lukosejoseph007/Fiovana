@@ -92,6 +92,8 @@ impl OpenRouterClient {
             .post(&url)
             .header("Authorization", format!("Bearer {}", self.config.api_key))
             .header("Content-Type", "application/json")
+            .header("HTTP-Referer", "https://proxemic.app")
+            .header("X-Title", "Proxemic Document Processor")
             .json(&request)
             .send()
             .await?;
