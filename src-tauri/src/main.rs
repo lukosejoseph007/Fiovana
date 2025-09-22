@@ -131,6 +131,18 @@ async fn main() {
         commands::vector_commands::VectorSystemState::new(),
     );
 
+    // Initialize document generator state
+    let document_generator_state =
+        commands::document_generation_commands::DocumentGeneratorAppState::new(
+            commands::document_generation_commands::DocumentGeneratorState::default(),
+        );
+
+    // Initialize document comparison state
+    let document_comparison_state =
+        commands::document_comparison_commands::DocumentComparisonAppState::new(
+            commands::document_comparison_commands::DocumentComparisonState::default(),
+        );
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
@@ -147,6 +159,8 @@ async fn main() {
         .manage(progress_state)
         .manage(ai_state)
         .manage(vector_state)
+        .manage(document_generator_state)
+        .manage(document_comparison_state)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -287,6 +301,22 @@ async fn main() {
             commands::get_document_chunks,
             commands::get_vector_system_status,
             commands::test_vector_search,
+            // Document generation commands
+            commands::init_document_generator,
+            commands::generate_document,
+            commands::generate_document_from_text,
+            commands::get_supported_output_formats,
+            commands::get_output_directory,
+            commands::set_output_directory,
+            commands::test_document_generation,
+            // Document comparison commands
+            commands::init_document_comparison,
+            commands::compare_documents_by_path,
+            commands::compare_text_content,
+            commands::get_comparison_history,
+            commands::clear_comparison_history,
+            commands::get_supported_comparison_types,
+            commands::test_document_comparison,
         ])
         .setup(move |app| {
             info!("Application setup complete");

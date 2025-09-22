@@ -9,22 +9,23 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  MessageSquare,
 } from 'lucide-react'
 
 const Dashboard: React.FC = () => {
   const quickActions = [
     {
+      title: 'AI Assistant',
+      description: 'Chat with AI about your documents',
+      icon: MessageSquare,
+      path: '/chat',
+      color: 'blue',
+    },
+    {
       title: 'Upload Documents',
       description: 'Drag and drop files to analyze and process',
       icon: Upload,
       path: '/file-management',
-      color: 'blue',
-    },
-    {
-      title: 'Watch Files',
-      description: 'Monitor file system changes in real-time',
-      icon: Eye,
-      path: '/file-watcher',
       color: 'green',
     },
     {

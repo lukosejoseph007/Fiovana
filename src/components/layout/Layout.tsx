@@ -12,6 +12,7 @@ import {
   BarChart3,
   FolderOpen,
   FileUp,
+  MessageSquare,
 } from 'lucide-react'
 
 const Layout: React.FC = () => {
@@ -24,6 +25,12 @@ const Layout: React.FC = () => {
       label: 'Dashboard',
       icon: Home,
       description: 'Overview and quick actions',
+    },
+    {
+      path: '/chat',
+      label: 'AI Assistant',
+      icon: MessageSquare,
+      description: 'Conversational document processing',
     },
     {
       path: '/file-management',

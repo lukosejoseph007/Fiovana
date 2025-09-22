@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
+import Chat from './pages/Chat'
 import FileManagement from './pages/FileManagement'
 import ImportWizard from './pages/ImportWizard'
 import FileWatcher from './pages/FileWatcher'
@@ -16,6 +17,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="/file-management" element={<FileManagement />} />
           <Route path="/import-wizard" element={<ImportWizard />} />
           <Route path="/file-watcher" element={<FileWatcher />} />
