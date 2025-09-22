@@ -49,6 +49,8 @@ pub struct AIOrchestrator {
     #[allow(dead_code)]
     response_generator: ResponseGenerator,
     config: AIConfig,
+    #[allow(dead_code)]
+    vector_search_enabled: bool,
 }
 
 impl AIOrchestrator {
@@ -113,23 +115,39 @@ impl AIOrchestrator {
             intent_classifier,
             response_generator,
             config,
+            vector_search_enabled: true, // Enable vector search for document-aware AI
         })
     }
 
     pub async fn process_conversation(
         &self,
         input: &str,
-        _context: Option<&str>,
+        context: Option<&str>,
     ) -> Result<AIResponse> {
         // Step 1: Classify intent
         let intent = self.intent_classifier.classify(input).await?;
 
-        // Step 2: Generate response based on provider
+        // Step 2: Prepare input with context if available
+        let enhanced_input = if let Some(ctx) = context {
+            if ctx.starts_with("No relevant documents")
+                || ctx.starts_with("Vector search unavailable")
+            {
+                // Use original input when no document context is available
+                input.to_string()
+            } else {
+                // Include document context in the prompt
+                format!("{}\n\nUser Question: {}", ctx, input)
+            }
+        } else {
+            input.to_string()
+        };
+
+        // Step 3: Generate response based on provider
         let response_content = match self.config.provider.as_str() {
             "local" => {
                 if let Some(client) = &self.ollama_client {
                     client
-                        .simple_chat(&self.config.default_model, input)
+                        .simple_chat(&self.config.default_model, &enhanced_input)
                         .await?
                 } else {
                     return Err(anyhow::anyhow!("Ollama client not available"));
@@ -138,7 +156,7 @@ impl AIOrchestrator {
             "openrouter" => {
                 if let Some(client) = &self.openrouter_client {
                     client
-                        .simple_chat(&self.config.default_model, input)
+                        .simple_chat(&self.config.default_model, &enhanced_input)
                         .await?
                 } else {
                     return Err(anyhow::anyhow!("OpenRouter client not available"));
@@ -147,7 +165,7 @@ impl AIOrchestrator {
             "anthropic" => {
                 if let Some(client) = &self.anthropic_client {
                     client
-                        .simple_chat(&self.config.default_model, input)
+                        .simple_chat(&self.config.default_model, &enhanced_input)
                         .await?
                 } else {
                     return Err(anyhow::anyhow!("Anthropic client not available"));

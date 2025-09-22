@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { invoke } from '@tauri-apps/api/core'
+import type { AISettings, AIStatus, ChatResponse } from '../../types/ai'
 
 interface Message {
   id: string
@@ -61,7 +62,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const loadAISettings = async () => {
     try {
       // Try to use Tauri API first
-      const settings = await invoke('get_ai_settings')
+      const settings = (await invoke('get_ai_settings')) as AISettings
       console.log('Loaded AI settings from backend:', settings)
       setCurrentProvider(settings.provider || 'local')
       setCurrentModel(settings.selectedModel || '')
@@ -87,7 +88,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
   const checkAIStatus = async () => {
     try {
-      const status = await invoke('get_ai_status')
+      const status = (await invoke('get_ai_status')) as AIStatus
       console.log('AI Status check result:', status)
       setAiStatus(status.available ? 'available' : 'unavailable')
     } catch (error) {
@@ -105,7 +106,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
       if (initialized) {
         // Double-check status after initialization
-        const status = await invoke('get_ai_status')
+        const status = (await invoke('get_ai_status')) as AIStatus
         console.log('AI status after initialization:', status)
         setAiStatus(status.available ? 'available' : 'unavailable')
       } else {
@@ -133,18 +134,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     setIsLoading(true)
 
     try {
-      const response = await invoke('chat_with_ai', {
+      const response = (await invoke('chat_with_ai', {
         request: {
           message: userMessage.content,
           context: null,
         },
-      })
+      })) as ChatResponse
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: response.success
-          ? response.response.content
+          ? response.response?.content || 'No response content'
           : response.error || 'Sorry, I encountered an error processing your request.',
         timestamp: new Date(),
         intent: response.response?.intent,

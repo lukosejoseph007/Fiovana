@@ -285,6 +285,9 @@ mod tests {
         let workspace_manager =
             Arc::new(WorkspaceManager::new(Arc::clone(&config_manager)).unwrap());
 
+        // Create a dummy channel for testing
+        let (document_indexing_sender, _) = tokio::sync::mpsc::unbounded_channel();
+
         let app_state = crate::AppState {
             config_manager,
             workspace_manager,
@@ -299,6 +302,7 @@ mod tests {
                     warnings: Vec::new(),
                 },
             },
+            document_indexing_sender,
         };
         (app_state, temp_dir)
     }

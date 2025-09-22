@@ -1,6 +1,7 @@
 // src-tauri/src/commands/ai_commands.rs
 
 use crate::ai::{AIConfig, AIOrchestrator, AIResponse};
+use crate::commands::vector_commands::VectorSearchRequest;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -74,14 +75,23 @@ pub async fn init_ai_system(
 #[tauri::command]
 pub async fn chat_with_ai(
     ai_state: State<'_, AIState>,
+    vector_state: State<'_, crate::commands::vector_commands::VectorState>,
     request: ChatRequest,
 ) -> Result<ChatResponse, String> {
     let state = ai_state.lock().await;
 
     match state.as_ref() {
         Some(orchestrator) => {
+            // Perform vector search if enabled and documents are indexed
+            let enhanced_context = if let Some(context) = request.context.as_deref() {
+                format!("User Context: {}", context)
+            } else {
+                // Perform document search to provide context
+                perform_document_search(&vector_state, &request.message).await
+            };
+
             match orchestrator
-                .process_conversation(&request.message, request.context.as_deref())
+                .process_conversation(&request.message, Some(&enhanced_context))
                 .await
             {
                 Ok(response) => Ok(ChatResponse {
@@ -302,6 +312,7 @@ pub async fn save_ai_settings(settings: serde_json::Value) -> Result<bool, Strin
 #[tauri::command]
 pub async fn test_ai_conversation(
     ai_state: State<'_, AIState>,
+    vector_state: State<'_, crate::commands::vector_commands::VectorState>,
     test_message: String,
 ) -> Result<String, String> {
     let request = ChatRequest {
@@ -309,7 +320,7 @@ pub async fn test_ai_conversation(
         context: Some("This is a test conversation".to_string()),
     };
 
-    match chat_with_ai(ai_state, request).await {
+    match chat_with_ai(ai_state, vector_state, request).await {
         Ok(response) => {
             if response.success {
                 if let Some(ai_response) = response.response {
@@ -326,6 +337,92 @@ pub async fn test_ai_conversation(
         }
         Err(e) => Err(e),
     }
+}
+
+// Helper function to perform document search for AI context
+async fn perform_document_search(
+    vector_state: &State<'_, crate::commands::vector_commands::VectorState>,
+    query: &str,
+) -> String {
+    // Perform vector search to find relevant document chunks
+    let search_request = VectorSearchRequest {
+        query: query.to_string(),
+        document_id: None,    // Search across all documents
+        max_results: Some(5), // Limit to top 5 most relevant chunks
+    };
+
+    match crate::commands::vector_commands::search_vectors(vector_state.clone(), search_request)
+        .await
+    {
+        Ok(search_response) => {
+            if search_response.success && !search_response.results.is_empty() {
+                let mut context = String::from("Relevant document content found:\n\n");
+
+                for (i, result) in search_response.results.iter().enumerate() {
+                    context.push_str(&format!(
+                        "Document {}: {} (similarity: {:.2})\nContent: {}\n\n",
+                        i + 1,
+                        result.chunk.document_id,
+                        result.similarity,
+                        result.chunk.content
+                    ));
+                }
+
+                context.push_str("Based on the above document content, please provide a helpful response to the user's question.");
+                context
+            } else {
+                "No relevant documents found. Providing general response.".to_string()
+            }
+        }
+        Err(_) => {
+            tracing::warn!("Vector search failed, providing response without document context");
+            "Vector search unavailable. Providing general response.".to_string()
+        }
+    }
+}
+
+/// Command to manually trigger indexing of a specific document
+#[tauri::command]
+pub async fn index_document_for_ai(
+    app_state: tauri::State<'_, crate::app_state::AppState>,
+    file_path: String,
+) -> Result<bool, String> {
+    use crate::filesystem::watcher::FileEvent;
+    use std::path::PathBuf;
+
+    // Create a file event for the document
+    let path_buf = PathBuf::from(&file_path);
+    let file_event = FileEvent::Created(path_buf);
+
+    // Send to indexing service
+    match app_state.document_indexing_sender.send(file_event) {
+        Ok(()) => {
+            tracing::info!("Successfully queued document for indexing: {}", file_path);
+            Ok(true)
+        }
+        Err(e) => {
+            let error_msg = format!("Failed to queue document for indexing: {}", e);
+            tracing::error!("{}", error_msg);
+            Err(error_msg)
+        }
+    }
+}
+
+/// Command to get information about what documents are currently indexed
+#[tauri::command]
+pub async fn get_indexed_documents_info(
+    vector_state: State<'_, crate::commands::vector_commands::VectorState>,
+) -> Result<serde_json::Value, String> {
+    // Get vector store statistics to understand what's indexed
+    let stats = crate::commands::vector_commands::get_vector_stats(vector_state).await?;
+
+    Ok(serde_json::json!({
+        "total_documents": stats.total_documents,
+        "total_chunks": stats.total_chunks,
+        "total_embeddings": stats.total_embeddings,
+        "dimension": stats.dimension,
+        "memory_usage_estimate_bytes": stats.memory_usage_estimate
+    }))
 }
 
 #[cfg(test)]

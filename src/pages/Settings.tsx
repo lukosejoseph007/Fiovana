@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import type { AISettings } from '../types/ai'
 import {
   Save,
   RefreshCw,
@@ -77,9 +78,8 @@ const Settings: React.FC = () => {
     try {
       // Try to load from Tauri backend first
       try {
-        // @ts-expect-error - Tauri command
-        const settings = await invoke('get_ai_settings')
-        setAiProvider(settings.provider || 'local')
+        const settings = (await invoke('get_ai_settings')) as AISettings
+        setAiProvider((settings.provider as 'local' | 'openrouter' | 'anthropic') || 'local')
         setOpenrouterApiKey(settings.openrouterApiKey || '')
         setAnthropicApiKey(settings.anthropicApiKey || '')
         setSelectedModel(settings.selectedModel || '')
@@ -90,7 +90,7 @@ const Settings: React.FC = () => {
         const stored = localStorage.getItem('ai_settings')
         if (stored) {
           const settings = JSON.parse(stored)
-          setAiProvider(settings.provider || 'local')
+          setAiProvider((settings.provider as 'local' | 'openrouter' | 'anthropic') || 'local')
           setOpenrouterApiKey(settings.openrouterApiKey || '')
           setAnthropicApiKey(settings.anthropicApiKey || '')
           setSelectedModel(settings.selectedModel || '')
@@ -119,7 +119,6 @@ const Settings: React.FC = () => {
     try {
       // Try to save to Tauri backend first
       try {
-        // @ts-expect-error - Tauri command
         await invoke('save_ai_settings', { settings })
       } catch {
         // Fallback to localStorage if Tauri command fails
@@ -135,7 +134,6 @@ const Settings: React.FC = () => {
         // Save updated recent models
         const updatedSettings = { ...settings, recentModels: newRecentModels }
         try {
-          // @ts-expect-error - Tauri command
           await invoke('save_ai_settings', { settings: updatedSettings })
         } catch {
           localStorage.setItem('ai_settings', JSON.stringify(updatedSettings))
@@ -152,7 +150,6 @@ const Settings: React.FC = () => {
   const checkOllamaConnection = async () => {
     setOllamaStatus('checking')
     try {
-      // @ts-expect-error - Tauri command
       const isConnected = await invoke('check_ollama_connection')
       setOllamaStatus(isConnected ? 'connected' : 'disconnected')
     } catch {
@@ -167,8 +164,7 @@ const Settings: React.FC = () => {
 
       if (aiProvider === 'local') {
         try {
-          // @ts-expect-error - Tauri command
-          models = await invoke('get_available_models')
+          models = (await invoke('get_available_models')) as string[]
         } catch {
           // Fallback models if Ollama is not available
           models = []
@@ -251,7 +247,6 @@ const Settings: React.FC = () => {
         }
         console.log('Restarting AI system with config:', config)
 
-        // @ts-expect-error - Tauri command
         await invoke('restart_ai_system', { config })
         console.log('AI system restarted successfully')
       } catch (error) {

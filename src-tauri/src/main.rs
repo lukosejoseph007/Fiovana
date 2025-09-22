@@ -17,6 +17,7 @@ mod filesystem;
 mod memory_monitor;
 mod notifications;
 mod resource_monitor;
+mod services;
 mod vector;
 mod workspace;
 
@@ -143,6 +144,19 @@ async fn main() {
             commands::document_comparison_commands::DocumentComparisonState::default(),
         );
 
+    // Initialize document indexing service
+    let (indexing_sender, indexing_receiver) =
+        services::document_indexing::create_indexing_channel();
+    let indexing_service = services::document_indexing::DocumentIndexingService::new(
+        indexing_receiver,
+        vector_state.clone(),
+    );
+
+    // Start the document indexing service in the background
+    tokio::spawn(async move {
+        indexing_service.start().await;
+    });
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
@@ -150,6 +164,7 @@ async fn main() {
             validation_result: security_result.clone(),
         },
         workspace_manager,
+        document_indexing_sender: indexing_sender,
     };
 
     // Build and run the Tauri application
@@ -294,6 +309,8 @@ async fn main() {
             commands::test_ai_conversation,
             commands::get_ai_settings,
             commands::save_ai_settings,
+            commands::index_document_for_ai,
+            commands::get_indexed_documents_info,
             // Vector search commands
             commands::init_vector_system,
             commands::index_document,

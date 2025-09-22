@@ -1,6 +1,17 @@
 // src/utils/mockTauri.ts
 // Mock Tauri APIs for browser development
 
+import type { MockTauriArgs, AISettings } from '../types/ai'
+
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: unknown
+    __TAURI__?: {
+      invoke: (command: string, args?: unknown) => Promise<unknown>
+    }
+  }
+}
+
 interface MockTauriWindow extends Window {
   __TAURI__?: {
     invoke: (command: string, args?: unknown) => Promise<unknown>
@@ -8,7 +19,7 @@ interface MockTauriWindow extends Window {
 }
 
 // Mock AI settings storage
-let mockAISettings = {
+let mockAISettings: AISettings = {
   provider: 'local',
   openrouterApiKey: '',
   anthropicApiKey: '',
@@ -39,7 +50,7 @@ export function initializeMockTauri() {
             return { ...mockAISettings }
 
           case 'save_ai_settings':
-            mockAISettings = { ...mockAISettings, ...args.settings }
+            mockAISettings = { ...mockAISettings, ...(args as MockTauriArgs).settings }
             console.log('🔧 Mock: Saved AI settings', mockAISettings)
             return true
 
@@ -49,11 +60,11 @@ export function initializeMockTauri() {
             return true
 
           case 'restart_ai_system':
-            if (args.config) {
-              mockAISettings = { ...mockAISettings, ...args.config }
+            if ((args as MockTauriArgs).config) {
+              mockAISettings = { ...mockAISettings, ...(args as MockTauriArgs).config }
             }
             mockAIInitialized = true
-            console.log('🔧 Mock: AI system restarted with config', args.config)
+            console.log('🔧 Mock: AI system restarted with config', (args as MockTauriArgs).config)
             return true
 
           case 'get_ai_status': {

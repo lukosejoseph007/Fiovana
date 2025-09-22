@@ -2,15 +2,8 @@
 // This file shows how to integrate the UI with actual Tauri commands
 
 import { useState, useEffect } from 'react'
+import type { AISettings } from '../types/ai'
 // Using the direct window.__TAURI__ approach like the rest of the app
-
-export interface AISettings {
-  provider: 'local' | 'openrouter' | 'anthropic'
-  openrouterApiKey: string
-  anthropicApiKey: string
-  selectedModel: string
-  preferLocalModels: boolean
-}
 
 export function useAISettings() {
   const [settings, setSettings] = useState<AISettings>({
@@ -19,13 +12,13 @@ export function useAISettings() {
     anthropicApiKey: '',
     selectedModel: '',
     preferLocalModels: true,
+    recentModels: [],
   })
 
   // Load settings from backend
   const loadSettings = async () => {
     try {
-      // @ts-expect-error - Tauri command
-      const savedSettings = await window.__TAURI__.invoke('get_ai_settings')
+      const savedSettings = (await window.__TAURI__?.invoke('get_ai_settings')) as AISettings
       setSettings(savedSettings)
     } catch (error) {
       console.error('Failed to load AI settings:', error)
