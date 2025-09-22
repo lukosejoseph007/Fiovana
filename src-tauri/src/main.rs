@@ -123,6 +123,14 @@ async fn main() {
     // Initialize progress state
     let progress_state = commands::progress_commands::ProgressState::new();
 
+    // Initialize AI state
+    let ai_state = commands::ai_commands::AIState::new(tokio::sync::Mutex::new(None));
+
+    // Initialize vector state
+    let vector_state = commands::vector_commands::VectorState::new(
+        commands::vector_commands::VectorSystemState::new(),
+    );
+
     // Create enhanced application state with both config and security
     let app_state = AppState {
         config_manager: Arc::clone(&config_manager),
@@ -137,6 +145,8 @@ async fn main() {
         .manage(app_state)
         .manage(deduplication_state)
         .manage(progress_state)
+        .manage(ai_state)
+        .manage(vector_state)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -258,6 +268,25 @@ async fn main() {
             commands::parse_document,
             commands::get_supported_document_formats,
             commands::get_document_processing_stats,
+            // AI integration commands
+            commands::init_ai_system,
+            commands::chat_with_ai,
+            commands::get_ai_status,
+            commands::shutdown_ai_system,
+            commands::restart_ai_system,
+            commands::check_ollama_connection,
+            commands::get_available_models,
+            commands::pull_model,
+            commands::test_ai_conversation,
+            // Vector search commands
+            commands::init_vector_system,
+            commands::index_document,
+            commands::search_vectors,
+            commands::get_vector_stats,
+            commands::remove_document_from_index,
+            commands::get_document_chunks,
+            commands::get_vector_system_status,
+            commands::test_vector_search,
         ])
         .setup(move |app| {
             info!("Application setup complete");

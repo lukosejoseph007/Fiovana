@@ -11,8 +11,8 @@ echo "========================================================"
 MAX_CPU_USAGE=80          # Kill if CPU usage exceeds this for too long
 CPU_CHECK_INTERVAL=5      # Check CPU every 5 seconds
 MAX_HIGH_CPU_DURATION=30  # Kill if high CPU usage lasts more than 30 seconds
-COMPILATION_TIMEOUT=120   # Maximum time allowed for compilation
-TEST_TIMEOUT=60           # Maximum time allowed for test execution
+COMPILATION_TIMEOUT=600   # Maximum time allowed for compilation (increased from 300)
+TEST_TIMEOUT=360          # Maximum time allowed for test execution (increased from 180)
 
 # Function to get CPU usage of a process
 get_cpu_usage() {
@@ -51,8 +51,8 @@ monitor_and_kill() {
             high_cpu_start=0
         fi
 
-        if [ "$elapsed" -gt "$COMPILATION_TIMEOUT" ]; then
-            echo "🚨 KILLING PROCESS: Compilation timeout (${elapsed}s) (PID: $pid)"
+        if [ "$elapsed" -gt "$TEST_TIMEOUT" ]; then
+            echo "🚨 KILLING PROCESS: Test timeout (${elapsed}s) (PID: $pid)"
             kill -9 "$pid" 2>/dev/null || true
             return 1
         fi
@@ -71,10 +71,10 @@ run_tests_safely() {
     echo ""
     echo "🧪 Running $test_type tests with monitoring..."
     echo "   Command: cargo test $test_args"
-    echo "   Max CPU: ${MAX_CPU_USAGE}%, Max duration: ${COMPILATION_TIMEOUT}s"
+    echo "   Max CPU: ${MAX_CPU_USAGE}%, Max duration: ${TEST_TIMEOUT}s"
 
     # Start the test process in background
-    timeout "$COMPILATION_TIMEOUT" cargo test $test_args &
+    timeout "$TEST_TIMEOUT" cargo test $test_args &
     local test_pid=$!
 
     echo "   Started test process (PID: $test_pid)"

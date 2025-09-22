@@ -74,6 +74,10 @@ candle-transformers = "0.8"
 candle-nn = "0.8"
 tokenizers = "0.20"
 
+# AI integration dependencies
+reqwest = { version = "0.12", features = ["json", "stream"] }
+url = "2.5"
+
 # Event persistence - now using file-based storage
 
 # Windows API for memory monitoring
