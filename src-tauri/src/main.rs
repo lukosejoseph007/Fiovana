@@ -329,6 +329,8 @@ async fn main() {
             // Vector search commands
             commands::init_vector_system,
             commands::search_vectors,
+            commands::keyword_search,
+            commands::semantic_search,
             commands::get_vector_stats,
             commands::remove_document_from_index,
             commands::get_document_chunks,

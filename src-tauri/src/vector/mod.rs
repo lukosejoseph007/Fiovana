@@ -365,6 +365,214 @@ pub struct VectorStore {
     chunks: Arc<RwLock<HashMap<String, DocumentChunk>>>,
     dimension: usize,
     document_index: Arc<RwLock<HashMap<String, Vec<String>>>>, // document_id -> chunk_ids
+    keyword_index: Arc<RwLock<KeywordIndex>>,                  // TF-IDF and phrase search index
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct KeywordIndex {
+    // Term frequency: chunk_id -> word -> count
+    term_frequency: HashMap<String, HashMap<String, usize>>,
+    // Document frequency: word -> number of chunks containing it
+    document_frequency: HashMap<String, usize>,
+    // Total number of chunks for IDF calculation
+    total_chunks: usize,
+    // Phrase index: normalized phrase -> chunk_ids containing it
+    phrase_index: HashMap<String, Vec<String>>,
+    // Word positions for exact phrase matching: chunk_id -> word -> positions
+    word_positions: HashMap<String, HashMap<String, Vec<usize>>>,
+}
+
+impl KeywordIndex {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn normalize_word(word: &str) -> String {
+        word.to_lowercase()
+            .chars()
+            .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+            .collect()
+    }
+
+    fn extract_words(text: &str) -> Vec<String> {
+        text.split_whitespace()
+            .map(Self::normalize_word)
+            .filter(|word| !word.is_empty() && word.len() > 1) // Filter out single characters
+            .collect()
+    }
+
+    fn extract_phrases(text: &str, max_phrase_length: usize) -> Vec<String> {
+        let words = Self::extract_words(text);
+        let mut phrases = Vec::new();
+
+        for length in 2..=max_phrase_length.min(words.len()) {
+            for i in 0..=(words.len() - length) {
+                let phrase = words[i..i + length].join(" ");
+                if phrase.len() >= 4 {
+                    // Minimum phrase length
+                    phrases.push(phrase);
+                }
+            }
+        }
+
+        phrases
+    }
+
+    pub fn add_chunk(&mut self, chunk_id: &str, content: &str) {
+        let words = Self::extract_words(content);
+        let phrases = Self::extract_phrases(content, 4); // Max 4-word phrases
+
+        // Track term frequencies and word positions
+        let mut tf_map = HashMap::new();
+        let mut positions_map = HashMap::new();
+
+        for (position, word) in words.iter().enumerate() {
+            *tf_map.entry(word.clone()).or_insert(0) += 1;
+            positions_map
+                .entry(word.clone())
+                .or_insert_with(Vec::new)
+                .push(position);
+
+            // Update document frequency
+            if tf_map[word] == 1 {
+                // First occurrence of this word in this chunk
+                *self.document_frequency.entry(word.clone()).or_insert(0) += 1;
+            }
+        }
+
+        // Store term frequencies and positions
+        self.term_frequency.insert(chunk_id.to_string(), tf_map);
+        self.word_positions
+            .insert(chunk_id.to_string(), positions_map);
+
+        // Index phrases
+        for phrase in phrases {
+            self.phrase_index
+                .entry(phrase)
+                .or_default()
+                .push(chunk_id.to_string());
+        }
+
+        self.total_chunks += 1;
+    }
+
+    pub fn remove_chunk(&mut self, chunk_id: &str) {
+        if let Some(tf_map) = self.term_frequency.remove(chunk_id) {
+            // Decrease document frequencies
+            for word in tf_map.keys() {
+                if let Some(df) = self.document_frequency.get_mut(word) {
+                    *df -= 1;
+                    if *df == 0 {
+                        self.document_frequency.remove(word);
+                    }
+                }
+            }
+
+            // Remove from phrase index
+            for phrase_chunks in self.phrase_index.values_mut() {
+                phrase_chunks.retain(|id| id != chunk_id);
+            }
+            self.phrase_index.retain(|_, chunks| !chunks.is_empty());
+
+            // Remove word positions
+            self.word_positions.remove(chunk_id);
+
+            self.total_chunks -= 1;
+        }
+    }
+
+    pub fn calculate_tf_idf_score(&self, chunk_id: &str, query_words: &[String]) -> f64 {
+        if let Some(tf_map) = self.term_frequency.get(chunk_id) {
+            let mut score = 0.0;
+
+            for word in query_words {
+                let tf = *tf_map.get(word).unwrap_or(&0) as f64;
+                if tf > 0.0 {
+                    let df = *self.document_frequency.get(word).unwrap_or(&0) as f64;
+                    if df > 0.0 {
+                        // TF-IDF calculation: log(1 + tf) * log(N / df)
+                        let tf_score = (1.0 + tf).ln();
+                        let idf_score = (self.total_chunks as f64 / df).ln();
+                        score += tf_score * idf_score;
+                    }
+                }
+            }
+
+            score
+        } else {
+            0.0
+        }
+    }
+
+    pub fn search_phrases(&self, query: &str, max_results: usize) -> Vec<(String, f64)> {
+        let query_phrases = Self::extract_phrases(query, 4);
+        let mut phrase_matches: HashMap<String, f64> = HashMap::new();
+
+        for phrase in &query_phrases {
+            if let Some(chunk_ids) = self.phrase_index.get(phrase) {
+                let phrase_score = phrase.split_whitespace().count() as f64; // Longer phrases get higher scores
+                for chunk_id in chunk_ids {
+                    *phrase_matches.entry(chunk_id.clone()).or_insert(0.0) += phrase_score * 2.0;
+                    // Boost phrase matches
+                }
+            }
+        }
+
+        // Also check for exact phrase matches using word positions
+        for phrase in &query_phrases {
+            let phrase_words: Vec<String> =
+                phrase.split_whitespace().map(|w| w.to_string()).collect();
+            if phrase_words.len() >= 2 {
+                for (chunk_id, positions_map) in &self.word_positions {
+                    if self.contains_exact_phrase(positions_map, &phrase_words) {
+                        *phrase_matches.entry(chunk_id.clone()).or_insert(0.0) +=
+                            phrase_words.len() as f64 * 3.0; // Higher boost for exact phrases
+                    }
+                }
+            }
+        }
+
+        // Sort by score and return top results
+        let mut results: Vec<(String, f64)> = phrase_matches.into_iter().collect();
+        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        results.into_iter().take(max_results).collect()
+    }
+
+    fn contains_exact_phrase(
+        &self,
+        positions_map: &HashMap<String, Vec<usize>>,
+        phrase_words: &[String],
+    ) -> bool {
+        if phrase_words.is_empty() {
+            return false;
+        }
+
+        // Get positions of the first word
+        if let Some(first_positions) = positions_map.get(&phrase_words[0]) {
+            for &start_pos in first_positions {
+                // Check if all subsequent words appear in consecutive positions
+                let mut all_found = true;
+                for (i, word) in phrase_words.iter().enumerate().skip(1) {
+                    let expected_pos = start_pos + i;
+                    if let Some(positions) = positions_map.get(word) {
+                        if !positions.contains(&expected_pos) {
+                            all_found = false;
+                            break;
+                        }
+                    } else {
+                        all_found = false;
+                        break;
+                    }
+                }
+
+                if all_found {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
 }
 
 impl VectorStore {
@@ -374,6 +582,7 @@ impl VectorStore {
             chunks: Arc::new(RwLock::new(HashMap::new())),
             dimension,
             document_index: Arc::new(RwLock::new(HashMap::new())),
+            keyword_index: Arc::new(RwLock::new(KeywordIndex::new())),
         }
     }
 
@@ -389,6 +598,7 @@ impl VectorStore {
         let mut chunks_store = self.chunks.write().await;
         let mut embeddings_store = self.embeddings.write().await;
         let mut doc_index = self.document_index.write().await;
+        let mut keyword_index = self.keyword_index.write().await;
 
         for (chunk, embedding) in chunks.into_iter().zip(embeddings.into_iter()) {
             if embedding.embedding.len() != self.dimension {
@@ -401,6 +611,7 @@ impl VectorStore {
 
             let document_id = chunk.document_id.clone();
             let chunk_id = chunk.id.clone();
+            let chunk_content = chunk.content.clone();
 
             // Store chunk and embedding
             chunks_store.insert(chunk_id.clone(), chunk);
@@ -410,7 +621,10 @@ impl VectorStore {
             doc_index
                 .entry(document_id)
                 .or_insert_with(Vec::new)
-                .push(chunk_id);
+                .push(chunk_id.clone());
+
+            // Add to keyword index for TF-IDF search
+            keyword_index.add_chunk(&chunk_id, &chunk_content);
         }
 
         Ok(())
@@ -525,15 +739,149 @@ impl VectorStore {
         Ok(document_chunks)
     }
 
+    pub async fn keyword_search(
+        &self,
+        query: &str,
+        max_results: usize,
+    ) -> Result<Vec<SearchResult>> {
+        let keyword_index = self.keyword_index.read().await;
+        let chunks = self.chunks.read().await;
+
+        // Extract query words for TF-IDF scoring
+        let query_words = KeywordIndex::extract_words(query);
+
+        if query_words.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // First, try phrase matching for higher precision
+        let phrase_matches = keyword_index.search_phrases(query, max_results * 2);
+
+        // Then do TF-IDF scoring for all chunks
+        let mut tf_idf_scores: Vec<(String, f64)> = Vec::new();
+        for chunk_id in chunks.keys() {
+            let score = keyword_index.calculate_tf_idf_score(chunk_id, &query_words);
+            if score > 0.0 {
+                tf_idf_scores.push((chunk_id.clone(), score));
+            }
+        }
+
+        // Combine scores - phrase matches get priority
+        let mut combined_scores: HashMap<String, f64> = HashMap::new();
+
+        // Add phrase scores with high weight
+        for (chunk_id, phrase_score) in phrase_matches {
+            combined_scores.insert(chunk_id, phrase_score);
+        }
+
+        // Add or boost TF-IDF scores
+        for (chunk_id, tf_idf_score) in tf_idf_scores {
+            let existing_score = combined_scores.get(&chunk_id).copied().unwrap_or(0.0);
+            combined_scores.insert(chunk_id, existing_score + tf_idf_score);
+        }
+
+        // Sort by combined score
+        let mut results: Vec<(String, f64)> = combined_scores.into_iter().collect();
+        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Convert to SearchResult objects
+        let mut search_results = Vec::new();
+        for (chunk_id, score) in results.into_iter().take(max_results) {
+            if let Some(chunk) = chunks.get(&chunk_id) {
+                // Normalize score to 0-1 range for similarity
+                let normalized_score = (score / 10.0).min(1.0) as f32;
+
+                search_results.push(SearchResult {
+                    chunk: chunk.clone(),
+                    similarity: normalized_score,
+                    explanation: format!(
+                        "Keyword match in document '{}' (chunk {}) - TF-IDF score: {:.2}",
+                        chunk.document_id, chunk.chunk_index, score
+                    ),
+                });
+            }
+        }
+
+        Ok(search_results)
+    }
+
+    pub async fn keyword_search_by_document(
+        &self,
+        document_id: &str,
+        query: &str,
+        max_results: usize,
+    ) -> Result<Vec<SearchResult>> {
+        let doc_index = self.document_index.read().await;
+        let chunk_ids = doc_index
+            .get(document_id)
+            .ok_or_else(|| anyhow!("Document not found: {}", document_id))?;
+
+        let keyword_index = self.keyword_index.read().await;
+        let chunks = self.chunks.read().await;
+
+        // Extract query words for TF-IDF scoring
+        let query_words = KeywordIndex::extract_words(query);
+
+        if query_words.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Score only chunks in the specified document
+        let mut scores: Vec<(String, f64)> = Vec::new();
+
+        for chunk_id in chunk_ids {
+            // Calculate TF-IDF score
+            let tf_idf_score = keyword_index.calculate_tf_idf_score(chunk_id, &query_words);
+
+            // Check for phrase matches
+            let phrase_matches = keyword_index.search_phrases(query, chunk_ids.len());
+            let phrase_score = phrase_matches
+                .iter()
+                .find(|(id, _)| id == chunk_id)
+                .map(|(_, score)| *score)
+                .unwrap_or(0.0);
+
+            let combined_score = tf_idf_score + phrase_score;
+            if combined_score > 0.0 {
+                scores.push((chunk_id.clone(), combined_score));
+            }
+        }
+
+        // Sort by score
+        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Convert to SearchResult objects
+        let mut search_results = Vec::new();
+        for (chunk_id, score) in scores.into_iter().take(max_results) {
+            if let Some(chunk) = chunks.get(&chunk_id) {
+                // Normalize score to 0-1 range for similarity
+                let normalized_score = (score / 10.0).min(1.0) as f32;
+
+                search_results.push(SearchResult {
+                    chunk: chunk.clone(),
+                    similarity: normalized_score,
+                    explanation: format!(
+                        "Keyword match in chunk {} - TF-IDF score: {:.2}",
+                        chunk.chunk_index, score
+                    ),
+                });
+            }
+        }
+
+        Ok(search_results)
+    }
+
     pub async fn remove_document(&self, document_id: &str) -> Result<()> {
         let mut doc_index = self.document_index.write().await;
         let mut chunks = self.chunks.write().await;
         let mut embeddings = self.embeddings.write().await;
+        let mut keyword_index = self.keyword_index.write().await;
 
         if let Some(chunk_ids) = doc_index.remove(document_id) {
             for chunk_id in chunk_ids {
                 chunks.remove(&chunk_id);
                 embeddings.remove(&chunk_id);
+                keyword_index.remove_chunk(&chunk_id);
             }
         }
 
@@ -810,5 +1158,208 @@ mod tests {
         }
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_keyword_index() -> Result<()> {
+        let mut keyword_index = KeywordIndex::new();
+
+        // Add test chunks
+        keyword_index.add_chunk("chunk1", "authentication password user login security");
+        keyword_index.add_chunk("chunk2", "user authentication system login credentials");
+        keyword_index.add_chunk(
+            "chunk3",
+            "database connection pooling authentication tokens",
+        );
+
+        // Test TF-IDF scoring with discriminative words
+        let query_words = vec!["user".to_string(), "database".to_string()];
+        let score1 = keyword_index.calculate_tf_idf_score("chunk1", &query_words);
+        let score2 = keyword_index.calculate_tf_idf_score("chunk2", &query_words);
+        let score3 = keyword_index.calculate_tf_idf_score("chunk3", &query_words);
+
+        // Chunks 1 and 2 contain "user", chunk 3 contains "database"
+        assert!(
+            score1 > 0.0,
+            "Chunk1 should have positive TF-IDF score for 'user'"
+        );
+        assert!(
+            score2 > 0.0,
+            "Chunk2 should have positive TF-IDF score for 'user'"
+        );
+        assert!(
+            score3 > 0.0,
+            "Chunk3 should have positive TF-IDF score for 'database'"
+        );
+
+        // Test single word that's discriminative
+        let db_query = vec!["database".to_string()];
+        let db_score1 = keyword_index.calculate_tf_idf_score("chunk1", &db_query);
+        let db_score3 = keyword_index.calculate_tf_idf_score("chunk3", &db_query);
+
+        assert_eq!(db_score1, 0.0, "Chunk1 should not score for 'database'");
+        assert!(db_score3 > 0.0, "Chunk3 should score for 'database'");
+
+        // Chunks 1 and 2 contain "user" but not "database", chunk 3 contains "database" but not "user"
+        // So chunks 1 and 2 should score the same, and chunk 3 should also score positively
+        assert_eq!(
+            score1, score2,
+            "Chunk1 and chunk2 should have same score (both have 'user')"
+        );
+        assert!(
+            score1 > 0.0 && score3 > 0.0,
+            "Both user-containing and database-containing chunks should score"
+        );
+
+        // Test phrase search
+        keyword_index.add_chunk(
+            "chunk4",
+            "user authentication is very important for security",
+        );
+        let phrase_results = keyword_index.search_phrases("user authentication", 5);
+
+        assert!(!phrase_results.is_empty(), "Should find phrase matches");
+
+        // Check that chunk4 appears in results (it contains the exact phrase)
+        let has_chunk4 = phrase_results.iter().any(|(id, _)| id == "chunk4");
+        assert!(has_chunk4, "Should find chunk4 with exact phrase match");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_keyword_search_integration() -> Result<()> {
+        let store = VectorStore::new(384);
+        let config = EmbeddingConfig::default();
+        let engine = EmbeddingEngine::new(config).await?;
+
+        // Create test chunks with relevant content
+        let chunks = vec![
+            DocumentChunk {
+                id: "doc1:0".to_string(),
+                document_id: "doc1".to_string(),
+                content: "User authentication and password security are critical for system protection.".to_string(),
+                chunk_index: 0,
+                start_char: 0,
+                end_char: 77,
+                metadata: HashMap::new(),
+            },
+            DocumentChunk {
+                id: "doc1:1".to_string(),
+                document_id: "doc1".to_string(),
+                content: "Database connections require proper authentication tokens and user credentials.".to_string(),
+                chunk_index: 1,
+                start_char: 77,
+                end_char: 155,
+                metadata: HashMap::new(),
+            },
+            DocumentChunk {
+                id: "doc2:0".to_string(),
+                document_id: "doc2".to_string(),
+                content: "Network security protocols and firewall configuration management.".to_string(),
+                chunk_index: 0,
+                start_char: 0,
+                end_char: 65,
+                metadata: HashMap::new(),
+            },
+        ];
+
+        // Generate embeddings
+        let embeddings = engine.embed_chunks(&chunks).await?;
+
+        // Add to vector store
+        store.add_document_chunks(chunks, embeddings).await?;
+
+        // Test keyword search
+        let results = store.keyword_search("authentication user", 5).await?;
+        assert!(!results.is_empty(), "Should find keyword search results");
+
+        // Results should be sorted by relevance
+        if results.len() > 1 {
+            assert!(
+                results[0].similarity >= results[1].similarity,
+                "Results should be sorted by similarity score"
+            );
+        }
+
+        // Test document-specific keyword search
+        let doc_results = store
+            .keyword_search_by_document("doc1", "authentication", 5)
+            .await?;
+        assert!(
+            !doc_results.is_empty(),
+            "Should find results in specific document"
+        );
+
+        // All results should be from doc1
+        for result in &doc_results {
+            assert_eq!(
+                result.chunk.document_id, "doc1",
+                "All results should be from doc1"
+            );
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_phrase_extraction() {
+        let text = "User authentication is very important for system security";
+        let phrases = KeywordIndex::extract_phrases(text, 3);
+
+        // Debug output to see what phrases are extracted
+        println!("Extracted phrases: {:?}", phrases);
+
+        assert!(
+            phrases.contains(&"user authentication".to_string()),
+            "Should extract 2-word phrases"
+        );
+        assert!(
+            phrases.contains(&"authentication is".to_string()),
+            "Should extract consecutive phrases: actual phrases = {:?}",
+            phrases
+        );
+        assert!(
+            phrases.contains(&"user authentication is".to_string()),
+            "Should extract 3-word phrases"
+        );
+
+        // Should not contain single words or very short phrases
+        assert!(
+            !phrases.contains(&"user".to_string()),
+            "Should not extract single words"
+        );
+    }
+
+    #[test]
+    fn test_exact_phrase_matching() {
+        let keyword_index = KeywordIndex::new();
+
+        // Create word positions map
+        let mut positions_map = HashMap::new();
+        positions_map.insert("user".to_string(), vec![0, 5]);
+        positions_map.insert("authentication".to_string(), vec![1]);
+        positions_map.insert("system".to_string(), vec![2]);
+        positions_map.insert("login".to_string(), vec![3]);
+        positions_map.insert("security".to_string(), vec![4]);
+        positions_map.insert("password".to_string(), vec![6]);
+
+        // Test exact phrase matching
+        let phrase1 = vec!["user".to_string(), "authentication".to_string()];
+        let phrase2 = vec!["login".to_string(), "password".to_string()]; // Non-consecutive (pos 3, 6)
+        let phrase3 = vec!["authentication".to_string(), "system".to_string()];
+
+        assert!(
+            keyword_index.contains_exact_phrase(&positions_map, &phrase1),
+            "Should find exact phrase at position 0-1"
+        );
+        assert!(
+            !keyword_index.contains_exact_phrase(&positions_map, &phrase2),
+            "Should not find non-consecutive phrase (login at pos 3, password at pos 6)"
+        );
+        assert!(
+            keyword_index.contains_exact_phrase(&positions_map, &phrase3),
+            "Should find exact phrase at position 1-2"
+        );
     }
 }

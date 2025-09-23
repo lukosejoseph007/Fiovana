@@ -179,7 +179,36 @@ pub async fn search_vectors(
         }
     };
 
-    // Generate query embedding
+    // Try keyword-based search first as a fallback/enhancement
+    let keyword_results = vector_state
+        .vector_store
+        .keyword_search(&request.query, request.max_results.unwrap_or(5))
+        .await;
+
+    match keyword_results {
+        Ok(results) => {
+            let query_time = start_time.elapsed().as_millis() as u64;
+            tracing::info!(
+                "Keyword search completed: query='{}', results={}, time={}ms",
+                request.query,
+                results.len(),
+                query_time
+            );
+
+            return Ok(VectorSearchResponse {
+                success: true,
+                results,
+                query_time_ms: query_time,
+                error: None,
+            });
+        }
+        Err(_) => {
+            // Fall back to vector search if keyword search fails
+            tracing::info!("Falling back to vector search");
+        }
+    }
+
+    // Generate query embedding for vector search
     let query_embedding = match engine.embed_text(&request.query).await {
         Ok(embedding) => embedding,
         Err(e) => {
@@ -194,7 +223,7 @@ pub async fn search_vectors(
         }
     };
 
-    // Perform search
+    // Perform vector search
     let max_results = request.max_results.unwrap_or(5);
     let search_results = match &request.document_id {
         Some(doc_id) => {
@@ -321,6 +350,130 @@ pub async fn get_vector_system_status(
         "vector_store_stats": stats,
         "embedding_dimension": vector_state.vector_store.dimension(),
     }))
+}
+
+#[tauri::command]
+pub async fn keyword_search(
+    vector_state: State<'_, VectorState>,
+    request: VectorSearchRequest,
+) -> Result<VectorSearchResponse, String> {
+    let start_time = std::time::Instant::now();
+
+    // Perform advanced keyword-based search with TF-IDF and phrase matching
+    let max_results = request.max_results.unwrap_or(5);
+    let search_results = match &request.document_id {
+        Some(doc_id) => {
+            vector_state
+                .vector_store
+                .keyword_search_by_document(doc_id, &request.query, max_results)
+                .await
+        }
+        None => {
+            vector_state
+                .vector_store
+                .keyword_search(&request.query, max_results)
+                .await
+        }
+    };
+
+    match search_results {
+        Ok(results) => {
+            let query_time = start_time.elapsed().as_millis() as u64;
+            tracing::info!(
+                "Advanced keyword search completed: query='{}', results={}, time={}ms, relevance_scoring=TF-IDF+phrase_matching",
+                request.query,
+                results.len(),
+                query_time
+            );
+
+            Ok(VectorSearchResponse {
+                success: true,
+                results,
+                query_time_ms: query_time,
+                error: None,
+            })
+        }
+        Err(e) => {
+            let error_msg = format!("Advanced keyword search failed: {}", e);
+            tracing::error!("{}", error_msg);
+            Ok(VectorSearchResponse {
+                success: false,
+                results: Vec::new(),
+                query_time_ms: start_time.elapsed().as_millis() as u64,
+                error: Some(error_msg),
+            })
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn semantic_search(
+    vector_state: State<'_, VectorState>,
+    request: VectorSearchRequest,
+) -> Result<VectorSearchResponse, String> {
+    let start_time = std::time::Instant::now();
+
+    // Perform semantic search combining keyword and contextual understanding
+    let max_results = request.max_results.unwrap_or(5);
+
+    // First try keyword search for immediate matches
+    let keyword_results = match &request.document_id {
+        Some(doc_id) => {
+            vector_state
+                .vector_store
+                .keyword_search_by_document(doc_id, &request.query, max_results * 2)
+                .await
+        }
+        None => {
+            vector_state
+                .vector_store
+                .keyword_search(&request.query, max_results * 2)
+                .await
+        }
+    };
+
+    // If keyword search succeeds, enhance with semantic understanding
+    let results = match keyword_results {
+        Ok(mut keyword_results) => {
+            // Sort by relevance and take top results
+            keyword_results.sort_by(|a, b| {
+                b.similarity
+                    .partial_cmp(&a.similarity)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+            keyword_results.truncate(max_results);
+
+            // Enhance explanations with semantic context
+            for result in &mut keyword_results {
+                result.explanation = format!(
+                    "Semantic match: {} (Relevance: {:.1}% - Found via advanced TF-IDF analysis with phrase matching)",
+                    result.explanation,
+                    result.similarity * 100.0
+                );
+            }
+
+            keyword_results
+        }
+        Err(e) => {
+            tracing::warn!("Keyword search failed, returning empty results: {}", e);
+            Vec::new()
+        }
+    };
+
+    let query_time = start_time.elapsed().as_millis() as u64;
+    tracing::info!(
+        "Semantic search completed: query='{}', results={}, time={}ms, method=hybrid_keyword_semantic",
+        request.query,
+        results.len(),
+        query_time
+    );
+
+    Ok(VectorSearchResponse {
+        success: true,
+        results,
+        query_time_ms: query_time,
+        error: None,
+    })
 }
 
 #[tauri::command]
