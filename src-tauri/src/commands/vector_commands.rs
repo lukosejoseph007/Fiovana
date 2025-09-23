@@ -86,7 +86,7 @@ pub async fn init_vector_system(
 }
 
 #[tauri::command]
-pub async fn index_document(
+pub async fn index_document_vector(
     vector_state: State<'_, VectorState>,
     request: DocumentIndexRequest,
 ) -> Result<DocumentIndexResponse, String> {
@@ -335,7 +335,7 @@ pub async fn test_vector_search(
         metadata: None,
     };
 
-    let index_result = index_document(vector_state.clone(), index_request).await?;
+    let index_result = index_document_vector(vector_state.clone(), index_request).await?;
     if !index_result.success {
         return Err(index_result
             .error

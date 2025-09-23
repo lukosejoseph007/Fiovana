@@ -3,9 +3,12 @@
 
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
+
+use crate::document::{DocxParser, EnhancedMetadata, MetadataExtractor, PdfParser};
 
 /// File corruption check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,6 +66,209 @@ impl CorruptionCheckResult {
             confidence,
         }
     }
+}
+
+/// Enhanced document processing result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessedDocumentResult {
+    /// Enhanced metadata
+    pub metadata: Option<EnhancedMetadata>,
+    /// Document content
+    pub content: Option<DocumentContent>,
+    /// Document structure
+    pub structure: Option<DocumentStructure>,
+    /// Corruption check result
+    pub corruption_check: CorruptionCheckResult,
+    /// Processing status
+    pub processing_status: ProcessingStatus,
+}
+
+/// Document content information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentContent {
+    /// Full text content
+    pub text: String,
+    /// Document title
+    pub title: Option<String>,
+    /// Document sections
+    pub sections: Vec<DocumentSection>,
+    /// Key terms extracted
+    pub key_terms: Vec<String>,
+    /// Word count
+    pub word_count: usize,
+    /// Detected language
+    pub language: Option<String>,
+}
+
+/// Document section
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentSection {
+    /// Section title
+    pub title: String,
+    /// Section level (0 = top level)
+    pub level: u32,
+    /// Section content
+    pub content: String,
+    /// Starting line number
+    pub line_start: usize,
+    /// Ending line number
+    pub line_end: usize,
+}
+
+/// Document structure information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentStructure {
+    /// Document type classification
+    pub document_type: DocumentType,
+    /// Extracted headings
+    pub headings: Vec<DocumentHeading>,
+    /// Extracted lists
+    pub lists: Vec<DocumentList>,
+    /// Extracted tables
+    pub tables: Vec<DocumentTable>,
+    /// Extracted images
+    pub images: Vec<DocumentImage>,
+    /// Page count (if available)
+    pub page_count: Option<usize>,
+    /// Has table of contents
+    pub has_toc: bool,
+}
+
+/// Document type classification
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum DocumentType {
+    Manual,
+    Guide,
+    Procedure,
+    Reference,
+    Training,
+    Policy,
+    Template,
+    Report,
+    Article,
+    Other(String),
+}
+
+impl DocumentType {
+    /// Classify document type from content and filename
+    pub fn from_content(content: &str, path: &Path) -> Self {
+        let filename = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("")
+            .to_lowercase();
+
+        let content_lower = content.to_lowercase();
+
+        // Classification based on filename
+        if filename.contains("manual")
+            || content_lower.contains("user manual")
+            || content_lower.contains("instruction manual")
+        {
+            DocumentType::Manual
+        } else if filename.contains("guide")
+            || content_lower.contains("guide")
+            || content_lower.contains("how to")
+        {
+            DocumentType::Guide
+        } else if filename.contains("procedure")
+            || content_lower.contains("procedure")
+            || content_lower.contains("step by step")
+        {
+            DocumentType::Procedure
+        } else if filename.contains("reference")
+            || content_lower.contains("reference")
+            || content_lower.contains("documentation")
+        {
+            DocumentType::Reference
+        } else if filename.contains("training")
+            || content_lower.contains("training")
+            || content_lower.contains("course")
+        {
+            DocumentType::Training
+        } else if filename.contains("policy")
+            || content_lower.contains("policy")
+            || content_lower.contains("regulation")
+        {
+            DocumentType::Policy
+        } else if filename.contains("template") || content_lower.contains("template") {
+            DocumentType::Template
+        } else if filename.contains("report")
+            || content_lower.contains("report")
+            || content_lower.contains("analysis")
+        {
+            DocumentType::Report
+        } else if filename.contains("article") || content_lower.contains("article") {
+            DocumentType::Article
+        } else {
+            DocumentType::Other(filename)
+        }
+    }
+}
+
+/// Document heading
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentHeading {
+    /// Heading text
+    pub text: String,
+    /// Heading level (0 = H1, 1 = H2, etc.)
+    pub level: u32,
+    /// Position in document
+    pub position: usize,
+}
+
+/// Document list
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentList {
+    /// List type
+    pub list_type: ListType,
+    /// List items
+    pub items: Vec<String>,
+}
+
+/// List type
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ListType {
+    Ordered,
+    Unordered,
+}
+
+/// Document table
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentTable {
+    /// Table rows (each row is a vector of cell contents)
+    pub rows: Vec<Vec<String>>,
+    /// Whether first row is header
+    pub has_header: bool,
+}
+
+/// Document image
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentImage {
+    /// Alt text
+    pub alt_text: String,
+    /// Image source
+    pub src: String,
+    /// Image type
+    pub image_type: ImageType,
+}
+
+/// Image type
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ImageType {
+    Embedded,
+    Referenced,
+    Inline,
+}
+
+/// Processing status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ProcessingStatus {
+    Success,
+    PartialSuccess,
+    CorruptedFile,
+    UnsupportedFormat,
+    ProcessingError(String),
 }
 
 /// File magic number patterns for common document types
@@ -373,6 +579,488 @@ impl FileProcessor {
         }
 
         Ok(FileValidationResult::valid(corruption_result))
+    }
+
+    /// Enhanced document processing with rich metadata extraction
+    pub fn process_document<P: AsRef<Path>>(path: P) -> Result<ProcessedDocumentResult> {
+        let path = path.as_ref();
+
+        // First check for corruption
+        let corruption_check = Self::check_corruption(path)?;
+        if corruption_check.is_corrupted {
+            return Ok(ProcessedDocumentResult {
+                metadata: None,
+                content: None,
+                structure: None,
+                corruption_check,
+                processing_status: ProcessingStatus::CorruptedFile,
+            });
+        }
+
+        // Extract enhanced metadata
+        let metadata = match MetadataExtractor::extract(path) {
+            Ok(meta) => Some(meta),
+            Err(e) => {
+                tracing::warn!("Failed to extract metadata from {}: {}", path.display(), e);
+                None
+            }
+        };
+
+        // Extract content and structure based on file type
+        let (content, structure) = Self::extract_content_and_structure(path)?;
+
+        Ok(ProcessedDocumentResult {
+            metadata,
+            content,
+            structure,
+            corruption_check,
+            processing_status: ProcessingStatus::Success,
+        })
+    }
+
+    /// Extract content and structural information from document
+    fn extract_content_and_structure(
+        path: &Path,
+    ) -> Result<(Option<DocumentContent>, Option<DocumentStructure>)> {
+        let extension = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("")
+            .to_lowercase();
+
+        match extension.as_str() {
+            "docx" => {
+                let docx_content = DocxParser::parse(path).context("Failed to parse DOCX file")?;
+
+                let content = DocumentContent {
+                    text: docx_content.text.clone(),
+                    title: Self::extract_title_from_content(&docx_content.text, path),
+                    sections: Self::extract_sections_from_text(&docx_content.text),
+                    key_terms: Self::extract_key_terms(&docx_content.text),
+                    word_count: Self::count_words(&docx_content.text),
+                    language: Self::detect_language(&docx_content.text),
+                };
+
+                let structure = DocumentStructure {
+                    document_type: DocumentType::from_content(&docx_content.text, path),
+                    headings: Self::extract_headings_from_text(&docx_content.text),
+                    lists: Self::extract_lists_from_text(&docx_content.text),
+                    tables: Self::extract_tables_from_text(&docx_content.text),
+                    images: Vec::new(), // DOCX parser doesn't extract images yet
+                    page_count: None,
+                    has_toc: Self::has_table_of_contents(&docx_content.text),
+                };
+
+                Ok((Some(content), Some(structure)))
+            }
+            "pdf" => {
+                let pdf_content = PdfParser::parse(path).context("Failed to parse PDF file")?;
+
+                let content = DocumentContent {
+                    text: pdf_content.text.clone(),
+                    title: Self::extract_title_from_content(&pdf_content.text, path),
+                    sections: Self::extract_sections_from_text(&pdf_content.text),
+                    key_terms: Self::extract_key_terms(&pdf_content.text),
+                    word_count: Self::count_words(&pdf_content.text),
+                    language: Self::detect_language(&pdf_content.text),
+                };
+
+                let structure = DocumentStructure {
+                    document_type: DocumentType::from_content(&pdf_content.text, path),
+                    headings: pdf_content
+                        .structure
+                        .headings
+                        .iter()
+                        .map(|h| DocumentHeading {
+                            text: h.text.clone(),
+                            level: h.level as u32,
+                            position: h.page * 1000, // Approximate position based on page
+                        })
+                        .collect(),
+                    lists: Self::extract_lists_from_text(&pdf_content.text),
+                    tables: Self::extract_tables_from_text(&pdf_content.text),
+                    images: Vec::new(), // PDF parser doesn't extract images yet
+                    page_count: Some(pdf_content.structure.page_count),
+                    has_toc: Self::has_table_of_contents(&pdf_content.text),
+                };
+
+                Ok((Some(content), Some(structure)))
+            }
+            "txt" | "md" | "markdown" => {
+                let text = std::fs::read_to_string(path).context("Failed to read text file")?;
+
+                let content = DocumentContent {
+                    text: text.clone(),
+                    title: Self::extract_title_from_content(&text, path),
+                    sections: Self::extract_sections_from_text(&text),
+                    key_terms: Self::extract_key_terms(&text),
+                    word_count: Self::count_words(&text),
+                    language: Self::detect_language(&text),
+                };
+
+                let structure = DocumentStructure {
+                    document_type: DocumentType::from_content(&text, path),
+                    headings: Self::extract_headings_from_text(&text),
+                    lists: Self::extract_lists_from_text(&text),
+                    tables: Self::extract_tables_from_text(&text),
+                    images: Self::extract_images_from_text(&text),
+                    page_count: None,
+                    has_toc: Self::has_table_of_contents(&text),
+                };
+
+                Ok((Some(content), Some(structure)))
+            }
+            _ => {
+                // Unsupported file type
+                Ok((None, None))
+            }
+        }
+    }
+
+    /// Extract title from document content
+    fn extract_title_from_content(content: &str, path: &Path) -> Option<String> {
+        // Try to find title in first few lines
+        for line in content.lines().take(10) {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() && trimmed.len() < 200 {
+                // Markdown heading
+                if trimmed.starts_with("# ") {
+                    return Some(trimmed.trim_start_matches("# ").to_string());
+                }
+                // HTML heading
+                if trimmed.starts_with("<h1>") && trimmed.ends_with("</h1>") {
+                    return Some(
+                        trimmed
+                            .trim_start_matches("<h1>")
+                            .trim_end_matches("</h1>")
+                            .to_string(),
+                    );
+                }
+                // First significant line as title
+                if trimmed.chars().next().is_some_and(|c| c.is_uppercase())
+                    && !trimmed.ends_with('.')
+                {
+                    return Some(trimmed.to_string());
+                }
+            }
+        }
+
+        // Fallback to filename
+        path.file_stem()
+            .and_then(|stem| stem.to_str())
+            .map(|s| s.to_string())
+    }
+
+    /// Extract sections from text content
+    fn extract_sections_from_text(content: &str) -> Vec<DocumentSection> {
+        let mut sections = Vec::new();
+        let lines: Vec<&str> = content.lines().collect();
+
+        let mut current_section: Option<DocumentSection> = None;
+        let mut line_number = 0;
+
+        for line in lines {
+            line_number += 1;
+            let trimmed = line.trim();
+
+            // Detect headings
+            if let Some((level, title)) = Self::detect_heading_in_line(trimmed) {
+                // Save previous section
+                if let Some(section) = current_section.take() {
+                    sections.push(section);
+                }
+
+                // Start new section
+                current_section = Some(DocumentSection {
+                    title: title.to_string(),
+                    level,
+                    content: String::new(),
+                    line_start: line_number,
+                    line_end: line_number,
+                });
+            } else if let Some(ref mut section) = current_section {
+                // Add content to current section
+                if !section.content.is_empty() {
+                    section.content.push('\n');
+                }
+                section.content.push_str(line);
+                section.line_end = line_number;
+            }
+        }
+
+        // Save last section
+        if let Some(section) = current_section {
+            sections.push(section);
+        }
+
+        // If no sections found, create one main section
+        if sections.is_empty() {
+            sections.push(DocumentSection {
+                title: "Main Content".to_string(),
+                level: 0,
+                content: content.to_string(),
+                line_start: 1,
+                line_end: line_number,
+            });
+        }
+
+        sections
+    }
+
+    /// Detect heading in a line of text
+    fn detect_heading_in_line(line: &str) -> Option<(u32, &str)> {
+        // Markdown-style headings
+        if line.starts_with('#') {
+            let level = line.chars().take_while(|&c| c == '#').count() as u32;
+            let title = line.trim_start_matches('#').trim();
+            if !title.is_empty() {
+                return Some((level - 1, title)); // 0-based level
+            }
+        }
+
+        // Simple heuristic: short lines that start with uppercase and don't end with period
+        if line.len() < 100
+            && line.chars().next().is_some_and(|c| c.is_uppercase())
+            && !line.ends_with('.')
+            && !line.contains(':')
+        {
+            return Some((0, line));
+        }
+
+        None
+    }
+
+    /// Extract key terms from text
+    fn extract_key_terms(content: &str) -> Vec<String> {
+        let mut term_counts = HashMap::new();
+
+        // Simple tokenization and counting
+        for word in content.to_lowercase().split_whitespace() {
+            let cleaned = word.trim_matches(|c: char| !c.is_alphabetic());
+            if cleaned.len() > 3 && !Self::is_stop_word(cleaned) {
+                *term_counts.entry(cleaned.to_string()).or_insert(0) += 1;
+            }
+        }
+
+        // Sort by frequency and take top terms
+        let mut terms: Vec<_> = term_counts.into_iter().collect();
+        terms.sort_by(|a, b| b.1.cmp(&a.1));
+
+        terms
+            .into_iter()
+            .take(20)
+            .map(|(term, _count)| term)
+            .collect()
+    }
+
+    /// Check if word is a stop word
+    fn is_stop_word(word: &str) -> bool {
+        const STOP_WORDS: &[&str] = &[
+            "the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was",
+            "one", "our", "out", "day", "get", "has", "him", "his", "how", "its", "may", "new",
+            "now", "old", "see", "two", "who", "boy", "did", "she", "use", "air", "men", "way",
+            "come", "could", "show", "also", "after", "back", "other", "many", "than", "then",
+            "them", "these", "some", "what", "make", "like", "into", "time", "very", "when",
+            "much", "know", "take", "people", "just", "first", "well", "water", "been", "call",
+            "find", "long", "down", "made", "part",
+        ];
+        STOP_WORDS.contains(&word)
+    }
+
+    /// Count words in text
+    fn count_words(content: &str) -> usize {
+        content.split_whitespace().count()
+    }
+
+    /// Detect language of text (simple heuristic)
+    fn detect_language(content: &str) -> Option<String> {
+        // Very simple language detection based on common words
+        let text_lower = content.to_lowercase();
+
+        if text_lower.contains(" the ")
+            && text_lower.contains(" and ")
+            && text_lower.contains(" of ")
+        {
+            Some("en".to_string())
+        } else if text_lower.contains(" el ")
+            && text_lower.contains(" de ")
+            && text_lower.contains(" la ")
+        {
+            Some("es".to_string())
+        } else if text_lower.contains(" le ")
+            && text_lower.contains(" de ")
+            && text_lower.contains(" la ")
+        {
+            Some("fr".to_string())
+        } else {
+            None
+        }
+    }
+
+    /// Extract headings from text
+    fn extract_headings_from_text(content: &str) -> Vec<DocumentHeading> {
+        let mut headings = Vec::new();
+        let mut position = 0;
+
+        for line in content.lines() {
+            if let Some((level, title)) = Self::detect_heading_in_line(line.trim()) {
+                headings.push(DocumentHeading {
+                    text: title.to_string(),
+                    level,
+                    position,
+                });
+            }
+            position += line.len() + 1; // +1 for newline
+        }
+
+        headings
+    }
+
+    /// Extract lists from text
+    fn extract_lists_from_text(content: &str) -> Vec<DocumentList> {
+        let mut lists = Vec::new();
+        let mut current_list: Option<DocumentList> = None;
+        let mut _item_number = 0;
+
+        for line in content.lines() {
+            let trimmed = line.trim();
+
+            // Detect list items
+            if trimmed.starts_with("- ")
+                || trimmed.starts_with("* ")
+                || trimmed.chars().next().is_some_and(|c| c.is_numeric())
+            {
+                let item_text = if trimmed.starts_with("- ") || trimmed.starts_with("* ") {
+                    trimmed[2..].trim().to_string()
+                } else {
+                    // Numbered list - remove number and period/parenthesis
+                    trimmed
+                        .split_once(['.', ')'])
+                        .map(|(_, rest)| rest.trim().to_string())
+                        .unwrap_or_else(|| trimmed.to_string())
+                };
+
+                let list_type = if trimmed.starts_with("- ") || trimmed.starts_with("* ") {
+                    ListType::Unordered
+                } else {
+                    ListType::Ordered
+                };
+
+                // Start new list or continue existing one
+                if let Some(ref mut list) = current_list {
+                    if list.list_type == list_type {
+                        list.items.push(item_text);
+                    } else {
+                        // Different list type, save current and start new
+                        lists.push(current_list.take().unwrap());
+                        current_list = Some(DocumentList {
+                            list_type,
+                            items: vec![item_text],
+                        });
+                    }
+                } else {
+                    current_list = Some(DocumentList {
+                        list_type,
+                        items: vec![item_text],
+                    });
+                }
+                _item_number += 1;
+            } else if current_list.is_some() && !trimmed.is_empty() {
+                // Non-list line, save current list
+                if let Some(list) = current_list.take() {
+                    lists.push(list);
+                }
+            }
+        }
+
+        // Save last list
+        if let Some(list) = current_list {
+            lists.push(list);
+        }
+
+        lists
+    }
+
+    /// Extract tables from text
+    fn extract_tables_from_text(content: &str) -> Vec<DocumentTable> {
+        let mut tables = Vec::new();
+        let lines: Vec<&str> = content.lines().collect();
+
+        let mut i = 0;
+        while i < lines.len() {
+            let line = lines[i].trim();
+
+            // Detect table rows (simple heuristic: lines with pipe characters)
+            if line.contains('|') && line.matches('|').count() >= 2 {
+                let mut table_rows = Vec::new();
+                let mut j = i;
+
+                // Collect consecutive table rows
+                while j < lines.len() {
+                    let table_line = lines[j].trim();
+                    if table_line.contains('|') && table_line.matches('|').count() >= 2 {
+                        let cells: Vec<String> = table_line
+                            .split('|')
+                            .map(|cell| cell.trim().to_string())
+                            .filter(|cell| !cell.is_empty())
+                            .collect();
+                        table_rows.push(cells);
+                        j += 1;
+                    } else {
+                        break;
+                    }
+                }
+
+                if table_rows.len() > 1 {
+                    tables.push(DocumentTable {
+                        rows: table_rows,
+                        has_header: true, // Assume first row is header
+                    });
+                }
+
+                i = j;
+            } else {
+                i += 1;
+            }
+        }
+
+        tables
+    }
+
+    /// Extract images from text (markdown/HTML format)
+    fn extract_images_from_text(content: &str) -> Vec<DocumentImage> {
+        let mut images = Vec::new();
+
+        // Markdown images: ![alt](src)
+        for line in content.lines() {
+            if line.contains("![") && line.contains("](") {
+                // Simple regex-like parsing
+                if let Some(start) = line.find("![") {
+                    if let Some(alt_end) = line[start..].find("](") {
+                        if let Some(src_end) = line[start + alt_end + 2..].find(')') {
+                            let alt = &line[start + 2..start + alt_end];
+                            let src = &line[start + alt_end + 2..start + alt_end + 2 + src_end];
+
+                            images.push(DocumentImage {
+                                alt_text: alt.to_string(),
+                                src: src.to_string(),
+                                image_type: ImageType::Embedded,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        images
+    }
+
+    /// Check if content has table of contents
+    fn has_table_of_contents(content: &str) -> bool {
+        let lower_content = content.to_lowercase();
+        lower_content.contains("table of contents")
+            || lower_content.contains("contents") && lower_content.contains("page")
+            || lower_content.contains("toc")
     }
 }
 

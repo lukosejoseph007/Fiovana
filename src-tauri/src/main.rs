@@ -144,6 +144,10 @@ async fn main() {
             commands::document_comparison_commands::DocumentComparisonState::default(),
         );
 
+    // Initialize document indexer state
+    let document_indexer_state: commands::document_indexing_commands::DocumentIndexerState =
+        std::sync::Arc::new(tokio::sync::Mutex::new(None));
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -176,6 +180,7 @@ async fn main() {
         .manage(vector_state)
         .manage(document_generator_state)
         .manage(document_comparison_state)
+        .manage(document_indexer_state)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -308,12 +313,16 @@ async fn main() {
             commands::pull_model,
             commands::test_ai_conversation,
             commands::get_ai_settings,
+            // Document indexing commands
+            commands::init_document_indexer,
+            commands::index_document,
+            commands::search_documents,
+            commands::get_index_stats,
+            commands::get_all_documents,
+            commands::get_document_details,
             commands::save_ai_settings,
-            commands::index_document_for_ai,
-            commands::get_indexed_documents_info,
             // Vector search commands
             commands::init_vector_system,
-            commands::index_document,
             commands::search_vectors,
             commands::get_vector_stats,
             commands::remove_document_from_index,

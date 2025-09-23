@@ -37,10 +37,75 @@ interface BackendFileResult {
   error?: string
 }
 
+interface SearchResult {
+  document: DocumentIndexEntry
+  score: number
+}
+
+interface SearchResponse {
+  success: boolean
+  results: SearchResult[]
+  total_found: number
+  error?: string
+}
+
+interface IndexStats {
+  total_documents: number
+  total_keywords: number
+  total_content_size: number
+  index_version: number
+  error?: string
+}
+
+interface DocumentIndexEntry {
+  title: string
+  path: string
+  summary?: string
+  content: string
+  metadata: object
+  structure: DocumentStructure
+  keywords: string[]
+  content_hash: string
+  indexed_at: {
+    secs_since_epoch: number
+    nanos_since_epoch: number
+  }
+  index_version: number
+}
+
+interface DocumentStructure {
+  document_type: string
+  sections: DocumentSection[]
+  toc?: TocEntry[]
+  page_count?: number
+  has_images: boolean
+  has_tables: boolean
+  has_code: boolean
+}
+
+interface DocumentSection {
+  title: string
+  level: number
+  content?: string
+}
+
+interface TocEntry {
+  title: string
+  level: number
+  page?: number
+}
+
 const FileManagement: React.FC = () => {
   const { state, dispatch } = useAppState()
   const { droppedFiles, isDragOver } = state.fileManagement
   const [isHovered, setIsHovered] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
+  const [filterType, setFilterType] = React.useState('all')
+  const [searchResults, setSearchResults] = React.useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = React.useState(false)
+  const [indexStats, setIndexStats] = React.useState<IndexStats | null>(null)
+  const [selectedDocument, setSelectedDocument] = React.useState<DocumentIndexEntry | null>(null)
+  const [showDocumentModal, setShowDocumentModal] = React.useState(false)
   const isListenerSetupRef = useRef(false)
   const lastDropTimeRef = useRef<number>(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -302,6 +367,125 @@ const FileManagement: React.FC = () => {
     dispatch({ type: 'FILE_MANAGEMENT_CLEAR_FILES' })
   }
 
+  // Initialize document indexer
+  useEffect(() => {
+    const initDocumentIndexer = async () => {
+      try {
+        await invoke('init_document_indexer', { indexDir: null })
+        console.log('Document indexer initialized')
+      } catch (error) {
+        console.error('Failed to initialize document indexer:', error)
+      }
+    }
+    initDocumentIndexer()
+  }, [])
+
+  // Auto-index files when they are uploaded
+  useEffect(() => {
+    const indexUploadedFiles = async () => {
+      console.log(`Auto-indexing ${droppedFiles.length} files...`)
+      for (const file of droppedFiles) {
+        if (file.path && file.validation?.is_valid && !file.error) {
+          try {
+            console.log(`Indexing document: ${file.name} at path: ${file.path}`)
+            const result = await invoke('index_document', {
+              request: { file_path: file.path },
+            })
+            console.log(`Successfully indexed document: ${file.name}`, result)
+          } catch (error) {
+            console.error(`Failed to index document ${file.name}:`, error)
+          }
+        } else {
+          console.log(
+            `Skipping indexing for ${file.name}: path=${file.path}, valid=${file.validation?.is_valid}, error=${file.error}`
+          )
+        }
+      }
+    }
+    if (droppedFiles.length > 0) {
+      indexUploadedFiles()
+    }
+  }, [droppedFiles])
+
+  // Search documents
+  const searchDocuments = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await invoke('search_documents', {
+        request: {
+          query: searchQuery,
+          filter: filterType === 'all' ? null : { extensions: [filterType] },
+          limit: 20,
+        },
+      })
+
+      if (response && typeof response === 'object' && 'results' in response) {
+        setSearchResults((response as SearchResponse).results || [])
+      }
+    } catch (error) {
+      console.error('Search failed:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Check index stats
+  const checkIndexStats = async () => {
+    try {
+      const stats = await invoke<IndexStats>('get_index_stats')
+      console.log('Index stats:', stats)
+      setIndexStats(stats)
+    } catch (error) {
+      console.error('Failed to get index stats:', error)
+      setIndexStats({
+        total_documents: 0,
+        total_keywords: 0,
+        total_content_size: 0,
+        index_version: 0,
+        error: String(error),
+      })
+    }
+  }
+
+  // View document details
+  const viewDocumentDetails = async (filePath: string) => {
+    try {
+      console.log('Getting document details for:', filePath)
+      const details = await invoke<DocumentIndexEntry | null>('get_document_details', { filePath })
+      console.log('Document details:', details)
+      setSelectedDocument(details)
+      setShowDocumentModal(true)
+    } catch (error) {
+      console.error('Failed to get document details:', error)
+    }
+  }
+
+  // Filter files locally
+  const filteredFiles = React.useMemo(() => {
+    if (filterType === 'all') return droppedFiles
+    return droppedFiles.filter(file => {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase()
+      switch (filterType) {
+        case 'pdf':
+          return fileExtension === 'pdf'
+        case 'docx':
+          return fileExtension === 'docx'
+        case 'txt':
+          return fileExtension === 'txt'
+        case 'md':
+          return fileExtension === 'md'
+        default:
+          return true
+      }
+    })
+  }, [droppedFiles, filterType])
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -310,6 +494,137 @@ const FileManagement: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400">
           Upload and analyze documents with AI-powered intelligence
         </p>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Search Documents
+        </h2>
+
+        <div className="space-y-4">
+          {/* Search Input */}
+          <div className="flex space-x-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && searchDocuments()}
+                placeholder="Search document content..."
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         placeholder-gray-500 dark:placeholder-gray-400
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={searchDocuments}
+              disabled={isSearching || !searchQuery.trim()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-colors duration-200"
+            >
+              {isSearching ? (
+                <div className="flex items-center space-x-2">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Searching...</span>
+                </div>
+              ) : (
+                'Search'
+              )}
+            </button>
+          </div>
+
+          {/* Filter Options and Index Stats */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Filter by type:
+              </span>
+              <select
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Files</option>
+                <option value="pdf">PDF Documents</option>
+                <option value="docx">Word Documents</option>
+                <option value="txt">Text Files</option>
+                <option value="md">Markdown Files</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={checkIndexStats}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Check Index Stats
+              </button>
+              {indexStats && (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {indexStats.error ? (
+                    <span className="text-red-600">Error: {indexStats.error}</span>
+                  ) : (
+                    <span>
+                      📊 {indexStats.total_documents} docs, {indexStats.total_keywords} keywords
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-md font-medium text-gray-900 dark:text-white mb-3">
+                Search Results ({searchResults.length})
+              </h3>
+              <div className="space-y-3">
+                {searchResults.map((result, index) => (
+                  <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {result.document?.title || result.document?.path || 'Unknown Document'}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {result.document?.path}
+                        </p>
+                        {result.document?.content && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                            {result.document.content.substring(0, 200)}...
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Score: {result.score?.toFixed(2) || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Drop Zone Section */}
@@ -418,7 +733,7 @@ const FileManagement: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Uploaded Files ({droppedFiles.length})
+              Uploaded Files ({filteredFiles.length} of {droppedFiles.length} shown)
             </h2>
             <button
               onClick={clearFiles}
@@ -484,10 +799,13 @@ const FileManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Last Modified
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {droppedFiles.map((file, index) => (
+                {filteredFiles.map((file, index) => (
                   <tr
                     key={index}
                     className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
@@ -555,6 +873,16 @@ const FileManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                       {new Date(file.lastModified).toLocaleString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {file.path && file.validation?.is_valid && !file.error && (
+                        <button
+                          onClick={() => viewDocumentDetails(file.path!)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs"
+                        >
+                          View Details
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -575,6 +903,199 @@ const FileManagement: React.FC = () => {
                 Drag and drop files anywhere on this window, or click the drop zone to browse and
                 select files for AI-powered analysis.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Details Modal */}
+      {showDocumentModal && selectedDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Document Details
+              </h2>
+              <button
+                onClick={() => setShowDocumentModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Basic Info */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                  Basic Information
+                </h3>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                  <div>
+                    <span className="font-medium">Title:</span> {selectedDocument.title}
+                  </div>
+                  <div>
+                    <span className="font-medium">Path:</span> {selectedDocument.path}
+                  </div>
+                  <div>
+                    <span className="font-medium">Content Hash:</span>{' '}
+                    {selectedDocument.content_hash?.substring(0, 16)}...
+                  </div>
+                  <div>
+                    <span className="font-medium">Indexed At:</span>{' '}
+                    {new Date(
+                      selectedDocument.indexed_at?.secs_since_epoch * 1000
+                    ).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Structure */}
+              {selectedDocument.structure && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Document Structure
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                    <div>
+                      <span className="font-medium">Type:</span>{' '}
+                      {selectedDocument.structure.document_type}
+                    </div>
+                    {selectedDocument.structure.page_count && (
+                      <div>
+                        <span className="font-medium">Pages:</span>{' '}
+                        {selectedDocument.structure.page_count}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedDocument.structure.has_images && (
+                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
+                          📷 Has Images
+                        </span>
+                      )}
+                      {selectedDocument.structure.has_tables && (
+                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">
+                          📊 Has Tables
+                        </span>
+                      )}
+                      {selectedDocument.structure.has_code && (
+                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs">
+                          💻 Has Code
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Table of Contents */}
+              {selectedDocument.structure?.toc && selectedDocument.structure.toc.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Table of Contents
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <ul className="space-y-1">
+                      {selectedDocument.structure.toc.map((entry: TocEntry, index: number) => (
+                        <li
+                          key={index}
+                          className="text-sm"
+                          style={{ marginLeft: `${entry.level * 20}px` }}
+                        >
+                          <span className="font-medium">{entry.title}</span>
+                          {entry.page && (
+                            <span className="text-gray-500 ml-2">p. {entry.page}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Sections */}
+              {selectedDocument.structure?.sections &&
+                selectedDocument.structure.sections.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                      Document Sections
+                    </h3>
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+                      {selectedDocument.structure.sections.map(
+                        (section: DocumentSection, index: number) => (
+                          <div key={index} className="border-l-2 border-blue-300 pl-3">
+                            <div className="font-medium text-sm">{section.title}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              Level {section.level} • {section.content?.length || 0} characters
+                            </div>
+                            {section.content && (
+                              <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                                {section.content.substring(0, 150)}...
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {/* Keywords */}
+              {selectedDocument.keywords && selectedDocument.keywords.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Keywords
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDocument.keywords.map((keyword: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Content Preview */}
+              {selectedDocument.content && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Content Preview
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                      {selectedDocument.content.substring(0, 1000)}
+                      {selectedDocument.content.length > 1000 && '...'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Summary */}
+              {selectedDocument.summary && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Summary
+                  </h3>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {selectedDocument.summary}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

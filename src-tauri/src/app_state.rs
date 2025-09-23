@@ -13,6 +13,7 @@ pub struct AppState {
     pub config_manager: Arc<ConfigManager>,
     pub security_state: SecurityState,
     pub workspace_manager: Arc<WorkspaceManager>,
+    #[allow(dead_code)]
     pub document_indexing_sender: mpsc::UnboundedSender<FileEvent>,
 }
 

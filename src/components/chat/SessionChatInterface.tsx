@@ -100,6 +100,17 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
     // Initialize AI system
     initializeAI()
 
+    // Initialize document indexer for AI to access
+    const initDocumentIndexer = async () => {
+      try {
+        await invoke('init_document_indexer', { indexDir: null })
+        console.log('Document indexer initialized for AI chat')
+      } catch (error) {
+        console.error('Failed to initialize document indexer for AI chat:', error)
+      }
+    }
+    initDocumentIndexer()
+
     // Set up storage listener for settings changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'ai_settings') {
