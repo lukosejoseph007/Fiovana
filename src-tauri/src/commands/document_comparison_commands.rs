@@ -1,6 +1,7 @@
 // src-tauri/src/commands/document_comparison_commands.rs
 // Tauri commands for document comparison functionality
 
+use crate::commands::document_indexing_commands::DocumentIndexerState;
 use crate::document::{
     ComparisonOptions, ComparisonType, DocumentComparator, DocumentComparisonRequest,
     DocumentComparisonResult, DocumentForComparison, ParsedDocumentContent,
@@ -18,6 +19,15 @@ pub struct CompareDocumentsRequest {
     pub file_path_b: String,
     pub comparison_type: String, // "text", "semantic", "structural", "comprehensive"
     pub options: Option<ComparisonOptionsInput>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompareDocumentsByIdRequest {
+    pub document_a_id: String,
+    pub document_b_id: String,
+    pub comparison_type: String, // "TextDiff", "StructuralDiff", "SemanticSimilarity", "Comprehensive"
+    pub include_metadata: bool,
+    pub similarity_threshold: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -309,10 +319,153 @@ pub async fn test_document_comparison(
     }
 }
 
+#[tauri::command]
+pub async fn compare_documents(
+    comparison_state: State<'_, DocumentComparisonAppState>,
+    indexer_state: State<'_, DocumentIndexerState>,
+    request: CompareDocumentsByIdRequest,
+) -> Result<CompareDocumentsResponse, String> {
+    let start_time = std::time::Instant::now();
+
+    // Get documents from indexer by ID
+    let indexer_lock = indexer_state.lock().await;
+    let indexer = match indexer_lock.as_ref() {
+        Some(indexer) => indexer,
+        None => {
+            return Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some("Document indexer not initialized".to_string()),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            });
+        }
+    };
+
+    let doc_a_entry = match indexer.get_document(&request.document_a_id) {
+        Some(entry) => entry,
+        None => {
+            return Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some(format!(
+                    "Document A with ID '{}' not found",
+                    request.document_a_id
+                )),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            });
+        }
+    };
+
+    let doc_b_entry = match indexer.get_document(&request.document_b_id) {
+        Some(entry) => entry,
+        None => {
+            return Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some(format!(
+                    "Document B with ID '{}' not found",
+                    request.document_b_id
+                )),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            });
+        }
+    };
+
+    // Convert paths to strings
+    let path_a = doc_a_entry.path.to_string_lossy().to_string();
+    let path_b = doc_b_entry.path.to_string_lossy().to_string();
+
+    // Release the indexer lock
+    drop(indexer_lock);
+
+    // Parse the documents
+    let doc_a = match parse_document_from_path(&path_a).await {
+        Ok(doc) => doc,
+        Err(e) => {
+            return Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some(format!("Failed to parse document A: {}", e)),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            });
+        }
+    };
+
+    let doc_b = match parse_document_from_path(&path_b).await {
+        Ok(doc) => doc,
+        Err(e) => {
+            return Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some(format!("Failed to parse document B: {}", e)),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            });
+        }
+    };
+
+    // Convert comparison type from frontend format to backend format
+    let comparison_type = match request.comparison_type.as_str() {
+        "TextDiff" => ComparisonType::TextDiff,
+        "StructuralDiff" => ComparisonType::StructuralDiff,
+        "SemanticSimilarity" => ComparisonType::SemanticSimilarity,
+        "Comprehensive" => ComparisonType::Comprehensive,
+        _ => ComparisonType::Comprehensive, // Default fallback
+    };
+
+    let options = ComparisonOptions {
+        include_metadata: request.include_metadata,
+        similarity_threshold: request.similarity_threshold,
+        max_differences: None,
+        ignore_formatting: false,
+        focus_on_content_changes: true,
+    };
+
+    let comparison_request = DocumentComparisonRequest {
+        document_a: doc_a,
+        document_b: doc_b,
+        comparison_type,
+        options,
+    };
+
+    let comparator_lock = comparison_state.comparator.lock().await;
+    match comparator_lock.compare_documents(comparison_request).await {
+        Ok(result) => {
+            let processing_time = start_time.elapsed().as_millis() as u64;
+
+            // Store in history
+            let mut history_lock = comparison_state.comparison_history.lock().await;
+            history_lock.push(result.clone());
+            if history_lock.len() > 100 {
+                history_lock.remove(0);
+            }
+
+            Ok(CompareDocumentsResponse {
+                success: true,
+                result: Some(result),
+                error: None,
+                processing_time_ms: processing_time,
+            })
+        }
+        Err(e) => {
+            let error_msg = format!("Document comparison failed: {}", e);
+            tracing::error!("{}", error_msg);
+
+            Ok(CompareDocumentsResponse {
+                success: false,
+                result: None,
+                error: Some(error_msg),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            })
+        }
+    }
+}
+
 // Helper functions
 async fn parse_document_from_path(file_path: &str) -> Result<DocumentForComparison, String> {
     use crate::commands::document_commands::parse_document;
+    use std::path::Path;
 
+    // First try the structured document parser for supported formats
     match parse_document(file_path.to_string()).await {
         Ok(response) => match response {
             crate::commands::document_commands::DocumentParseResponse::Docx {
@@ -334,12 +487,72 @@ async fn parse_document_from_path(file_path: &str) -> Result<DocumentForComparis
             crate::commands::document_commands::DocumentParseResponse::Error {
                 message,
                 file_path,
-            } => Err(format!(
-                "Failed to parse document {}: {}",
-                file_path, message
-            )),
+            } => {
+                // If structured parsing fails, try to read as plain text for common text formats
+                let path = Path::new(&file_path);
+                let extension = path
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .map(|ext| ext.to_lowercase());
+
+                match extension.as_deref() {
+                    Some("md") | Some("txt") | Some("markdown") | Some("text") | Some("rst") => {
+                        // Read as plain text
+                        parse_text_document(&file_path).await
+                    }
+                    _ => Err(format!(
+                        "Failed to parse document {}: {}",
+                        file_path, message
+                    )),
+                }
+            }
         },
-        Err(e) => Err(format!("Document parsing error: {}", e)),
+        Err(e) => {
+            // If the main parser fails entirely, try text parsing for supported formats
+            let path = Path::new(file_path);
+            let extension = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .map(|ext| ext.to_lowercase());
+
+            match extension.as_deref() {
+                Some("md") | Some("txt") | Some("markdown") | Some("text") | Some("rst") => {
+                    parse_text_document(file_path).await
+                }
+                _ => Err(format!("Document parsing error: {}", e)),
+            }
+        }
+    }
+}
+
+async fn parse_text_document(file_path: &str) -> Result<DocumentForComparison, String> {
+    use std::fs;
+
+    match fs::read_to_string(file_path) {
+        Ok(content) => {
+            let mut metadata = HashMap::new();
+
+            // Extract filename as title
+            if let Some(filename) = std::path::Path::new(file_path).file_stem() {
+                if let Some(title) = filename.to_str() {
+                    metadata.insert("title".to_string(), title.to_string());
+                }
+            }
+
+            // Determine file type
+            let extension = std::path::Path::new(file_path)
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or("txt");
+            metadata.insert("format".to_string(), extension.to_string());
+
+            Ok(DocumentForComparison {
+                file_path: file_path.to_string(),
+                content: Some(ParsedDocumentContent::Text { content }),
+                metadata,
+            })
+        }
+        Err(e) => Err(format!("Failed to read text file {}: {}", file_path, e)),
     }
 }
 

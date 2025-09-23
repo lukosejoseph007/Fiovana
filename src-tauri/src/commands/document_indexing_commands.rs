@@ -236,6 +236,87 @@ pub async fn get_document_details(
     }
 }
 
+/// Remove a document from the index
+#[tauri::command]
+pub async fn remove_document_from_indexer(
+    indexer_state: State<'_, DocumentIndexerState>,
+    document_id: String,
+) -> Result<bool, String> {
+    tracing::info!("Removing document from indexer: {}", document_id);
+
+    let mut state = indexer_state.lock().await;
+    if let Some(ref mut indexer) = *state {
+        match indexer.remove_document(&document_id) {
+            Ok(removed) => {
+                if removed {
+                    tracing::info!("Successfully removed document: {}", document_id);
+                    // Persist the changes
+                    if let Err(e) = indexer.save_index() {
+                        tracing::error!("Failed to save index after removal: {}", e);
+                        return Err(format!("Failed to save index after removal: {}", e));
+                    }
+                    Ok(true)
+                } else {
+                    tracing::warn!("Document not found for removal: {}", document_id);
+                    Ok(false)
+                }
+            }
+            Err(e) => {
+                tracing::error!("Failed to remove document {}: {}", document_id, e);
+                Err(format!("Failed to remove document: {}", e))
+            }
+        }
+    } else {
+        tracing::error!(
+            "Document indexer not initialized when trying to remove: {}",
+            document_id
+        );
+        Err("Document indexer not initialized".to_string())
+    }
+}
+
+/// Clear all documents from the index
+#[tauri::command]
+pub async fn clear_document_index(
+    indexer_state: State<'_, DocumentIndexerState>,
+) -> Result<usize, String> {
+    tracing::info!("Clearing all documents from index");
+
+    let mut state = indexer_state.lock().await;
+    if let Some(ref mut indexer) = *state {
+        let documents = indexer.get_all_documents();
+        let total_count = documents.len();
+        let document_ids: Vec<String> = documents.iter().map(|doc| doc.id.clone()).collect();
+
+        let mut removed_count = 0;
+        for doc_id in document_ids {
+            match indexer.remove_document(&doc_id) {
+                Ok(true) => removed_count += 1,
+                Ok(false) => {
+                    tracing::warn!("Document {} was not found during bulk removal", doc_id)
+                }
+                Err(e) => tracing::error!("Failed to remove document {}: {}", doc_id, e),
+            }
+        }
+
+        // Persist the changes
+        if let Err(e) = indexer.save_index() {
+            tracing::error!("Failed to save index after clearing: {}", e);
+            return Err(format!("Failed to save index after clearing: {}", e));
+        }
+
+        tracing::info!(
+            "Successfully cleared {} of {} documents from index",
+            removed_count,
+            total_count
+        );
+        Ok(removed_count)
+    } else {
+        tracing::error!("Document indexer not initialized when trying to clear");
+        Err("Document indexer not initialized".to_string())
+    }
+}
+
 /// Get relevant documents for AI context (internal function)
 pub async fn get_relevant_documents_for_context(
     indexer_state: &DocumentIndexerState,

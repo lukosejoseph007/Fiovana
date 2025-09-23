@@ -11,6 +11,9 @@ import Deduplication from './pages/Deduplication'
 import ProgressDashboard from './pages/ProgressDashboard'
 import Workspace from './pages/Workspace'
 import Settings from './pages/Settings'
+import Search from './pages/Search'
+import DocumentComparison from './pages/DocumentComparison'
+import DocumentIndex from './pages/DocumentIndex'
 
 const App: React.FC = () => {
   return (
@@ -27,6 +30,9 @@ const App: React.FC = () => {
             <Route path="/progress" element={<ProgressDashboard />} />
             <Route path="/workspace" element={<Workspace />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/comparison" element={<DocumentComparison />} />
+            <Route path="/index" element={<DocumentIndex />} />
           </Route>
         </Routes>
       </Router>

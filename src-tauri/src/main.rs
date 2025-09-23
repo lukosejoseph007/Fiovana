@@ -320,6 +320,8 @@ async fn main() {
             commands::get_index_stats,
             commands::get_all_documents,
             commands::get_document_details,
+            commands::remove_document_from_indexer,
+            commands::clear_document_index,
             commands::save_ai_settings,
             // Document chunking commands
             commands::chunk_document,
@@ -347,6 +349,7 @@ async fn main() {
             // Document comparison commands
             commands::init_document_comparison,
             commands::compare_documents_by_path,
+            commands::compare_documents,
             commands::compare_text_content,
             commands::get_comparison_history,
             commands::clear_comparison_history,

@@ -849,7 +849,7 @@ impl DocumentIndexer {
         Ok(())
     }
 
-    fn save_index(&self) -> Result<()> {
+    pub fn save_index(&self) -> Result<()> {
         let index_file = self.index_dir.join("index.json");
         let entries: Vec<&DocumentIndexEntry> = self.index.values().collect();
 
