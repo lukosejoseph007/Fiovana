@@ -2,6 +2,7 @@
 // Document processing and analysis module
 
 pub mod batch_processor;
+pub mod chunker;
 pub mod content_hasher;
 pub mod deduplication;
 pub mod document_comparison;

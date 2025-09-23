@@ -321,6 +321,11 @@ async fn main() {
             commands::get_all_documents,
             commands::get_document_details,
             commands::save_ai_settings,
+            // Document chunking commands
+            commands::chunk_document,
+            commands::get_document_semantic_chunks,
+            commands::get_chunk_stats,
+            commands::test_chunking_configs,
             // Vector search commands
             commands::init_vector_system,
             commands::search_vectors,
