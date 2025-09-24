@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
-import { Search, Zap, FileText, Clock, TrendingUp, Sparkles } from 'lucide-react'
+import {
+  Search,
+  Zap,
+  FileText,
+  Clock,
+  TrendingUp,
+  Sparkles,
+  RefreshCw,
+  AlertTriangle,
+  Activity,
+} from 'lucide-react'
 
 interface SearchResult {
   chunk: {
@@ -40,6 +50,10 @@ const SearchInterface: React.FC = () => {
   const [queryTime, setQueryTime] = useState<number>(0)
   const [searchStats, setSearchStats] = useState<SearchStats | null>(null)
   const [recentQueries, setRecentQueries] = useState<string[]>([])
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false)
+  const [diagnosticResults, setDiagnosticResults] = useState<string | null>(null)
 
   useEffect(() => {
     loadSearchStats()
@@ -74,6 +88,71 @@ const SearchInterface: React.FC = () => {
     const updated = [query, ...recentQueries.filter(q => q !== query)].slice(0, 5)
     setRecentQueries(updated)
     localStorage.setItem('recent_search_queries', JSON.stringify(updated))
+  }
+
+  const syncDocuments = async () => {
+    setIsSyncing(true)
+    setSyncError(null)
+
+    // Create an AbortController for cancellation
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 120000) // 2-minute timeout to prevent system hangs
+
+    try {
+      console.log('Starting document sync with 2-minute timeout...')
+
+      // First ensure vector system is initialized with timeout
+      const initPromise = invoke('init_vector_system')
+      await Promise.race([
+        initPromise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Vector system initialization timed out after 30 seconds')), 30000)
+        )
+      ])
+      console.log('Vector system initialized successfully')
+
+      // Then sync documents with strict timeout
+      const syncPromise = invoke<string>('sync_documents_to_vector_system')
+      const syncResult = await Promise.race([
+        syncPromise,
+        new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error('Document sync timed out after 90 seconds to prevent system hang')), 90000)
+        )
+      ])
+      console.log('Document sync result:', syncResult)
+
+      // Reload stats after sync
+      await loadSearchStats()
+
+      if (searchStats && searchStats.total_documents > 0) {
+        console.log(`Successfully synced ${searchStats.total_documents} documents to vector system`)
+      }
+    } catch (error: unknown) {
+      console.error('Failed to sync documents:', error)
+      setSyncError(error instanceof Error ? error.message : String(error))
+    } finally {
+      clearTimeout(timeoutId)
+      setIsSyncing(false)
+    }
+  }
+
+  const runDiagnostics = async () => {
+    setIsRunningDiagnostics(true)
+    setDiagnosticResults(null)
+
+    try {
+      const results = await invoke<string>('diagnose_document_vector_system')
+      setDiagnosticResults(results)
+    } catch (error: unknown) {
+      console.error('Diagnostics failed:', error)
+      setDiagnosticResults(
+        `Diagnostics Error: ${error instanceof Error ? error.message : String(error)}`
+      )
+    } finally {
+      setIsRunningDiagnostics(false)
+    }
   }
 
   const performSearch = async () => {
@@ -188,6 +267,76 @@ const SearchInterface: React.FC = () => {
                 </div>
                 <div className="text-sm text-purple-700">Memory Usage</div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sync Controls */}
+      {searchStats && searchStats.total_documents === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-yellow-600 mt-1" size={20} />
+            <div className="flex-1">
+              <h3 className="font-medium text-yellow-800 mb-2">No documents indexed for search</h3>
+              <p className="text-yellow-700 text-sm mb-3">
+                You need to sync documents from the Document Index to enable intelligent search.
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={syncDocuments}
+                  disabled={isSyncing}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                >
+                  {isSyncing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Syncing Documents...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={16} />
+                      Sync Documents from Index
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={runDiagnostics}
+                  disabled={isRunningDiagnostics}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                >
+                  {isRunningDiagnostics ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Running Diagnostics...
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={16} />
+                      Run System Diagnostics
+                    </>
+                  )}
+                </button>
+              </div>
+              {syncError && (
+                <div className="mt-3 p-3 bg-red-100 border border-red-200 rounded text-red-800 text-sm">
+                  <strong>Sync Error:</strong> {syncError}
+                  {syncError.includes('CPU-intensive') && (
+                    <div className="mt-2">
+                      <strong>Recommendation:</strong> Configure OPENROUTER_API_KEY or
+                      OPENAI_API_KEY in your .env file for better performance.
+                    </div>
+                  )}
+                </div>
+              )}
+              {diagnosticResults && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-blue-900 text-sm">
+                  <strong>System Diagnostics:</strong>
+                  <pre className="mt-2 whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                    {diagnosticResults}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 use tauri::Manager;
+use tokio::sync::Mutex;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -28,6 +29,21 @@ use workspace::WorkspaceManager;
 
 #[tokio::main]
 async fn main() {
+    // Load environment variables from .env file
+    match dotenvy::dotenv() {
+        Ok(path) => println!("✅ Loaded .env from: {:?}", path),
+        Err(_) => println!("⚠️ No .env file found or failed to load"),
+    }
+
+    // Debug: Check configuration sources
+    if std::env::var("OPENAI_API_KEY").is_ok() {
+        println!("✅ OPENAI_API_KEY loaded from .env");
+    } else if std::env::var("OPENROUTER_API_KEY").is_ok() {
+        println!("✅ OPENROUTER_API_KEY loaded from .env");
+    } else {
+        println!("ℹ️ No .env API keys found (UI settings will be used if configured)");
+    }
+
     // Initialize AI system first
     ai::init();
 
@@ -148,6 +164,11 @@ async fn main() {
     let document_indexer_state: commands::document_indexing_commands::DocumentIndexerState =
         std::sync::Arc::new(tokio::sync::Mutex::new(None));
 
+    // Initialize embedding engine state
+    let embedding_engine_state: std::sync::Arc<
+        tokio::sync::RwLock<Option<vector::EmbeddingEngine>>,
+    > = std::sync::Arc::new(tokio::sync::RwLock::new(None));
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -181,6 +202,8 @@ async fn main() {
         .manage(document_generator_state)
         .manage(document_comparison_state)
         .manage(document_indexer_state)
+        .manage(embedding_engine_state)
+        .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -338,6 +361,8 @@ async fn main() {
             commands::get_document_chunks,
             commands::get_vector_system_status,
             commands::test_vector_search,
+            commands::sync_documents_to_vector_system,
+            commands::diagnose_document_vector_system,
             // Document generation commands
             commands::init_document_generator,
             commands::generate_document,
@@ -355,6 +380,28 @@ async fn main() {
             commands::clear_comparison_history,
             commands::get_supported_comparison_types,
             commands::test_document_comparison,
+            // Embedding service commands
+            commands::configure_embedding_service,
+            commands::get_embedding,
+            commands::get_batch_embeddings,
+            commands::get_embedding_service_status,
+            commands::clear_embedding_cache,
+            commands::test_embedding_connection,
+            commands::get_available_embedding_providers,
+            commands::get_recommended_models,
+            // Embedding settings commands
+            commands::test_embedding_settings_connection,
+            commands::save_embedding_settings,
+            commands::load_embedding_settings,
+            commands::apply_embedding_settings,
+            commands::get_embedding_system_status,
+            // Hybrid search command
+            commands::hybrid_search,
+            // Document operation commands
+            commands::initialize_document_commands,
+            commands::execute_document_command,
+            commands::parse_document_command,
+            commands::get_available_document_commands,
         ])
         .setup(move |app| {
             info!("Application setup complete");

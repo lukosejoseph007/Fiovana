@@ -4,11 +4,14 @@ use crate::ai::{AIConfig, AIOrchestrator, AIResponse};
 use crate::commands::document_indexing_commands::{
     get_relevant_documents_for_context, DocumentIndexerState,
 };
+use crate::commands::vector_commands::VectorState;
+use crate::vector::{EmbeddingConfig, EmbeddingEngine, SearchResult};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
+use tracing::{debug, info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatRequest {
@@ -77,7 +80,7 @@ pub async fn init_ai_system(
 #[tauri::command]
 pub async fn chat_with_ai(
     ai_state: State<'_, AIState>,
-    _vector_state: State<'_, crate::commands::vector_commands::VectorState>,
+    vector_state: State<'_, VectorState>,
     indexer_state: State<'_, DocumentIndexerState>,
     request: ChatRequest,
 ) -> Result<ChatResponse, String> {
@@ -85,13 +88,16 @@ pub async fn chat_with_ai(
 
     match state.as_ref() {
         Some(orchestrator) => {
-            // Perform document search to provide context
+            // Perform enhanced document search with vector capabilities
             let enhanced_context = if let Some(context) = request.context.as_deref() {
                 format!("User Context: {}", context)
             } else {
-                // Search indexed documents for relevant context
-                perform_indexed_document_search(&indexer_state, &request.message).await
+                // Use enhanced search with both vector and keyword search
+                perform_enhanced_document_search(&vector_state, &indexer_state, &request.message)
+                    .await
             };
+
+            debug!("Chat context length: {} characters", enhanced_context.len());
 
             match orchestrator
                 .process_conversation(&request.message, Some(&enhanced_context))
@@ -315,7 +321,7 @@ pub async fn save_ai_settings(settings: serde_json::Value) -> Result<bool, Strin
 #[tauri::command]
 pub async fn test_ai_conversation(
     _ai_state: State<'_, AIState>,
-    _vector_state: State<'_, crate::commands::vector_commands::VectorState>,
+    _vector_state: State<'_, VectorState>,
     test_message: String,
 ) -> Result<String, String> {
     let _request = ChatRequest {
@@ -423,6 +429,186 @@ async fn perform_indexed_document_search(
             format!("Document search unavailable due to error: {}. Please check if documents are indexed.", e)
         }
     }
+}
+
+/// Perform enhanced document search combining vector and keyword search
+async fn perform_enhanced_document_search(
+    vector_state: &VectorState,
+    indexer_state: &DocumentIndexerState,
+    query: &str,
+) -> String {
+    info!("AI performing enhanced search for query: '{}'", query);
+
+    // Vector-first approach: Try vector search first, only fall back to document search if needed
+    let vector_results = perform_vector_search(vector_state, query).await;
+
+    if !vector_results.is_empty() {
+        // Vector search found results - use only these (most precise and efficient)
+        tracing::info!("Using vector search results only - {} characters", vector_results.len());
+        vector_results
+    } else {
+        // Vector search failed, fall back to document search
+        tracing::info!("Vector search empty, attempting document search fallback");
+        let keyword_results = perform_indexed_document_search(indexer_state, query).await;
+
+        if !keyword_results.is_empty() {
+            tracing::info!("Using document search fallback - {} characters", keyword_results.len());
+            keyword_results
+        } else {
+            // No results from either search
+            tracing::warn!("Both vector and document search returned empty results");
+            "No relevant documents found. Make sure you have uploaded documents in File Management and they have been successfully indexed and processed for vector search.".to_string()
+        }
+    }
+}
+
+/// Perform vector search using embeddings
+async fn perform_vector_search(vector_state: &VectorState, query: &str) -> String {
+    debug!("Performing vector search for query: '{}'", query);
+
+    // Get the vector store from state
+    let vector_store = &vector_state.vector_store;
+
+    // VectorStore is always available, no need for Option check
+    // Create a temporary embedding engine to generate query embedding
+    match EmbeddingEngine::new(EmbeddingConfig::default()).await {
+        Ok(engine) => {
+            match engine.embed_text(query).await {
+                Ok(query_embedding) => {
+                    // Perform vector search
+                    match vector_store.search(&query_embedding, 5).await {
+                        Ok(results) => {
+                            if results.is_empty() {
+                                debug!("Vector search returned no results");
+                                String::new()
+                            } else {
+                                debug!("Vector search returned {} results", results.len());
+                                format_vector_search_results(results)
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Vector search error: {}", e);
+                            String::new()
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to generate query embedding: {}", e);
+                    String::new()
+                }
+            }
+        }
+        Err(e) => {
+            warn!("Failed to create embedding engine: {}", e);
+            String::new()
+        }
+    }
+}
+
+/// Format vector search results for AI context
+fn format_vector_search_results(results: Vec<SearchResult>) -> String {
+    let mut context_parts = vec!["=== VECTOR SEARCH RESULTS ===".to_string()];
+
+    for (i, result) in results.iter().enumerate() {
+        let preview = if result.chunk.content.len() > 400 {
+            format!("{}...", &result.chunk.content[..400])
+        } else {
+            result.chunk.content.clone()
+        };
+
+        context_parts.push(format!(
+            "Result {}: Document {} (Similarity: {:.3})\nContent: {}\nExplanation: {}",
+            i + 1,
+            result.chunk.document_id,
+            result.similarity,
+            preview,
+            result.explanation
+        ));
+    }
+
+    context_parts.join("\n\n")
+}
+
+// Document operation command types and Tauri commands
+use crate::ai::document_commands::{
+    CommandParser, CommandResult, DocumentCommand, DocumentCommandProcessor,
+};
+
+// State for document command processor
+pub type DocumentCommandProcessorState = Arc<Mutex<Option<DocumentCommandProcessor>>>;
+
+#[tauri::command]
+pub async fn initialize_document_commands(
+    indexer_state: State<'_, DocumentIndexerState>,
+    vector_state: State<'_, VectorState>,
+    command_processor_state: State<'_, DocumentCommandProcessorState>,
+) -> Result<String, String> {
+    let indexer_guard = indexer_state.lock().await;
+    if let Some(indexer) = indexer_guard.as_ref() {
+        let mut processor = DocumentCommandProcessor::new(Arc::new(indexer.clone()));
+
+        // Add vector search capabilities if available
+        let embedding_engine_guard = vector_state.embedding_engine.lock().await;
+        if let Some(embedding_engine) = embedding_engine_guard.as_ref() {
+            processor = processor.with_vector_search(
+                embedding_engine.clone(),
+                (*vector_state.vector_store).clone(),
+            );
+        }
+
+        let mut command_processor_guard = command_processor_state.lock().await;
+        *command_processor_guard = Some(processor);
+
+        Ok("Document command processor initialized successfully".to_string())
+    } else {
+        Err("Document indexer not initialized".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn execute_document_command(
+    command_text: String,
+    command_processor_state: State<'_, DocumentCommandProcessorState>,
+) -> Result<CommandResult, String> {
+    // Parse natural language command
+    let command = CommandParser::parse_command(&command_text).ok_or(
+        "Could not parse command. Try commands like 'summarize document X' or 'compare A and B'"
+            .to_string(),
+    )?;
+
+    // Execute command
+    let command_processor_guard = command_processor_state.lock().await;
+    if let Some(processor) = command_processor_guard.as_ref() {
+        processor
+            .execute_command(command)
+            .await
+            .map_err(|e| e.to_string())
+    } else {
+        Err("Document command processor not initialized".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn parse_document_command(
+    command_text: String,
+) -> Result<Option<DocumentCommand>, String> {
+    Ok(CommandParser::parse_command(&command_text))
+}
+
+#[tauri::command]
+pub async fn get_available_document_commands() -> Result<Vec<String>, String> {
+    let examples = vec![
+        "summarize document [document_id]".to_string(),
+        "compare [document_a] and [document_b]".to_string(),
+        "find similar documents to [document_id]".to_string(),
+        "analyze content of [document_id]".to_string(),
+        "analyze structure of [document_id]".to_string(),
+        "extract key points from [document_id]".to_string(),
+        "search for [query]".to_string(),
+        "search documents about [topic]".to_string(),
+    ];
+
+    Ok(examples)
 }
 
 #[cfg(test)]

@@ -5,6 +5,17 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+pub mod embedding_service;
+pub mod persistent_store;
+pub use embedding_service::{
+    EmbeddingProvider, EmbeddingService, EmbeddingServiceConfig, UsageStats,
+};
+// Persistent store types are available but not currently exported
+// as they are not used outside the vector module yet
+// pub use persistent_store::{
+//     OptimizationResult, PersistentStorageInfo, PersistentVectorConfig, PersistentVectorStore,
+// };
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmbeddingConfig {
     pub model_name: String,
@@ -17,9 +28,9 @@ pub struct EmbeddingConfig {
 impl Default for EmbeddingConfig {
     fn default() -> Self {
         Self {
-            model_name: "all-MiniLM-L6-v2".to_string(),
-            dimension: 384,
-            max_length: 512,
+            model_name: "text-embedding-3-small".to_string(), // OpenAI API model (no local model)
+            dimension: 1536,                                  // OpenAI embedding dimension
+            max_length: 8192, // Increased token limit for API models
             chunk_size: 1000,
             chunk_overlap: 200,
         }
@@ -51,18 +62,168 @@ pub struct EmbeddingRecord {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
+#[derive(Clone)]
 pub struct EmbeddingEngine {
     config: EmbeddingConfig,
+    embedding_service: EmbeddingService,
+    #[allow(dead_code)] // Cache functionality to be implemented in future versions
     embeddings_cache: Arc<RwLock<HashMap<String, Vec<f32>>>>,
     model_available: bool,
 }
 
 impl EmbeddingEngine {
     pub async fn new(config: EmbeddingConfig) -> Result<Self> {
-        // For now, we'll use a basic implementation without heavy ML dependencies
-        // This can be enhanced later with actual model loading
+        // Create embedding service configuration from engine config
+        // Prioritize API-based embeddings to avoid CPU overload
 
-        let model_available = Self::check_model_availability(&config.model_name).await;
+        // Helper function to load UI settings
+        async fn load_ui_embedding_settings(
+        ) -> Option<crate::commands::embedding_settings_commands::EmbeddingSettings> {
+            let config_dir = dirs::config_dir()?.join("proxemic");
+            let settings_file = config_dir.join("embedding_settings.json");
+
+            if !settings_file.exists() {
+                return None;
+            }
+
+            let settings_json = std::fs::read_to_string(&settings_file).ok()?;
+            serde_json::from_str(&settings_json).ok()
+        }
+
+        // Helper function for .env loading
+        fn load_env_embedding_config(
+        ) -> Result<(EmbeddingProvider, Option<String>, String, usize), anyhow::Error> {
+            let embedding_model = std::env::var("EMBEDDING_MODEL")
+                .unwrap_or_else(|_| "text-embedding-3-small".to_string());
+
+            // Determine model dimensions based on model name
+            let get_model_dimension = |model: &str| -> usize {
+                match model {
+                    "text-embedding-3-small" => 1536, // Cheapest and most efficient
+                    "text-embedding-3-large" => 3072, // Higher performance, more expensive
+                    "text-embedding-ada-002" => 1536, // Legacy model
+                    _ => 1536,                        // Default to 1536 for unknown models
+                }
+            };
+            let model_dimension = get_model_dimension(&embedding_model);
+
+            if let Ok(openai_key) = std::env::var("OPENAI_API_KEY") {
+                tracing::info!("✅ Using .env OpenAI API for embeddings");
+                Ok((
+                    EmbeddingProvider::OpenAI,
+                    Some(openai_key),
+                    embedding_model,
+                    model_dimension,
+                ))
+            } else if let Ok(openrouter_key) = std::env::var("OPENROUTER_API_KEY") {
+                tracing::info!("✅ Using .env OpenRouter API for embeddings");
+                Ok((
+                    EmbeddingProvider::OpenRouter,
+                    Some(openrouter_key),
+                    embedding_model,
+                    model_dimension,
+                ))
+            } else {
+                Err(anyhow!("No .env embedding configuration found"))
+            }
+        }
+
+        // PRIORITY CONFIGURATION: UI Settings First, then .env fallback, then graceful failure
+        let (provider, api_key, model_name, dimension) = if let Some(ui_settings) =
+            load_ui_embedding_settings().await
+        {
+            if !ui_settings.api_key.is_empty() {
+                tracing::info!(
+                    "✅ Using UI embedding settings - Provider: {}, Model: {}",
+                    ui_settings.provider,
+                    ui_settings.model
+                );
+                let embedding_provider = match ui_settings.provider.as_str() {
+                    "openai" => EmbeddingProvider::OpenAI,
+                    "openrouter" => EmbeddingProvider::OpenRouter,
+                    _ => EmbeddingProvider::OpenAI, // Default to OpenAI
+                };
+                let model_dimension = match ui_settings.model.as_str() {
+                    "text-embedding-3-small" => 1536,
+                    "text-embedding-3-large" => 3072,
+                    "text-embedding-ada-002" => 1536,
+                    _ => 1536,
+                };
+                let final_dimension = ui_settings.custom_dimensions.unwrap_or(model_dimension);
+                (
+                    embedding_provider,
+                    Some(ui_settings.api_key),
+                    ui_settings.model,
+                    final_dimension,
+                )
+            } else {
+                tracing::warn!("⚠️ UI settings found but API key is empty, trying .env fallback");
+                match load_env_embedding_config() {
+                    Ok(config) => config,
+                    Err(_) => {
+                        tracing::error!("❌ No valid embedding configuration found in UI or .env");
+                        return Err(anyhow!("No embedding configuration found. Please configure API keys through the Settings UI or set OPENAI_API_KEY/OPENROUTER_API_KEY in your .env file."));
+                    }
+                }
+            }
+        } else {
+            tracing::info!("ℹ️ No UI settings found, checking .env configuration");
+            match load_env_embedding_config() {
+                Ok(config) => config,
+                Err(_) => {
+                    tracing::error!("❌ CRITICAL: No valid API embedding configuration found!");
+                    tracing::error!("Local embeddings are disabled for system stability.");
+                    tracing::info!("💡 Configure API keys through Settings > Embeddings in the UI");
+                    return Err(anyhow!("No API embedding configuration found. Local embeddings are disabled to prevent system crashes. Please configure OpenAI or OpenRouter API keys through the Settings UI or set OPENAI_API_KEY/OPENROUTER_API_KEY in your .env file."));
+                }
+            }
+        };
+
+        let service_config = EmbeddingServiceConfig {
+            provider: provider.clone(),
+            api_key,
+            model_name: model_name.clone(),
+            dimension,
+            max_tokens: config.max_length,
+            batch_size: 25,      // Reduced batch size to prevent hangs
+            timeout_seconds: 20, // Aggressive timeout to prevent system hangs
+        };
+
+        let embedding_service = EmbeddingService::new(service_config).await?;
+        let model_available = embedding_service.test_connection().await?;
+
+        if !model_available {
+            tracing::error!(
+                "❌ CRITICAL: API connection failed for model {} - Provider: {:?}",
+                model_name,
+                provider
+            );
+            return Err(anyhow!("API embedding service connection failed. Please check your API key and internet connection. Local embeddings are disabled for safety."));
+        } else {
+            tracing::info!(
+                "✅ SUCCESS: API-based embeddings connected - Provider: {:?}, Model: {}, Dimension: {}",
+                provider, model_name, dimension
+            );
+        }
+
+        // Update config dimensions to match API provider
+        let mut final_config = config;
+        final_config.dimension = dimension;
+
+        Ok(Self {
+            config: final_config,
+            embedding_service,
+            embeddings_cache: Arc::new(RwLock::new(HashMap::new())),
+            model_available,
+        })
+    }
+
+    pub async fn new_with_service(
+        config: EmbeddingConfig,
+        service_config: EmbeddingServiceConfig,
+    ) -> Result<Self> {
+        let embedding_service = EmbeddingService::new(service_config).await?;
+        let model_available = embedding_service.test_connection().await?;
 
         if !model_available {
             tracing::warn!(
@@ -73,16 +234,10 @@ impl EmbeddingEngine {
 
         Ok(Self {
             config,
+            embedding_service,
             embeddings_cache: Arc::new(RwLock::new(HashMap::new())),
             model_available,
         })
-    }
-
-    async fn check_model_availability(model_name: &str) -> bool {
-        // For now, return false to use fallback implementation
-        // Later this can check for actual model files or API availability
-        tracing::info!("Checking availability for model: {}", model_name);
-        false
     }
 
     pub async fn get_model_info(&self) -> Result<String> {
@@ -93,194 +248,27 @@ impl EmbeddingEngine {
     }
 
     pub async fn embed_text(&self, text: &str) -> Result<Vec<f32>> {
-        // Check cache first
-        let cache_key = format!("{}:{}", text.len(), self.hash_text(text));
-        {
-            let cache = self.embeddings_cache.read().await;
-            if let Some(cached) = cache.get(&cache_key) {
-                return Ok(cached.clone());
-            }
-        }
-
-        // Generate embedding
-        let embedding = if self.model_available {
-            // TODO: Use actual ML model when available
-            self.generate_ml_embedding(text).await?
-        } else {
-            // Use deterministic fallback embedding
-            self.generate_fallback_embedding(text)
-        };
-
-        // Cache the result
-        {
-            let mut cache = self.embeddings_cache.write().await;
-            cache.insert(cache_key, embedding.clone());
-        }
-
-        Ok(embedding)
+        // Use the embedding service instead of manual implementation
+        self.embedding_service.get_embedding(text.to_string()).await
     }
 
-    async fn generate_ml_embedding(&self, _text: &str) -> Result<Vec<f32>> {
-        // Placeholder for actual ML implementation
-        // This would use candle-transformers with a sentence transformer model
-        Err(anyhow!("ML embedding not yet implemented"))
+    // Expose embedding service methods for advanced configuration
+    pub async fn get_embedding_service_stats(&self) -> UsageStats {
+        self.embedding_service.get_usage_stats().await
     }
 
-    fn generate_fallback_embedding(&self, text: &str) -> Vec<f32> {
-        // Generate a deterministic embedding based on text characteristics
-        let mut embedding = vec![0.0; self.config.dimension];
-
-        // Simple feature extraction
-        let words: Vec<&str> = text.split_whitespace().collect();
-        let word_count = words.len() as f32;
-        let char_count = text.len() as f32;
-        let avg_word_length = if words.is_empty() {
-            0.0
-        } else {
-            char_count / word_count
-        };
-
-        // Character frequency features
-        let mut char_freq: HashMap<char, f32> = HashMap::new();
-        for c in text.chars() {
-            *char_freq
-                .entry(c.to_lowercase().next().unwrap_or(c))
-                .or_insert(0.0) += 1.0;
-        }
-
-        // Fill embedding vector with normalized features
-        for (i, embedding_val) in embedding.iter_mut().enumerate().take(self.config.dimension) {
-            let feature = match i % 10 {
-                0 => word_count / 100.0,           // Normalized word count
-                1 => char_count / 1000.0,          // Normalized character count
-                2 => avg_word_length / 10.0,       // Normalized average word length
-                3 => self.text_entropy(text),      // Text complexity
-                4 => self.vowel_ratio(text),       // Vowel ratio
-                5 => self.punctuation_ratio(text), // Punctuation ratio
-                6 => self.uppercase_ratio(text),   // Uppercase ratio
-                7 => self.digit_ratio(text),       // Digit ratio
-                8 => self.whitespace_ratio(text),  // Whitespace ratio
-                _ => {
-                    // Hash-based features for remaining dimensions
-                    let hash_input = format!("{}{}", text, i);
-                    let hash = self.simple_hash(&hash_input);
-                    (hash % 1000) as f32 / 1000.0
-                }
-            };
-
-            *embedding_val = feature.clamp(-1.0, 1.0); // Clamp to [-1, 1]
-        }
-
-        // Normalize the embedding vector
-        self.normalize_vector(&mut embedding);
-        embedding
-    }
-
-    fn text_entropy(&self, text: &str) -> f32 {
-        let mut freq: HashMap<char, f32> = HashMap::new();
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            return 0.0;
-        }
-
-        for c in text.chars() {
-            *freq.entry(c).or_insert(0.0) += 1.0;
-        }
-
-        let mut entropy = 0.0;
-        for count in freq.values() {
-            let prob = count / total_chars;
-            if prob > 0.0 {
-                entropy -= prob * prob.log2();
-            }
-        }
-
-        entropy / 10.0 // Normalize
-    }
-
-    fn vowel_ratio(&self, text: &str) -> f32 {
-        let vowels = "aeiouAEIOU";
-        let vowel_count = text.chars().filter(|c| vowels.contains(*c)).count() as f32;
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            0.0
-        } else {
-            vowel_count / total_chars
-        }
-    }
-
-    fn punctuation_ratio(&self, text: &str) -> f32 {
-        let punct_count = text.chars().filter(|c| c.is_ascii_punctuation()).count() as f32;
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            0.0
-        } else {
-            punct_count / total_chars
-        }
-    }
-
-    fn uppercase_ratio(&self, text: &str) -> f32 {
-        let upper_count = text.chars().filter(|c| c.is_uppercase()).count() as f32;
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            0.0
-        } else {
-            upper_count / total_chars
-        }
-    }
-
-    fn digit_ratio(&self, text: &str) -> f32 {
-        let digit_count = text.chars().filter(|c| c.is_ascii_digit()).count() as f32;
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            0.0
-        } else {
-            digit_count / total_chars
-        }
-    }
-
-    fn whitespace_ratio(&self, text: &str) -> f32 {
-        let whitespace_count = text.chars().filter(|c| c.is_whitespace()).count() as f32;
-        let total_chars = text.len() as f32;
-
-        if total_chars == 0.0 {
-            0.0
-        } else {
-            whitespace_count / total_chars
-        }
-    }
-
-    fn simple_hash(&self, text: &str) -> usize {
-        let mut hash = 5381usize;
-        for byte in text.bytes() {
-            hash = hash.wrapping_mul(33).wrapping_add(byte as usize);
-        }
-        hash
-    }
-
-    fn hash_text(&self, text: &str) -> String {
-        format!("{:x}", self.simple_hash(text))
-    }
-
-    fn normalize_vector(&self, vector: &mut [f32]) {
-        let magnitude: f32 = vector.iter().map(|x| x * x).sum::<f32>().sqrt();
-        if magnitude > 0.0 {
-            for val in vector.iter_mut() {
-                *val /= magnitude;
-            }
-        }
+    pub async fn clear_embedding_cache(&self) {
+        self.embedding_service.clear_cache().await
     }
 
     pub fn chunk_text(&self, text: &str, document_id: &str) -> Vec<DocumentChunk> {
-        let mut chunks = Vec::new();
-        let text_len = text.len();
+        let start_time = std::time::Instant::now();
+        let max_duration = std::time::Duration::from_secs(30); // 30 second timeout for chunking
 
-        if text_len <= self.config.chunk_size {
+        tracing::debug!("🔪 Starting text chunking for document '{}' ({} chars)", document_id, text.len());
+        let mut chunks = Vec::new();
+
+        if text.len() <= self.config.chunk_size {
             // Single chunk for small text
             chunks.push(DocumentChunk {
                 id: format!("{}:0", document_id),
@@ -288,61 +276,158 @@ impl EmbeddingEngine {
                 content: text.to_string(),
                 chunk_index: 0,
                 start_char: 0,
-                end_char: text_len,
+                end_char: text.len(),
                 metadata: HashMap::new(),
             });
+            tracing::debug!("🔪 Document '{}' fits in single chunk", document_id);
             return chunks;
         }
 
-        let mut start = 0;
+        let mut start_byte = 0;
         let mut chunk_index = 0;
+        let mut iteration_count = 0;
+        const MAX_ITERATIONS: usize = 1000; // Safety limit
 
-        while start < text_len {
-            let end = std::cmp::min(start + self.config.chunk_size, text_len);
+        while start_byte < text.len() {
+            iteration_count += 1;
 
-            // Try to break at word boundaries
-            let actual_end = if end < text_len {
-                if let Some(last_space) = text[start..end].rfind(' ') {
-                    start + last_space
-                } else {
-                    end
+            // Timeout protection
+            if start_time.elapsed() > max_duration {
+                tracing::error!("🚨 CHUNKING TIMEOUT: Document '{}' chunking exceeded {} seconds, stopping at {} chunks",
+                    document_id, max_duration.as_secs(), chunks.len());
+                break;
+            }
+
+            // Iteration protection
+            if iteration_count > MAX_ITERATIONS {
+                tracing::error!("🚨 CHUNKING ITERATION LIMIT: Document '{}' exceeded {} iterations, stopping",
+                    document_id, MAX_ITERATIONS);
+                break;
+            }
+
+            if iteration_count % 100 == 0 {
+                tracing::debug!("🔄 Chunking progress: Document '{}' - {} iterations, {} chunks created",
+                    document_id, iteration_count, chunks.len());
+            }
+
+            let mut end_byte = std::cmp::min(start_byte + self.config.chunk_size, text.len());
+
+            // Ensure we don't break UTF-8 character boundaries - with safety limit
+            let mut boundary_attempts = 0;
+            while end_byte > start_byte && !text.is_char_boundary(end_byte) && boundary_attempts < 10 {
+                end_byte -= 1;
+                boundary_attempts += 1;
+            }
+
+            if boundary_attempts >= 10 {
+                tracing::warn!("⚠️ UTF-8 boundary adjustment limit reached for document '{}' at position {}",
+                    document_id, end_byte);
+                // Force to next valid boundary or use original position
+                if !text.is_char_boundary(end_byte) {
+                    end_byte = std::cmp::min(start_byte + self.config.chunk_size, text.len());
                 }
-            } else {
-                end
-            };
+            }
 
-            let chunk_content = text[start..actual_end].to_string();
+            // Try to break at word boundaries (space characters)
+            if end_byte < text.len() {
+                // Look backward from end_byte to find the last space
+                let search_text = &text[start_byte..end_byte];
+                if let Some(last_space_pos) = search_text.rfind(' ') {
+                    let potential_end = start_byte + last_space_pos;
+                    // Don't make chunks too small - if the space is too early, use the full chunk
+                    if potential_end > start_byte + (self.config.chunk_size / 4) {
+                        end_byte = potential_end;
+                    }
+                }
+            }
+
+            let chunk_content = text[start_byte..end_byte].to_string();
+
+            if chunk_content.is_empty() {
+                tracing::warn!("⚠️ Empty chunk detected for document '{}', breaking", document_id);
+                break; // Avoid infinite loop with empty chunks
+            }
 
             chunks.push(DocumentChunk {
                 id: format!("{}:{}", document_id, chunk_index),
                 document_id: document_id.to_string(),
                 content: chunk_content,
                 chunk_index,
-                start_char: start,
-                end_char: actual_end,
+                start_char: start_byte,
+                end_char: end_byte,
                 metadata: HashMap::new(),
             });
 
-            // Move start position with overlap
-            start = actual_end.saturating_sub(self.config.chunk_overlap);
-            if start >= actual_end {
-                break; // Prevent infinite loop
+            // Calculate next position with overlap
+            let chunk_size = end_byte - start_byte;
+            let overlap_bytes = std::cmp::min(self.config.chunk_overlap, chunk_size);
+            let next_start = end_byte.saturating_sub(overlap_bytes);
+
+            // Ensure we don't start in the middle of a UTF-8 character - with safety limit
+            let mut new_start_byte = next_start;
+            let mut utf8_attempts = 0;
+            while new_start_byte > 0 && !text.is_char_boundary(new_start_byte) && utf8_attempts < 10 {
+                new_start_byte -= 1;
+                utf8_attempts += 1;
             }
 
+            if utf8_attempts >= 10 {
+                tracing::warn!("⚠️ UTF-8 start boundary adjustment limit reached for document '{}' at position {}",
+                    document_id, new_start_byte);
+                // Use a safe fallback - move forward to next boundary
+                new_start_byte = next_start;
+                while new_start_byte < text.len() && !text.is_char_boundary(new_start_byte) {
+                    new_start_byte += 1;
+                }
+            }
+
+            // Ensure we make progress
+            if new_start_byte >= end_byte || new_start_byte <= start_byte {
+                // Force progress to prevent infinite loop
+                new_start_byte = end_byte;
+                tracing::debug!("🔧 Forced progress: Moving from {} to {} for document '{}'",
+                    start_byte, new_start_byte, document_id);
+            }
+
+            start_byte = new_start_byte;
             chunk_index += 1;
+
+            // Safety check: if we've processed too many chunks, something might be wrong
+            if chunks.len() > 500 {
+                tracing::error!("🚨 CHUNK LIMIT: Document '{}' generated {} chunks, stopping for safety",
+                    document_id, chunks.len());
+                break;
+            }
+        }
+
+        let duration = start_time.elapsed();
+        tracing::debug!("🔪 Completed text chunking for document '{}': {} chunks in {:?}",
+            document_id, chunks.len(), duration);
+
+        if duration > std::time::Duration::from_secs(5) {
+            tracing::warn!("⚠️ Slow chunking: Document '{}' took {:?} to chunk", document_id, duration);
         }
 
         chunks
     }
 
     pub async fn embed_chunks(&self, chunks: &[DocumentChunk]) -> Result<Vec<EmbeddingRecord>> {
-        let mut records = Vec::new();
+        if chunks.is_empty() {
+            return Ok(Vec::new());
+        }
 
-        for chunk in chunks {
-            let embedding = self.embed_text(&chunk.content).await?;
+        // Batch process chunks for efficiency - collect all text content
+        let texts: Vec<String> = chunks.iter().map(|chunk| chunk.content.clone()).collect();
+
+        // Single batch API call instead of individual calls (major performance improvement)
+        let embeddings = self.embedding_service.get_embeddings(texts).await?;
+
+        // Create records from batch results
+        let mut records = Vec::new();
+        for (chunk, embedding) in chunks.iter().zip(embeddings.iter()) {
             records.push(EmbeddingRecord {
                 chunk_id: chunk.id.clone(),
-                embedding,
+                embedding: embedding.clone(),
                 timestamp: chrono::Utc::now(),
             });
         }
@@ -355,11 +440,16 @@ impl EmbeddingEngine {
         &self.config
     }
 
+    pub fn get_config(&self) -> &EmbeddingConfig {
+        &self.config
+    }
+
     pub fn is_model_available(&self) -> bool {
         self.model_available
     }
 }
 
+#[derive(Clone)]
 pub struct VectorStore {
     embeddings: Arc<RwLock<HashMap<String, EmbeddingRecord>>>,
     chunks: Arc<RwLock<HashMap<String, DocumentChunk>>>,
@@ -948,8 +1038,8 @@ mod tests {
 
     #[test]
     fn test_vector_store_creation() {
-        let store = VectorStore::new(384); // Common embedding dimension
-        assert_eq!(store.dimension(), 384);
+        let store = VectorStore::new(1536); // OpenAI embedding dimension (changed from local 384)
+        assert_eq!(store.dimension(), 1536);
     }
 
     #[tokio::test]
@@ -961,7 +1051,7 @@ mod tests {
         let text = "This is a test document for embedding.";
         let embedding = engine.embed_text(text).await?;
 
-        assert_eq!(embedding.len(), 384); // Default dimension
+        assert_eq!(embedding.len(), 1536); // API model default dimension
 
         // Test caching - second call should be faster
         let embedding2 = engine.embed_text(text).await?;
@@ -1229,7 +1319,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_keyword_search_integration() -> Result<()> {
-        let store = VectorStore::new(384);
+        let store = VectorStore::new(1536); // API model dimensions
         let config = EmbeddingConfig::default();
         let engine = EmbeddingEngine::new(config).await?;
 

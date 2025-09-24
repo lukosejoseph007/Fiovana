@@ -148,6 +148,7 @@ pub struct DocumentMetadata {
 }
 
 /// Metadata extractor
+#[derive(Clone)]
 pub struct MetadataExtractor;
 
 #[allow(dead_code)]

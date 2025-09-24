@@ -17,6 +17,7 @@ import {
   XCircle,
   AlertCircle,
   Loader,
+  Zap,
 } from 'lucide-react'
 
 const Settings: React.FC = () => {
@@ -42,10 +43,24 @@ const Settings: React.FC = () => {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
 
+  // Embedding Configuration State
+  const [embeddingProvider, setEmbeddingProvider] = useState<'openai' | 'openrouter'>('openai')
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
+  const [embeddingModel, setEmbeddingModel] = useState('text-embedding-3-small')
+  const [customDimensions, setCustomDimensions] = useState<number | null>(null)
+  const [batchSize, setBatchSize] = useState(25)
+  const [timeoutSeconds, setTimeoutSeconds] = useState(90)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'failed'>(
+    'unknown'
+  )
+  const [connectionError, setConnectionError] = useState('')
+
   const tabs = [
     { id: 'general', label: 'General', icon: Monitor },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'ai', label: 'AI Models', icon: Cpu },
+    { id: 'embeddings', label: 'Embeddings', icon: Zap },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'storage', label: 'Storage', icon: Database },
     { id: 'network', label: 'Network', icon: Globe },
@@ -55,7 +70,15 @@ const Settings: React.FC = () => {
   // Load settings on mount
   useEffect(() => {
     loadSettingsFromStorage()
+    loadEmbeddingSettings()
   }, [])
+
+  // Load embedding settings when tab changes to embeddings
+  useEffect(() => {
+    if (activeTab === 'embeddings') {
+      loadEmbeddingSettings()
+    }
+  }, [activeTab])
 
   // Check Ollama connection on mount and when tab changes to AI
   useEffect(() => {
@@ -236,6 +259,14 @@ const Settings: React.FC = () => {
     try {
       await saveSettingsToStorage()
 
+      // Save embedding settings
+      try {
+        await saveEmbeddingSettings()
+        console.log('Embedding settings saved successfully')
+      } catch (error) {
+        console.warn('Failed to save embedding settings:', error)
+      }
+
       // Initialize AI system with new settings
       try {
         const config = {
@@ -266,6 +297,83 @@ const Settings: React.FC = () => {
   const handleResetSettings = () => {
     // Implementation for resetting settings
     console.log('Settings reset to defaults')
+  }
+
+  // Embedding settings functions
+  const loadEmbeddingSettings = async () => {
+    try {
+      const settings = await invoke('load_embedding_settings')
+      if (settings && typeof settings === 'object') {
+        const embeddingSettings = settings as {
+          provider: string
+          api_key: string
+          model: string
+          custom_dimensions?: number
+          batch_size: number
+          timeout_seconds: number
+        }
+
+        setEmbeddingProvider(embeddingSettings.provider === 'openrouter' ? 'openrouter' : 'openai')
+        setOpenaiApiKey(embeddingSettings.api_key || '')
+        setEmbeddingModel(embeddingSettings.model || 'text-embedding-3-small')
+        setCustomDimensions(embeddingSettings.custom_dimensions || null)
+        setBatchSize(embeddingSettings.batch_size || 25)
+        setTimeoutSeconds(embeddingSettings.timeout_seconds || 90)
+      }
+    } catch (error) {
+      console.error('Failed to load embedding settings:', error)
+    }
+  }
+
+  const saveEmbeddingSettings = async () => {
+    try {
+      const settings = {
+        provider: embeddingProvider,
+        api_key: openaiApiKey,
+        model: embeddingModel,
+        custom_dimensions: customDimensions,
+        batch_size: batchSize,
+        timeout_seconds: timeoutSeconds,
+      }
+
+      await invoke('save_embedding_settings', { settings })
+
+      // Apply settings to vector system if API key is provided
+      if (openaiApiKey) {
+        await invoke('apply_embedding_settings', { settings })
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to save embedding settings:', error)
+      throw error
+    }
+  }
+
+  const testEmbeddingConnection = async () => {
+    setIsTestingConnection(true)
+    setConnectionStatus('unknown')
+    setConnectionError('')
+
+    try {
+      const result = await invoke('test_embedding_settings_connection', {
+        provider: embeddingProvider,
+        apiKey: openaiApiKey,
+        model: embeddingModel,
+      })
+
+      if (result) {
+        setConnectionStatus('connected')
+      } else {
+        setConnectionStatus('failed')
+        setConnectionError('Connection test failed')
+      }
+    } catch (error: unknown) {
+      setConnectionStatus('failed')
+      setConnectionError(error instanceof Error ? error.message : 'Unknown error')
+    } finally {
+      setIsTestingConnection(false)
+    }
   }
 
   const renderGeneralSettings = () => (
@@ -666,6 +774,254 @@ const Settings: React.FC = () => {
     </div>
   )
 
+  const renderEmbeddingSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          Embedding Configuration
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Configure API-based embeddings for intelligent document search. Local embeddings are
+          disabled for performance and stability.
+        </p>
+
+        {/* Provider Selection */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Embedding Provider
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* OpenAI Option */}
+              <div
+                className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  embeddingProvider === 'openai'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                }`}
+                onClick={() => setEmbeddingProvider('openai')}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">OpenAI</h4>
+                  {embeddingProvider === 'openai' && connectionStatus === 'connected' && (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  )}
+                  {embeddingProvider === 'openai' && connectionStatus === 'failed' && (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Most reliable, newest models available
+                </p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Cost: ~$0.00002 per 1K tokens (5x cheaper than legacy models)
+                </div>
+              </div>
+
+              {/* OpenRouter Option */}
+              <div
+                className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  embeddingProvider === 'openrouter'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                }`}
+                onClick={() => setEmbeddingProvider('openrouter')}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">OpenRouter</h4>
+                  {embeddingProvider === 'openrouter' && connectionStatus === 'connected' && (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  )}
+                  {embeddingProvider === 'openrouter' && connectionStatus === 'failed' && (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Access OpenAI models through OpenRouter
+                </p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Cost: Competitive pricing, same models
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* API Key Configuration */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {embeddingProvider === 'openai' ? 'OpenAI API Key' : 'OpenRouter API Key'}
+            </label>
+            <div className="flex space-x-2">
+              <input
+                type="password"
+                value={openaiApiKey}
+                onChange={e => setOpenaiApiKey(e.target.value)}
+                placeholder={`Enter your ${embeddingProvider === 'openai' ? 'OpenAI' : 'OpenRouter'} API key`}
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+              <button
+                onClick={testEmbeddingConnection}
+                disabled={!openaiApiKey || isTestingConnection}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isTestingConnection ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  'Test Connection'
+                )}
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Get your API key from{' '}
+              <a
+                href={
+                  embeddingProvider === 'openai'
+                    ? 'https://platform.openai.com/api-keys'
+                    : 'https://openrouter.ai/keys'
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {embeddingProvider === 'openai' ? 'platform.openai.com' : 'openrouter.ai/keys'}
+              </a>
+            </p>
+            {connectionStatus === 'connected' && (
+              <div className="mt-2 flex items-center text-green-600 dark:text-green-400 text-sm">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                API connection successful
+              </div>
+            )}
+            {connectionStatus === 'failed' && connectionError && (
+              <div className="mt-2 flex items-start text-red-600 dark:text-red-400 text-sm">
+                <XCircle className="h-4 w-4 mr-1 mt-0.5" />
+                <div>
+                  <div>Connection failed</div>
+                  <div className="text-xs mt-1 opacity-80">{connectionError}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Model Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Embedding Model
+            </label>
+            <select
+              value={embeddingModel}
+              onChange={e => setEmbeddingModel(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            >
+              <optgroup label="Recommended (Cost-Effective)">
+                <option value="text-embedding-3-small">
+                  text-embedding-3-small (1536 dim) - 5x cheaper
+                </option>
+              </optgroup>
+              <optgroup label="High Performance">
+                <option value="text-embedding-3-large">
+                  text-embedding-3-large (3072 dim) - Best quality
+                </option>
+              </optgroup>
+              <optgroup label="Legacy">
+                <option value="text-embedding-ada-002">
+                  text-embedding-ada-002 (1536 dim) - Legacy
+                </option>
+              </optgroup>
+            </select>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              text-embedding-3-small is recommended for most use cases - 80% cost savings with same
+              quality
+            </p>
+          </div>
+
+          {/* Advanced Options */}
+          <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Advanced Options
+            </h4>
+
+            {/* Custom Dimensions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                  Custom Dimensions (Optional)
+                </label>
+                <input
+                  type="number"
+                  value={customDimensions || ''}
+                  onChange={e =>
+                    setCustomDimensions(e.target.value ? parseInt(e.target.value) : null)
+                  }
+                  placeholder="Default: 1536 or 3072"
+                  min="1"
+                  max="3072"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Reduce dimensions for even lower costs
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                  Batch Size
+                </label>
+                <input
+                  type="number"
+                  value={batchSize}
+                  onChange={e => setBatchSize(parseInt(e.target.value) || 25)}
+                  min="1"
+                  max="100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Lower for slower systems
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+                Timeout (seconds)
+              </label>
+              <input
+                type="number"
+                value={timeoutSeconds}
+                onChange={e => setTimeoutSeconds(parseInt(e.target.value) || 90)}
+                min="10"
+                max="300"
+                className="w-full md:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Increase for slow internet connections
+              </p>
+            </div>
+          </div>
+
+          {/* Safety Notice */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2" />
+              <div>
+                <h5 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Performance & Safety Notice
+                </h5>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                  Local embeddings have been disabled to prevent CPU overload and system crashes.
+                  API-based embeddings are much faster, more reliable, and cost-effective.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   const renderSecuritySettings = () => (
     <div className="space-y-6">
       <div>
@@ -735,6 +1091,8 @@ const Settings: React.FC = () => {
         return renderAppearanceSettings()
       case 'ai':
         return renderAISettings()
+      case 'embeddings':
+        return renderEmbeddingSettings()
       case 'security':
         return renderSecuritySettings()
       default:

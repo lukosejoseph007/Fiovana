@@ -137,6 +137,7 @@ pub struct SearchResult {
 }
 
 /// Document indexer
+#[derive(Clone)]
 #[allow(dead_code)]
 pub struct DocumentIndexer {
     /// Index storage directory

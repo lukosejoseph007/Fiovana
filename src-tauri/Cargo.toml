@@ -27,6 +27,7 @@ tempfile = "3.3"
 tauri-plugin-log = { version = "2.7", features = ["colored"] }
 log = "0.4"
 infer = "0.19.0"
+dotenvy = "0.15"
 
 # Configuration Management Dependencies (self-contained)
 uuid = { version = "1.0", features = ["v4", "serde"] }

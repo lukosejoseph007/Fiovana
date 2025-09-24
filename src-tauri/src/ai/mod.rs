@@ -2,6 +2,7 @@
 
 pub mod anthropic;
 pub mod context;
+pub mod document_commands;
 pub mod intent;
 pub mod ollama;
 pub mod openrouter;
