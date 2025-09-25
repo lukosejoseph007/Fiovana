@@ -3,6 +3,7 @@
 
 pub mod batch_processor;
 pub mod chunker;
+pub mod content_classifier;
 pub mod content_hasher;
 pub mod deduplication;
 pub mod document_comparison;
@@ -18,6 +19,10 @@ pub mod progress_tracker;
 pub mod structure_analyzer;
 
 pub use batch_processor::*;
+#[allow(unused_imports)]
+pub use content_classifier::{
+    ContentCategory, ContentClassification, ContentClassifier, DocumentContentAnalysis,
+};
 pub use content_hasher::*;
 // Note: deduplication module is available but not auto-imported to avoid unused warnings
 pub use document_comparison::*;

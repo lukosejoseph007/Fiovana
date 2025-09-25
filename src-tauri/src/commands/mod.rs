@@ -2,6 +2,7 @@
 // Module for organizing Tauri commands
 
 pub mod ai_commands;
+pub mod content_classification_commands;
 pub mod deduplication_commands;
 pub mod document_chunking_commands;
 pub mod document_commands;
@@ -21,6 +22,7 @@ pub mod workspace_performance_commands;
 // Re-export all commands for easy access
 // Note: deduplication_commands are available but not auto-imported to avoid unused warnings
 pub use ai_commands::*;
+pub use content_classification_commands::*;
 pub use document_chunking_commands::*;
 pub use document_commands::*;
 pub use document_comparison_commands::*;

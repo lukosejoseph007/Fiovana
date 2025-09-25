@@ -410,6 +410,13 @@ async fn main() {
             commands::analyze_content_structure,
             commands::batch_analyze_structure,
             commands::compare_document_structures,
+            // Content classification commands
+            commands::classify_text_content,
+            commands::classify_text_content_with_ai,
+            commands::classify_file_content,
+            commands::batch_classify_files,
+            commands::get_content_categories,
+            commands::compare_content_classifications,
         ])
         .setup(move |app| {
             info!("Application setup complete");
