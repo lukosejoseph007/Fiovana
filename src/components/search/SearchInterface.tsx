@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import {
   Search,
@@ -54,16 +54,33 @@ const SearchInterface: React.FC = () => {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false)
   const [diagnosticResults, setDiagnosticResults] = useState<string | null>(null)
+  const [indexedDocumentsCount, setIndexedDocumentsCount] = useState<number>(0)
+  const [hasUnsyncedDocuments, setHasUnsyncedDocuments] = useState<boolean>(false)
 
-  useEffect(() => {
-    loadSearchStats()
-    loadRecentQueries()
-  }, [])
+  const checkForUnsyncedDocuments = useCallback(async () => {
+    try {
+      // Get documents from the indexer
+      const indexStats = await invoke<{ total_documents: number }>('get_index_stats')
+      setIndexedDocumentsCount(indexStats.total_documents)
 
-  const loadSearchStats = async () => {
+      // Compare with vector system stats
+      if (searchStats) {
+        const hasUnsynced = indexStats.total_documents > searchStats.total_documents
+        setHasUnsyncedDocuments(hasUnsynced)
+      }
+    } catch (error) {
+      console.error('Failed to check for unsynced documents:', error)
+      setIndexedDocumentsCount(0)
+      setHasUnsyncedDocuments(false)
+    }
+  }, [searchStats])
+
+  const loadSearchStats = useCallback(async () => {
     try {
       const stats = await invoke<SearchStats>('get_vector_stats')
       setSearchStats(stats)
+      // Check for unsynced documents after loading stats
+      await checkForUnsyncedDocuments()
     } catch (error) {
       console.error('Failed to load search stats:', error)
       // Set default stats to prevent UI from breaking
@@ -75,7 +92,12 @@ const SearchInterface: React.FC = () => {
         memory_usage_estimate: 0,
       })
     }
-  }
+  }, [checkForUnsyncedDocuments])
+
+  useEffect(() => {
+    loadSearchStats()
+    loadRecentQueries()
+  }, [loadSearchStats])
 
   const loadRecentQueries = () => {
     const stored = localStorage.getItem('recent_search_queries')
@@ -132,6 +154,7 @@ const SearchInterface: React.FC = () => {
 
       // Reload stats after sync
       await loadSearchStats()
+      await checkForUnsyncedDocuments()
 
       if (searchStats && searchStats.total_documents > 0) {
         console.log(`Successfully synced ${searchStats.total_documents} documents to vector system`)
@@ -280,14 +303,20 @@ const SearchInterface: React.FC = () => {
       )}
 
       {/* Sync Controls */}
-      {searchStats && searchStats.total_documents === 0 && (
+      {searchStats && (searchStats.total_documents === 0 || hasUnsyncedDocuments) && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="text-yellow-600 mt-1" size={20} />
             <div className="flex-1">
-              <h3 className="font-medium text-yellow-800 mb-2">No documents indexed for search</h3>
+              <h3 className="font-medium text-yellow-800 mb-2">
+                {searchStats.total_documents === 0
+                  ? 'No documents indexed for search'
+                  : 'New documents available to sync'}
+              </h3>
               <p className="text-yellow-700 text-sm mb-3">
-                You need to sync documents from the Document Index to enable intelligent search.
+                {searchStats.total_documents === 0
+                  ? 'You need to sync documents from the Document Index to enable intelligent search.'
+                  : `${indexedDocumentsCount} documents found in Document Index, ${searchStats.total_documents} synced to search. Click sync to update search results.`}
               </p>
               <div className="flex gap-3 flex-wrap">
                 <button

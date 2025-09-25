@@ -9,14 +9,17 @@
     "max_concurrent_operations": 10
   },
   "security": {
-    "allowed_extensions": [".docx", ".pdf", ".md", ".txt"],
+    "allowed_extensions": [".docx", ".pdf", ".md", ".txt", ".csv", ".json"],
     "max_path_length": 260,
     "max_file_size": 104857600,
     "allowed_mime_types": [
       "application/pdf",
       "text/plain",
       "text/markdown",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      "text/csv",
+      "application/json",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/zip"
     ],
     "prohibited_filename_chars": ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", "\u0000"],
     "enable_magic_number_validation": true,

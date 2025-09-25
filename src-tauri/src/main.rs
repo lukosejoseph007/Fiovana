@@ -434,6 +434,38 @@ async fn main() {
             crate::notifications::set_global_emitter(emitter);
             info!("Notification system initialized");
 
+            // Auto-initialize document indexer on app load
+            let app_handle = app.handle().clone();
+            tokio::spawn(async move {
+                // Initialize document indexer
+                if let Some(indexer_state) = app_handle.try_state::<commands::document_indexing_commands::DocumentIndexerState>() {
+                    match commands::document_indexing_commands::init_document_indexer(indexer_state, None).await {
+                        Ok(_) => info!("✅ Document indexer auto-initialized on app load"),
+                        Err(e) => info!("ℹ️ Document indexer auto-initialization skipped: {}", e),
+                    }
+                }
+
+                // Initialize vector system
+                if let Some(vector_state) = app_handle.try_state::<commands::vector_commands::VectorState>() {
+                    match commands::vector_commands::init_vector_system(vector_state, None).await {
+                        Ok(_) => {
+                            info!("✅ Vector system auto-initialized on app load");
+
+                            // Auto-sync documents from document indexer to vector system
+                            if let Some(indexer_state) = app_handle.try_state::<commands::document_indexing_commands::DocumentIndexerState>() {
+                                if let Some(vector_state) = app_handle.try_state::<commands::vector_commands::VectorState>() {
+                                    match commands::vector_commands::sync_documents_to_vector_system(vector_state, indexer_state).await {
+                                        Ok(_) => info!("✅ Documents auto-synced from indexer to vector system on app load"),
+                                        Err(e) => info!("ℹ️ Document sync skipped: {}", e),
+                                    }
+                                }
+                            }
+                        },
+                        Err(e) => info!("ℹ️ Vector system auto-initialization skipped: {}", e),
+                    }
+                }
+            });
+
             // Additional security monitoring setup
             setup_security_monitoring(app)?;
 

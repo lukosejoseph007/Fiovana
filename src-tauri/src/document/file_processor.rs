@@ -356,11 +356,15 @@ impl FileProcessor {
     pub fn check_corruption<P: AsRef<Path>>(path: P) -> Result<CorruptionCheckResult> {
         let path = path.as_ref();
 
+        tracing::info!("🔎 Checking corruption for file: {}", path.display());
+
         // Get expected type from file extension
         let expected_type = path
             .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
+
+        tracing::debug!("Expected type: {:?}", expected_type);
 
         // Read file header for magic number detection
         let mut file =
@@ -371,7 +375,10 @@ impl FileProcessor {
             .read(&mut header)
             .with_context(|| format!("Failed to read file header: {}", path.display()))?;
 
+        tracing::debug!("Bytes read: {}", bytes_read);
+
         if bytes_read == 0 {
+            tracing::warn!("❌ File is empty (0 bytes read): {}", path.display());
             return Ok(CorruptionCheckResult::corrupted(
                 None,
                 expected_type,
@@ -386,6 +393,12 @@ impl FileProcessor {
         let (detected_type, _description) = MagicNumbers::detect_type(&header)
             .map(|(t, d)| (Some(t), d))
             .unwrap_or((None, String::new()));
+
+        tracing::debug!(
+            "Detected type: {:?}, Expected type: {:?}",
+            detected_type,
+            expected_type
+        );
 
         // Perform specific validation based on detected/expected type
         let mut corruption_details = Vec::new();
@@ -407,16 +420,32 @@ impl FileProcessor {
                 .as_deref()
                 .is_some_and(|ext| ["docx", "xlsx", "pptx"].contains(&ext))
         {
+            tracing::debug!("Validating Office document structure");
             if let Err(e) = Self::validate_office_document(&mut file) {
+                tracing::warn!("Office document validation failed: {}", e);
                 corruption_details.push(format!("Office document validation failed: {}", e));
                 is_corrupted = true;
                 confidence = 0.8;
+            } else {
+                tracing::debug!("Office document validation passed");
             }
         }
 
         // Check for type mismatch
         if let (Some(ref detected), Some(ref expected)) = (&detected_type, &expected_type) {
-            if detected != expected && !Self::is_compatible_type(detected, expected) {
+            let is_compatible = Self::is_compatible_type(detected, expected);
+            tracing::debug!(
+                "Type check: detected='{}', expected='{}', compatible={}",
+                detected,
+                expected,
+                is_compatible
+            );
+            if detected != expected && !is_compatible {
+                tracing::warn!(
+                    "File type mismatch: detected '{}', expected '{}'",
+                    detected,
+                    expected
+                );
                 corruption_details.push(format!(
                     "File type mismatch: detected '{}', expected '{}'",
                     detected, expected
@@ -425,11 +454,21 @@ impl FileProcessor {
             }
         }
 
-        // Generic corruption indicators
-        if let Some(generic_issues) = Self::check_generic_corruption(&header) {
-            corruption_details.extend(generic_issues);
-            is_corrupted = true;
-            confidence *= 0.8;
+        // Generic corruption indicators (skip for ZIP-based Office documents)
+        let skip_generic_checks = detected_type.as_deref() == Some("zip")
+            && expected_type
+                .as_deref()
+                .is_some_and(|ext| ["docx", "xlsx", "pptx"].contains(&ext));
+
+        if !skip_generic_checks {
+            if let Some(generic_issues) = Self::check_generic_corruption(&header) {
+                corruption_details.extend(generic_issues);
+                is_corrupted = true;
+                confidence *= 0.8;
+            }
+        } else {
+            println!("🔧 VALIDATION DEBUG: Skipping generic corruption checks for ZIP-based Office document");
+            tracing::debug!("Skipping generic corruption checks for ZIP-based Office document");
         }
 
         if is_corrupted || !corruption_details.is_empty() {
@@ -550,14 +589,22 @@ impl FileProcessor {
     pub fn validate_file<P: AsRef<Path>>(path: P) -> Result<FileValidationResult> {
         let path = path.as_ref();
 
+        println!(
+            "🔍 VALIDATION DEBUG: Starting file validation for: {}",
+            path.display()
+        );
+        tracing::info!("🔍 Starting file validation for: {}", path.display());
+
         // Check if file exists and is readable
         if !path.exists() {
+            tracing::warn!("❌ File does not exist: {}", path.display());
             return Ok(FileValidationResult::invalid(
                 "File does not exist".to_string(),
             ));
         }
 
         if !path.is_file() {
+            tracing::warn!("❌ Path is not a file: {}", path.display());
             return Ok(FileValidationResult::invalid(
                 "Path is not a file".to_string(),
             ));
@@ -566,18 +613,46 @@ impl FileProcessor {
         let metadata = std::fs::metadata(path)
             .with_context(|| format!("Failed to get file metadata: {}", path.display()))?;
 
+        println!(
+            "📏 VALIDATION DEBUG: File metadata for {}: size={} bytes",
+            path.display(),
+            metadata.len()
+        );
+        tracing::info!(
+            "📏 File metadata for {}: size={} bytes",
+            path.display(),
+            metadata.len()
+        );
+
         // Check file size (0 bytes is suspicious for most document types)
         if metadata.len() == 0 {
+            println!(
+                "⚠️  VALIDATION DEBUG: File appears to be empty: {}",
+                path.display()
+            );
+            tracing::warn!("⚠️  File appears to be empty: {}", path.display());
             return Ok(FileValidationResult::invalid("File is empty".to_string()));
         }
 
         // Check for corruption
+        tracing::info!("🔍 Running corruption check for: {}", path.display());
         let corruption_result = Self::check_corruption(path)?;
 
         if corruption_result.is_corrupted {
+            println!(
+                "💥 VALIDATION DEBUG: File marked as corrupted: {} - Details: {:?}",
+                path.display(),
+                corruption_result.corruption_details
+            );
+            tracing::warn!(
+                "💥 File marked as corrupted: {} - Details: {:?}",
+                path.display(),
+                corruption_result.corruption_details
+            );
             return Ok(FileValidationResult::corrupted(corruption_result));
         }
 
+        tracing::info!("✅ File validation passed: {}", path.display());
         Ok(FileValidationResult::valid(corruption_result))
     }
 

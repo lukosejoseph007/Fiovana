@@ -503,6 +503,7 @@ impl SecurityConfig {
             "text/csv",
             "application/json",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/zip", // Required for DOCX, XLSX, PPTX files
             "image/png",
             "image/jpeg",
         ]

@@ -120,7 +120,8 @@ impl EmbeddingEngine {
             serde_json::from_str(&settings_json).ok()
         }
 
-        // Helper function for .env loading
+        // Helper function for .env loading (kept for future optional use)
+        #[allow(dead_code)]
         fn load_env_embedding_config(
         ) -> Result<(EmbeddingProvider, Option<String>, String, usize), anyhow::Error> {
             let embedding_model = std::env::var("EMBEDDING_MODEL")
@@ -187,26 +188,12 @@ impl EmbeddingEngine {
                     final_dimension,
                 )
             } else {
-                tracing::warn!("⚠️ UI settings found but API key is empty, trying .env fallback");
-                match load_env_embedding_config() {
-                    Ok(config) => config,
-                    Err(_) => {
-                        tracing::error!("❌ No valid embedding configuration found in UI or .env");
-                        return Err(anyhow!("No embedding configuration found. Please configure API keys through the Settings UI or set OPENAI_API_KEY/OPENROUTER_API_KEY in your .env file."));
-                    }
-                }
+                tracing::warn!("⚠️ UI settings found but API key is empty");
+                return Err(anyhow!("Embedding API key not configured. Please configure your API key through Settings > Embeddings in the UI."));
             }
         } else {
-            tracing::info!("ℹ️ No UI settings found, checking .env configuration");
-            match load_env_embedding_config() {
-                Ok(config) => config,
-                Err(_) => {
-                    tracing::error!("❌ CRITICAL: No valid API embedding configuration found!");
-                    tracing::error!("Local embeddings are disabled for system stability.");
-                    tracing::info!("💡 Configure API keys through Settings > Embeddings in the UI");
-                    return Err(anyhow!("No API embedding configuration found. Local embeddings are disabled to prevent system crashes. Please configure OpenAI or OpenRouter API keys through the Settings UI or set OPENAI_API_KEY/OPENROUTER_API_KEY in your .env file."));
-                }
-            }
+            tracing::info!("ℹ️ No UI embedding settings found");
+            return Err(anyhow!("No embedding configuration found. Please configure your API key through Settings > Embeddings in the UI."));
         };
 
         let service_config = EmbeddingServiceConfig {

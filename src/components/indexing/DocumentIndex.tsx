@@ -196,22 +196,22 @@ const DocumentIndex: React.FC = () => {
           sections.map(section => ({
             chunk_id: section.id,
             document_id: document.id,
-            content: section.content,
+            content: section.content || '',
             chunk_index: 0,
             start_char: 0,
-            end_char: section.content.length,
+            end_char: (section.content || '').length,
             metadata: {
-              title: section.title,
-              section: section.title,
+              title: section.title || '',
+              section: section.title || '',
               chunk_index: 0,
               chunk_type: 'section',
-              heading_level: section.level,
-              word_count: section.content.split(' ').length,
+              heading_level: section.level || 1,
+              word_count: (section.content || '').split(' ').length,
               content_hash: '',
             },
             position: {
               start_char: 0,
-              end_char: section.content.length,
+              end_char: (section.content || '').length,
               start_line: 0,
               end_line: 0,
             },
@@ -297,13 +297,35 @@ const DocumentIndex: React.FC = () => {
   const filteredEntries = indexEntries.filter(entry => {
     const matchesSearch =
       !searchQuery ||
-      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.path.toLowerCase().includes(searchQuery.toLowerCase())
+      (entry.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (entry.path || '').toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesFilter = filterType === 'all' || filterType === 'processed'
 
     return matchesSearch && matchesFilter
   })
+
+  const formatDocumentType = (
+    documentType: string | { [key: string]: string } | null | undefined
+  ): string => {
+    if (!documentType) return 'Unknown'
+    if (typeof documentType === 'string') return documentType
+    if (typeof documentType === 'object' && documentType.Other) {
+      return `Other (${documentType.Other})`
+    }
+    // Handle other enum variants that might be objects
+    if (typeof documentType === 'object') {
+      const keys = Object.keys(documentType)
+      if (keys.length > 0) {
+        const variant = keys[0]
+        if (variant && documentType[variant] !== undefined) {
+          const value = documentType[variant]
+          return value ? `${variant} (${value})` : variant
+        }
+      }
+    }
+    return String(documentType)
+  }
 
   const getChunkTypeIcon = (chunkType: string) => {
     switch (chunkType) {
@@ -515,7 +537,7 @@ const DocumentIndex: React.FC = () => {
                       <div>
                         <div className="text-gray-600">Type</div>
                         <div className="font-medium">
-                          {entry.structure?.document_type || 'Unknown'}
+                          {formatDocumentType(entry.structure?.document_type)}
                         </div>
                       </div>
                       <div>
@@ -560,7 +582,7 @@ const DocumentIndex: React.FC = () => {
                   <div>Word Count: {selectedDocument.metadata?.word_count || 'Unknown'}</div>
                   <div>Sections: {selectedDocument.structure?.sections?.length || 0}</div>
                   <div>Keywords: {selectedDocument.keywords?.length || 0}</div>
-                  <div>Content: {selectedDocument.content.length} chars</div>
+                  <div>Content: {(selectedDocument.content || '').length} chars</div>
                 </div>
               </div>
 
@@ -577,32 +599,32 @@ const DocumentIndex: React.FC = () => {
                     onClick={() => setSelectedChunk(chunk)}
                   >
                     <div className="flex items-start gap-2 mb-2">
-                      {getChunkTypeIcon(chunk.metadata.chunk_type)}
+                      {getChunkTypeIcon(chunk.metadata?.chunk_type || 'paragraph')}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-gray-900">
-                            Chunk {chunk.metadata.chunk_index + 1}
+                            Chunk {(chunk.metadata?.chunk_index || 0) + 1}
                           </span>
                           {chunk.metadata.section && (
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                              {chunk.metadata.section}
+                              {chunk.metadata?.section}
                             </span>
                           )}
                           {chunk.metadata.page_number && (
                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                              Page {chunk.metadata.page_number}
+                              Page {chunk.metadata?.page_number}
                             </span>
                           )}
                         </div>
                         <div className="text-sm text-gray-600 mb-2">
-                          {chunk.content.substring(0, 100)}...
+                          {(chunk.content || '').substring(0, 100)}...
                         </div>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>{chunk.metadata.word_count} words</span>
+                          <span>{chunk.metadata?.word_count || 0} words</span>
                           <span>
-                            Lines {chunk.position.start_line}-{chunk.position.end_line}
+                            Lines {chunk.position?.start_line || 0}-{chunk.position?.end_line || 0}
                           </span>
-                          {chunk.metadata.keywords && chunk.metadata.keywords.length > 0 && (
+                          {chunk.metadata?.keywords && chunk.metadata.keywords.length > 0 && (
                             <span>{chunk.metadata.keywords.length} keywords</span>
                           )}
                         </div>
@@ -631,8 +653,8 @@ const DocumentIndex: React.FC = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
-                  {getChunkTypeIcon(selectedChunk.metadata.chunk_type)}
-                  Chunk {selectedChunk.metadata.chunk_index + 1} Details
+                  {getChunkTypeIcon(selectedChunk.metadata?.chunk_type || 'paragraph')}
+                  Chunk {(selectedChunk.metadata?.chunk_index || 0) + 1} Details
                 </h3>
                 <button
                   onClick={() => setSelectedChunk(null)}
@@ -648,11 +670,13 @@ const DocumentIndex: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <div className="text-gray-600">Type</div>
-                  <div className="font-medium">{selectedChunk.metadata.chunk_type}</div>
+                  <div className="font-medium">
+                    {selectedChunk.metadata?.chunk_type || 'Unknown'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-gray-600">Word Count</div>
-                  <div className="font-medium">{selectedChunk.metadata.word_count}</div>
+                  <div className="font-medium">{selectedChunk.metadata?.word_count || 0}</div>
                 </div>
                 <div>
                   <div className="text-gray-600">Position</div>
@@ -669,7 +693,7 @@ const DocumentIndex: React.FC = () => {
               </div>
 
               {/* Keywords */}
-              {selectedChunk.metadata.keywords && selectedChunk.metadata.keywords.length > 0 && (
+              {selectedChunk.metadata?.keywords && selectedChunk.metadata.keywords.length > 0 && (
                 <div>
                   <div className="text-sm text-gray-600 mb-2">Keywords</div>
                   <div className="flex flex-wrap gap-2">
@@ -705,7 +729,7 @@ const DocumentIndex: React.FC = () => {
                   </div>
                   <div>
                     <div>Content Hash</div>
-                    <div className="font-mono">{selectedChunk.metadata.content_hash}</div>
+                    <div className="font-mono">{selectedChunk.metadata?.content_hash || 'N/A'}</div>
                   </div>
                 </div>
               </div>

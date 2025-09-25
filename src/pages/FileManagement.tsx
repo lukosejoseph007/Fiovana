@@ -106,9 +106,34 @@ const FileManagement: React.FC = () => {
   const [indexStats, setIndexStats] = React.useState<IndexStats | null>(null)
   const [selectedDocument, setSelectedDocument] = React.useState<DocumentIndexEntry | null>(null)
   const [showDocumentModal, setShowDocumentModal] = React.useState(false)
+  const [documentDetailsLoading, setDocumentDetailsLoading] = React.useState(false)
+  const [documentDetailsError, setDocumentDetailsError] = React.useState<string | null>(null)
   const isListenerSetupRef = useRef(false)
   const lastDropTimeRef = useRef<number>(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Helper function to format document type for display
+  const formatDocumentType = (
+    documentType: string | { [key: string]: string } | null | undefined
+  ): string => {
+    if (!documentType) return 'Unknown'
+    if (typeof documentType === 'string') return documentType
+    if (typeof documentType === 'object' && documentType.Other) {
+      return `Other (${documentType.Other})`
+    }
+    // Handle other enum variants that might be objects
+    if (typeof documentType === 'object') {
+      const keys = Object.keys(documentType)
+      if (keys.length > 0) {
+        const variant = keys[0]
+        if (variant && documentType[variant] !== undefined) {
+          const value = documentType[variant]
+          return value ? `${variant} (${value})` : variant
+        }
+      }
+    }
+    return String(documentType)
+  }
 
   // Prevent default drag/drop behavior on the whole document (but allow our DropZone)
   useEffect(() => {
@@ -455,14 +480,25 @@ const FileManagement: React.FC = () => {
 
   // View document details
   const viewDocumentDetails = async (filePath: string) => {
+    setDocumentDetailsLoading(true)
+    setDocumentDetailsError(null)
+    setShowDocumentModal(true)
+
     try {
       console.log('Getting document details for:', filePath)
       const details = await invoke<DocumentIndexEntry | null>('get_document_details', { filePath })
       console.log('Document details:', details)
-      setSelectedDocument(details)
-      setShowDocumentModal(true)
+
+      if (details) {
+        setSelectedDocument(details)
+      } else {
+        setDocumentDetailsError('Document details not found or could not be loaded.')
+      }
     } catch (error) {
       console.error('Failed to get document details:', error)
+      setDocumentDetailsError(`Failed to load document details: ${error}`)
+    } finally {
+      setDocumentDetailsLoading(false)
     }
   }
 
@@ -909,7 +945,7 @@ const FileManagement: React.FC = () => {
       )}
 
       {/* Document Details Modal */}
-      {showDocumentModal && selectedDocument && (
+      {showDocumentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
@@ -917,7 +953,11 @@ const FileManagement: React.FC = () => {
                 Document Details
               </h2>
               <button
-                onClick={() => setShowDocumentModal(false)}
+                onClick={() => {
+                  setShowDocumentModal(false)
+                  setSelectedDocument(null)
+                  setDocumentDetailsError(null)
+                }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -932,169 +972,219 @@ const FileManagement: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Basic Info */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                  Basic Information
-                </h3>
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
-                  <div>
-                    <span className="font-medium">Title:</span> {selectedDocument.title}
-                  </div>
-                  <div>
-                    <span className="font-medium">Path:</span> {selectedDocument.path}
-                  </div>
-                  <div>
-                    <span className="font-medium">Content Hash:</span>{' '}
-                    {selectedDocument.content_hash?.substring(0, 16)}...
-                  </div>
-                  <div>
-                    <span className="font-medium">Indexed At:</span>{' '}
-                    {new Date(
-                      selectedDocument.indexed_at?.secs_since_epoch * 1000
-                    ).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Document Structure */}
-              {selectedDocument.structure && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Document Structure
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
-                    <div>
-                      <span className="font-medium">Type:</span>{' '}
-                      {selectedDocument.structure.document_type}
-                    </div>
-                    {selectedDocument.structure.page_count && (
-                      <div>
-                        <span className="font-medium">Pages:</span>{' '}
-                        {selectedDocument.structure.page_count}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedDocument.structure.has_images && (
-                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                          📷 Has Images
-                        </span>
-                      )}
-                      {selectedDocument.structure.has_tables && (
-                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">
-                          📊 Has Tables
-                        </span>
-                      )}
-                      {selectedDocument.structure.has_code && (
-                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs">
-                          💻 Has Code
-                        </span>
-                      )}
-                    </div>
-                  </div>
+              {/* Loading State */}
+              {documentDetailsLoading && (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
+                    Loading document details...
+                  </p>
                 </div>
               )}
 
-              {/* Table of Contents */}
-              {selectedDocument.structure?.toc && selectedDocument.structure.toc.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Table of Contents
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <ul className="space-y-1">
-                      {selectedDocument.structure.toc.map((entry: TocEntry, index: number) => (
-                        <li
-                          key={index}
-                          className="text-sm"
-                          style={{ marginLeft: `${entry.level * 20}px` }}
-                        >
-                          <span className="font-medium">{entry.title}</span>
-                          {entry.page && (
-                            <span className="text-gray-500 ml-2">p. {entry.page}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+              {/* Error State */}
+              {documentDetailsError && !documentDetailsLoading && (
+                <div className="text-center py-8">
+                  <div className="text-red-500 mb-4">
+                    <svg
+                      className="w-16 h-16 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
+                    </svg>
                   </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Unable to Load Document Details
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">{documentDetailsError}</p>
+                  <button
+                    onClick={() => {
+                      setShowDocumentModal(false)
+                      setSelectedDocument(null)
+                      setDocumentDetailsError(null)
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Close
+                  </button>
                 </div>
               )}
 
-              {/* Sections */}
-              {selectedDocument.structure?.sections &&
-                selectedDocument.structure.sections.length > 0 && (
+              {/* Document Details Content - Only show when loaded successfully */}
+              {selectedDocument && !documentDetailsLoading && !documentDetailsError && (
+                <>
+                  {/* Basic Info */}
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                      Document Sections
+                      Basic Information
                     </h3>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
-                      {selectedDocument.structure.sections.map(
-                        (section: DocumentSection, index: number) => (
-                          <div key={index} className="border-l-2 border-blue-300 pl-3">
-                            <div className="font-medium text-sm">{section.title}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                              Level {section.level} • {section.content?.length || 0} characters
-                            </div>
-                            {section.content && (
-                              <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                                {section.content.substring(0, 150)}...
-                              </div>
-                            )}
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                      <div>
+                        <span className="font-medium">Title:</span> {selectedDocument.title}
+                      </div>
+                      <div>
+                        <span className="font-medium">Path:</span> {selectedDocument.path}
+                      </div>
+                      <div>
+                        <span className="font-medium">Content Hash:</span>{' '}
+                        {selectedDocument.content_hash?.substring(0, 16)}...
+                      </div>
+                      <div>
+                        <span className="font-medium">Indexed At:</span>{' '}
+                        {new Date(
+                          selectedDocument.indexed_at?.secs_since_epoch * 1000
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Document Structure */}
+                  {selectedDocument.structure && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                        Document Structure
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-2">
+                        <div>
+                          <span className="font-medium">Type:</span>{' '}
+                          {formatDocumentType(selectedDocument.structure.document_type)}
+                        </div>
+                        {selectedDocument.structure.page_count && (
+                          <div>
+                            <span className="font-medium">Pages:</span>{' '}
+                            {selectedDocument.structure.page_count}
                           </div>
-                        )
-                      )}
+                        )}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedDocument.structure.has_images && (
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
+                              📷 Has Images
+                            </span>
+                          )}
+                          {selectedDocument.structure.has_tables && (
+                            <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">
+                              📊 Has Tables
+                            </span>
+                          )}
+                          {selectedDocument.structure.has_code && (
+                            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs">
+                              💻 Has Code
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-              {/* Keywords */}
-              {selectedDocument.keywords && selectedDocument.keywords.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Keywords
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDocument.keywords.map((keyword: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
+                  {/* Table of Contents */}
+                  {selectedDocument.structure?.toc && selectedDocument.structure.toc.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                        Table of Contents
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <ul className="space-y-1">
+                          {selectedDocument.structure.toc.map((entry: TocEntry, index: number) => (
+                            <li
+                              key={index}
+                              className="text-sm"
+                              style={{ marginLeft: `${entry.level * 20}px` }}
+                            >
+                              <span className="font-medium">{entry.title}</span>
+                              {entry.page && (
+                                <span className="text-gray-500 ml-2">p. {entry.page}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* Content Preview */}
-              {selectedDocument.content && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Content Preview
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-60 overflow-y-auto">
-                      {selectedDocument.content.substring(0, 1000)}
-                      {selectedDocument.content.length > 1000 && '...'}
-                    </div>
-                  </div>
-                </div>
-              )}
+                  {/* Sections */}
+                  {selectedDocument.structure?.sections &&
+                    selectedDocument.structure.sections.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                          Document Sections
+                        </h3>
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+                          {selectedDocument.structure.sections.map(
+                            (section: DocumentSection, index: number) => (
+                              <div key={index} className="border-l-2 border-blue-300 pl-3">
+                                <div className="font-medium text-sm">{section.title}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  Level {section.level} • {section.content?.length || 0} characters
+                                </div>
+                                {section.content && (
+                                  <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                                    {section.content.substring(0, 150)}...
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-              {/* Summary */}
-              {selectedDocument.summary && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Summary
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                      {selectedDocument.summary}
+                  {/* Keywords */}
+                  {selectedDocument.keywords && selectedDocument.keywords.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                        Keywords
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {selectedDocument.keywords.map((keyword: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+
+                  {/* Content Preview */}
+                  {selectedDocument.content && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                        Content Preview
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                          {selectedDocument.content.substring(0, 1000)}
+                          {selectedDocument.content.length > 1000 && '...'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {selectedDocument.summary && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                        Summary
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                          {selectedDocument.summary}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

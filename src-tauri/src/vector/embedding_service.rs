@@ -253,7 +253,7 @@ impl EmbeddingService {
             .post("https://api.openai.com/v1/embeddings")
             .header("Authorization", format!("Bearer {}", api_key))
             .header("Content-Type", "application/json")
-            .body(request.to_string())
+            .json(&request)
             .send()
             .await?;
 

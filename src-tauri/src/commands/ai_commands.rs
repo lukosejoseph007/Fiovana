@@ -283,15 +283,15 @@ fn settings_to_ai_config(settings: serde_json::Value) -> Result<AIConfig, String
 
 #[tauri::command]
 pub async fn get_ai_settings() -> Result<serde_json::Value, String> {
-    // Try to load from storage first
-    let stored_settings = AI_SETTINGS_STORAGE.lock().unwrap().clone();
+    // Try to load from file first
+    let config_dir = dirs::config_dir()
+        .ok_or("Failed to get config directory")?
+        .join("proxemic");
 
-    if let Some(settings) = stored_settings {
-        tracing::info!("Loaded stored AI settings: {:?}", settings);
-        Ok(settings)
-    } else {
-        tracing::info!("No stored settings found, using defaults");
-        // Return default settings
+    let settings_file = config_dir.join("ai_settings.json");
+
+    if !settings_file.exists() {
+        tracing::info!("No AI settings file found, returning defaults");
         let default_settings = serde_json::json!({
             "provider": "local",
             "openrouterApiKey": "",
@@ -300,21 +300,45 @@ pub async fn get_ai_settings() -> Result<serde_json::Value, String> {
             "preferLocalModels": true,
             "recentModels": []
         });
-        Ok(default_settings)
+        return Ok(default_settings);
     }
+
+    let settings_json = std::fs::read_to_string(&settings_file)
+        .map_err(|e| format!("Failed to read AI settings file: {}", e))?;
+
+    let settings: serde_json::Value = serde_json::from_str(&settings_json)
+        .map_err(|e| format!("Failed to parse AI settings: {}", e))?;
+
+    tracing::info!("✅ Loaded AI settings from file");
+    Ok(settings)
 }
 
 #[tauri::command]
 pub async fn save_ai_settings(settings: serde_json::Value) -> Result<bool, String> {
-    tracing::info!("Saving AI settings: {:?}", settings);
+    tracing::info!("Saving AI settings to file");
 
-    // Store the settings
+    // Save to file-based storage
+    let settings_json = serde_json::to_string_pretty(&settings)
+        .map_err(|e| format!("Failed to serialize AI settings: {}", e))?;
+
+    let config_dir = dirs::config_dir()
+        .ok_or("Failed to get config directory")?
+        .join("proxemic");
+
+    std::fs::create_dir_all(&config_dir)
+        .map_err(|e| format!("Failed to create config directory: {}", e))?;
+
+    let settings_file = config_dir.join("ai_settings.json");
+    std::fs::write(&settings_file, settings_json)
+        .map_err(|e| format!("Failed to write AI settings file: {}", e))?;
+
+    // Also store in memory for compatibility with existing code
     {
         let mut storage = AI_SETTINGS_STORAGE.lock().unwrap();
-        *storage = Some(settings.clone());
+        *storage = Some(settings);
     }
 
-    tracing::info!("AI settings saved successfully");
+    tracing::info!("✅ AI settings saved successfully to file");
     Ok(true)
 }
 

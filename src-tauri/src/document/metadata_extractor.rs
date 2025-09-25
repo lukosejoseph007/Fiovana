@@ -223,8 +223,8 @@ impl MetadataExtractor {
 
         buffer.truncate(bytes_read);
 
-        // Detect MIME type from content
-        let detected_mime_type = Self::detect_mime_type(&buffer);
+        // Detect MIME type from content and file extension
+        let detected_mime_type = Self::detect_mime_type(&buffer, path);
 
         // Analyze content if it appears to be text
         let (encoding, line_endings, preview, language, stats) = if Self::is_text_content(&buffer) {
@@ -337,12 +337,31 @@ impl MetadataExtractor {
 
     // Helper methods
 
-    fn detect_mime_type(buffer: &[u8]) -> Option<String> {
+    fn detect_mime_type(buffer: &[u8], path: &Path) -> Option<String> {
         // Basic MIME type detection based on file signatures
         if buffer.starts_with(b"%PDF") {
             Some("application/pdf".to_string())
         } else if buffer.starts_with(&[0x50, 0x4B, 0x03, 0x04]) {
-            Some("application/zip".to_string())
+            // ZIP-based files - check extension to determine specific type
+            let extension = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .map(|ext| ext.to_lowercase());
+
+            match extension.as_deref() {
+                Some("docx") => Some(
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        .to_string(),
+                ),
+                Some("xlsx") => Some(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".to_string(),
+                ),
+                Some("pptx") => Some(
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        .to_string(),
+                ),
+                _ => Some("application/zip".to_string()),
+            }
         } else if buffer.starts_with(&[0xFF, 0xD8, 0xFF]) {
             Some("image/jpeg".to_string())
         } else if buffer.starts_with(&[0x89, 0x50, 0x4E, 0x47]) {

@@ -46,10 +46,26 @@ impl MagicNumberValidator {
         let mut buffer = [0; 256];
         let _ = file.read(&mut buffer).unwrap_or(0);
 
-        let mime = Infer::new()
+        let mut mime = Infer::new()
             .get(&buffer)
             .map(|info| info.mime_type())
             .unwrap_or("application/octet-stream");
+
+        // Handle Office documents that are detected as ZIP files
+        if mime == "application/zip" {
+            if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
+                match extension.to_lowercase().as_str() {
+                    "docx" => mime =
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "xlsx" => {
+                        mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    }
+                    "pptx" => mime =
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    _ => {} // Keep as application/zip
+                }
+            }
+        }
 
         if !self.allowed_mime_types.contains(mime) {
             return Err(ValidationError::MimeType {
