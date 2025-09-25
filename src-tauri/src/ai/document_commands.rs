@@ -1112,6 +1112,16 @@ impl CommandParser {
             }
         }
 
+        // Look for standalone document references like "document1", "document2", etc.
+        for word in &words {
+            if word.starts_with("document") && word.len() > 8 {
+                return Some(word.to_string());
+            }
+            if word.ends_with(".txt") || word.ends_with(".md") || word.ends_with(".pdf") {
+                return Some(word.to_string());
+            }
+        }
+
         None
     }
 

@@ -619,7 +619,14 @@ impl KeywordIndex {
                         // TF-IDF calculation: log(1 + tf) * log(N / df)
                         let tf_score = (1.0 + tf).ln();
                         let idf_score = (self.total_chunks as f64 / df).ln();
-                        score += tf_score * idf_score;
+
+                        // Handle single document case: when total_chunks = df = 1, idf_score = ln(1) = 0
+                        // In this case, just use the TF score so we still get results
+                        if self.total_chunks == 1 {
+                            score += tf_score; // Use only TF component when there's just one document
+                        } else {
+                            score += tf_score * idf_score;
+                        }
                     }
                 }
             }

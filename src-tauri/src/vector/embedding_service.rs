@@ -469,8 +469,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_fallback_embeddings() -> Result<()> {
+        // Skip test if no OpenAI API key is configured
+        let api_key = match std::env::var("OPENAI_API_KEY") {
+            Ok(key) if !key.is_empty() => key,
+            _ => {
+                println!("Skipping test: OPENAI_API_KEY not configured");
+                return Ok(());
+            }
+        };
+
         let config = EmbeddingServiceConfig {
             provider: EmbeddingProvider::OpenAI,
+            api_key: Some(api_key),
             dimension: 10,
             ..Default::default()
         };
@@ -491,8 +501,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_embedding_caching() -> Result<()> {
+        // Skip test if no OpenAI API key is configured
+        let api_key = match std::env::var("OPENAI_API_KEY") {
+            Ok(key) if !key.is_empty() => key,
+            _ => {
+                println!("Skipping test: OPENAI_API_KEY not configured");
+                return Ok(());
+            }
+        };
+
         let config = EmbeddingServiceConfig {
             provider: EmbeddingProvider::OpenAI,
+            api_key: Some(api_key),
             dimension: 5,
             ..Default::default()
         };
@@ -516,8 +536,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_deterministic_embeddings() -> Result<()> {
+        // Skip test if no OpenAI API key is configured
+        let api_key = match std::env::var("OPENAI_API_KEY") {
+            Ok(key) if !key.is_empty() => key,
+            _ => {
+                println!("Skipping test: OPENAI_API_KEY not configured");
+                return Ok(());
+            }
+        };
+
         let config = EmbeddingServiceConfig {
             provider: EmbeddingProvider::OpenAI,
+            api_key: Some(api_key),
             dimension: 5,
             ..Default::default()
         };
@@ -534,8 +564,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_batch_embeddings() -> Result<()> {
+        // Skip test if no OpenAI API key is configured
+        let api_key = match std::env::var("OPENAI_API_KEY") {
+            Ok(key) if !key.is_empty() => key,
+            _ => {
+                println!("Skipping test: OPENAI_API_KEY not configured");
+                return Ok(());
+            }
+        };
+
         let config = EmbeddingServiceConfig {
             provider: EmbeddingProvider::OpenAI,
+            api_key: Some(api_key),
             dimension: 3,
             ..Default::default()
         };

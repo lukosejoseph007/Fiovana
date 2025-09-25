@@ -1199,10 +1199,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_vector_functionality() {
+        // Skip test if no API key is configured
+        if std::env::var("OPENAI_API_KEY").is_err() && std::env::var("OPENROUTER_API_KEY").is_err()
+        {
+            println!("Skipping test: No API key configured (OPENAI_API_KEY or OPENROUTER_API_KEY)");
+            return;
+        }
+
         // Test core vector functionality without Tauri state
         let config = EmbeddingConfig::default();
-        let engine = EmbeddingEngine::new(config).await.unwrap();
-        let store = VectorStore::new(384);
+        let engine = EmbeddingEngine::new(config.clone()).await.unwrap();
+        let store = VectorStore::new(config.dimension);
 
         // Test text chunking
         let test_text = "This is a test document for vector search functionality.";
