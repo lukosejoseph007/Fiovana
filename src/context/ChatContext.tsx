@@ -159,6 +159,64 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
       }
     }
 
+    case 'CHAT_ADD_RESPONSE': {
+      const { sessionId, messageId, response } = action.payload
+      const sessions = state.sessions.map(session => {
+        if (session.id !== sessionId) return session
+
+        const messages = session.messages.map(message => {
+          if (message.id !== messageId) return message
+
+          const responses = message.responses || []
+          const newResponses = [...responses, response]
+
+          return {
+            ...message,
+            responses: newResponses,
+            activeResponseIndex: newResponses.length - 1, // Set new response as active
+          }
+        })
+
+        return {
+          ...session,
+          messages,
+          updatedAt: new Date(),
+        }
+      })
+
+      return {
+        ...state,
+        sessions,
+      }
+    }
+
+    case 'CHAT_SET_ACTIVE_RESPONSE': {
+      const { sessionId, messageId, responseIndex } = action.payload
+      const sessions = state.sessions.map(session => {
+        if (session.id !== sessionId) return session
+
+        const messages = session.messages.map(message => {
+          if (message.id !== messageId) return message
+
+          return {
+            ...message,
+            activeResponseIndex: responseIndex,
+          }
+        })
+
+        return {
+          ...session,
+          messages,
+          updatedAt: new Date(),
+        }
+      })
+
+      return {
+        ...state,
+        sessions,
+      }
+    }
+
     case 'CHAT_SET_LOADING': {
       return {
         ...state,
@@ -241,6 +299,8 @@ export interface ChatContextType {
   addMessage: (sessionId: string, message: ChatMessage) => void
   deleteMessage: (sessionId: string, messageId: string) => void
   clearChatHistory: (sessionId: string) => void
+  addResponse: (sessionId: string, messageId: string, response: ChatMessage) => void
+  setActiveResponse: (sessionId: string, messageId: string, responseIndex: number) => void
   getActiveSession: () => ChatSession | null
   getTotalMessageCount: () => number
 }
@@ -328,6 +388,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     return state.sessions.reduce((total, session) => total + session.messageCount, 0)
   }
 
+  const addResponse = (sessionId: string, messageId: string, response: ChatMessage) => {
+    dispatch({ type: 'CHAT_ADD_RESPONSE', payload: { sessionId, messageId, response } })
+  }
+
+  const setActiveResponse = (sessionId: string, messageId: string, responseIndex: number) => {
+    dispatch({ type: 'CHAT_SET_ACTIVE_RESPONSE', payload: { sessionId, messageId, responseIndex } })
+  }
+
   const contextValue: ChatContextType = {
     state,
     dispatch,
@@ -338,6 +406,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     addMessage,
     deleteMessage,
     clearChatHistory,
+    addResponse,
+    setActiveResponse,
     getActiveSession,
     getTotalMessageCount,
   }

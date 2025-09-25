@@ -1,6 +1,20 @@
-import React, { useRef, useEffect, useCallback } from 'react'
-import { Send, Bot, User, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import React, { useRef, useEffect, useCallback, useState } from 'react'
+import {
+  Send,
+  Bot,
+  User,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Copy,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import { invoke } from '@tauri-apps/api/core'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { AISettings, AIStatus, ChatResponse } from '../../types/ai'
 import { useChatContext } from '../../hooks/useChatContext'
 import type { ChatMessage } from '../../context/chatTypes'
@@ -10,7 +24,8 @@ interface SessionChatInterfaceProps {
 }
 
 const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className = '' }) => {
-  const { state, addMessage, getActiveSession, dispatch } = useChatContext()
+  const { state, addMessage, getActiveSession, dispatch, addResponse, setActiveResponse } =
+    useChatContext()
   const { isLoading, aiStatus, currentProvider, currentModel } = state
   const [input, setInput] = React.useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -18,6 +33,7 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
 
   const activeSession = getActiveSession()
   const messages = React.useMemo(() => activeSession?.messages || [], [activeSession?.messages])
+  const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -128,23 +144,42 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
     }
   }, [loadAISettings, checkAIStatus, initializeAI])
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return
+  const sendMessage = async (retryMessageId?: string) => {
+    if ((!input.trim() && !retryMessageId) || (isLoading && !retryMessageId)) return
 
     if (!activeSession) {
       console.error('No active session to add message to')
       return
     }
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: input.trim(),
-      timestamp: new Date(),
+    let userMessage: ChatMessage
+    let isRetry = false
+
+    if (retryMessageId) {
+      // Find the user message for retry
+      const messageIndex = messages.findIndex(m => m.id === retryMessageId)
+      if (messageIndex === -1) return
+
+      const userMsgIndex = messageIndex - 1
+      if (userMsgIndex < 0 || messages[userMsgIndex]?.type !== 'user') return
+
+      const foundUserMessage = messages[userMsgIndex]
+      if (!foundUserMessage) return
+
+      userMessage = foundUserMessage
+      isRetry = true
+      setRetryingMessageId(retryMessageId)
+    } else {
+      userMessage = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: input.trim(),
+        timestamp: new Date(),
+      }
+      addMessage(activeSession.id, userMessage)
+      setInput('')
     }
 
-    addMessage(activeSession.id, userMessage)
-    setInput('')
     dispatch({ type: 'CHAT_SET_LOADING', payload: true })
 
     try {
@@ -156,7 +191,7 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
       })) as ChatResponse
 
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         type: 'assistant',
         content: response.success
           ? response.response?.content || 'No response content'
@@ -165,22 +200,36 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
         intent: response.response?.intent,
         confidence: response.response?.confidence,
         error: response.success ? undefined : response.error,
+        parentMessageId: isRetry ? retryMessageId : undefined,
       }
 
-      addMessage(activeSession.id, assistantMessage)
+      if (isRetry && retryMessageId) {
+        addResponse(activeSession.id, retryMessageId, assistantMessage)
+      } else {
+        addMessage(activeSession.id, assistantMessage)
+      }
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         type: 'assistant',
         content: 'Sorry, I encountered a technical error. Please try again.',
         timestamp: new Date(),
         error: String(error),
+        parentMessageId: isRetry ? retryMessageId : undefined,
       }
-      addMessage(activeSession.id, errorMessage)
+
+      if (isRetry && retryMessageId) {
+        addResponse(activeSession.id, retryMessageId, errorMessage)
+      } else {
+        addMessage(activeSession.id, errorMessage)
+      }
     } finally {
       dispatch({ type: 'CHAT_SET_LOADING', payload: false })
-      inputRef.current?.focus()
+      setRetryingMessageId(null)
+      if (!isRetry) {
+        inputRef.current?.focus()
+      }
     }
   }
 
@@ -193,6 +242,56 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
 
   const formatTime = (timestamp: Date) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error)
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      try {
+        document.execCommand('copy')
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError)
+      }
+      document.body.removeChild(textArea)
+    }
+  }
+
+  const getCurrentResponse = (message: ChatMessage) => {
+    if (!message.responses || message.responses.length === 0) {
+      return message
+    }
+    const activeIndex = message.activeResponseIndex ?? 0
+    return message.responses[activeIndex] || message
+  }
+
+  const handleRetry = (messageId: string) => {
+    sendMessage(messageId)
+  }
+
+  const handleSwitchResponse = (messageId: string, direction: 'prev' | 'next') => {
+    if (!activeSession) return
+
+    const message = messages.find(m => m.id === messageId)
+    if (!message || !message.responses || message.responses.length <= 1) return
+
+    const currentIndex = message.activeResponseIndex ?? 0
+    let newIndex: number
+
+    if (direction === 'prev') {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : message.responses.length - 1
+    } else {
+      newIndex = currentIndex < message.responses.length - 1 ? currentIndex + 1 : 0
+    }
+
+    setActiveResponse(activeSession.id, messageId, newIndex)
   }
 
   const getStatusIcon = () => {
@@ -292,56 +391,142 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
             </div>
           </div>
         ) : (
-          messages.map(message => (
-            <div
-              key={message.id}
-              className={`flex items-start space-x-3 ${
-                message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-              }`}
-            >
+          messages.map(message => {
+            const currentResponse = getCurrentResponse(message)
+            const hasMultipleResponses = message.responses && message.responses.length > 1
+            const isRetrying = retryingMessageId === message.id
+
+            return (
               <div
-                className={`p-2 rounded-lg ${
-                  message.type === 'user'
-                    ? 'bg-blue-50 dark:bg-blue-900/20'
-                    : 'bg-gray-50 dark:bg-gray-700'
+                key={message.id}
+                className={`flex items-start space-x-3 ${
+                  message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                 }`}
               >
-                {message.type === 'user' ? (
-                  <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                ) : (
-                  <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                )}
-              </div>
-              <div className={`flex-1 ${message.type === 'user' ? 'text-right' : ''}`}>
                 <div
-                  className={`inline-block max-w-3xl p-3 rounded-lg ${
+                  className={`p-2 rounded-lg ${
                     message.type === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : message.error
-                        ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                      ? 'bg-blue-50 dark:bg-blue-900/20'
+                      : 'bg-gray-50 dark:bg-gray-700'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  {message.error && (
-                    <div className="mt-2 flex items-center space-x-1 text-xs text-red-600 dark:text-red-400">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>Error occurred</span>
-                    </div>
-                  )}
-                  {message.intent && (
-                    <div className="mt-2 text-xs opacity-70">
-                      Intent: {message.intent}
-                      {message.confidence && ` (${Math.round(message.confidence * 100)}%)`}
-                    </div>
+                  {message.type === 'user' ? (
+                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  ) : (
+                    <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                   )}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {formatTime(message.timestamp)}
+                <div className={`flex-1 ${message.type === 'user' ? 'text-right' : ''}`}>
+                  <div
+                    className={`inline-block max-w-3xl p-3 rounded-lg relative group ${
+                      message.type === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : currentResponse.error
+                          ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    {/* Copy button */}
+                    <button
+                      onClick={() => copyToClipboard(currentResponse.content)}
+                      className={`absolute top-2 ${
+                        message.type === 'user' ? 'left-2' : 'right-2'
+                      } opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-black/10 dark:hover:bg-white/10`}
+                      title="Copy message"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+
+                    {/* Message content with markdown support for assistant messages */}
+                    {message.type === 'assistant' ? (
+                      <div className="text-sm prose prose-sm max-w-none dark:prose-invert">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {currentResponse.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">{currentResponse.content}</p>
+                    )}
+
+                    {currentResponse.error && (
+                      <div className="mt-2 flex items-center space-x-1 text-xs text-red-600 dark:text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>Error occurred</span>
+                      </div>
+                    )}
+                    {currentResponse.intent && (
+                      <div className="mt-2 text-xs opacity-70">
+                        Intent: {currentResponse.intent}
+                        {currentResponse.confidence &&
+                          ` (${Math.round(currentResponse.confidence * 100)}%)`}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Response controls for assistant messages */}
+                  {message.type === 'assistant' && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      {/* Retry button */}
+                      <button
+                        onClick={() => handleRetry(message.id)}
+                        disabled={isLoading || isRetrying}
+                        className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Retry this response"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                        <span>{isRetrying ? 'Retrying...' : 'Retry'}</span>
+                      </button>
+
+                      {/* Response navigation for multiple responses */}
+                      {hasMultipleResponses && (
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleSwitchResponse(message.id, 'prev')}
+                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-600"
+                            title="Previous response"
+                          >
+                            <ChevronLeft className="h-3 w-3" />
+                          </button>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {(message.activeResponseIndex ?? 0) + 1} of {message.responses!.length}
+                          </span>
+                          <button
+                            onClick={() => handleSwitchResponse(message.id, 'next')}
+                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-600"
+                            title="Next response"
+                          >
+                            <ChevronRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* User message copy button in controls area */}
+                  {message.type === 'user' && (
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => copyToClipboard(message.content)}
+                        className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        title="Copy message"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div
+                    className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${
+                      message.type === 'user' ? 'text-right' : ''
+                    }`}
+                  >
+                    {formatTime(currentResponse.timestamp)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
         {isLoading && (
           <div className="flex items-start space-x-3">
@@ -371,7 +556,7 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder={
               aiStatus === 'available'
                 ? 'Ask me about your documents...'
@@ -385,7 +570,7 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
                      disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={!input.trim() || aiStatus !== 'available' || isLoading}
             className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
                      disabled:opacity-50 disabled:cursor-not-allowed

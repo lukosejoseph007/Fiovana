@@ -8,6 +8,9 @@ export interface ChatMessage {
   intent?: string
   confidence?: number
   error?: string
+  responses?: ChatMessage[]
+  activeResponseIndex?: number
+  parentMessageId?: string
 }
 
 export interface ChatSession {
@@ -43,6 +46,14 @@ export type ChatAction =
   | { type: 'CHAT_ADD_MESSAGE'; payload: { sessionId: string; message: ChatMessage } }
   | { type: 'CHAT_DELETE_MESSAGE'; payload: { sessionId: string; messageId: string } }
   | { type: 'CHAT_CLEAR_SESSION_MESSAGES'; payload: string }
+  | {
+      type: 'CHAT_ADD_RESPONSE'
+      payload: { sessionId: string; messageId: string; response: ChatMessage }
+    }
+  | {
+      type: 'CHAT_SET_ACTIVE_RESPONSE'
+      payload: { sessionId: string; messageId: string; responseIndex: number }
+    }
 
   // UI State
   | { type: 'CHAT_SET_LOADING'; payload: boolean }
