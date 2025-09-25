@@ -265,7 +265,11 @@ impl EmbeddingEngine {
         let start_time = std::time::Instant::now();
         let max_duration = std::time::Duration::from_secs(30); // 30 second timeout for chunking
 
-        tracing::debug!("🔪 Starting text chunking for document '{}' ({} chars)", document_id, text.len());
+        tracing::debug!(
+            "🔪 Starting text chunking for document '{}' ({} chars)",
+            document_id,
+            text.len()
+        );
         let mut chunks = Vec::new();
 
         if text.len() <= self.config.chunk_size {
@@ -300,28 +304,41 @@ impl EmbeddingEngine {
 
             // Iteration protection
             if iteration_count > MAX_ITERATIONS {
-                tracing::error!("🚨 CHUNKING ITERATION LIMIT: Document '{}' exceeded {} iterations, stopping",
-                    document_id, MAX_ITERATIONS);
+                tracing::error!(
+                    "🚨 CHUNKING ITERATION LIMIT: Document '{}' exceeded {} iterations, stopping",
+                    document_id,
+                    MAX_ITERATIONS
+                );
                 break;
             }
 
             if iteration_count % 100 == 0 {
-                tracing::debug!("🔄 Chunking progress: Document '{}' - {} iterations, {} chunks created",
-                    document_id, iteration_count, chunks.len());
+                tracing::debug!(
+                    "🔄 Chunking progress: Document '{}' - {} iterations, {} chunks created",
+                    document_id,
+                    iteration_count,
+                    chunks.len()
+                );
             }
 
             let mut end_byte = std::cmp::min(start_byte + self.config.chunk_size, text.len());
 
             // Ensure we don't break UTF-8 character boundaries - with safety limit
             let mut boundary_attempts = 0;
-            while end_byte > start_byte && !text.is_char_boundary(end_byte) && boundary_attempts < 10 {
+            while end_byte > start_byte
+                && !text.is_char_boundary(end_byte)
+                && boundary_attempts < 10
+            {
                 end_byte -= 1;
                 boundary_attempts += 1;
             }
 
             if boundary_attempts >= 10 {
-                tracing::warn!("⚠️ UTF-8 boundary adjustment limit reached for document '{}' at position {}",
-                    document_id, end_byte);
+                tracing::warn!(
+                    "⚠️ UTF-8 boundary adjustment limit reached for document '{}' at position {}",
+                    document_id,
+                    end_byte
+                );
                 // Force to next valid boundary or use original position
                 if !text.is_char_boundary(end_byte) {
                     end_byte = std::cmp::min(start_byte + self.config.chunk_size, text.len());
@@ -344,7 +361,10 @@ impl EmbeddingEngine {
             let chunk_content = text[start_byte..end_byte].to_string();
 
             if chunk_content.is_empty() {
-                tracing::warn!("⚠️ Empty chunk detected for document '{}', breaking", document_id);
+                tracing::warn!(
+                    "⚠️ Empty chunk detected for document '{}', breaking",
+                    document_id
+                );
                 break; // Avoid infinite loop with empty chunks
             }
 
@@ -366,7 +386,8 @@ impl EmbeddingEngine {
             // Ensure we don't start in the middle of a UTF-8 character - with safety limit
             let mut new_start_byte = next_start;
             let mut utf8_attempts = 0;
-            while new_start_byte > 0 && !text.is_char_boundary(new_start_byte) && utf8_attempts < 10 {
+            while new_start_byte > 0 && !text.is_char_boundary(new_start_byte) && utf8_attempts < 10
+            {
                 new_start_byte -= 1;
                 utf8_attempts += 1;
             }
@@ -385,8 +406,12 @@ impl EmbeddingEngine {
             if new_start_byte >= end_byte || new_start_byte <= start_byte {
                 // Force progress to prevent infinite loop
                 new_start_byte = end_byte;
-                tracing::debug!("🔧 Forced progress: Moving from {} to {} for document '{}'",
-                    start_byte, new_start_byte, document_id);
+                tracing::debug!(
+                    "🔧 Forced progress: Moving from {} to {} for document '{}'",
+                    start_byte,
+                    new_start_byte,
+                    document_id
+                );
             }
 
             start_byte = new_start_byte;
@@ -394,18 +419,29 @@ impl EmbeddingEngine {
 
             // Safety check: if we've processed too many chunks, something might be wrong
             if chunks.len() > 500 {
-                tracing::error!("🚨 CHUNK LIMIT: Document '{}' generated {} chunks, stopping for safety",
-                    document_id, chunks.len());
+                tracing::error!(
+                    "🚨 CHUNK LIMIT: Document '{}' generated {} chunks, stopping for safety",
+                    document_id,
+                    chunks.len()
+                );
                 break;
             }
         }
 
         let duration = start_time.elapsed();
-        tracing::debug!("🔪 Completed text chunking for document '{}': {} chunks in {:?}",
-            document_id, chunks.len(), duration);
+        tracing::debug!(
+            "🔪 Completed text chunking for document '{}': {} chunks in {:?}",
+            document_id,
+            chunks.len(),
+            duration
+        );
 
         if duration > std::time::Duration::from_secs(5) {
-            tracing::warn!("⚠️ Slow chunking: Document '{}' took {:?} to chunk", document_id, duration);
+            tracing::warn!(
+                "⚠️ Slow chunking: Document '{}' took {:?} to chunk",
+                document_id,
+                duration
+            );
         }
 
         chunks

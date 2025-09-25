@@ -110,13 +110,17 @@ impl EmbeddingService {
         // Add aggressive timeout wrapper around the entire operation
         let timeout_duration = std::time::Duration::from_secs(self.config.timeout_seconds.min(20)); // Max 20 seconds for API calls
 
-        tracing::info!("🕒 Starting embedding generation for {} texts with {}s timeout", texts.len(), timeout_duration.as_secs());
+        tracing::info!(
+            "🕒 Starting embedding generation for {} texts with {}s timeout",
+            texts.len(),
+            timeout_duration.as_secs()
+        );
 
         match tokio::time::timeout(timeout_duration, self.get_embeddings_internal(texts)).await {
             Ok(result) => {
                 tracing::info!("✅ Embedding generation completed successfully");
                 result
-            },
+            }
             Err(_) => {
                 tracing::error!("⏰ CRITICAL: Embedding generation timed out after {} seconds - API may be hanging", timeout_duration.as_secs());
                 Err(anyhow!(

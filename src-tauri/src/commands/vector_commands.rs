@@ -899,7 +899,10 @@ pub async fn sync_documents_to_vector_system(
     for batch_start in (0..documents.len()).step_by(BATCH_SIZE) {
         // Check overall timeout
         if overall_start.elapsed().as_secs() > MAX_SYNC_DURATION {
-            tracing::error!("❌ SYNC TIMEOUT: Stopping after {} seconds to prevent system hang", MAX_SYNC_DURATION);
+            tracing::error!(
+                "❌ SYNC TIMEOUT: Stopping after {} seconds to prevent system hang",
+                MAX_SYNC_DURATION
+            );
             break;
         }
 
@@ -918,8 +921,13 @@ pub async fn sync_documents_to_vector_system(
             let doc_index = batch_start + local_index;
 
             // Skip overly large documents to prevent hangs
-            if document.content.len() > 50000 { // 50KB limit
-                let skip_msg = format!("⏩ {}: Skipped (too large: {} chars)", document.title, document.content.len());
+            if document.content.len() > 50000 {
+                // 50KB limit
+                let skip_msg = format!(
+                    "⏩ {}: Skipped (too large: {} chars)",
+                    document.title,
+                    document.content.len()
+                );
                 sync_results.push(skip_msg.clone());
                 tracing::warn!("{}", skip_msg);
                 continue;
@@ -936,19 +944,33 @@ pub async fn sync_documents_to_vector_system(
             // Create a future for processing this single document with strict limits
             let doc_future = async {
                 // Create chunks from the document content with timeout protection
-                tracing::debug!("🔪 Starting chunking for document '{}' ({} chars)", document.title, document.content.len());
+                tracing::debug!(
+                    "🔪 Starting chunking for document '{}' ({} chars)",
+                    document.title,
+                    document.content.len()
+                );
 
-                let chunking_future = async {
-                    engine.chunk_text(&document.content, &document.id)
-                };
+                let chunking_future = async { engine.chunk_text(&document.content, &document.id) };
 
-                let chunks = match tokio::time::timeout(tokio::time::Duration::from_secs(45), chunking_future).await {
+                let chunks = match tokio::time::timeout(
+                    tokio::time::Duration::from_secs(45),
+                    chunking_future,
+                )
+                .await
+                {
                     Ok(chunks) => {
-                        tracing::debug!("🔪 Chunking completed for '{}': {} chunks", document.title, chunks.len());
+                        tracing::debug!(
+                            "🔪 Chunking completed for '{}': {} chunks",
+                            document.title,
+                            chunks.len()
+                        );
                         chunks
-                    },
+                    }
                     Err(_) => {
-                        tracing::error!("🚨 CHUNKING TIMEOUT: Document '{}' chunking exceeded 45 seconds", document.title);
+                        tracing::error!(
+                            "🚨 CHUNKING TIMEOUT: Document '{}' chunking exceeded 45 seconds",
+                            document.title
+                        );
                         return Err("Document chunking timed out - document may contain problematic content".to_string());
                     }
                 };
@@ -981,7 +1003,10 @@ pub async fn sync_documents_to_vector_system(
 
                 // Warn if embedding took too long (might indicate API issues)
                 if embedding_time.as_secs() > 10 {
-                    tracing::warn!("⚠️ Embedding generation took {} seconds - API may be slow", embedding_time.as_secs());
+                    tracing::warn!(
+                        "⚠️ Embedding generation took {} seconds - API may be slow",
+                        embedding_time.as_secs()
+                    );
                 }
 
                 // Store embeddings in vector store
@@ -1012,7 +1037,10 @@ pub async fn sync_documents_to_vector_system(
                     tracing::error!("❌ Failed to sync '{}': {}", document.title, error);
                 }
                 Err(_) => {
-                    let timeout_msg = format!("⏰ {}: Timed out after 15s (API hang detected - preventing system freeze)", document.title);
+                    let timeout_msg = format!(
+                        "⏰ {}: Timed out after 15s (API hang detected - preventing system freeze)",
+                        document.title
+                    );
                     sync_results.push(timeout_msg.clone());
                     failed_syncs += 1;
                     tracing::error!("⏰ CRITICAL: Document '{}' timed out after 15 seconds - preventing system hang", document.title);
@@ -1021,8 +1049,12 @@ pub async fn sync_documents_to_vector_system(
 
             // Aggressive circuit breaker: Stop immediately on any timeout or if too many failures
             if failed_syncs >= 2 || (failed_syncs >= 1 && successful_syncs == 0) {
-                tracing::error!("🔴 EMERGENCY STOP: Halting sync after {} failures to prevent system freeze", failed_syncs);
-                sync_results.push("🔴 EMERGENCY STOP: Sync halted to prevent system hang".to_string());
+                tracing::error!(
+                    "🔴 EMERGENCY STOP: Halting sync after {} failures to prevent system freeze",
+                    failed_syncs
+                );
+                sync_results
+                    .push("🔴 EMERGENCY STOP: Sync halted to prevent system hang".to_string());
                 break;
             }
 

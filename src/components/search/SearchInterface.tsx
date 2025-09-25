@@ -108,8 +108,11 @@ const SearchInterface: React.FC = () => {
       await Promise.race([
         initPromise,
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Vector system initialization timed out after 30 seconds')), 30000)
-        )
+          setTimeout(
+            () => reject(new Error('Vector system initialization timed out after 30 seconds')),
+            30000
+          )
+        ),
       ])
       console.log('Vector system initialized successfully')
 
@@ -118,8 +121,12 @@ const SearchInterface: React.FC = () => {
       const syncResult = await Promise.race([
         syncPromise,
         new Promise<string>((_, reject) =>
-          setTimeout(() => reject(new Error('Document sync timed out after 90 seconds to prevent system hang')), 90000)
-        )
+          setTimeout(
+            () =>
+              reject(new Error('Document sync timed out after 90 seconds to prevent system hang')),
+            90000
+          )
+        ),
       ])
       console.log('Document sync result:', syncResult)
 

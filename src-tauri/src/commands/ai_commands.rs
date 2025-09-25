@@ -444,7 +444,10 @@ async fn perform_enhanced_document_search(
 
     if !vector_results.is_empty() {
         // Vector search found results - use only these (most precise and efficient)
-        tracing::info!("Using vector search results only - {} characters", vector_results.len());
+        tracing::info!(
+            "Using vector search results only - {} characters",
+            vector_results.len()
+        );
         vector_results
     } else {
         // Vector search failed, fall back to document search
@@ -452,7 +455,10 @@ async fn perform_enhanced_document_search(
         let keyword_results = perform_indexed_document_search(indexer_state, query).await;
 
         if !keyword_results.is_empty() {
-            tracing::info!("Using document search fallback - {} characters", keyword_results.len());
+            tracing::info!(
+                "Using document search fallback - {} characters",
+                keyword_results.len()
+            );
             keyword_results
         } else {
             // No results from either search
