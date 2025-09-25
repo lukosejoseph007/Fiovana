@@ -1192,7 +1192,7 @@ mod tests {
         assert_eq!(state.vector_store.dimension(), 1536); // API model default dimension (changed from local 384)
 
         // Test that embedding engine can be created (requires API configuration)
-        let config = EmbeddingConfig::default();
+        let _config = EmbeddingConfig::default();
         // Note: This will fail without API keys, which is expected for security
         // Local embedding fallback has been removed to prevent system crashes
     }
