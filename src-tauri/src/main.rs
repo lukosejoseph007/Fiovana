@@ -204,6 +204,9 @@ async fn main() {
         .manage(document_indexer_state)
         .manage(embedding_engine_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
+        .manage(Arc::new(tokio::sync::RwLock::new(
+            commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
+        )))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -402,6 +405,11 @@ async fn main() {
             commands::execute_document_command,
             commands::parse_document_command,
             commands::get_available_document_commands,
+            // Structure analysis commands
+            commands::analyze_document_structure,
+            commands::analyze_content_structure,
+            commands::batch_analyze_structure,
+            commands::compare_document_structures,
         ])
         .setup(move |app| {
             info!("Application setup complete");

@@ -15,6 +15,7 @@ pub mod metadata_extractor;
 pub mod pdf_parser;
 pub mod progress_persistence;
 pub mod progress_tracker;
+pub mod structure_analyzer;
 
 pub use batch_processor::*;
 pub use content_hasher::*;
@@ -44,6 +45,12 @@ pub use metadata_extractor::*;
 pub use pdf_parser::*;
 pub use progress_persistence::*;
 pub use progress_tracker::*;
+#[allow(unused_imports)]
+pub use structure_analyzer::{
+    AnalyzedSection, ContentPattern, ContentPatternMatch, DocumentFlow, DocumentOrganization,
+    HeadingType, SectionType, StructuralStatistics,
+};
+pub use structure_analyzer::{DocumentStructureAnalysis, HeadingNode, StructureAnalyzer};
 
 #[allow(dead_code)]
 pub fn init() {
