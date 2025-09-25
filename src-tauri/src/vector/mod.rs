@@ -72,6 +72,36 @@ pub struct EmbeddingEngine {
 }
 
 impl EmbeddingEngine {
+    /// Create a new EmbeddingEngine for testing that uses mock embeddings
+    #[cfg(test)]
+    pub async fn new_mock_for_test(mut config: EmbeddingConfig) -> Result<Self> {
+        use std::collections::HashMap;
+
+        // Override config to use test model
+        config.model_name = "test-embedding-model".to_string();
+
+        // Create a mock embedding service config
+        let service_config = EmbeddingServiceConfig {
+            provider: EmbeddingProvider::OpenAI,
+            api_key: Some("test_key".to_string()),
+            model_name: config.model_name.clone(),
+            dimension: config.dimension,
+            max_tokens: config.max_length,
+            batch_size: 25,
+            timeout_seconds: 20,
+        };
+
+        // Create embedding service but don't test connection for mocks
+        let embedding_service = EmbeddingService::new(service_config).await?;
+
+        Ok(Self {
+            config,
+            embedding_service,
+            embeddings_cache: Arc::new(RwLock::new(HashMap::new())),
+            model_available: true, // Mock as available
+        })
+    }
+
     pub async fn new(config: EmbeddingConfig) -> Result<Self> {
         // Create embedding service configuration from engine config
         // Prioritize API-based embeddings to avoid CPU overload
@@ -248,8 +278,71 @@ impl EmbeddingEngine {
     }
 
     pub async fn embed_text(&self, text: &str) -> Result<Vec<f32>> {
+        #[cfg(test)]
+        {
+            // For testing: generate deterministic mock embeddings
+            if self.config.model_name == "test-embedding-model" {
+                return self.generate_mock_embedding(text).await;
+            }
+        }
+
         // Use the embedding service instead of manual implementation
         self.embedding_service.get_embedding(text.to_string()).await
+    }
+
+    #[cfg(test)]
+    async fn generate_mock_embedding(&self, text: &str) -> Result<Vec<f32>> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        // Check cache first
+        {
+            let cache = self.embeddings_cache.read().await;
+            if let Some(embedding) = cache.get(text) {
+                return Ok(embedding.clone());
+            }
+        }
+
+        // Generate deterministic embedding based on text hash
+        let mut hasher = DefaultHasher::new();
+        text.hash(&mut hasher);
+        let hash = hasher.finish();
+
+        // Create a deterministic but varied embedding vector
+        let mut embedding = Vec::with_capacity(self.config.dimension);
+        let mut seed = hash;
+
+        for _i in 0..self.config.dimension {
+            // Simple PRNG to generate consistent values
+            seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
+            let normalized = (seed as f32 / u64::MAX as f32) * 2.0 - 1.0; // Range [-1, 1]
+            embedding.push(normalized * 0.1); // Scale down to reasonable embedding values
+        }
+
+        // Cache the result
+        {
+            let mut cache = self.embeddings_cache.write().await;
+            cache.insert(text.to_string(), embedding.clone());
+        }
+
+        Ok(embedding)
+    }
+
+    #[cfg(test)]
+    async fn generate_mock_chunk_embeddings(
+        &self,
+        chunks: &[DocumentChunk],
+    ) -> Result<Vec<EmbeddingRecord>> {
+        let mut records = Vec::new();
+        for chunk in chunks {
+            let embedding = self.generate_mock_embedding(&chunk.content).await?;
+            records.push(EmbeddingRecord {
+                chunk_id: chunk.id.clone(),
+                embedding,
+                timestamp: chrono::Utc::now(),
+            });
+        }
+        Ok(records)
     }
 
     // Expose embedding service methods for advanced configuration
@@ -450,6 +543,14 @@ impl EmbeddingEngine {
     pub async fn embed_chunks(&self, chunks: &[DocumentChunk]) -> Result<Vec<EmbeddingRecord>> {
         if chunks.is_empty() {
             return Ok(Vec::new());
+        }
+
+        #[cfg(test)]
+        {
+            // For testing: generate mock embeddings
+            if self.config.model_name == "test-embedding-model" {
+                return self.generate_mock_chunk_embeddings(chunks).await;
+            }
         }
 
         // Batch process chunks for efficiency - collect all text content
@@ -1088,7 +1189,7 @@ mod tests {
     #[tokio::test]
     async fn test_embedding_engine() -> Result<()> {
         let config = EmbeddingConfig::default();
-        let engine = EmbeddingEngine::new(config).await?;
+        let engine = EmbeddingEngine::new_mock_for_test(config).await?;
 
         // Test basic functionality
         let text = "This is a test document for embedding.";
@@ -1132,7 +1233,7 @@ mod tests {
             dimension: 3,
             ..Default::default()
         };
-        let _engine = EmbeddingEngine::new(config).await?;
+        let _engine = EmbeddingEngine::new_mock_for_test(config).await?;
 
         // Create test chunks
         let chunks = vec![
@@ -1249,7 +1350,7 @@ mod tests {
     #[tokio::test]
     async fn test_embedding_deterministic() -> Result<()> {
         let config = EmbeddingConfig::default();
-        let engine = EmbeddingEngine::new(config).await?;
+        let engine = EmbeddingEngine::new_mock_for_test(config).await?;
 
         let text = "Test text for deterministic embedding";
         let embedding1 = engine.embed_text(text).await?;
@@ -1263,7 +1364,7 @@ mod tests {
     #[tokio::test]
     async fn test_embedding_features() -> Result<()> {
         let config = EmbeddingConfig::default();
-        let engine = EmbeddingEngine::new(config).await?;
+        let engine = EmbeddingEngine::new_mock_for_test(config).await?;
 
         // Test different types of text
         let texts = vec![
@@ -1364,7 +1465,7 @@ mod tests {
     async fn test_keyword_search_integration() -> Result<()> {
         let store = VectorStore::new(1536); // API model dimensions
         let config = EmbeddingConfig::default();
-        let engine = EmbeddingEngine::new(config).await?;
+        let engine = EmbeddingEngine::new_mock_for_test(config).await?;
 
         // Create test chunks with relevant content
         let chunks = vec![
