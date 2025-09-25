@@ -1087,7 +1087,7 @@ mod tests {
 # User Manual
 
 ## Introduction
-This document explains how to use the system.
+This document explains how to use the system effectively. It provides comprehensive guidance and detailed instructions for users to understand and operate the system properly.
 
 ## Procedures
 Follow these steps:
