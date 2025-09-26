@@ -284,13 +284,25 @@ impl AIOrchestrator {
             content: response_content,
             intent: intent.intent.clone(),
             confidence: 0.95, // Default confidence
+            confidence_level: response::ConfidenceLevel::VeryHigh,
             suggested_actions: vec![],
+            follow_up_questions: vec![],
+            document_references: vec![],
+            action_items: vec![],
             metadata: response::ResponseMetadata {
                 processing_time_ms: 0,
                 model_used: self.config.default_model.clone(),
                 tokens_used: None,
                 confidence_explanation:
                     "Document-aware response using context manager and prompt templates".to_string(),
+                context_used: true,
+                documents_analyzed: 0,
+                session_id: Some(session_id.to_string()),
+                turn_id: None,
+                reasoning_chain: vec![
+                    "Used document-aware processing".to_string(),
+                    "Applied conversation context".to_string(),
+                ],
             },
         };
 

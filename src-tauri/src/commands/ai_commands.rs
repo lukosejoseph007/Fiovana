@@ -158,6 +158,9 @@ pub async fn chat_with_ai(
                             content: response_text,
                             intent: conv_response.intent,
                             confidence: conv_response.confidence,
+                            confidence_level: crate::ai::response::ConfidenceLevel::from_score(
+                                conv_response.confidence,
+                            ),
                             suggested_actions: conv_response
                                 .suggested_actions
                                 .into_iter()
@@ -166,13 +169,26 @@ pub async fn chat_with_ai(
                                     description: "Generated from conversational intelligence"
                                         .to_string(),
                                     parameters: None,
+                                    priority: crate::ai::response::ActionPriority::Medium,
+                                    estimated_duration: Some("Variable".to_string()),
+                                    prerequisites: vec![],
                                 })
                                 .collect(),
+                            follow_up_questions: vec![],
+                            document_references: vec![],
+                            action_items: vec![],
                             metadata: crate::ai::response::ResponseMetadata {
                                 processing_time_ms: action_result.execution_time_ms,
                                 model_used: "intent_classification".to_string(),
                                 tokens_used: None,
                                 confidence_explanation: conv_response.reasoning,
+                                context_used: false,
+                                documents_analyzed: 0,
+                                session_id: None,
+                                turn_id: None,
+                                reasoning_chain: vec![
+                                    "Used conversational intelligence system".to_string()
+                                ],
                             },
                         };
 

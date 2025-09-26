@@ -1,8 +1,11 @@
 // src-tauri/src/ai/response.rs
 
 use anyhow::Result;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
+use super::conversation_context::ConversationSession;
 use super::intent::{Intent, IntentConfidence};
 use super::ollama::OllamaClient;
 use super::AIConfig;
@@ -16,13 +19,38 @@ pub enum ResponseType {
     MultiStep,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ConfidenceLevel {
+    VeryHigh, // 0.9+
+    High,     // 0.8-0.89
+    Medium,   // 0.6-0.79
+    Low,      // 0.4-0.59
+    VeryLow,  // <0.4
+}
+
+impl ConfidenceLevel {
+    pub fn from_score(score: f32) -> Self {
+        match score {
+            s if s >= 0.9 => ConfidenceLevel::VeryHigh,
+            s if s >= 0.8 => ConfidenceLevel::High,
+            s if s >= 0.6 => ConfidenceLevel::Medium,
+            s if s >= 0.4 => ConfidenceLevel::Low,
+            _ => ConfidenceLevel::VeryLow,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIResponse {
     pub response_type: ResponseType,
     pub content: String,
     pub intent: Intent,
     pub confidence: f32,
+    pub confidence_level: ConfidenceLevel,
     pub suggested_actions: Vec<SuggestedAction>,
+    pub follow_up_questions: Vec<FollowUpQuestion>,
+    pub document_references: Vec<DocumentReferenceContext>,
+    pub action_items: Vec<ActionItem>,
     pub metadata: ResponseMetadata,
 }
 
@@ -31,6 +59,62 @@ pub struct SuggestedAction {
     pub action_type: String,
     pub description: String,
     pub parameters: Option<serde_json::Value>,
+    pub priority: ActionPriority,
+    pub estimated_duration: Option<String>,
+    pub prerequisites: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ActionPriority {
+    Immediate,
+    High,
+    Medium,
+    Low,
+    Optional,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FollowUpQuestion {
+    pub question: String,
+    pub purpose: String,
+    pub options: Option<Vec<String>>,
+    pub priority: QuestionPriority,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum QuestionPriority {
+    Critical,  // Must be answered to proceed
+    Important, // Should be answered for best results
+    Helpful,   // Nice to have for optimization
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentReferenceContext {
+    pub document_id: String,
+    pub title: String,
+    pub relevance_score: f32,
+    pub specific_sections: Vec<String>,
+    pub reference_reason: String,
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActionItem {
+    pub title: String,
+    pub description: String,
+    pub action_type: String,
+    pub estimated_time: Option<String>,
+    pub depends_on: Vec<String>,
+    pub status: ActionStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ActionStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Blocked,
+    Cancelled,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -39,6 +123,11 @@ pub struct ResponseMetadata {
     pub model_used: String,
     pub tokens_used: Option<u32>,
     pub confidence_explanation: String,
+    pub context_used: bool,
+    pub documents_analyzed: usize,
+    pub session_id: Option<String>,
+    pub turn_id: Option<String>,
+    pub reasoning_chain: Vec<String>,
 }
 
 #[allow(dead_code)]
@@ -159,20 +248,39 @@ impl ResponseGenerator {
         let response_type =
             self.determine_response_type(&intent_result.intent, intent_result.confidence);
 
-        // Generate suggested actions
+        // Generate enhanced response components
+        let confidence_level = ConfidenceLevel::from_score(intent_result.confidence);
         let suggested_actions = self.generate_suggested_actions(&intent_result.intent);
+        let follow_up_questions = self.generate_follow_up_questions(
+            &intent_result.intent,
+            intent_result.confidence,
+            None,
+        );
+        let document_references = self.extract_document_references(context, None);
+        let documents_analyzed_count = document_references.len();
+        let action_items = self.generate_action_items(&intent_result.intent, &suggested_actions);
+        let reasoning_chain = self.build_reasoning_chain(intent_result, context.is_some(), false);
 
         Ok(AIResponse {
             response_type,
             content: ai_response,
             intent: intent_result.intent.clone(),
             confidence: intent_result.confidence,
+            confidence_level,
             suggested_actions,
+            follow_up_questions,
+            document_references,
+            action_items,
             metadata: ResponseMetadata {
                 processing_time_ms: processing_time,
                 model_used: config.default_model.clone(),
                 tokens_used: None, // Ollama doesn't provide token counts in simple API
                 confidence_explanation: intent_result.reasoning.clone(),
+                context_used: context.is_some(),
+                documents_analyzed: documents_analyzed_count,
+                session_id: None,
+                turn_id: None, // Will be set by conversation manager
+                reasoning_chain,
             },
         })
     }
@@ -242,11 +350,17 @@ impl ResponseGenerator {
                     action_type: "select_documents".to_string(),
                     description: "Select documents to compare".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("1 minute".to_string()),
+                    prerequisites: vec![],
                 },
                 SuggestedAction {
                     action_type: "run_comparison".to_string(),
                     description: "Run document comparison".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("2-5 minutes".to_string()),
+                    prerequisites: vec!["select_documents".to_string()],
                 },
             ],
             Intent::GenerateOutput => vec![
@@ -254,11 +368,17 @@ impl ResponseGenerator {
                     action_type: "select_format".to_string(),
                     description: "Choose output format (Word, PDF, HTML)".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("30 seconds".to_string()),
+                    prerequisites: vec![],
                 },
                 SuggestedAction {
                     action_type: "configure_template".to_string(),
                     description: "Configure document template".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("2 minutes".to_string()),
+                    prerequisites: vec![],
                 },
             ],
             Intent::SearchDocuments => vec![
@@ -266,11 +386,17 @@ impl ResponseGenerator {
                     action_type: "open_search".to_string(),
                     description: "Open search interface".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("10 seconds".to_string()),
+                    prerequisites: vec![],
                 },
                 SuggestedAction {
                     action_type: "filter_documents".to_string(),
                     description: "Apply document filters".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("30 seconds".to_string()),
+                    prerequisites: vec![],
                 },
             ],
             Intent::ManageFiles => vec![
@@ -278,11 +404,17 @@ impl ResponseGenerator {
                     action_type: "import_files".to_string(),
                     description: "Import new files".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Medium,
+                    estimated_duration: Some("1-3 minutes".to_string()),
+                    prerequisites: vec![],
                 },
                 SuggestedAction {
                     action_type: "organize_workspace".to_string(),
                     description: "Organize workspace files".to_string(),
                     parameters: None,
+                    priority: ActionPriority::Low,
+                    estimated_duration: Some("5-10 minutes".to_string()),
+                    prerequisites: vec![],
                 },
             ],
             _ => vec![],
@@ -310,6 +442,280 @@ impl ResponseGenerator {
                 "I'm here to help with document processing tasks. Could you please clarify what you'd like to do? I can help with comparing documents, generating outputs, searching content, and managing your workspace.".to_string()
             }
         }
+    }
+
+    fn generate_follow_up_questions(
+        &self,
+        intent: &Intent,
+        confidence: f32,
+        session: Option<&ConversationSession>,
+    ) -> Vec<FollowUpQuestion> {
+        let mut questions = Vec::new();
+
+        // Add confidence-based questions
+        if confidence < 0.7 {
+            questions.push(FollowUpQuestion {
+                question: "Could you provide more details about what you're trying to accomplish?"
+                    .to_string(),
+                purpose: "Clarify intent and improve accuracy".to_string(),
+                options: None,
+                priority: QuestionPriority::Critical,
+            });
+        }
+
+        // Add intent-specific questions
+        match intent {
+            Intent::CompareDocuments => {
+                questions.extend(vec![
+                    FollowUpQuestion {
+                        question:
+                            "What specific aspects would you like me to focus on in the comparison?"
+                                .to_string(),
+                        purpose: "Focus the comparison analysis".to_string(),
+                        options: Some(vec![
+                            "Content changes".to_string(),
+                            "Structural changes".to_string(),
+                            "Style differences".to_string(),
+                            "All aspects".to_string(),
+                        ]),
+                        priority: QuestionPriority::Important,
+                    },
+                    FollowUpQuestion {
+                        question: "Do you need the results in a specific format?".to_string(),
+                        purpose: "Determine output format preferences".to_string(),
+                        options: Some(vec![
+                            "Summary report".to_string(),
+                            "Detailed analysis".to_string(),
+                            "Side-by-side view".to_string(),
+                        ]),
+                        priority: QuestionPriority::Helpful,
+                    },
+                ]);
+            }
+            Intent::GenerateOutput => {
+                questions.extend(vec![
+                    FollowUpQuestion {
+                        question: "Who is the target audience for this output?".to_string(),
+                        purpose: "Tailor content appropriately".to_string(),
+                        options: Some(vec![
+                            "Students/Beginners".to_string(),
+                            "Professionals".to_string(),
+                            "Experts".to_string(),
+                            "General audience".to_string(),
+                        ]),
+                        priority: QuestionPriority::Important,
+                    },
+                    FollowUpQuestion {
+                        question: "What's the primary purpose of this document?".to_string(),
+                        purpose: "Guide content structure and style".to_string(),
+                        options: Some(vec![
+                            "Training material".to_string(),
+                            "Reference guide".to_string(),
+                            "Presentation".to_string(),
+                            "Assessment".to_string(),
+                        ]),
+                        priority: QuestionPriority::Important,
+                    },
+                ]);
+            }
+            Intent::UpdateContent => {
+                questions.push(FollowUpQuestion {
+                    question: "Should I preserve the original writing style and tone?".to_string(),
+                    purpose: "Maintain consistency in updates".to_string(),
+                    options: Some(vec![
+                        "Yes, preserve original style".to_string(),
+                        "Update to match new standards".to_string(),
+                        "Let me decide case by case".to_string(),
+                    ]),
+                    priority: QuestionPriority::Important,
+                });
+            }
+            Intent::SearchDocuments => {
+                if let Some(conv_session) = session {
+                    if conv_session.document_references.is_empty() {
+                        questions.push(FollowUpQuestion {
+                            question:
+                                "Would you like me to search across all documents or specific ones?"
+                                    .to_string(),
+                            purpose: "Scope the search appropriately".to_string(),
+                            options: Some(vec![
+                                "All documents".to_string(),
+                                "Recent documents".to_string(),
+                                "Specific document types".to_string(),
+                            ]),
+                            priority: QuestionPriority::Important,
+                        });
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        questions
+    }
+
+    fn extract_document_references(
+        &self,
+        context: Option<&str>,
+        session: Option<&ConversationSession>,
+    ) -> Vec<DocumentReferenceContext> {
+        let mut references = Vec::new();
+
+        // Extract from context if available
+        if let Some(ctx) = context {
+            // Simple pattern matching for document references
+            let doc_patterns = [
+                r#"(?i)document(?:s)?\s+(?:named|called|titled)\s+['"]([^'"]+)['"]?"#,
+                r#"(?i)file(?:s)?\s+['"]([^'"]+)['"]?"#,
+                r"(?i)([\w\s]+\.(?:docx?|pdf|txt|md))\b",
+            ];
+
+            for pattern in &doc_patterns {
+                if let Ok(regex) = Regex::new(pattern) {
+                    for cap in regex.captures_iter(ctx) {
+                        if let Some(title) = cap.get(1) {
+                            references.push(DocumentReferenceContext {
+                                document_id: format!("doc_{}", references.len()),
+                                title: title.as_str().to_string(),
+                                relevance_score: 0.8,
+                                specific_sections: vec![],
+                                reference_reason: "Mentioned in context".to_string(),
+                                path: None,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add from session context
+        if let Some(conv_session) = session {
+            for doc_ref in &conv_session.document_references {
+                references.push(DocumentReferenceContext {
+                    document_id: doc_ref.document_id.clone(),
+                    title: doc_ref.title.clone(),
+                    relevance_score: doc_ref.relevance_score,
+                    specific_sections: vec![],
+                    reference_reason: "Previously discussed in conversation".to_string(),
+                    path: doc_ref.path.clone(),
+                });
+            }
+        }
+
+        references
+    }
+
+    fn generate_action_items(
+        &self,
+        intent: &Intent,
+        _suggested_actions: &[SuggestedAction],
+    ) -> Vec<ActionItem> {
+        let mut action_items = Vec::new();
+
+        match intent {
+            Intent::CompareDocuments => {
+                action_items.push(ActionItem {
+                    title: "Document Comparison Analysis".to_string(),
+                    description: "Complete comparison between selected documents".to_string(),
+                    action_type: "analysis".to_string(),
+                    estimated_time: Some("5-10 minutes".to_string()),
+                    depends_on: vec![],
+                    status: ActionStatus::Pending,
+                });
+            }
+            Intent::GenerateOutput => {
+                action_items.push(ActionItem {
+                    title: "Document Generation".to_string(),
+                    description: "Generate output in specified format".to_string(),
+                    action_type: "generation".to_string(),
+                    estimated_time: Some("3-8 minutes".to_string()),
+                    depends_on: vec![],
+                    status: ActionStatus::Pending,
+                });
+            }
+            Intent::UpdateContent => {
+                action_items.push(ActionItem {
+                    title: "Content Update".to_string(),
+                    description: "Apply changes while preserving style and structure".to_string(),
+                    action_type: "update".to_string(),
+                    estimated_time: Some("2-5 minutes".to_string()),
+                    depends_on: vec![],
+                    status: ActionStatus::Pending,
+                });
+            }
+            _ => {}
+        }
+
+        action_items
+    }
+
+    fn build_reasoning_chain(
+        &self,
+        intent_result: &IntentConfidence,
+        has_context: bool,
+        has_session: bool,
+    ) -> Vec<String> {
+        let mut reasoning = vec![
+            format!(
+                "Analyzed user input and classified intent as {:?}",
+                intent_result.intent
+            ),
+            format!(
+                "Confidence score: {:.1}% based on {}",
+                intent_result.confidence * 100.0,
+                intent_result.reasoning
+            ),
+        ];
+
+        if has_context {
+            reasoning.push("Incorporated relevant context from document analysis".to_string());
+        }
+
+        if has_session {
+            reasoning.push(
+                "Referenced conversation history for better context understanding".to_string(),
+            );
+        }
+
+        if intent_result.confidence < 0.7 {
+            reasoning.push("Generated clarifying questions due to low confidence".to_string());
+        }
+
+        if !intent_result.alternative_intents.is_empty() {
+            reasoning.push(format!(
+                "Considered {} alternative interpretations",
+                intent_result.alternative_intents.len()
+            ));
+        }
+
+        reasoning.push("Generated structured response with actionable suggestions".to_string());
+
+        reasoning
+    }
+
+    fn init_follow_up_templates(templates: &mut HashMap<Intent, Vec<String>>) {
+        templates.insert(
+            Intent::CompareDocuments,
+            vec![
+                "What specific changes are you most concerned about?".to_string(),
+                "Do you need a summary or detailed analysis?".to_string(),
+                "Should I focus on any particular sections?".to_string(),
+            ],
+        );
+
+        templates.insert(
+            Intent::GenerateOutput,
+            vec![
+                "What format would you prefer for the output?".to_string(),
+                "Who is the target audience?".to_string(),
+                "Do you have any style or branding requirements?".to_string(),
+            ],
+        );
+    }
+
+    fn init_action_templates(_templates: &mut HashMap<Intent, Vec<SuggestedAction>>) {
+        // This method can be expanded with more sophisticated action templates
+        // For now, we'll use the existing generate_suggested_actions logic
     }
 }
 
@@ -363,5 +769,78 @@ mod tests {
         let response = generator.generate_fallback_response(&intent_result);
         assert!(response.contains("Proxemic"));
         assert!(response.contains("help"));
+    }
+
+    #[test]
+    fn test_enhanced_response_generation() {
+        let generator = ResponseGenerator::new();
+
+        // Test confidence level mapping
+        assert_eq!(ConfidenceLevel::from_score(0.95), ConfidenceLevel::VeryHigh);
+        assert_eq!(ConfidenceLevel::from_score(0.85), ConfidenceLevel::High);
+        assert_eq!(ConfidenceLevel::from_score(0.65), ConfidenceLevel::Medium);
+        assert_eq!(ConfidenceLevel::from_score(0.45), ConfidenceLevel::Low);
+        assert_eq!(ConfidenceLevel::from_score(0.25), ConfidenceLevel::VeryLow);
+
+        // Test follow-up question generation
+        let questions =
+            generator.generate_follow_up_questions(&Intent::CompareDocuments, 0.9, None);
+        assert!(!questions.is_empty());
+
+        // Test document reference extraction
+        let context = "Please compare document_a.docx with the file 'project_spec.pdf'";
+        let references = generator.extract_document_references(Some(context), None);
+        assert!(!references.is_empty());
+
+        // Test action item generation
+        let actions = generator.generate_suggested_actions(&Intent::CompareDocuments);
+        let action_items = generator.generate_action_items(&Intent::CompareDocuments, &actions);
+        assert!(!action_items.is_empty());
+    }
+
+    #[test]
+    fn test_follow_up_questions() {
+        let generator = ResponseGenerator::new();
+
+        // Test low confidence generates clarifying questions
+        let questions =
+            generator.generate_follow_up_questions(&Intent::CompareDocuments, 0.5, None);
+        assert!(questions
+            .iter()
+            .any(|q| q.priority == QuestionPriority::Critical));
+
+        // Test intent-specific questions
+        let questions = generator.generate_follow_up_questions(&Intent::GenerateOutput, 0.9, None);
+        assert!(questions.iter().any(|q| q.question.contains("audience")));
+    }
+
+    #[test]
+    fn test_document_reference_extraction() {
+        let generator = ResponseGenerator::new();
+
+        // Test context extraction
+        let context = "Compare user_guide.pdf with technical_manual.docx";
+        let references = generator.extract_document_references(Some(context), None);
+        assert_eq!(references.len(), 2);
+        assert!(references.iter().any(|r| r.title.contains("user_guide")));
+        assert!(references
+            .iter()
+            .any(|r| r.title.contains("technical_manual")));
+    }
+
+    #[test]
+    fn test_reasoning_chain() {
+        let generator = ResponseGenerator::new();
+        let intent_result = IntentConfidence {
+            intent: Intent::CompareDocuments,
+            confidence: 0.8,
+            reasoning: "High keyword match".to_string(),
+            alternative_intents: vec![(Intent::SearchDocuments, 0.3)],
+        };
+
+        let reasoning = generator.build_reasoning_chain(&intent_result, true, false);
+        assert!(reasoning.len() >= 3);
+        assert!(reasoning.iter().any(|r| r.contains("CompareDocuments")));
+        assert!(reasoning.iter().any(|r| r.contains("context")));
     }
 }
