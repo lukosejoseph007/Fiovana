@@ -22,7 +22,7 @@ use tokio::sync::Mutex;
 pub struct WorkspaceIntelligence {
     document_indexer: Arc<Mutex<DocumentIndexer>>,
     relationship_analyzer: Arc<Mutex<RelationshipAnalyzer>>,
-    ai_orchestrator: Option<Arc<Mutex<AIOrchestrator>>>,
+    _ai_orchestrator: Option<Arc<Mutex<AIOrchestrator>>>,
 }
 
 /// Comprehensive workspace analysis results
@@ -267,7 +267,7 @@ impl WorkspaceIntelligence {
         Self {
             document_indexer,
             relationship_analyzer,
-            ai_orchestrator,
+            _ai_orchestrator: ai_orchestrator,
         }
     }
 
@@ -491,7 +491,7 @@ impl WorkspaceIntelligence {
             total_size += doc.content.len();
 
             // Track creation timeline (convert SystemTime to DateTime)
-            let datetime = DateTime::<Utc>::try_from(doc.indexed_at).unwrap_or_else(|_| Utc::now());
+            let datetime = DateTime::<Utc>::from(doc.indexed_at);
             let indexed_date = datetime.date_naive();
             *creation_timeline.entry(indexed_date).or_insert(0) += 1;
 
@@ -745,11 +745,7 @@ impl WorkspaceIntelligence {
                 let mut paths = vec![PathBuf::from(&doc_a.path)];
                 let max_similarity = similar_docs.iter().map(|(_, sim)| *sim).fold(0.0, f64::max);
 
-                paths.extend(
-                    similar_docs
-                        .into_iter()
-                        .map(|(path, _)| PathBuf::from(path)),
-                );
+                paths.extend(similar_docs.into_iter().map(|(path, _)| path));
 
                 duplicates.push(DuplicateContentGroup {
                     similarity_score: max_similarity,
@@ -916,8 +912,7 @@ impl WorkspaceIntelligence {
         let old_documents: Vec<_> = documents
             .iter()
             .filter(|doc| {
-                let doc_datetime =
-                    DateTime::<Utc>::try_from(doc.indexed_at).unwrap_or_else(|_| Utc::now());
+                let doc_datetime = DateTime::<Utc>::from(doc.indexed_at);
                 (now - doc_datetime).num_days() > 180 // 6 months old
             })
             .collect();
@@ -1003,8 +998,7 @@ impl WorkspaceIntelligence {
                 entry.total_size += doc.content.len();
 
                 // Convert SystemTime to DateTime for consistency
-                let datetime =
-                    DateTime::<Utc>::try_from(doc.indexed_at).unwrap_or_else(|_| Utc::now());
+                let datetime = DateTime::<Utc>::from(doc.indexed_at);
                 match entry.last_activity {
                     Some(current) if datetime > current => {
                         entry.last_activity = Some(datetime);
@@ -1102,8 +1096,7 @@ impl WorkspaceIntelligence {
         let oldest_doc = documents.iter().min_by_key(|doc| doc.indexed_at).unwrap();
 
         let time_span = {
-            let oldest_datetime =
-                DateTime::<Utc>::try_from(oldest_doc.indexed_at).unwrap_or_else(|_| Utc::now());
+            let oldest_datetime = DateTime::<Utc>::from(oldest_doc.indexed_at);
             Utc::now() - oldest_datetime
         };
 
@@ -1115,7 +1108,7 @@ impl WorkspaceIntelligence {
 
         let mut update_patterns = HashMap::new();
         for doc in documents {
-            let datetime = DateTime::<Utc>::try_from(doc.indexed_at).unwrap_or_else(|_| Utc::now());
+            let datetime = DateTime::<Utc>::from(doc.indexed_at);
             let month = datetime.format("%Y-%m").to_string();
             *update_patterns.entry(month).or_insert(0) += 1;
         }
@@ -1195,8 +1188,7 @@ impl WorkspaceIntelligence {
         let currency_score = documents
             .iter()
             .map(|doc| {
-                let doc_datetime =
-                    DateTime::<Utc>::try_from(doc.indexed_at).unwrap_or_else(|_| Utc::now());
+                let doc_datetime = DateTime::<Utc>::from(doc.indexed_at);
                 let days_old = (now - doc_datetime).num_days();
                 (1.0 - (days_old as f64 / 365.0)).max(0.0f64) // Decay over 1 year
             })

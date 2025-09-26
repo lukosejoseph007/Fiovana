@@ -45,7 +45,7 @@ pub struct GetWorkspaceRecommendationsResponse {
 #[derive(Debug, Deserialize)]
 pub struct GetWorkspaceInsightsRequest {
     pub workspace_path: PathBuf,
-    pub insight_types: Option<Vec<String>>,
+    pub _insight_types: Option<Vec<String>>,
 }
 
 /// Response for workspace insights
@@ -76,6 +76,7 @@ pub struct ProductivitySummary {
 }
 
 /// State container for workspace intelligence
+#[allow(dead_code)]
 pub struct WorkspaceIntelligenceState {
     pub analyzer: Arc<Mutex<WorkspaceIntelligence>>,
 }
