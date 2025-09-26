@@ -1,5 +1,6 @@
 // src-tauri/src/ai/mod.rs
 
+pub mod actions;
 pub mod anthropic;
 pub mod context;
 pub mod document_commands;
