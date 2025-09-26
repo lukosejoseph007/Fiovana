@@ -11,11 +11,13 @@ use std::path::{Path, PathBuf};
 
 pub mod backup;
 pub mod config;
+pub mod intelligence;
 pub mod manager;
 pub mod performance;
 pub mod types;
 
 pub use config::*;
+pub use intelligence::*;
 pub use manager::*;
 pub use types::*;
 

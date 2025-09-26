@@ -427,6 +427,13 @@ async fn main() {
             commands::find_related_documents,
             commands::get_relationship_types,
             commands::analyze_document_pair,
+            // Workspace intelligence commands
+            commands::initialize_workspace_intelligence,
+            commands::analyze_workspace,
+            commands::get_workspace_recommendations,
+            commands::get_workspace_insights,
+            commands::get_workspace_health_score,
+            commands::compare_workspaces,
         ])
         .setup(move |app| {
             info!("Application setup complete");

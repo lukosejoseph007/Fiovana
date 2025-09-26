@@ -18,6 +18,7 @@ pub mod relationship_commands;
 pub mod structure_commands;
 pub mod vector_commands;
 pub mod workspace_commands;
+pub mod workspace_intelligence_commands;
 pub mod workspace_performance_commands;
 
 // Re-export all commands for easy access
@@ -38,3 +39,4 @@ pub use relationship_commands::*;
 pub use structure_commands::*;
 pub use vector_commands::*;
 pub use workspace_commands::*;
+pub use workspace_intelligence_commands::*;
