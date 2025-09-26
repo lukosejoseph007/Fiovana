@@ -82,8 +82,105 @@ pub async fn chat_with_ai(
     ai_state: State<'_, AIState>,
     vector_state: State<'_, VectorState>,
     indexer_state: State<'_, DocumentIndexerState>,
+    conversational_state: State<
+        '_,
+        crate::commands::conversational_intelligence_commands::ConversationalIntelligenceState,
+    >,
     request: ChatRequest,
 ) -> Result<ChatResponse, String> {
+    // Check if conversational intelligence is available and enabled
+    let use_conversational_intelligence = {
+        let conv_state = conversational_state.lock().await;
+        conv_state.is_some()
+    };
+
+    if use_conversational_intelligence {
+        // Use the conversational intelligence system for enhanced intent-based processing
+        let conversation_request =
+            crate::commands::conversational_intelligence_commands::ConversationRequest {
+                user_input: request.message.clone(),
+                session_id: None, // ChatRequest doesn't have session_id, we'll auto-generate
+                context: request.context.as_ref().map(|ctx| {
+                    let mut context_map = std::collections::HashMap::new();
+                    context_map.insert("user_context".to_string(), ctx.clone());
+                    context_map
+                }),
+            };
+
+        match crate::commands::conversational_intelligence_commands::process_conversation(
+            conversational_state,
+            conversation_request,
+        )
+        .await
+        {
+            Ok(conv_response) => {
+                // If the action was executed successfully, return the result
+                if conv_response.action_executed {
+                    if let Some(action_result) = conv_response.action_result {
+                        let response_text = if action_result.success {
+                            format!(
+                                "I understood your intent ({:?}) and completed the action: {}",
+                                conv_response.intent, action_result.message
+                            )
+                        } else {
+                            format!(
+                                "I understood your intent ({:?}) but couldn't complete the action: {}",
+                                conv_response.intent, action_result.message
+                            )
+                        };
+
+                        let ai_response = AIResponse {
+                            response_type: if action_result.success {
+                                crate::ai::response::ResponseType::Action
+                            } else {
+                                crate::ai::response::ResponseType::Error
+                            },
+                            content: response_text,
+                            intent: conv_response.intent,
+                            confidence: conv_response.confidence,
+                            suggested_actions: conv_response
+                                .suggested_actions
+                                .into_iter()
+                                .map(|action| crate::ai::response::SuggestedAction {
+                                    action_type: action,
+                                    description: "Generated from conversational intelligence"
+                                        .to_string(),
+                                    parameters: None,
+                                })
+                                .collect(),
+                            metadata: crate::ai::response::ResponseMetadata {
+                                processing_time_ms: action_result.execution_time_ms,
+                                model_used: "intent_classification".to_string(),
+                                tokens_used: None,
+                                confidence_explanation: conv_response.reasoning,
+                            },
+                        };
+
+                        return Ok(ChatResponse {
+                            success: action_result.success,
+                            response: Some(ai_response),
+                            error: if action_result.success {
+                                None
+                            } else {
+                                Some(action_result.message)
+                            },
+                        });
+                    }
+                } else {
+                    // Action wasn't executed, fall back to conversational AI
+                    tracing::debug!("Intent classified as {:?} but action not executed, falling back to conversational AI", conv_response.intent);
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    "Conversational intelligence failed: {}, falling back to AI chat",
+                    e
+                );
+            }
+        }
+    }
+
+    // Fall back to traditional AI chat for general conversation or when conversational intelligence fails
     let state = ai_state.lock().await;
 
     match state.as_ref() {

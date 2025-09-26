@@ -172,6 +172,10 @@ async fn main() {
     // Initialize relationship analyzer state
     let relationship_state = commands::relationship_commands::RelationshipState::new();
 
+    // Initialize conversational intelligence state
+    let conversational_intelligence_state: commands::conversational_intelligence_commands::ConversationalIntelligenceState =
+        std::sync::Arc::new(tokio::sync::Mutex::new(None));
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -207,6 +211,7 @@ async fn main() {
         .manage(document_indexer_state)
         .manage(embedding_engine_state)
         .manage(relationship_state)
+        .manage(conversational_intelligence_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .manage(Arc::new(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
@@ -441,6 +446,15 @@ async fn main() {
             commands::analyze_style_group,
             commands::find_style_outliers,
             commands::get_style_recommendations,
+            // Conversational intelligence commands
+            commands::initialize_conversational_intelligence,
+            commands::process_conversation,
+            commands::classify_user_intent,
+            commands::extract_parameters,
+            commands::get_conversation_session,
+            commands::get_supported_intents,
+            commands::cleanup_conversation_sessions,
+            commands::get_conversational_intelligence_status,
         ])
         .setup(move |app| {
             info!("Application setup complete");

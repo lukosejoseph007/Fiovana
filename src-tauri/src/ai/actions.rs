@@ -1465,8 +1465,6 @@ pub fn intent_to_action(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use tokio::sync::Mutex as TokioMutex;
 
     #[tokio::test]
     async fn test_action_serialization() {
