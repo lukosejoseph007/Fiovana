@@ -18,6 +18,7 @@ pub mod progress_persistence;
 pub mod progress_tracker;
 pub mod relationship_analyzer;
 pub mod structure_analyzer;
+pub mod style_analyzer;
 
 pub use batch_processor::*;
 #[allow(unused_imports)]
@@ -63,6 +64,11 @@ pub use structure_analyzer::{
     HeadingType, SectionType, StructuralStatistics,
 };
 pub use structure_analyzer::{DocumentStructureAnalysis, HeadingNode, StructureAnalyzer};
+#[allow(unused_imports)]
+pub use style_analyzer::{
+    FormattingProfile, SentencePatterns, StructuralPatterns, StyleAnalyzer, StyleProfile,
+    StyleSimilarity, ToneAnalysis, ToneType, VocabularyComplexity, VocabularyProfile,
+};
 
 #[allow(dead_code)]
 pub fn init() {

@@ -434,6 +434,13 @@ async fn main() {
             commands::get_workspace_insights,
             commands::get_workspace_health_score,
             commands::compare_workspaces,
+            // Style analysis commands
+            commands::analyze_document_style,
+            commands::analyze_corpus_style,
+            commands::compare_document_styles,
+            commands::analyze_style_group,
+            commands::find_style_outliers,
+            commands::get_style_recommendations,
         ])
         .setup(move |app| {
             info!("Application setup complete");
