@@ -277,6 +277,10 @@ impl IntentClassifier {
                 "customize".to_string(),
                 "personalize".to_string(),
                 "rewrite for".to_string(),
+                "adapt for".to_string(),
+                "adapt this".to_string(),
+                "for a technical audience".to_string(),
+                "for an audience".to_string(),
             ],
         );
 
@@ -292,6 +296,9 @@ impl IntentClassifier {
                 "reformat".to_string(),
                 "restructure".to_string(),
                 "format as".to_string(),
+                "to pdf format".to_string(),
+                "to word format".to_string(),
+                "transform to".to_string(),
             ],
         );
 
@@ -404,7 +411,6 @@ impl IntentClassifier {
             Intent::ApplyStyle,
             vec![
                 "apply style".to_string(),
-                "format".to_string(),
                 "apply formatting".to_string(),
                 "style document".to_string(),
                 "format document".to_string(),
@@ -425,6 +431,9 @@ impl IntentClassifier {
                 "usage".to_string(),
                 "tutorial".to_string(),
                 "assistance".to_string(),
+                "how do I".to_string(),
+                "how can I".to_string(),
+                "how should I".to_string(),
             ],
         );
 
@@ -545,6 +554,9 @@ impl IntentClassifier {
                 "process explanation".to_string(),
                 "workflow".to_string(),
                 "procedure".to_string(),
+                "explain the process".to_string(),
+                "explain".to_string(),
+                "the process of".to_string(),
             ],
         );
 
@@ -601,11 +613,14 @@ impl IntentClassifier {
         let (confidence, reasoning) = if best_score >= 1.5 {
             (0.9, format!("Strong pattern match for {:?}", best_intent))
         } else if best_score >= 1.0 {
-            (0.7, format!("Good pattern match for {:?}", best_intent))
+            (0.8, format!("Good pattern match for {:?}", best_intent))
         } else if best_score >= 0.5 {
-            (0.5, format!("Weak pattern match for {:?}", best_intent))
+            (
+                0.6,
+                format!("Reasonable pattern match for {:?}", best_intent),
+            )
         } else {
-            (0.2, "No clear pattern match found".to_string())
+            (0.3, "No clear pattern match found".to_string())
         };
 
         Ok(IntentConfidence {
@@ -642,8 +657,15 @@ impl IntentClassifier {
             *scores.entry(Intent::SummarizeDocument).or_insert(0.0) += 1.2;
         }
 
-        // Document analysis heuristics
+        // Document analysis heuristics (but not when it's style-related or explaining process)
+        let style_context =
+            input.contains("style") || input.contains("tone") || input.contains("writing");
+        let explain_context = input.contains("explain")
+            || input.contains("step by step")
+            || input.contains("walk me through");
         if document_context
+            && !style_context
+            && !explain_context
             && (input.contains("analyze")
                 || input.contains("analysis")
                 || input.contains("review")
@@ -694,20 +716,20 @@ impl IntentClassifier {
             || input.contains("make");
 
         if generation_context {
-            if input.contains("new") || input.contains("document") {
-                *scores.entry(Intent::CreateDocument).or_insert(0.0) += 1.0;
-            } else if input.contains("adapt")
-                || input.contains("modify for")
-                || input.contains("tailor")
-            {
-                *scores.entry(Intent::AdaptContent).or_insert(0.0) += 1.0;
+            if input.contains("word") || input.contains("pdf") || input.contains("export") {
+                *scores.entry(Intent::GenerateOutput).or_insert(0.0) += 1.0;
             } else if input.contains("convert")
                 || input.contains("transform")
                 || input.contains("format")
             {
                 *scores.entry(Intent::TransformFormat).or_insert(0.0) += 1.0;
-            } else if input.contains("word") || input.contains("pdf") || input.contains("export") {
-                *scores.entry(Intent::GenerateOutput).or_insert(0.0) += 1.0;
+            } else if input.contains("adapt")
+                || input.contains("modify for")
+                || input.contains("tailor")
+            {
+                *scores.entry(Intent::AdaptContent).or_insert(0.0) += 1.0;
+            } else if input.contains("new") || input.contains("document") {
+                *scores.entry(Intent::CreateDocument).or_insert(0.0) += 1.0;
             }
         }
 
@@ -737,7 +759,7 @@ impl IntentClassifier {
         }
 
         // Style operation context boosting
-        if input.contains("style") || input.contains("tone") || input.contains("writing") {
+        if style_context {
             if input.contains("analyze") || input.contains("analysis") || input.contains("check") {
                 *scores.entry(Intent::AnalyzeStyle).or_insert(0.0) += 1.0;
             } else if input.contains("adapt")
@@ -753,14 +775,22 @@ impl IntentClassifier {
         // Question patterns analysis (more nuanced help detection)
         if input.starts_with("how") || input.starts_with("what") || input.starts_with("can") {
             if input.contains("do I") || input.contains("can I") || input.contains("should I") {
-                *scores.entry(Intent::GetHelp).or_insert(0.0) += 0.8;
+                *scores.entry(Intent::GetHelp).or_insert(0.0) += 1.5;
             } else if input.contains("does this work") || input.contains("is the process") {
-                *scores.entry(Intent::ExplainProcess).or_insert(0.0) += 0.8;
+                *scores.entry(Intent::ExplainProcess).or_insert(0.0) += 1.5;
             }
-            // Reduce boost for action-oriented questions
+            // Reduce boost for action-oriented questions, but boost help for "update" questions
             if input.contains("compare") || input.contains("generate") || input.contains("create") {
                 if let Some(score) = scores.get_mut(&Intent::GetHelp) {
                     *score *= 0.5;
+                }
+            }
+            // Special case: "update" in questions should be help, not action
+            if input.contains("update") {
+                *scores.entry(Intent::GetHelp).or_insert(0.0) += 1.0;
+                // Reduce UpdateContent score for questions
+                if let Some(score) = scores.get_mut(&Intent::UpdateContent) {
+                    *score *= 0.3;
                 }
             }
         }
