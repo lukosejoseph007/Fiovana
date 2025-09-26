@@ -3,6 +3,7 @@
 pub mod actions;
 pub mod anthropic;
 pub mod context;
+pub mod conversation_context;
 pub mod document_commands;
 pub mod intent;
 pub mod ollama;
@@ -18,6 +19,9 @@ use tokio::sync::Mutex;
 // Re-export key types
 pub use anthropic::{AnthropicClient, AnthropicConfig};
 pub use context::{DocumentContextManager, DocumentRef, UserPreferences};
+pub use conversation_context::ConversationContextManager;
+#[allow(unused_imports)]
+pub use conversation_context::{EnrichedConversationContext, TaskStatus};
 pub use intent::IntentClassifier;
 pub use ollama::{OllamaClient, OllamaConfig};
 pub use openrouter::{OpenRouterClient, OpenRouterConfig};

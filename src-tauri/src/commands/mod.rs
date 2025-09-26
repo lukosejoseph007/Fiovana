@@ -3,6 +3,7 @@
 
 pub mod ai_commands;
 pub mod content_classification_commands;
+pub mod conversation_context_commands;
 pub mod conversational_intelligence_commands;
 pub mod deduplication_commands;
 pub mod document_chunking_commands;
@@ -27,6 +28,7 @@ pub mod workspace_performance_commands;
 // Note: deduplication_commands are available but not auto-imported to avoid unused warnings
 pub use ai_commands::*;
 pub use content_classification_commands::*;
+pub use conversation_context_commands::*;
 pub use conversational_intelligence_commands::*;
 pub use document_chunking_commands::*;
 pub use document_commands::*;

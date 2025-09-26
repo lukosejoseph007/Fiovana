@@ -1,6 +1,7 @@
 // src-tauri/src/commands/ai_commands.rs
 
 use crate::ai::{AIConfig, AIOrchestrator, AIResponse};
+use crate::commands::conversation_context_commands::ConversationContextState;
 use crate::commands::document_indexing_commands::{
     get_relevant_documents_for_context, DocumentIndexerState,
 };
@@ -17,6 +18,7 @@ use tracing::{debug, info, warn};
 pub struct ChatRequest {
     pub message: String,
     pub context: Option<String>,
+    pub session_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,8 +88,26 @@ pub async fn chat_with_ai(
         '_,
         crate::commands::conversational_intelligence_commands::ConversationalIntelligenceState,
     >,
+    conversation_context_state: State<'_, ConversationContextState>,
     request: ChatRequest,
 ) -> Result<ChatResponse, String> {
+    // Get or create session ID
+    let session_id = request
+        .session_id
+        .unwrap_or_else(|| format!("session_{}", chrono::Utc::now().timestamp_millis()));
+
+    // Add user message to conversation context
+    {
+        let mut context_manager = conversation_context_state.lock().await;
+        let _ = context_manager.add_conversation_turn(&session_id, "user", &request.message, None);
+    }
+
+    // Get enriched conversation context
+    let enriched_context = {
+        let context_manager = conversation_context_state.lock().await;
+        context_manager.get_enriched_context(&session_id, &request.message)
+    };
+
     // Check if conversational intelligence is available and enabled
     let use_conversational_intelligence = {
         let conv_state = conversational_state.lock().await;
@@ -185,26 +205,95 @@ pub async fn chat_with_ai(
 
     match state.as_ref() {
         Some(orchestrator) => {
-            // Perform enhanced document search with vector capabilities
-            let enhanced_context = if let Some(context) = request.context.as_deref() {
-                format!("User Context: {}", context)
-            } else {
-                // Use enhanced search with both vector and keyword search
+            // Build comprehensive context combining conversation history, document search, and user context
+            let mut context_parts = Vec::new();
+
+            // Add conversation context if available
+            if let Some(enriched_ctx) = &enriched_context {
+                context_parts.push("=== CONVERSATION CONTEXT ===".to_string());
+                context_parts.push(format!("Session: {}", enriched_ctx.session_id));
+
+                if let Some(topic) = &enriched_ctx.current_topic {
+                    context_parts.push(format!("Current Topic: {}", topic));
+                }
+
+                if !enriched_ctx.active_documents.is_empty() {
+                    context_parts.push("Active Documents:".to_string());
+                    for doc in &enriched_ctx.active_documents {
+                        context_parts
+                            .push(format!("- {} (refs: {})", doc.title, doc.reference_count));
+                    }
+                }
+
+                if !enriched_ctx.reference_resolution_map.is_empty() {
+                    context_parts.push("Reference Resolutions:".to_string());
+                    for (original, resolved) in &enriched_ctx.reference_resolution_map {
+                        context_parts.push(format!("- '{}' refers to '{}'", original, resolved));
+                    }
+                }
+
+                if !enriched_ctx.recent_conversation.is_empty() {
+                    context_parts.push("Recent Conversation:".to_string());
+                    for turn in enriched_ctx.recent_conversation.iter().rev().take(3).rev() {
+                        let content_preview = if turn.content.len() > 100 {
+                            format!("{}...", &turn.content[..100])
+                        } else {
+                            turn.content.clone()
+                        };
+                        context_parts.push(format!(
+                            "{}: {}",
+                            turn.role.to_uppercase(),
+                            content_preview
+                        ));
+                    }
+                }
+
+                context_parts.push(format!("Context Summary: {}", enriched_ctx.context_summary));
+            }
+
+            // Add user-provided context if available
+            if let Some(context) = request.context.as_deref() {
+                context_parts.push("=== USER PROVIDED CONTEXT ===".to_string());
+                context_parts.push(context.to_string());
+            }
+
+            // Add document search results
+            context_parts.push("=== DOCUMENT SEARCH RESULTS ===".to_string());
+            let document_context =
                 perform_enhanced_document_search(&vector_state, &indexer_state, &request.message)
-                    .await
-            };
+                    .await;
+            context_parts.push(document_context);
 
-            debug!("Chat context length: {} characters", enhanced_context.len());
+            let enhanced_context = context_parts.join("\n\n");
+            debug!(
+                "Enhanced chat context length: {} characters",
+                enhanced_context.len()
+            );
 
+            // Process with AI orchestrator
             match orchestrator
                 .process_conversation(&request.message, Some(&enhanced_context))
                 .await
             {
-                Ok(response) => Ok(ChatResponse {
-                    success: true,
-                    response: Some(response),
-                    error: None,
-                }),
+                Ok(response) => {
+                    // Add assistant response to conversation context
+                    {
+                        let mut context_manager = conversation_context_state.lock().await;
+                        let intent_str = Some(format!("{:?}", response.intent));
+                        let _ = context_manager.add_conversation_turn(
+                            &session_id,
+                            "assistant",
+                            &response.content,
+                            intent_str,
+                        );
+                    }
+
+                    Ok(ChatResponse {
+                        success: true,
+                        response: Some(response),
+                        error: None,
+                    })
+                }
                 Err(e) => {
                     let error_msg = format!("AI processing failed: {}", e);
                     tracing::error!("{}", error_msg);
@@ -448,6 +537,7 @@ pub async fn test_ai_conversation(
     let _request = ChatRequest {
         message: test_message,
         context: Some("This is a test conversation".to_string()),
+        session_id: Some("test_session".to_string()),
     };
 
     // Note: This test is simplified and doesn't test document indexer integration

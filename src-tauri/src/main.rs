@@ -176,6 +176,10 @@ async fn main() {
     let conversational_intelligence_state: commands::conversational_intelligence_commands::ConversationalIntelligenceState =
         std::sync::Arc::new(tokio::sync::Mutex::new(None));
 
+    // Initialize conversation context state
+    let conversation_context_state: commands::conversation_context_commands::ConversationContextState =
+        std::sync::Arc::new(tokio::sync::Mutex::new(crate::ai::ConversationContextManager::new()));
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -212,6 +216,7 @@ async fn main() {
         .manage(embedding_engine_state)
         .manage(relationship_state)
         .manage(conversational_intelligence_state)
+        .manage(conversation_context_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .manage(Arc::new(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
@@ -453,8 +458,21 @@ async fn main() {
             commands::extract_parameters,
             commands::get_conversation_session,
             commands::get_supported_intents,
-            commands::cleanup_conversation_sessions,
+            commands::cleanup_conversation_context_sessions,
             commands::get_conversational_intelligence_status,
+            // Conversation context commands
+            commands::initialize_conversation_context,
+            commands::add_conversation_turn,
+            commands::get_enriched_context,
+            commands::start_conversation_task,
+            commands::update_conversation_task_status,
+            commands::get_conversation_session_info,
+            commands::get_conversation_history,
+            commands::get_active_documents,
+            commands::get_active_entities,
+            commands::export_conversation_session,
+            commands::import_conversation_session,
+            commands::get_conversation_context_status,
         ])
         .setup(move |app| {
             info!("Application setup complete");

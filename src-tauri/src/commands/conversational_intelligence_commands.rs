@@ -491,6 +491,7 @@ impl SessionManager {
         self.sessions.get(session_id)
     }
 
+    #[allow(dead_code)]
     fn cleanup_old_sessions(&mut self) {
         let cutoff = chrono::Utc::now() - chrono::Duration::hours(24);
         self.sessions
@@ -640,6 +641,7 @@ pub async fn get_supported_intents(
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 pub async fn cleanup_conversation_sessions(
     state: State<'_, ConversationalIntelligenceState>,
 ) -> Result<String, String> {
