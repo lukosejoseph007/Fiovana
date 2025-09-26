@@ -1,5 +1,435 @@
 [
   {
+    "id": "doc_45bcd169644fb172",
+    "path": "/home/lukosejoseph007/Desktop/proxemic/Proxemic/docs/BACKUP_PROCEDURES.md",
+    "title": "Backup and Recovery Procedures",
+    "summary": "## Overview\nThis document outlines the backup and recovery procedures for the Proxemic application. The system includes automated configuration backups with integrity checking and version management.",
+    "content": "# Backup and Recovery Procedures\n\n## Overview\nThis document outlines the backup and recovery procedures for the Proxemic application. The system includes automated configuration backups with integrity checking and version management.\n\n## Backup Types\n\n### 1. Security Configuration Backups\n- **Frequency**: Hourly (configurable)\n- **Retention**: 30 days\n- **Files**: `security_config.json`, `magic_number_rules.json`, `safe_mode_config.json`, `circuit_breaker_config.json`\n- **Priority**: Critical\n\n### 2. Application Configuration Backups\n- **Frequency**: Every 6 hours\n- **Retention**: 14 days\n- **Files**: `app_config.json`, `user_preferences.json`, `workspace_config.json`\n- **Priority**: High\n\n### 3. Audit Log Backups\n- **Frequency**: Daily\n- **Retention**: 7 days\n- **Files**: `security_audit.log`, `operation_audit.log`, `error.log`\n- **Priority**: Medium\n\n## Backup Configuration\n\nThe backup system is configured via the `BackupConfig` structure:\n\n```rust\npub struct BackupConfig {\n    pub enabled: bool,\n    pub max_backups: usize,\n    pub retention_days: u32,\n    pub backup_interval_hours: u32,\n    pub priority_levels: HashMap<BackupPriority, BackupPriorityConfig>,\n    pub backup_directory: PathBuf,\n    pub encryption_enabled: bool,\n    pub integrity_checks: bool,\n    pub auto_cleanup: bool,\n}\n```\n\n## Manual Backup Operations\n\n### Creating a Manual Backup\n```bash\n# Backup security configurations\ncurl -X POST http://localhost:8080/api/backup/security\n\n# Backup application configurations\ncurl -X POST http://localhost:8080/api/backup/application\n\n# Backup audit logs\ncurl -X POST http://localhost:8080/api/backup/logs\n```\n\n### Checking Backup Status\n```bash\n# List all backups\ncurl http://localhost:8080/api/backup/list\n\n# Get backup details\ncurl http://localhost:8080/api/backup/{backup_id}\n```\n\n## Recovery Procedures\n\n### 1. Configuration Recovery\n```bash\n# Restore security configuration from backup\ncurl -X POST http://localhost:8080/api/recovery/security/{backup_id}\n\n# Restore application configuration\ncurl -X POST http://localhost:8080/api/recovery/application/{backup_id}\n```\n\n### 2. Emergency Recovery Mode\nIn case of critical failure, the system can be started in recovery mode:\n\n```bash\nPROXEMIC_RECOVERY_MODE=true ./proxemic-app\n```\n\n## Environment Variables\n\n| Variable | Description | Default |\n|----------|-------------|---------|\n| `PROXEMIC_BACKUP_ENABLED` | Enable/disable backup system | `true` |\n| `PROXEMIC_BACKUP_DIRECTORY` | Backup storage directory | `./backups` |\n| `PROXEMIC_MAX_BACKUPS` | Maximum number of backups to keep | `10` |\n| `PROXEMIC_RETENTION_DAYS` | Backup retention period | `30` |\n\n## Integrity Verification\n\nAll backups include SHA-256 checksums for integrity verification. The system automatically validates backups during restoration:\n\n```rust\nfn validate_backup_integrity(backup_path: &Path) -> Result<bool> {\n    let expected_checksum = // get from metadata\n    let actual_checksum = calculate_checksum(backup_path)?;\n    Ok(expected_checksum == actual_checksum)\n}\n```\n\n## Monitoring and Alerts\n\nThe backup system logs all operations to the security audit log with the following events:\n- Backup started/completed\n- Backup failure\n- Integrity check failure\n- Restoration operations\n- Cleanup operations\n\n## Troubleshooting\n\n### Common Issues\n\n1. **Backup Directory Permission Denied**\n   ```bash\n   chmod 755 ./backups\n   ```\n\n2. **Insufficient Disk Space**\n   - Reduce retention days\n   - Increase cleanup frequency\n   - Specify different backup directory\n\n3. **Integrity Check Failures**\n   - Verify disk health\n   - Check for file corruption\n   - Restore from different backup\n",
+    "metadata": {
+      "basic": {
+        "file_name": "BACKUP_PROCEDURES.md",
+        "file_extension": "md",
+        "file_size": 3646,
+        "created": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 582668165
+        },
+        "modified": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 582668165
+        },
+        "accessed": {
+          "secs_since_epoch": 1758782658,
+          "nanos_since_epoch": 352209035
+        },
+        "is_file": true,
+        "is_dir": false,
+        "is_symlink": false
+      },
+      "content": {
+        "detected_mime_type": "text/plain",
+        "encoding": "UTF-8",
+        "line_endings": "LF",
+        "preview": "# Backup and Recovery Procedures\n\n## Overview\nThis document outlines the backup and recovery procedures for the Proxemic application. The system includes automated configuration backups with integrity",
+        "language": "English",
+        "stats": {
+          "char_count": 3646,
+          "word_count": 423,
+          "line_count": 132,
+          "paragraph_count": 32,
+          "binary_ratio": 0.0
+        }
+      },
+      "security": {
+        "permissions": 33204,
+        "is_executable": false,
+        "is_hidden": false,
+        "has_extended_attributes": false,
+        "security_flags": []
+      },
+      "technical": {
+        "entropy": 5.172369684208878,
+        "compression_ratio": 1.0227208976157083,
+        "checksums": {
+          "sha256": "bcef2f666f6a3a4dbd00df206579c7f75ac67cd2bed06c837295a5564623d725"
+        },
+        "structure": {
+          "has_structure": false,
+          "format_version": null,
+          "embedded_resources": 0,
+          "sections": []
+        }
+      },
+      "document": {
+        "title": "# Backup and Recovery Procedures",
+        "author": null,
+        "subject": null,
+        "keywords": [],
+        "creator": "Text Editor",
+        "producer": null,
+        "creation_date": null,
+        "modification_date": null,
+        "page_count": 132,
+        "document_language": null,
+        "format_properties": {}
+      }
+    },
+    "structure": {
+      "document_type": "Procedure",
+      "sections": [
+        {
+          "id": "section_0",
+          "title": "Backup and Recovery Procedures",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 0,
+          "length": 34
+        },
+        {
+          "id": "section_1",
+          "title": "Overview",
+          "level": 1,
+          "content": "This document outlines the backup and recovery procedures for the Proxemic application. The system includes automated configuration backups with integrity checking and version management.\n",
+          "keywords": [],
+          "position": 34,
+          "length": 201
+        },
+        {
+          "id": "section_2",
+          "title": "Backup Types",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 235,
+          "length": 17
+        },
+        {
+          "id": "section_3",
+          "title": "1. Security Configuration Backups",
+          "level": 2,
+          "content": "- **Frequency**: Hourly (configurable)\n- **Retention**: 30 days\n- **Files**: `security_config.json`, `magic_number_rules.json`, `safe_mode_config.json`, `circuit_breaker_config.json`\n- **Priority**: Critical\n",
+          "keywords": [],
+          "position": 252,
+          "length": 247
+        },
+        {
+          "id": "section_4",
+          "title": "2. Application Configuration Backups",
+          "level": 2,
+          "content": "- **Frequency**: Every 6 hours\n- **Retention**: 14 days\n- **Files**: `app_config.json`, `user_preferences.json`, `workspace_config.json`\n- **Priority**: High\n",
+          "keywords": [],
+          "position": 499,
+          "length": 200
+        },
+        {
+          "id": "section_5",
+          "title": "3. Audit Log Backups",
+          "level": 2,
+          "content": "- **Frequency**: Daily\n- **Retention**: 7 days\n- **Files**: `security_audit.log`, `operation_audit.log`, `error.log`\n- **Priority**: Medium\n",
+          "keywords": [],
+          "position": 699,
+          "length": 166
+        },
+        {
+          "id": "section_6",
+          "title": "Backup Configuration",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 865,
+          "length": 25
+        },
+        {
+          "id": "section_7",
+          "title": "The backup system is configured via the `BackupConfig` structure:",
+          "level": 0,
+          "content": "```rust\npub struct BackupConfig {\n    pub enabled: bool,\n    pub max_backups: usize,\n    pub retention_days: u32,\n    pub backup_interval_hours: u32,\n    pub priority_levels: HashMap<BackupPriority, BackupPriorityConfig>,\n    pub backup_directory: PathBuf,\n    pub encryption_enabled: bool,\n    pub integrity_checks: bool,\n    pub auto_cleanup: bool,\n}\n```\n",
+          "keywords": [],
+          "position": 890,
+          "length": 425
+        },
+        {
+          "id": "section_8",
+          "title": "Manual Backup Operations",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 1315,
+          "length": 29
+        },
+        {
+          "id": "section_9",
+          "title": "Creating a Manual Backup",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 1344,
+          "length": 37
+        },
+        {
+          "id": "section_10",
+          "title": "Backup security configurations",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/backup/security\n",
+          "keywords": [],
+          "position": 1381,
+          "length": 89
+        },
+        {
+          "id": "section_11",
+          "title": "Backup application configurations",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/backup/application\n",
+          "keywords": [],
+          "position": 1470,
+          "length": 95
+        },
+        {
+          "id": "section_12",
+          "title": "Backup audit logs",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/backup/logs\n```\n",
+          "keywords": [],
+          "position": 1565,
+          "length": 76
+        },
+        {
+          "id": "section_13",
+          "title": "Checking Backup Status",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 1641,
+          "length": 35
+        },
+        {
+          "id": "section_14",
+          "title": "List all backups",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/backup/list\n",
+          "keywords": [],
+          "position": 1676,
+          "length": 63
+        },
+        {
+          "id": "section_15",
+          "title": "Get backup details",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/backup/{backup_id}\n```\n",
+          "keywords": [],
+          "position": 1739,
+          "length": 76
+        },
+        {
+          "id": "section_16",
+          "title": "Recovery Procedures",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 1815,
+          "length": 24
+        },
+        {
+          "id": "section_17",
+          "title": "1. Configuration Recovery",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 1839,
+          "length": 38
+        },
+        {
+          "id": "section_18",
+          "title": "Restore security configuration from backup",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/recovery/security/{backup_id}\n",
+          "keywords": [],
+          "position": 1877,
+          "length": 115
+        },
+        {
+          "id": "section_19",
+          "title": "Restore application configuration",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/recovery/application/{backup_id}\n```\n",
+          "keywords": [],
+          "position": 1992,
+          "length": 113
+        },
+        {
+          "id": "section_20",
+          "title": "2. Emergency Recovery Mode",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 2105,
+          "length": 31
+        },
+        {
+          "id": "section_21",
+          "title": "In case of critical failure, the system can be started in recovery mode:",
+          "level": 0,
+          "content": "```bash",
+          "keywords": [],
+          "position": 2136,
+          "length": 82
+        },
+        {
+          "id": "section_22",
+          "title": "PROXEMIC_RECOVERY_MODE=true ./proxemic-app",
+          "level": 0,
+          "content": "```\n",
+          "keywords": [],
+          "position": 2218,
+          "length": 48
+        },
+        {
+          "id": "section_23",
+          "title": "Environment Variables",
+          "level": 1,
+          "content": "| Variable | Description | Default |\n|----------|-------------|---------|\n| `PROXEMIC_BACKUP_ENABLED` | Enable/disable backup system | `true` |\n| `PROXEMIC_BACKUP_DIRECTORY` | Backup storage directory | `./backups` |\n| `PROXEMIC_MAX_BACKUPS` | Maximum number of backups to keep | `10` |\n| `PROXEMIC_RETENTION_DAYS` | Backup retention period | `30` |\n",
+          "keywords": [],
+          "position": 2266,
+          "length": 377
+        },
+        {
+          "id": "section_24",
+          "title": "Integrity Verification",
+          "level": 1,
+          "content": "All backups include SHA-256 checksums for integrity verification. The system automatically validates backups during restoration:\n\n```rust\nfn validate_backup_integrity(backup_path: &Path) -> Result<bool> {\n    let expected_checksum = // get from metadata\n    let actual_checksum = calculate_checksum(backup_path)?;",
+          "keywords": [],
+          "position": 2643,
+          "length": 341
+        },
+        {
+          "id": "section_25",
+          "title": "Ok(expected_checksum == actual_checksum)",
+          "level": 0,
+          "content": "}\n```\n",
+          "keywords": [],
+          "position": 2984,
+          "length": 52
+        },
+        {
+          "id": "section_26",
+          "title": "Monitoring and Alerts",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 3036,
+          "length": 26
+        },
+        {
+          "id": "section_27",
+          "title": "The backup system logs all operations to the security audit log with the following events:",
+          "level": 0,
+          "content": "- Backup started/completed\n- Backup failure\n- Integrity check failure\n- Restoration operations\n- Cleanup operations\n",
+          "keywords": [],
+          "position": 3062,
+          "length": 208
+        },
+        {
+          "id": "section_28",
+          "title": "Troubleshooting",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 3270,
+          "length": 20
+        },
+        {
+          "id": "section_29",
+          "title": "Common Issues",
+          "level": 2,
+          "content": "1. **Backup Directory Permission Denied**\n   ```bash\n   chmod 755 ./backups\n   ```\n\n2. **Insufficient Disk Space**\n   - Reduce retention days\n   - Increase cleanup frequency\n   - Specify different backup directory\n\n3. **Integrity Check Failures**\n   - Verify disk health\n   - Check for file corruption\n   - Restore from different backup",
+          "keywords": [
+            "retention",
+            "days",
+            "different",
+            "specify",
+            "increase",
+            "check",
+            "file",
+            "cleanup",
+            "frequency",
+            "reduce",
+            "**insufficient",
+            "disk",
+            "from",
+            "```bash",
+            "directory",
+            "**integrity",
+            "denied**",
+            "backup",
+            "verify",
+            "chmod"
+          ],
+          "position": 3290,
+          "length": 356
+        }
+      ],
+      "toc": [
+        {
+          "title": "**Frequency**: Hourly (configurable)",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**Retention**: 30 days",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**Files**: `security_config.json`, `magic_number_rules.json`, `safe_mode_config.json`, `circuit_breaker_config.json`",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**Priority**: Critical",
+          "level": 0,
+          "page": null,
+          "position": null
+        }
+      ],
+      "page_count": null,
+      "has_images": false,
+      "has_tables": true,
+      "has_code": true
+    },
+    "keywords": [
+      "**frequency**:",
+      "integrity",
+      "from",
+      "system",
+      "audit",
+      "**priority**:",
+      "operations",
+      "check",
+      "post",
+      "backups",
+      "recovery",
+      "backup",
+      "days",
+      "curl",
+      "security",
+      "```bash",
+      "configuration",
+      "bool,",
+      "restore",
+      "**files**:"
+    ],
+    "content_hash": "928a8d9515bf1837",
+    "indexed_at": {
+      "secs_since_epoch": 1758857332,
+      "nanos_since_epoch": 679535425
+    },
+    "index_version": 1
+  },
+  {
     "id": "doc_831a38754656ff15",
     "path": "/home/lukosejoseph007/Downloads/Edge SWG R2 Techical Specialist Exam Study Guide.docx",
     "title": "Exam Study Guide",
@@ -2473,6 +2903,784 @@
     "indexed_at": {
       "secs_since_epoch": 1758824659,
       "nanos_since_epoch": 871328445
+    },
+    "index_version": 1
+  },
+  {
+    "id": "doc_2cf554ccc65ffd4e",
+    "path": "/home/lukosejoseph007/Desktop/proxemic/Proxemic/docs/EMERGENCY_PROCEDURES.md",
+    "title": "Emergency Procedures Manual",
+    "summary": "## Overview\nThis document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Proxemic application.",
+    "content": "# Emergency Procedures Manual\n\n## Overview\nThis document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Proxemic application.\n\n## Emergency Security Disable Mechanism\n\n### Kill Switch Activation\nThe system includes a hardware-style kill switch that can completely disable security operations:\n\n```rust\n// Emergency kill switch implementation\npub struct EmergencyManager {\n    current_level: Arc<RwLock<EmergencyLevel>>,\n    kill_switch_active: Arc<RwLock<bool>>,\n}\n\nimpl EmergencyManager {\n    pub fn activate_kill_switch(&self) -> Result<()> {\n        let mut kill_switch = self.kill_switch_active.write().unwrap();\n        *kill_switch = true;\n        log::critical!(\"EMERGENCY KILL SWITCH ACTIVATED\");\n        Ok(())\n    }\n\n    pub fn is_kill_switch_active(&self) -> bool {\n        *self.kill_switch_active.read().unwrap()\n    }\n}\n```\n\n### Activation Methods\n\n#### 1. API Endpoint\n```bash\n# Activate kill switch via API\ncurl -X POST http://localhost:8080/api/emergency/kill-switch/activate\n\n# Check kill switch status\ncurl http://localhost:8080/api/emergency/kill-switch/status\n```\n\n#### 2. Environment Variable\n```bash\n# Emergency override via environment\nPROXEMIC_EMERGENCY_DISABLE=true ./proxemic-app\n```\n\n#### 3. Configuration File\n```json\n// emergency-config.json\n{\n  \"kill_switch_active\": true,\n  \"security_disabled\": true,\n  \"emergency_reason\": \"System compromise detected\"\n}\n```\n\n## Manual Override Procedures\n\n### File Operation Overrides\n```rust\n// Manual override for critical file operations\npub fn manual_file_override(path: &Path, operation: FileOperation) -> Result<()> {\n    if !is_emergency_override_active() {\n        return Err(anyhow!(\"Emergency override not active\"));\n    }\n\n    // Bypass all security checks\n    match operation {\n        FileOperation::Read => std::fs::read_to_string(path),\n        FileOperation::Write => std::fs::write(path, content),\n        FileOperation::Delete => std::fs::remove_file(path),\n    }\n}\n```\n\n### Security Control Overrides\n\n#### 1. Disable Magic Number Validation\n```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"magic_validation\",\"enabled\":false}'\n```\n\n#### 2. Bypass Safe Mode\n```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"safe_mode\",\"level\":\"disabled\"}'\n```\n\n#### 3. Disable Circuit Breakers\n```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"circuit_breakers\",\"enabled\":false}'\n```\n\n## Emergency Access Levels\n\n### Access Level Matrix\n\n| Level | File Operations | Security Checks | Audit Logging | Recovery Options |\n|-------|-----------------|-----------------|---------------|------------------|\n| **Normal** | Full | Full | Enabled | Standard |\n| **Elevated** | Full | Reduced | Enhanced | Enhanced |\n| **High** | Read-only | Basic | Critical only | Limited |\n| **Critical** | Admin only | Emergency | Emergency | Manual |\n| **Lockdown** | None | None | None | None |\n\n### Level Transition Commands\n```bash\n# Set emergency level\ncurl -X POST http://localhost:8080/api/emergency/level \\\n  --data '{\"level\":\"critical\",\"reason\":\"Security incident\"}'\n\n# Get current level\ncurl http://localhost:8080/api/emergency/level\n```\n\n## Incident Response Automation\n\n### Automated Alerting System\n```rust\n// Security violation alerting\npub fn trigger_security_alert(\n    event: SecurityEvent,\n    severity: AlertSeverity,\n    actions: Vec<AlertAction>\n) -> Result<()> {\n    log::error!(\"SECURITY ALERT: {:?} - {:?}\", severity, event);\n\n    // Automated responses based on severity\n    match severity {\n        AlertSeverity::Critical => {\n            activate_kill_switch()?;\n            notify_security_team(event.clone())?;\n            preserve_evidence()?;\n        }\n        AlertSeverity::High => {\n            elevate_safe_mode()?;\n            notify_on_call()?;\n            quarantine_affected_files()?;\n        }\n        AlertSeverity::Medium => {\n            increase_logging()?;\n            schedule_review()?;\n        }\n        AlertSeverity::Low => {\n            log_event_only()?;\n        }\n    }\n\n    Ok(())\n}\n```\n\n### Alert Integration Points\n- **Slack**: Security channel notifications\n- **Email**: On-call team alerts\n- **SMS**: Critical incident alerts\n- **PagerDuty**: Escalation procedures\n\n## Recovery and Restoration\n\n### System Restoration\n```bash\n# Emergency restoration from backup\ncurl -X POST http://localhost:8080/api/recovery/emergency-restore \\\n  --data '{\"backup_id\":\"latest\",\"force\":true}'\n\n# Validate restoration integrity\ncurl http://localhost:8080/api/recovery/validate\n```\n\n### Configuration Reset\n```bash\n# Reset to factory security settings\ncurl -X POST http://localhost:8080/api/emergency/reset-config\n\n# Reload security configuration\ncurl -X POST http://localhost:8080/api/security/reload\n```\n\n## Evidence Preservation\n\n### Emergency Snapshot\n```bash\n# Create emergency evidence package\n./emergency-snapshot.sh --full --encrypt\n\n# Package includes:\n# - Security logs\n# - Configuration files\n# - System state\n# - Memory dump (if available)\n```\n\n### Forensic Data Collection\n```rust\n// Collect forensic evidence\npub fn collect_forensic_evidence() -> Result<ForensicPackage> {\n    let mut evidence = ForensicPackage::new();\n\n    evidence.add_logs(\"./logs/security_audit.log\")?;\n    evidence.add_logs(\"./logs/system.log\")?;\n    evidence.add_files(\"./config/\")?;\n    evidence.add_metadata(SystemMetadata::collect()?);\n\n    evidence.encrypt()?;\n    evidence.upload_secure_storage()?;\n\n    Ok(evidence)\n}\n```\n\n## Communication Procedures\n\n### Internal Communications\n```bash\n# Send emergency notification\ncurl -X POST http://localhost:8080/api/emergency/notify \\\n  --data '{\n    \"message\": \"Security incident detected\",\n    \"severity\": \"critical\",\n    \"channels\": [\"slack\",\"email\",\"sms\"]\n  }'\n```\n\n### External Communications\n- **Customers**: Status page updates\n- **Partners**: Direct notifications\n- **Regulators**: Compliance reporting\n- **Law Enforcement**: Evidence handover\n\n## Training and Certification\n\n### Required Training\n- Emergency procedure walkthroughs\n- Kill switch activation drills\n- Evidence preservation practice\n- Communication protocol testing\n\n### Certification Requirements\n- Quarterly emergency drill participation\n- Annual procedure review\n- Incident response certification\n- Security awareness training\n\n## Appendix: Quick Reference Guide\n\n### Emergency Commands Cheat Sheet\n\n```bash\n# Activate kill switch\nPROXEMIC_EMERGENCY=1 ./proxemic-app\n\n# Disable security\ncurl -X POST http://localhost:8080/api/security/disable\n\n# Emergency backup\ncurl -X POST http://localhost:8080/api/backup/emergency\n\n# System snapshot\n./scripts/emergency-snapshot.sh\n\n# Notify team\ncurl -X POST http://localhost:8080/api/alert/critical\n```\n\n### Contact List\n- **Security Lead**: 24/7 emergency line\n- **Engineering Manager**: Secondary contact\n- **Legal Counsel**: Compliance issues\n- **PR Team**: External communications\n",
+    "metadata": {
+      "basic": {
+        "file_name": "EMERGENCY_PROCEDURES.md",
+        "file_extension": "md",
+        "file_size": 7028,
+        "created": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 583240653
+        },
+        "modified": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 583240653
+        },
+        "accessed": {
+          "secs_since_epoch": 1758857332,
+          "nanos_since_epoch": 501452724
+        },
+        "is_file": true,
+        "is_dir": false,
+        "is_symlink": false
+      },
+      "content": {
+        "detected_mime_type": "text/plain",
+        "encoding": "UTF-8",
+        "line_endings": "LF",
+        "preview": "# Emergency Procedures Manual\n\n## Overview\nThis document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Proxem",
+        "language": "English",
+        "stats": {
+          "char_count": 7028,
+          "word_count": 731,
+          "line_count": 274,
+          "paragraph_count": 55,
+          "binary_ratio": 0.0
+        }
+      },
+      "security": {
+        "permissions": 33204,
+        "is_executable": false,
+        "is_hidden": false,
+        "has_extended_attributes": false,
+        "security_flags": []
+      },
+      "technical": {
+        "entropy": 5.128354589066766,
+        "compression_ratio": 1.0568421052631578,
+        "checksums": {
+          "sha256": "8000820be588e1148c2b93462379b988b3124f2d8d6992610c04ebbe9bd63d1a"
+        },
+        "structure": {
+          "has_structure": false,
+          "format_version": null,
+          "embedded_resources": 0,
+          "sections": []
+        }
+      },
+      "document": {
+        "title": "# Emergency Procedures Manual",
+        "author": null,
+        "subject": null,
+        "keywords": [],
+        "creator": "Text Editor",
+        "producer": null,
+        "creation_date": null,
+        "modification_date": null,
+        "page_count": 274,
+        "document_language": null,
+        "format_properties": {}
+      }
+    },
+    "structure": {
+      "document_type": "Guide",
+      "sections": [
+        {
+          "id": "section_0",
+          "title": "Emergency Procedures Manual",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 0,
+          "length": 31
+        },
+        {
+          "id": "section_1",
+          "title": "Overview",
+          "level": 1,
+          "content": "This document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Proxemic application.\n",
+          "keywords": [],
+          "position": 31,
+          "length": 186
+        },
+        {
+          "id": "section_2",
+          "title": "Emergency Security Disable Mechanism",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 217,
+          "length": 41
+        },
+        {
+          "id": "section_3",
+          "title": "Kill Switch Activation",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 258,
+          "length": 27
+        },
+        {
+          "id": "section_4",
+          "title": "The system includes a hardware-style kill switch that can completely disable security operations:",
+          "level": 0,
+          "content": "```rust\n// Emergency kill switch implementation\npub struct EmergencyManager {\n    current_level: Arc<RwLock<EmergencyLevel>>,\n    kill_switch_active: Arc<RwLock<bool>>,\n}\n\nimpl EmergencyManager {\n    pub fn activate_kill_switch(&self) -> Result<()> {\n        let mut kill_switch = self.kill_switch_active.write().unwrap();\n        *kill_switch = true;\n        log::critical!(\"EMERGENCY KILL SWITCH ACTIVATED\");",
+          "keywords": [],
+          "position": 285,
+          "length": 510
+        },
+        {
+          "id": "section_5",
+          "title": "Ok(())",
+          "level": 0,
+          "content": "    }\n\n    pub fn is_kill_switch_active(&self) -> bool {\n        *self.kill_switch_active.read().unwrap()\n    }\n}\n```\n",
+          "keywords": [],
+          "position": 795,
+          "length": 134
+        },
+        {
+          "id": "section_6",
+          "title": "Activation Methods",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 929,
+          "length": 24
+        },
+        {
+          "id": "section_7",
+          "title": "1. API Endpoint",
+          "level": 3,
+          "content": "```bash",
+          "keywords": [],
+          "position": 953,
+          "length": 29
+        },
+        {
+          "id": "section_8",
+          "title": "Activate kill switch via API",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/kill-switch/activate\n",
+          "keywords": [],
+          "position": 982,
+          "length": 102
+        },
+        {
+          "id": "section_9",
+          "title": "Check kill switch status",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/emergency/kill-switch/status\n```\n",
+          "keywords": [],
+          "position": 1084,
+          "length": 92
+        },
+        {
+          "id": "section_10",
+          "title": "2. Environment Variable",
+          "level": 3,
+          "content": "```bash",
+          "keywords": [],
+          "position": 1176,
+          "length": 37
+        },
+        {
+          "id": "section_11",
+          "title": "Emergency override via environment",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1213,
+          "length": 37
+        },
+        {
+          "id": "section_12",
+          "title": "PROXEMIC_EMERGENCY_DISABLE=true ./proxemic-app",
+          "level": 0,
+          "content": "```\n",
+          "keywords": [],
+          "position": 1250,
+          "length": 52
+        },
+        {
+          "id": "section_13",
+          "title": "3. Configuration File",
+          "level": 3,
+          "content": "```json\n// emergency-config.json\n{\n  \"kill_switch_active\": true,\n  \"security_disabled\": true,\n  \"emergency_reason\": \"System compromise detected\"\n}\n```\n",
+          "keywords": [],
+          "position": 1302,
+          "length": 179
+        },
+        {
+          "id": "section_14",
+          "title": "Manual Override Procedures",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 1481,
+          "length": 31
+        },
+        {
+          "id": "section_15",
+          "title": "File Operation Overrides",
+          "level": 2,
+          "content": "```rust\n// Manual override for critical file operations\npub fn manual_file_override(path: &Path, operation: FileOperation) -> Result<()> {\n    if !is_emergency_override_active() {\n        return Err(anyhow!(\"Emergency override not active\"));\n    }\n\n    // Bypass all security checks\n    match operation {",
+          "keywords": [],
+          "position": 1512,
+          "length": 334
+        },
+        {
+          "id": "section_16",
+          "title": "FileOperation::Read => std::fs::read_to_string(path),",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1846,
+          "length": 62
+        },
+        {
+          "id": "section_17",
+          "title": "FileOperation::Write => std::fs::write(path, content),",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1908,
+          "length": 63
+        },
+        {
+          "id": "section_18",
+          "title": "FileOperation::Delete => std::fs::remove_file(path),",
+          "level": 0,
+          "content": "    }\n}\n```\n",
+          "keywords": [],
+          "position": 1971,
+          "length": 74
+        },
+        {
+          "id": "section_19",
+          "title": "Security Control Overrides",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 2045,
+          "length": 32
+        },
+        {
+          "id": "section_20",
+          "title": "1. Disable Magic Number Validation",
+          "level": 3,
+          "content": "```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"magic_validation\",\"enabled\":false}'\n```\n",
+          "keywords": [],
+          "position": 2077,
+          "length": 170
+        },
+        {
+          "id": "section_21",
+          "title": "2. Bypass Safe Mode",
+          "level": 3,
+          "content": "```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"safe_mode\",\"level\":\"disabled\"}'\n```\n",
+          "keywords": [],
+          "position": 2247,
+          "length": 151
+        },
+        {
+          "id": "section_22",
+          "title": "3. Disable Circuit Breakers",
+          "level": 3,
+          "content": "```bash\ncurl -X POST http://localhost:8080/api/security/override \\\n  --data '{\"feature\":\"circuit_breakers\",\"enabled\":false}'\n```\n",
+          "keywords": [],
+          "position": 2398,
+          "length": 163
+        },
+        {
+          "id": "section_23",
+          "title": "Emergency Access Levels",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 2561,
+          "length": 28
+        },
+        {
+          "id": "section_24",
+          "title": "Access Level Matrix",
+          "level": 2,
+          "content": "| Level | File Operations | Security Checks | Audit Logging | Recovery Options |\n|-------|-----------------|-----------------|---------------|------------------|\n| **Normal** | Full | Full | Enabled | Standard |\n| **Elevated** | Full | Reduced | Enhanced | Enhanced |\n| **High** | Read-only | Basic | Critical only | Limited |\n| **Critical** | Admin only | Emergency | Emergency | Manual |\n| **Lockdown** | None | None | None | None |\n",
+          "keywords": [],
+          "position": 2589,
+          "length": 461
+        },
+        {
+          "id": "section_25",
+          "title": "Level Transition Commands",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 3050,
+          "length": 38
+        },
+        {
+          "id": "section_26",
+          "title": "Set emergency level",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/level \\\n  --data '{\"level\":\"critical\",\"reason\":\"Security incident\"}'\n",
+          "keywords": [],
+          "position": 3088,
+          "length": 141
+        },
+        {
+          "id": "section_27",
+          "title": "Get current level",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/emergency/level\n```\n",
+          "keywords": [],
+          "position": 3229,
+          "length": 72
+        },
+        {
+          "id": "section_28",
+          "title": "Incident Response Automation",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 3301,
+          "length": 33
+        },
+        {
+          "id": "section_29",
+          "title": "Automated Alerting System",
+          "level": 2,
+          "content": "```rust\n// Security violation alerting\npub fn trigger_security_alert(\n    event: SecurityEvent,\n    severity: AlertSeverity,\n    actions: Vec<AlertAction>\n) -> Result<()> {\n    log::error!(\"SECURITY ALERT: {:?} - {:?}\", severity, event);\n\n    // Automated responses based on severity\n    match severity {",
+          "keywords": [],
+          "position": 3334,
+          "length": 335
+        },
+        {
+          "id": "section_30",
+          "title": "AlertSeverity::Critical => {",
+          "level": 0,
+          "content": "            activate_kill_switch()?;\n            notify_security_team(event.clone())?;\n            preserve_evidence()?;\n        }",
+          "keywords": [],
+          "position": 3669,
+          "length": 168
+        },
+        {
+          "id": "section_31",
+          "title": "AlertSeverity::High => {",
+          "level": 0,
+          "content": "            elevate_safe_mode()?;\n            notify_on_call()?;\n            quarantine_affected_files()?;\n        }",
+          "keywords": [],
+          "position": 3837,
+          "length": 150
+        },
+        {
+          "id": "section_32",
+          "title": "AlertSeverity::Medium => {",
+          "level": 0,
+          "content": "            increase_logging()?;\n            schedule_review()?;\n        }",
+          "keywords": [],
+          "position": 3987,
+          "length": 110
+        },
+        {
+          "id": "section_33",
+          "title": "AlertSeverity::Low => {",
+          "level": 0,
+          "content": "            log_event_only()?;\n        }\n    }\n",
+          "keywords": [],
+          "position": 4097,
+          "length": 80
+        },
+        {
+          "id": "section_34",
+          "title": "Ok(())",
+          "level": 0,
+          "content": "}\n```\n",
+          "keywords": [],
+          "position": 4177,
+          "length": 18
+        },
+        {
+          "id": "section_35",
+          "title": "Alert Integration Points",
+          "level": 2,
+          "content": "- **Slack**: Security channel notifications\n- **Email**: On-call team alerts\n- **SMS**: Critical incident alerts\n- **PagerDuty**: Escalation procedures\n",
+          "keywords": [],
+          "position": 4195,
+          "length": 182
+        },
+        {
+          "id": "section_36",
+          "title": "Recovery and Restoration",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 4377,
+          "length": 29
+        },
+        {
+          "id": "section_37",
+          "title": "System Restoration",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 4406,
+          "length": 31
+        },
+        {
+          "id": "section_38",
+          "title": "Emergency restoration from backup",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/recovery/emergency-restore \\\n  --data '{\"backup_id\":\"latest\",\"force\":true}'\n",
+          "keywords": [],
+          "position": 4437,
+          "length": 152
+        },
+        {
+          "id": "section_39",
+          "title": "Validate restoration integrity",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/recovery/validate\n```\n",
+          "keywords": [],
+          "position": 4589,
+          "length": 87
+        },
+        {
+          "id": "section_40",
+          "title": "Configuration Reset",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 4676,
+          "length": 32
+        },
+        {
+          "id": "section_41",
+          "title": "Reset to factory security settings",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/reset-config\n",
+          "keywords": [],
+          "position": 4708,
+          "length": 100
+        },
+        {
+          "id": "section_42",
+          "title": "Reload security configuration",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/security/reload\n```\n",
+          "keywords": [],
+          "position": 4808,
+          "length": 92
+        },
+        {
+          "id": "section_43",
+          "title": "Evidence Preservation",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 4900,
+          "length": 26
+        },
+        {
+          "id": "section_44",
+          "title": "Emergency Snapshot",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 4926,
+          "length": 31
+        },
+        {
+          "id": "section_45",
+          "title": "Create emergency evidence package",
+          "level": 0,
+          "content": "./emergency-snapshot.sh --full --encrypt\n",
+          "keywords": [],
+          "position": 4957,
+          "length": 78
+        },
+        {
+          "id": "section_46",
+          "title": "Package includes:",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5035,
+          "length": 20
+        },
+        {
+          "id": "section_47",
+          "title": "- Security logs",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5055,
+          "length": 18
+        },
+        {
+          "id": "section_48",
+          "title": "- Configuration files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5073,
+          "length": 24
+        },
+        {
+          "id": "section_49",
+          "title": "- System state",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5097,
+          "length": 17
+        },
+        {
+          "id": "section_50",
+          "title": "- Memory dump (if available)",
+          "level": 0,
+          "content": "```\n",
+          "keywords": [],
+          "position": 5114,
+          "length": 36
+        },
+        {
+          "id": "section_51",
+          "title": "Forensic Data Collection",
+          "level": 2,
+          "content": "```rust\n// Collect forensic evidence\npub fn collect_forensic_evidence() -> Result<ForensicPackage> {\n    let mut evidence = ForensicPackage::new();\n\n    evidence.add_logs(\"./logs/security_audit.log\")?;\n    evidence.add_logs(\"./logs/system.log\")?;\n    evidence.add_files(\"./config/\")?;\n    evidence.add_metadata(SystemMetadata::collect()?);\n\n    evidence.encrypt()?;\n    evidence.upload_secure_storage()?;\n",
+          "keywords": [],
+          "position": 5150,
+          "length": 435
+        },
+        {
+          "id": "section_52",
+          "title": "Ok(evidence)",
+          "level": 0,
+          "content": "}\n```\n",
+          "keywords": [],
+          "position": 5585,
+          "length": 24
+        },
+        {
+          "id": "section_53",
+          "title": "Communication Procedures",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 5609,
+          "length": 29
+        },
+        {
+          "id": "section_54",
+          "title": "Internal Communications",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 5638,
+          "length": 36
+        },
+        {
+          "id": "section_55",
+          "title": "Send emergency notification",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/notify \\\n  --data '{\n    \"message\": \"Security incident detected\",\n    \"severity\": \"critical\",\n    \"channels\": [\"slack\",\"email\",\"sms\"]\n  }'\n```\n",
+          "keywords": [],
+          "position": 5674,
+          "length": 223
+        },
+        {
+          "id": "section_56",
+          "title": "External Communications",
+          "level": 2,
+          "content": "- **Customers**: Status page updates\n- **Partners**: Direct notifications\n- **Regulators**: Compliance reporting\n- **Law Enforcement**: Evidence handover\n",
+          "keywords": [],
+          "position": 5897,
+          "length": 183
+        },
+        {
+          "id": "section_57",
+          "title": "Training and Certification",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 6080,
+          "length": 31
+        },
+        {
+          "id": "section_58",
+          "title": "Required Training",
+          "level": 2,
+          "content": "- Emergency procedure walkthroughs\n- Kill switch activation drills\n- Evidence preservation practice\n- Communication protocol testing\n",
+          "keywords": [],
+          "position": 6111,
+          "length": 156
+        },
+        {
+          "id": "section_59",
+          "title": "Certification Requirements",
+          "level": 2,
+          "content": "- Quarterly emergency drill participation\n- Annual procedure review\n- Incident response certification\n- Security awareness training\n",
+          "keywords": [],
+          "position": 6267,
+          "length": 164
+        },
+        {
+          "id": "section_60",
+          "title": "Appendix: Quick Reference Guide",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 6431,
+          "length": 36
+        },
+        {
+          "id": "section_61",
+          "title": "Emergency Commands Cheat Sheet",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 6467,
+          "length": 44
+        },
+        {
+          "id": "section_62",
+          "title": "Activate kill switch",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6511,
+          "length": 23
+        },
+        {
+          "id": "section_63",
+          "title": "PROXEMIC_EMERGENCY=1 ./proxemic-app",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6534,
+          "length": 37
+        },
+        {
+          "id": "section_64",
+          "title": "Disable security",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/security/disable\n",
+          "keywords": [],
+          "position": 6571,
+          "length": 76
+        },
+        {
+          "id": "section_65",
+          "title": "Emergency backup",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/backup/emergency\n",
+          "keywords": [],
+          "position": 6647,
+          "length": 76
+        },
+        {
+          "id": "section_66",
+          "title": "System snapshot",
+          "level": 0,
+          "content": "./scripts/emergency-snapshot.sh\n",
+          "keywords": [],
+          "position": 6723,
+          "length": 51
+        },
+        {
+          "id": "section_67",
+          "title": "Notify team",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/alert/critical\n```\n",
+          "keywords": [],
+          "position": 6774,
+          "length": 73
+        },
+        {
+          "id": "section_68",
+          "title": "Contact List",
+          "level": 2,
+          "content": "- **Security Lead**: 24/7 emergency line\n- **Engineering Manager**: Secondary contact\n- **Legal Counsel**: Compliance issues\n- **PR Team**: External communications",
+          "keywords": [
+            "**legal",
+            "**pr",
+            "line",
+            "compliance",
+            "contact",
+            "communications",
+            "lead**:",
+            "**security",
+            "manager**:",
+            "counsel**:",
+            "**engineering",
+            "secondary",
+            "emergency",
+            "issues",
+            "team**:",
+            "external",
+            "24/7"
+          ],
+          "position": 6847,
+          "length": 181
+        }
+      ],
+      "toc": [
+        {
+          "title": "**Slack**: Security channel notifications",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**Email**: On-call team alerts",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**SMS**: Critical incident alerts",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**PagerDuty**: Escalation procedures",
+          "level": 0,
+          "page": null,
+          "position": null
+        }
+      ],
+      "page_count": null,
+      "has_images": false,
+      "has_tables": true,
+      "has_code": true
+    },
+    "keywords": [
+      "security",
+      "configuration",
+      "####",
+      "system",
+      "switch",
+      "kill",
+      "```bash",
+      "incident",
+      "critical",
+      "override",
+      "curl",
+      "disable",
+      "emergency",
+      "post",
+      "--data",
+      "evidence",
+      "level",
+      "procedures",
+      "manual",
+      "file"
+    ],
+    "content_hash": "3af7b773a2178fab",
+    "indexed_at": {
+      "secs_since_epoch": 1758857332,
+      "nanos_since_epoch": 669074337
     },
     "index_version": 1
   }

@@ -169,6 +169,9 @@ async fn main() {
         tokio::sync::RwLock<Option<vector::EmbeddingEngine>>,
     > = std::sync::Arc::new(tokio::sync::RwLock::new(None));
 
+    // Initialize relationship analyzer state
+    let relationship_state = commands::relationship_commands::RelationshipState::new();
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -203,6 +206,7 @@ async fn main() {
         .manage(document_comparison_state)
         .manage(document_indexer_state)
         .manage(embedding_engine_state)
+        .manage(relationship_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .manage(Arc::new(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
@@ -417,6 +421,12 @@ async fn main() {
             commands::batch_classify_files,
             commands::get_content_categories,
             commands::compare_content_classifications,
+            // Relationship analysis commands
+            commands::initialize_relationship_analyzer,
+            commands::analyze_document_relationships,
+            commands::find_related_documents,
+            commands::get_relationship_types,
+            commands::analyze_document_pair,
         ])
         .setup(move |app| {
             info!("Application setup complete");

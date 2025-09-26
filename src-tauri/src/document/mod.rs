@@ -16,6 +16,7 @@ pub mod metadata_extractor;
 pub mod pdf_parser;
 pub mod progress_persistence;
 pub mod progress_tracker;
+pub mod relationship_analyzer;
 pub mod structure_analyzer;
 
 pub use batch_processor::*;
@@ -50,6 +51,12 @@ pub use metadata_extractor::*;
 pub use pdf_parser::*;
 pub use progress_persistence::*;
 pub use progress_tracker::*;
+#[allow(unused_imports)]
+pub use relationship_analyzer::{
+    DocumentRelationship, EvidenceType, RelationshipAnalysisMetadata, RelationshipAnalysisResult,
+    RelationshipAnalyzer, RelationshipConfig, RelationshipEvidence, RelationshipStats,
+    RelationshipStrength, RelationshipType,
+};
 #[allow(unused_imports)]
 pub use structure_analyzer::{
     AnalyzedSection, ContentPattern, ContentPatternMatch, DocumentFlow, DocumentOrganization,
