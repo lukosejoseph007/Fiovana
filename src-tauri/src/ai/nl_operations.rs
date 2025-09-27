@@ -10,7 +10,9 @@ use std::collections::HashMap;
 use super::document_commands::{
     AnalysisType, DocumentCommand, DocumentCommandProcessor, SearchType, SummaryLength,
 };
+use crate::commands::document_generation_commands::GenerateFromConversationRequest;
 use crate::document::document_comparison::ComparisonType;
+use crate::document::{AudienceType, OutputFormat};
 
 /// Natural language operation parser and executor
 pub struct NaturalLanguageOperations {
@@ -32,6 +34,11 @@ struct OperationPatterns {
     search: Regex,
     analyze: Regex,
     extract_points: Regex,
+    // Generation patterns
+    generate_training_manual: Regex,
+    generate_quick_reference: Regex,
+    generate_presentation: Regex,
+    generate_document: Regex,
 
     // Parameter patterns
     summary_length: Regex,
@@ -61,6 +68,11 @@ pub enum OperationType {
     Search,
     Analyze,
     ExtractKeyPoints,
+    // New generation operations
+    GenerateTrainingManual,
+    GenerateQuickReference,
+    GeneratePresentation,
+    GenerateDocument,
     Unknown,
 }
 
@@ -205,6 +217,23 @@ impl NaturalLanguageOperations {
             scores.insert(OperationType::ExtractKeyPoints, 0.8);
         }
 
+        // Check for generation patterns
+        if self.patterns.generate_training_manual.is_match(input) {
+            scores.insert(OperationType::GenerateTrainingManual, 0.9);
+        }
+
+        if self.patterns.generate_quick_reference.is_match(input) {
+            scores.insert(OperationType::GenerateQuickReference, 0.9);
+        }
+
+        if self.patterns.generate_presentation.is_match(input) {
+            scores.insert(OperationType::GeneratePresentation, 0.9);
+        }
+
+        if self.patterns.generate_document.is_match(input) {
+            scores.insert(OperationType::GenerateDocument, 0.8);
+        }
+
         // Return the highest scoring operation
         if let Some((op_type, score)) = scores.iter().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()) {
             (op_type.clone(), *score)
@@ -314,6 +343,140 @@ impl NaturalLanguageOperations {
                     }
                 } else {
                     parameters.insert("max_points".to_string(), "5".to_string());
+                }
+            }
+            OperationType::GenerateTrainingManual => {
+                // Extract audience level
+                if input.contains("beginner") || input.contains("basic") {
+                    parameters.insert("audience".to_string(), "beginner".to_string());
+                } else if input.contains("advanced") || input.contains("expert") {
+                    parameters.insert("audience".to_string(), "advanced".to_string());
+                } else {
+                    parameters.insert("audience".to_string(), "intermediate".to_string());
+                }
+
+                // Extract output filename
+                if let Some(cap) = Regex::new(r"(?:save|name)\s+(?:as\s+)?([\w\.]+)")
+                    .unwrap()
+                    .captures(input)
+                {
+                    if let Some(filename_match) = cap.get(1) {
+                        parameters.insert(
+                            "output_filename".to_string(),
+                            filename_match.as_str().to_string(),
+                        );
+                    }
+                } else {
+                    parameters.insert(
+                        "output_filename".to_string(),
+                        "training_manual.html".to_string(),
+                    );
+                }
+            }
+            OperationType::GenerateQuickReference => {
+                // Extract format type
+                if input.contains("card") || input.contains("quick card") {
+                    parameters.insert("format".to_string(), "quickcard".to_string());
+                } else if input.contains("sheet") || input.contains("cheat sheet") {
+                    parameters.insert("format".to_string(), "cheatsheet".to_string());
+                } else {
+                    parameters.insert("format".to_string(), "quickcard".to_string());
+                }
+
+                // Extract output filename
+                if let Some(cap) = Regex::new(r"(?:save|name)\s+(?:as\s+)?([\w\.]+)")
+                    .unwrap()
+                    .captures(input)
+                {
+                    if let Some(filename_match) = cap.get(1) {
+                        parameters.insert(
+                            "output_filename".to_string(),
+                            filename_match.as_str().to_string(),
+                        );
+                    }
+                } else {
+                    parameters.insert(
+                        "output_filename".to_string(),
+                        "quick_reference.html".to_string(),
+                    );
+                }
+            }
+            OperationType::GeneratePresentation => {
+                // Extract number of slides
+                if let Some(cap) = Regex::new(r"(\d+)\s+slides?").unwrap().captures(input) {
+                    if let Some(num_match) = cap.get(1) {
+                        parameters.insert("slides".to_string(), num_match.as_str().to_string());
+                    }
+                } else {
+                    parameters.insert("slides".to_string(), "10".to_string());
+                }
+
+                // Extract style
+                if input.contains("corporate") || input.contains("professional") {
+                    parameters.insert("style".to_string(), "corporate".to_string());
+                } else if input.contains("academic") || input.contains("educational") {
+                    parameters.insert("style".to_string(), "academic".to_string());
+                } else {
+                    parameters.insert("style".to_string(), "corporate".to_string());
+                }
+
+                // Extract output filename
+                if let Some(cap) = Regex::new(r"(?:save|name)\s+(?:as\s+)?([\w\.]+)")
+                    .unwrap()
+                    .captures(input)
+                {
+                    if let Some(filename_match) = cap.get(1) {
+                        parameters.insert(
+                            "output_filename".to_string(),
+                            filename_match.as_str().to_string(),
+                        );
+                    }
+                } else {
+                    parameters.insert(
+                        "output_filename".to_string(),
+                        "presentation.html".to_string(),
+                    );
+                }
+            }
+            OperationType::GenerateDocument => {
+                // Extract document type
+                if input.contains("report") {
+                    parameters.insert("doc_type".to_string(), "report".to_string());
+                } else if input.contains("summary") {
+                    parameters.insert("doc_type".to_string(), "summary".to_string());
+                } else if input.contains("checklist") {
+                    parameters.insert("doc_type".to_string(), "checklist".to_string());
+                } else {
+                    parameters.insert("doc_type".to_string(), "document".to_string());
+                }
+
+                // Extract output format
+                if input.contains("pdf") {
+                    parameters.insert("format".to_string(), "pdf".to_string());
+                } else if input.contains("docx") || input.contains("word") {
+                    parameters.insert("format".to_string(), "docx".to_string());
+                } else if input.contains("markdown") || input.contains("md") {
+                    parameters.insert("format".to_string(), "markdown".to_string());
+                } else {
+                    parameters.insert("format".to_string(), "html".to_string());
+                }
+
+                // Extract output filename
+                if let Some(cap) = Regex::new(r"(?:save|name)\s+(?:as\s+)?([\w\.]+)")
+                    .unwrap()
+                    .captures(input)
+                {
+                    if let Some(filename_match) = cap.get(1) {
+                        parameters.insert(
+                            "output_filename".to_string(),
+                            filename_match.as_str().to_string(),
+                        );
+                    }
+                } else {
+                    parameters.insert(
+                        "output_filename".to_string(),
+                        "generated_document.html".to_string(),
+                    );
                 }
             }
             OperationType::Unknown => {}
@@ -443,6 +606,70 @@ impl NaturalLanguageOperations {
                     max_points,
                 })
             }
+            OperationType::GenerateTrainingManual
+            | OperationType::GenerateQuickReference
+            | OperationType::GeneratePresentation
+            | OperationType::GenerateDocument => {
+                // Create a GenerateFromConversationRequest based on the operation
+                let conversation_content = operation
+                    .documents
+                    .first()
+                    .map(|doc| format!("Generate from document: {}", doc))
+                    .unwrap_or_else(|| "Generate new document".to_string());
+
+                let generation_request = match operation.operation_type {
+                    OperationType::GenerateTrainingManual => "Create a training manual".to_string(),
+                    OperationType::GenerateQuickReference => {
+                        "Generate a quick reference guide".to_string()
+                    }
+                    OperationType::GeneratePresentation => "Make a presentation".to_string(),
+                    _ => "Generate a document".to_string(),
+                };
+
+                let target_audience = operation
+                    .parameters
+                    .get("audience")
+                    .and_then(|a| match a.as_str() {
+                        "beginner" => Some(AudienceType::Beginner),
+                        "general" => Some(AudienceType::General),
+                        "technical" => Some(AudienceType::Technical),
+                        "expert" => Some(AudienceType::Expert),
+                        "student" => Some(AudienceType::Student),
+                        "business" => Some(AudienceType::Business),
+                        _ => None,
+                    })
+                    .unwrap_or(AudienceType::General);
+
+                let output_format = operation
+                    .parameters
+                    .get("format")
+                    .and_then(|f| match f.as_str() {
+                        "pdf" => Some(OutputFormat::Pdf),
+                        "docx" => Some(OutputFormat::Docx),
+                        "html" => Some(OutputFormat::Html),
+                        "markdown" => Some(OutputFormat::Markdown),
+                        _ => None,
+                    })
+                    .unwrap_or(OutputFormat::Html);
+
+                let output_filename = operation
+                    .parameters
+                    .get("output_filename")
+                    .cloned()
+                    .unwrap_or_else(|| "generated_document.html".to_string());
+
+                let request = GenerateFromConversationRequest {
+                    conversation_content,
+                    generation_request,
+                    target_audience,
+                    output_format,
+                    output_filename,
+                };
+
+                Ok(DocumentCommand::GenerateFromConversation {
+                    request: Box::new(request),
+                })
+            }
             OperationType::Unknown => Err(anyhow!("Unknown operation type")),
         }
     }
@@ -468,6 +695,12 @@ impl NaturalLanguageOperations {
             DocumentCommand::ExtractKeyPoints { .. } => {
                 format!("Key points from the document:\n\n{}", result)
             }
+            DocumentCommand::GenerateFromConversation { .. } => {
+                format!("Generated document successfully:\n\n{}", result)
+            }
+            DocumentCommand::GenerateOutput { .. } => {
+                format!("Output generation completed:\n\n{}", result)
+            }
         }
     }
 
@@ -479,6 +712,9 @@ impl NaturalLanguageOperations {
                 "Try: 'Compare doc1.pdf with doc2.pdf'".to_string(),
                 "Try: 'Find documents similar to report.docx'".to_string(),
                 "Try: 'Search for documents about machine learning'".to_string(),
+                "Try: 'Create a training manual from document.pdf'".to_string(),
+                "Try: 'Generate a quick reference guide from report.docx'".to_string(),
+                "Try: 'Make a presentation from these materials'".to_string(),
             ],
             _ => vec![
                 "Be more specific about which documents you want to work with".to_string(),
@@ -519,6 +755,16 @@ impl NaturalLanguageOperations {
                 "Want more or fewer key points?".to_string(),
                 "Would you like a summary of the document?".to_string(),
                 "Want to analyze the document structure?".to_string(),
+            ],
+            DocumentCommand::GenerateFromConversation { .. } => vec![
+                "Want to generate a different type of document?".to_string(),
+                "Would you like to modify the content or format?".to_string(),
+                "Want to create additional documents from this content?".to_string(),
+            ],
+            DocumentCommand::GenerateOutput { .. } => vec![
+                "Want to try a different output format?".to_string(),
+                "Would you like to adjust the generation settings?".to_string(),
+                "Want to generate additional variations?".to_string(),
             ],
         }
     }
@@ -566,6 +812,19 @@ impl OperationPatterns {
             analyze: Regex::new(r"(?i)\b(analyze|analysis|examine|study|review|assess)\b")?,
             extract_points: Regex::new(
                 r"(?i)\b(key points|main points|important points|extract|highlights)\b",
+            )?,
+            // Generation patterns
+            generate_training_manual: Regex::new(
+                r"(?i)\b(create|generate|make|build).*\b(training manual|training guide|instructor guide)\b",
+            )?,
+            generate_quick_reference: Regex::new(
+                r"(?i)\b(create|generate|make|build).*\b(quick reference|reference guide|cheat sheet|quick card)\b",
+            )?,
+            generate_presentation: Regex::new(
+                r"(?i)\b(create|generate|make|build).*\b(presentation|slides|slideshow|powerpoint)\b",
+            )?,
+            generate_document: Regex::new(
+                r"(?i)\b(create|generate|make|build).*\b(document|report|checklist|summary)\b",
             )?,
 
             // Parameter patterns
