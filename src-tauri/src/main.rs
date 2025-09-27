@@ -180,6 +180,10 @@ async fn main() {
     let conversation_context_state: commands::conversation_context_commands::ConversationContextState =
         std::sync::Arc::new(tokio::sync::Mutex::new(crate::ai::ConversationContextManager::new()));
 
+    // Initialize template manager state
+    let template_manager_state: commands::template_commands::TemplateManagerState =
+        std::sync::Mutex::new(crate::document::TemplateManager::new_default());
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -217,6 +221,7 @@ async fn main() {
         .manage(relationship_state)
         .manage(conversational_intelligence_state)
         .manage(conversation_context_state)
+        .manage(template_manager_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .manage(Arc::new(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
@@ -473,6 +478,26 @@ async fn main() {
             commands::export_conversation_session,
             commands::import_conversation_session,
             commands::get_conversation_context_status,
+            // Natural language operations commands
+            commands::execute_natural_language_operation,
+            commands::parse_natural_language_operation,
+            commands::get_nl_operation_examples,
+            commands::get_nl_operation_suggestions,
+            commands::test_nl_operations,
+            // Template management commands
+            commands::initialize_template_manager,
+            commands::create_template,
+            commands::get_template,
+            commands::update_template,
+            commands::delete_template,
+            commands::list_templates,
+            commands::search_templates,
+            commands::generate_from_template,
+            commands::validate_template,
+            commands::get_template_statistics,
+            commands::get_template_types,
+            commands::get_output_formats,
+            commands::get_audience_levels,
         ])
         .setup(move |app| {
             info!("Application setup complete");

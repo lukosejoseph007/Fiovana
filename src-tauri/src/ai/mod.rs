@@ -6,6 +6,7 @@ pub mod context;
 pub mod conversation_context;
 pub mod document_commands;
 pub mod intent;
+pub mod nl_operations;
 pub mod ollama;
 pub mod openrouter;
 pub mod prompts;
