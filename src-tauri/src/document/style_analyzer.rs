@@ -24,6 +24,17 @@ pub enum VocabularyComplexity {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ReadabilityLevel {
+    VeryEasy,        // 90-100 Flesch score
+    Easy,            // 80-90
+    FairlyEasy,      // 70-80
+    Standard,        // 60-70
+    FairlyDifficult, // 50-60
+    Difficult,       // 30-50
+    VeryDifficult,   // 0-30
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VocabularyProfile {
     pub complexity: VocabularyComplexity,
     pub average_word_length: f64,
@@ -33,6 +44,15 @@ pub struct VocabularyProfile {
     pub technical_terms: Vec<String>,
     pub preferred_terms: HashMap<String, i32>,
     pub avoided_terms: Vec<String>,
+    // Advanced vocabulary analysis fields
+    pub flesch_reading_score: f64,
+    pub flesch_kincaid_grade: f64,
+    pub technical_density: f64,
+    pub formality_index: f64,
+    pub syllable_complexity: f64,
+    pub jargon_ratio: f64,
+    pub readability_level: ReadabilityLevel,
+    pub domain_specific_terms: HashMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,17 +76,57 @@ pub enum ToneType {
     Conversational,
     Instructional,
     Technical,
+    Authoritative,
+    Empathetic,
+    Persuasive,
+    Objective,
+    Enthusiastic,
+    Cautious,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum VoiceType {
+    Authoritative,  // Commands, directives, expertise
+    Friendly,       // Warm, approachable, personal
+    Neutral,        // Balanced, professional
+    Encouraging,    // Supportive, motivational
+    Explanatory,    // Educational, detailed
+    Conversational, // Casual, informal dialogue
+    Expert,         // Technical, specialized knowledge
+    Empathetic,     // Understanding, caring
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum EmotionalTone {
+    Positive,     // Optimistic, upbeat
+    Negative,     // Critical, pessimistic
+    Neutral,      // Balanced, objective
+    Enthusiastic, // Excited, energetic
+    Cautious,     // Careful, reserved
+    Confident,    // Assured, certain
+    Uncertain,    // Hesitant, questioning
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToneAnalysis {
     pub primary_tone: ToneType,
+    pub voice_type: VoiceType,
+    pub emotional_tone: EmotionalTone,
     pub formality_score: f64,  // 0.0 = very informal, 1.0 = very formal
     pub directness_score: f64, // 0.0 = indirect, 1.0 = direct
     pub supportiveness: f64,   // 0.0 = unsupportive, 1.0 = very supportive
+    pub authority_score: f64,  // 0.0 = submissive, 1.0 = authoritative
+    pub empathy_score: f64,    // 0.0 = cold, 1.0 = very empathetic
+    pub enthusiasm_score: f64, // 0.0 = neutral, 1.0 = very enthusiastic
+    pub certainty_score: f64,  // 0.0 = uncertain, 1.0 = very certain
+    pub politeness_score: f64, // 0.0 = rude, 1.0 = very polite
     pub confidence_indicators: Vec<String>,
+    pub authority_indicators: Vec<String>,
+    pub empathy_indicators: Vec<String>,
+    pub enthusiasm_indicators: Vec<String>,
     pub characteristic_phrases: Vec<String>,
     pub tone_consistency: f64,
+    pub voice_consistency: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,6 +182,21 @@ pub struct StyleAnalyzer {
     // Formality indicators
     formal_indicators: Vec<&'static str>,
     informal_indicators: Vec<&'static str>,
+    // Advanced vocabulary analysis patterns
+    academic_terms: Vec<&'static str>,
+    business_jargon: Vec<&'static str>,
+    scientific_terms: Vec<&'static str>,
+    legal_terms: Vec<&'static str>,
+    complex_connectors: Vec<&'static str>,
+    // Advanced tone and voice detection patterns
+    authority_indicators: Vec<&'static str>,
+    empathy_indicators: Vec<&'static str>,
+    enthusiasm_indicators: Vec<&'static str>,
+    politeness_indicators: Vec<&'static str>,
+    certainty_indicators: Vec<&'static str>,
+    uncertainty_indicators: Vec<&'static str>,
+    positive_emotion_words: Vec<&'static str>,
+    negative_emotion_words: Vec<&'static str>,
 }
 
 impl StyleAnalyzer {
@@ -201,6 +276,292 @@ impl StyleAnalyzer {
                 "folks",
                 "basically",
                 "pretty much",
+            ],
+            academic_terms: vec![
+                "hypothesis",
+                "methodology",
+                "empirical",
+                "theoretical",
+                "paradigm",
+                "conceptual",
+                "framework",
+                "analysis",
+                "synthesis",
+                "correlation",
+                "implications",
+                "phenomena",
+                "discourse",
+                "substantive",
+                "comprehensive",
+                "systematic",
+                "prevalent",
+                "inherent",
+                "pertinent",
+                "subsequently",
+            ],
+            business_jargon: vec![
+                "synergy",
+                "leverage",
+                "paradigm",
+                "optimization",
+                "stakeholder",
+                "deliverable",
+                "actionable",
+                "scalable",
+                "benchmark",
+                "strategize",
+                "monetize",
+                "streamline",
+                "proactive",
+                "mindshare",
+                "bandwidth",
+                "ideation",
+                "holistic",
+                "disruptive",
+                "innovative",
+                "ecosystem",
+            ],
+            scientific_terms: vec![
+                "hypothesis",
+                "methodology",
+                "empirical",
+                "statistical",
+                "correlation",
+                "regression",
+                "variables",
+                "coefficient",
+                "algorithm",
+                "protocol",
+                "specimen",
+                "parameters",
+                "quantitative",
+                "qualitative",
+                "systematic",
+                "experimental",
+                "observational",
+                "analytical",
+                "diagnostic",
+                "therapeutic",
+            ],
+            legal_terms: vec![
+                "pursuant",
+                "whereas",
+                "herein",
+                "thereof",
+                "aforementioned",
+                "hereafter",
+                "notwithstanding",
+                "heretofore",
+                "provision",
+                "stipulation",
+                "compliance",
+                "jurisdiction",
+                "liability",
+                "indemnification",
+                "arbitration",
+                "litigation",
+                "statutory",
+                "regulatory",
+                "contractual",
+                "fiduciary",
+            ],
+            complex_connectors: vec![
+                "nevertheless",
+                "furthermore",
+                "consequently",
+                "notwithstanding",
+                "subsequently",
+                "additionally",
+                "specifically",
+                "particularly",
+                "accordingly",
+                "alternatively",
+                "meanwhile",
+                "likewise",
+                "otherwise",
+                "conversely",
+                "similarly",
+                "ultimately",
+                "essentially",
+                "fundamentally",
+                "predominantly",
+                "substantially",
+            ],
+            authority_indicators: vec![
+                "command",
+                "require",
+                "must",
+                "shall",
+                "mandatory",
+                "directive",
+                "insist",
+                "demand",
+                "instruct",
+                "order",
+                "decree",
+                "dictate",
+                "enforce",
+                "compel",
+                "establish",
+                "determine",
+                "decide",
+                "rule",
+                "declare",
+                "assert",
+            ],
+            empathy_indicators: vec![
+                "understand",
+                "appreciate",
+                "recognize",
+                "acknowledge",
+                "empathize",
+                "sympathize",
+                "care",
+                "concern",
+                "support",
+                "comfort",
+                "reassure",
+                "encourage",
+                "share",
+                "feel",
+                "relate",
+                "experience",
+                "struggle",
+                "challenge",
+                "difficulty",
+                "sorry",
+            ],
+            enthusiasm_indicators: vec![
+                "excited",
+                "amazing",
+                "fantastic",
+                "wonderful",
+                "excellent",
+                "outstanding",
+                "incredible",
+                "awesome",
+                "brilliant",
+                "superb",
+                "great",
+                "love",
+                "enjoy",
+                "thrilled",
+                "delighted",
+                "pleased",
+                "happy",
+                "enthusiastic",
+                "passionate",
+                "eager",
+            ],
+            politeness_indicators: vec![
+                "please",
+                "thank you",
+                "thanks",
+                "appreciate",
+                "grateful",
+                "kindly",
+                "would you",
+                "could you",
+                "may i",
+                "excuse me",
+                "sorry",
+                "pardon",
+                "welcome",
+                "glad",
+                "honor",
+                "privilege",
+                "respect",
+                "consider",
+                "suggest",
+                "recommend",
+            ],
+            certainty_indicators: vec![
+                "definitely",
+                "certainly",
+                "absolutely",
+                "undoubtedly",
+                "clearly",
+                "obviously",
+                "without doubt",
+                "sure",
+                "confident",
+                "certain",
+                "positive",
+                "guarantee",
+                "ensure",
+                "assure",
+                "confirm",
+                "establish",
+                "prove",
+                "demonstrate",
+                "verify",
+                "validate",
+            ],
+            uncertainty_indicators: vec![
+                "maybe",
+                "perhaps",
+                "possibly",
+                "might",
+                "could",
+                "may",
+                "seems",
+                "appears",
+                "likely",
+                "probably",
+                "suppose",
+                "assume",
+                "guess",
+                "think",
+                "believe",
+                "suspect",
+                "doubt",
+                "uncertain",
+                "unclear",
+                "unsure",
+            ],
+            positive_emotion_words: vec![
+                "happy",
+                "joy",
+                "pleased",
+                "satisfied",
+                "content",
+                "delighted",
+                "excited",
+                "enthusiastic",
+                "optimistic",
+                "hopeful",
+                "grateful",
+                "thankful",
+                "appreciate",
+                "love",
+                "enjoy",
+                "wonderful",
+                "excellent",
+                "great",
+                "amazing",
+                "fantastic",
+            ],
+            negative_emotion_words: vec![
+                "sad",
+                "angry",
+                "frustrated",
+                "disappointed",
+                "upset",
+                "annoyed",
+                "worried",
+                "concerned",
+                "anxious",
+                "stressed",
+                "difficult",
+                "problem",
+                "issue",
+                "trouble",
+                "challenge",
+                "struggle",
+                "fail",
+                "error",
+                "mistake",
+                "wrong",
             ],
         }
     }
@@ -330,6 +691,14 @@ impl StyleAnalyzer {
                 technical_terms: vec![],
                 preferred_terms: HashMap::new(),
                 avoided_terms: vec![],
+                flesch_reading_score: 0.0,
+                flesch_kincaid_grade: 0.0,
+                technical_density: 0.0,
+                formality_index: 0.0,
+                syllable_complexity: 0.0,
+                jargon_ratio: 0.0,
+                readability_level: ReadabilityLevel::Standard,
+                domain_specific_terms: HashMap::new(),
             };
         }
 
@@ -380,6 +749,16 @@ impl StyleAnalyzer {
 
         let preferred_terms: HashMap<String, i32> = common_terms.into_iter().collect();
 
+        // Calculate advanced vocabulary metrics
+        let flesch_reading_score = self.calculate_flesch_reading_score(content);
+        let flesch_kincaid_grade = self.calculate_flesch_kincaid_grade(content);
+        let technical_density = self.calculate_technical_density(content);
+        let formality_index = self.calculate_formality_index(content);
+        let syllable_complexity = self.calculate_syllable_complexity(content);
+        let jargon_ratio = self.calculate_jargon_ratio(content);
+        let readability_level = self.determine_readability_level(flesch_reading_score);
+        let domain_specific_terms = self.identify_domain_specific_terms(content);
+
         VocabularyProfile {
             complexity,
             average_word_length,
@@ -389,6 +768,14 @@ impl StyleAnalyzer {
             technical_terms: technical_terms.into_iter().take(10).collect(),
             preferred_terms,
             avoided_terms: vec![], // Could be enhanced with more analysis
+            flesch_reading_score,
+            flesch_kincaid_grade,
+            technical_density,
+            formality_index,
+            syllable_complexity,
+            jargon_ratio,
+            readability_level,
+            domain_specific_terms,
         }
     }
 
@@ -483,12 +870,23 @@ impl StyleAnalyzer {
         if word_count == 0.0 {
             return ToneAnalysis {
                 primary_tone: ToneType::Professional,
+                voice_type: VoiceType::Neutral,
+                emotional_tone: EmotionalTone::Neutral,
                 formality_score: 0.5,
                 directness_score: 0.5,
                 supportiveness: 0.5,
+                authority_score: 0.5,
+                empathy_score: 0.5,
+                enthusiasm_score: 0.5,
+                certainty_score: 0.5,
+                politeness_score: 0.5,
                 confidence_indicators: vec![],
+                authority_indicators: vec![],
+                empathy_indicators: vec![],
+                enthusiasm_indicators: vec![],
                 characteristic_phrases: vec![],
                 tone_consistency: 0.5,
+                voice_consistency: 0.5,
             };
         }
 
@@ -509,6 +907,56 @@ impl StyleAnalyzer {
             formal_count / (formal_count + informal_count)
         } else {
             0.5 // Neutral if no indicators found
+        };
+
+        // Calculate authority score
+        let authority_count = self
+            .authority_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+        let authority_score = (authority_count / word_count * 100.0).min(1.0);
+
+        // Calculate empathy score
+        let empathy_count = self
+            .empathy_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+        let empathy_score = (empathy_count / word_count * 100.0).min(1.0);
+
+        // Calculate enthusiasm score
+        let enthusiasm_count = self
+            .enthusiasm_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+        let enthusiasm_score = (enthusiasm_count / word_count * 100.0).min(1.0);
+
+        // Calculate politeness score
+        let politeness_count = self
+            .politeness_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+        let politeness_score = (politeness_count / word_count * 100.0).min(1.0);
+
+        // Calculate certainty score
+        let certainty_count = self
+            .certainty_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+        let uncertainty_count = self
+            .uncertainty_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+
+        let certainty_score = if certainty_count + uncertainty_count > 0.0 {
+            certainty_count / (certainty_count + uncertainty_count)
+        } else {
+            0.5
         };
 
         // Analyze directness (imperative sentences, direct commands)
@@ -550,48 +998,125 @@ impl StyleAnalyzer {
 
         let supportiveness = (supportive_count / word_count * 100.0).min(1.0);
 
-        // Determine primary tone
+        // Calculate emotional tone
+        let positive_emotion_count = self
+            .positive_emotion_words
+            .iter()
+            .map(|word| lower_content.matches(word).count())
+            .sum::<usize>() as f64;
+
+        let negative_emotion_count = self
+            .negative_emotion_words
+            .iter()
+            .map(|word| lower_content.matches(word).count())
+            .sum::<usize>() as f64;
+
+        let emotional_tone = if enthusiasm_score > 0.3 {
+            EmotionalTone::Enthusiastic
+        } else if positive_emotion_count > negative_emotion_count && positive_emotion_count > 0.0 {
+            EmotionalTone::Positive
+        } else if negative_emotion_count > positive_emotion_count && negative_emotion_count > 0.0 {
+            EmotionalTone::Negative
+        } else if certainty_score > 0.7 {
+            EmotionalTone::Confident
+        } else if certainty_score < 0.3 {
+            EmotionalTone::Uncertain
+        } else if authority_score > 0.2 && directness_score < 0.3 {
+            EmotionalTone::Cautious
+        } else {
+            EmotionalTone::Neutral
+        };
+
+        // Determine voice type
+        let voice_type = if authority_score > 0.3 {
+            VoiceType::Authoritative
+        } else if empathy_score > 0.3 {
+            VoiceType::Empathetic
+        } else if supportiveness > 0.3 {
+            VoiceType::Encouraging
+        } else if enthusiasm_score > 0.2 || positive_emotion_count > 0.0 {
+            VoiceType::Friendly
+        } else if lower_content.contains("technical") || lower_content.contains("specification") {
+            VoiceType::Expert
+        } else if formality_score < 0.4 {
+            VoiceType::Conversational
+        } else if lower_content.contains("explain")
+            || lower_content.contains("describe")
+            || lower_content.contains("understand")
+        {
+            VoiceType::Explanatory
+        } else {
+            VoiceType::Neutral
+        };
+
+        // Determine primary tone (enhanced)
         let primary_tone = if formality_score > 0.7 {
             if lower_content.contains("research") || lower_content.contains("analysis") {
                 ToneType::Academic
+            } else if authority_score > 0.3 {
+                ToneType::Authoritative
             } else {
                 ToneType::Formal
             }
         } else if formality_score < 0.3 {
-            if supportiveness > 0.3 {
+            if enthusiasm_score > 0.3 {
+                ToneType::Enthusiastic
+            } else if supportiveness > 0.3 {
                 ToneType::Friendly
             } else {
                 ToneType::Informal
             }
+        } else if empathy_score > 0.3 {
+            ToneType::Empathetic
         } else if supportiveness > 0.4 {
             ToneType::Instructional
+        } else if lower_content.contains("consider") || lower_content.contains("suggest") {
+            ToneType::Persuasive
+        } else if certainty_score < 0.3 && authority_score < 0.2 {
+            ToneType::Cautious
         } else if lower_content.contains("technical") || lower_content.contains("specification") {
             ToneType::Technical
         } else if directness_score > 0.3 {
             ToneType::Professional
+        } else if positive_emotion_count == 0.0
+            && negative_emotion_count == 0.0
+            && formality_score > 0.4
+        {
+            ToneType::Objective
         } else {
             ToneType::Conversational
         };
 
-        // Extract confidence indicators
-        let confidence_indicators = vec![
-            "definitely",
-            "certainly",
-            "clearly",
-            "obviously",
-            "undoubtedly",
-            "ensure",
-            "guarantee",
-            "proven",
-            "established",
-            "confirmed",
-        ]
-        .into_iter()
-        .filter(|indicator| lower_content.contains(indicator))
-        .map(|s| s.to_string())
-        .collect();
+        // Extract indicators for different aspects
+        let confidence_indicators = self
+            .certainty_indicators
+            .iter()
+            .filter(|indicator| lower_content.contains(*indicator))
+            .map(|s| s.to_string())
+            .collect();
 
-        // Find characteristic phrases (this is simplified)
+        let authority_indicators = self
+            .authority_indicators
+            .iter()
+            .filter(|indicator| lower_content.contains(*indicator))
+            .map(|s| s.to_string())
+            .collect();
+
+        let empathy_indicators = self
+            .empathy_indicators
+            .iter()
+            .filter(|indicator| lower_content.contains(*indicator))
+            .map(|s| s.to_string())
+            .collect();
+
+        let enthusiasm_indicators = self
+            .enthusiasm_indicators
+            .iter()
+            .filter(|indicator| lower_content.contains(*indicator))
+            .map(|s| s.to_string())
+            .collect();
+
+        // Find characteristic phrases (enhanced)
         let characteristic_phrases = vec![
             "it is important to",
             "please note",
@@ -601,29 +1126,59 @@ impl StyleAnalyzer {
             "keep in mind",
             "as you can see",
             "it should be noted",
+            "we believe",
+            "in our opinion",
+            "you might consider",
+            "it is recommended",
+            "feel free to",
+            "don't hesitate",
         ]
         .into_iter()
         .filter(|phrase| lower_content.contains(phrase))
         .map(|s| s.to_string())
         .collect();
 
-        // Calculate tone consistency (simplified - could be enhanced)
-        let tone_consistency = if !(0.2..=0.8).contains(&formality_score) {
-            0.9 // Very consistent
-        } else if !(0.4..=0.6).contains(&formality_score) {
-            0.7 // Moderately consistent
-        } else {
-            0.5 // Mixed tone
-        };
+        // Calculate tone consistency
+        let tone_scores = [
+            formality_score,
+            authority_score,
+            empathy_score,
+            enthusiasm_score,
+        ];
+        let max_score = tone_scores.iter().fold(0.0f64, |a, &b| a.max(b));
+        let min_score = tone_scores.iter().fold(1.0f64, |a, &b| a.min(b));
+        let tone_consistency = 1.0 - (max_score - min_score);
+
+        // Calculate voice consistency
+        let voice_scores = [
+            authority_score,
+            empathy_score,
+            supportiveness,
+            enthusiasm_score,
+        ];
+        let voice_max = voice_scores.iter().fold(0.0f64, |a, &b| a.max(b));
+        let voice_min = voice_scores.iter().fold(1.0f64, |a, &b| a.min(b));
+        let voice_consistency = 1.0 - (voice_max - voice_min);
 
         ToneAnalysis {
             primary_tone,
+            voice_type,
+            emotional_tone,
             formality_score,
             directness_score,
             supportiveness,
+            authority_score,
+            empathy_score,
+            enthusiasm_score,
+            certainty_score,
+            politeness_score,
             confidence_indicators,
+            authority_indicators,
+            empathy_indicators,
+            enthusiasm_indicators,
             characteristic_phrases,
             tone_consistency,
+            voice_consistency,
         }
     }
 
@@ -1039,6 +1594,293 @@ impl StyleAnalyzer {
             document_sources: vec!["raw_content".to_string()],
             analysis_date: chrono::Utc::now().to_rfc3339(),
         })
+    }
+
+    // Advanced vocabulary analysis methods
+
+    /// Calculate Flesch Reading Ease score
+    /// Formula: 206.835 - (1.015 × ASL) - (84.6 × ASW)
+    /// ASL = average sentence length, ASW = average syllables per word
+    fn calculate_flesch_reading_score(&self, content: &str) -> f64 {
+        let sentences = self.count_sentences(content);
+        let words = self.count_words(content);
+        let syllables = self.count_syllables(content);
+
+        if sentences == 0 || words == 0 {
+            return 0.0;
+        }
+
+        let asl = words as f64 / sentences as f64; // Average sentence length
+        let asw = syllables as f64 / words as f64; // Average syllables per word
+
+        let score = 206.835 - (1.015 * asl) - (84.6 * asw);
+        score.clamp(0.0, 100.0)
+    }
+
+    /// Calculate Flesch-Kincaid Grade Level
+    /// Formula: (0.39 × ASL) + (11.8 × ASW) - 15.59
+    fn calculate_flesch_kincaid_grade(&self, content: &str) -> f64 {
+        let sentences = self.count_sentences(content);
+        let words = self.count_words(content);
+        let syllables = self.count_syllables(content);
+
+        if sentences == 0 || words == 0 {
+            return 0.0;
+        }
+
+        let asl = words as f64 / sentences as f64;
+        let asw = syllables as f64 / words as f64;
+
+        let grade = (0.39 * asl) + (11.8 * asw) - 15.59;
+        grade.max(0.0)
+    }
+
+    /// Calculate technical density as ratio of technical terms to total words
+    fn calculate_technical_density(&self, content: &str) -> f64 {
+        let words = self.get_words(content);
+        if words.is_empty() {
+            return 0.0;
+        }
+
+        let technical_count = words
+            .iter()
+            .filter(|word| {
+                self.technical_patterns
+                    .iter()
+                    .any(|pattern| word.to_lowercase().contains(pattern))
+                    || self
+                        .scientific_terms
+                        .iter()
+                        .any(|term| word.to_lowercase().contains(term))
+            })
+            .count();
+
+        technical_count as f64 / words.len() as f64
+    }
+
+    /// Calculate formality index based on formal vs informal indicators
+    fn calculate_formality_index(&self, content: &str) -> f64 {
+        let lower_content = content.to_lowercase();
+        let word_count = self.count_words(content) as f64;
+
+        if word_count == 0.0 {
+            return 0.5;
+        }
+
+        let formal_count = self
+            .formal_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+
+        let informal_count = self
+            .informal_indicators
+            .iter()
+            .map(|indicator| lower_content.matches(indicator).count())
+            .sum::<usize>() as f64;
+
+        let academic_count = self
+            .academic_terms
+            .iter()
+            .map(|term| lower_content.matches(term).count())
+            .sum::<usize>() as f64;
+
+        let legal_count = self
+            .legal_terms
+            .iter()
+            .map(|term| lower_content.matches(term).count())
+            .sum::<usize>() as f64;
+
+        let complex_connector_count = self
+            .complex_connectors
+            .iter()
+            .map(|connector| lower_content.matches(connector).count())
+            .sum::<usize>() as f64;
+
+        // Weight different indicators
+        let formal_score = formal_count * 1.0
+            + academic_count * 1.2
+            + legal_count * 1.5
+            + complex_connector_count * 0.8;
+        let informal_score = informal_count * 1.0;
+
+        let total_indicators = formal_score + informal_score;
+        if total_indicators == 0.0 {
+            return 0.5; // Neutral
+        }
+
+        (formal_score / total_indicators).min(1.0)
+    }
+
+    /// Calculate syllable complexity (average syllables per word)
+    fn calculate_syllable_complexity(&self, content: &str) -> f64 {
+        let words = self.count_words(content);
+        let syllables = self.count_syllables(content);
+
+        if words == 0 {
+            return 0.0;
+        }
+
+        syllables as f64 / words as f64
+    }
+
+    /// Calculate jargon ratio (domain-specific terms)
+    fn calculate_jargon_ratio(&self, content: &str) -> f64 {
+        let words = self.get_words(content);
+        if words.is_empty() {
+            return 0.0;
+        }
+
+        let jargon_count = words
+            .iter()
+            .filter(|word| {
+                let lower_word = word.to_lowercase();
+                self.business_jargon
+                    .iter()
+                    .any(|jargon| lower_word.contains(jargon))
+                    || self
+                        .academic_terms
+                        .iter()
+                        .any(|term| lower_word.contains(term))
+                    || self
+                        .legal_terms
+                        .iter()
+                        .any(|term| lower_word.contains(term))
+            })
+            .count();
+
+        jargon_count as f64 / words.len() as f64
+    }
+
+    /// Determine readability level from Flesch reading score
+    fn determine_readability_level(&self, flesch_score: f64) -> ReadabilityLevel {
+        match flesch_score {
+            90.0..=100.0 => ReadabilityLevel::VeryEasy,
+            80.0..=89.9 => ReadabilityLevel::Easy,
+            70.0..=79.9 => ReadabilityLevel::FairlyEasy,
+            60.0..=69.9 => ReadabilityLevel::Standard,
+            50.0..=59.9 => ReadabilityLevel::FairlyDifficult,
+            30.0..=49.9 => ReadabilityLevel::Difficult,
+            _ => ReadabilityLevel::VeryDifficult,
+        }
+    }
+
+    /// Identify domain-specific terms categorized by domain
+    fn identify_domain_specific_terms(&self, content: &str) -> HashMap<String, Vec<String>> {
+        let lower_content = content.to_lowercase();
+        let mut domain_terms = HashMap::new();
+
+        // Academic terms
+        let academic_found: Vec<String> = self
+            .academic_terms
+            .iter()
+            .filter(|term| lower_content.contains(*term))
+            .map(|s| s.to_string())
+            .collect();
+        if !academic_found.is_empty() {
+            domain_terms.insert("academic".to_string(), academic_found);
+        }
+
+        // Business jargon
+        let business_found: Vec<String> = self
+            .business_jargon
+            .iter()
+            .filter(|term| lower_content.contains(*term))
+            .map(|s| s.to_string())
+            .collect();
+        if !business_found.is_empty() {
+            domain_terms.insert("business".to_string(), business_found);
+        }
+
+        // Scientific terms
+        let scientific_found: Vec<String> = self
+            .scientific_terms
+            .iter()
+            .filter(|term| lower_content.contains(*term))
+            .map(|s| s.to_string())
+            .collect();
+        if !scientific_found.is_empty() {
+            domain_terms.insert("scientific".to_string(), scientific_found);
+        }
+
+        // Legal terms
+        let legal_found: Vec<String> = self
+            .legal_terms
+            .iter()
+            .filter(|term| lower_content.contains(*term))
+            .map(|s| s.to_string())
+            .collect();
+        if !legal_found.is_empty() {
+            domain_terms.insert("legal".to_string(), legal_found);
+        }
+
+        // Technical terms
+        let technical_found: Vec<String> = self
+            .technical_patterns
+            .iter()
+            .filter(|term| lower_content.contains(*term))
+            .map(|s| s.to_string())
+            .collect();
+        if !technical_found.is_empty() {
+            domain_terms.insert("technical".to_string(), technical_found);
+        }
+
+        domain_terms
+    }
+
+    // Helper methods for advanced analysis
+
+    fn count_sentences(&self, content: &str) -> usize {
+        content
+            .chars()
+            .filter(|&c| c == '.' || c == '!' || c == '?')
+            .count()
+            .max(1) // Ensure at least 1 sentence for calculation safety
+    }
+
+    fn count_words(&self, content: &str) -> usize {
+        content.split_whitespace().filter(|w| !w.is_empty()).count()
+    }
+
+    fn get_words(&self, content: &str) -> Vec<String> {
+        content
+            .split_whitespace()
+            .map(|w| w.trim_matches(|c: char| !c.is_alphabetic()))
+            .filter(|w| !w.is_empty())
+            .map(|w| w.to_string())
+            .collect()
+    }
+
+    fn count_syllables(&self, content: &str) -> usize {
+        let words = self.get_words(content);
+        words
+            .iter()
+            .map(|word| self.count_syllables_in_word(word))
+            .sum()
+    }
+
+    /// Simple syllable counting algorithm
+    fn count_syllables_in_word(&self, word: &str) -> usize {
+        let word = word.to_lowercase();
+        let vowels = ['a', 'e', 'i', 'o', 'u', 'y'];
+        let mut syllable_count = 0;
+        let mut prev_was_vowel = false;
+
+        for ch in word.chars() {
+            let is_vowel = vowels.contains(&ch);
+            if is_vowel && !prev_was_vowel {
+                syllable_count += 1;
+            }
+            prev_was_vowel = is_vowel;
+        }
+
+        // Handle silent 'e'
+        if word.ends_with('e') && syllable_count > 1 {
+            syllable_count -= 1;
+        }
+
+        // Ensure at least 1 syllable per word
+        syllable_count.max(1)
     }
 }
 
