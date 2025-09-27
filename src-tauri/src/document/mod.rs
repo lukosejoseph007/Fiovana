@@ -10,6 +10,7 @@ pub mod document_comparison;
 pub mod document_generator;
 pub mod docx_parser;
 pub mod file_processor;
+pub mod format_converters;
 pub mod import_errors;
 pub mod indexer;
 pub mod metadata_extractor;
@@ -44,6 +45,11 @@ pub use file_processor::{
 };
 pub use import_errors::*;
 // Document indexer - now enabled for document intelligence
+#[allow(unused_imports)]
+pub use format_converters::{
+    ConversionOptions, ConversionResult, DocumentFormat, FormatConverter, FormatInfo,
+    QualitySettings,
+};
 #[allow(unused_imports)]
 pub use indexer::{
     DocumentIndexEntry, DocumentIndexer, IndexDocumentSection, IndexStats, SearchFilter,

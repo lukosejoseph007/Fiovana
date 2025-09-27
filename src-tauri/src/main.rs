@@ -497,6 +497,14 @@ async fn main() {
             commands::get_template_statistics,
             commands::get_template_types,
             commands::get_output_formats,
+            // Format conversion commands
+            commands::convert_document_format,
+            commands::get_supported_formats,
+            commands::check_conversion_capability,
+            commands::batch_convert_documents,
+            commands::get_default_conversion_options,
+            commands::validate_conversion_options,
+            commands::get_conversion_statistics,
             commands::get_audience_levels,
         ])
         .setup(move |app| {
