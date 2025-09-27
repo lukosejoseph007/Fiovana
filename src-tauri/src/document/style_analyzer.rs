@@ -66,7 +66,7 @@ pub struct SentencePatterns {
     pub typical_structures: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ToneType {
     Formal,
     Informal,
@@ -84,7 +84,7 @@ pub enum ToneType {
     Cautious,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum VoiceType {
     Authoritative,  // Commands, directives, expertise
     Friendly,       // Warm, approachable, personal

@@ -23,6 +23,7 @@ pub mod relationship_analyzer;
 pub mod structure_analyzer;
 pub mod style_analyzer;
 pub mod style_learner;
+pub mod style_transfer;
 pub mod templates;
 
 pub use batch_processor::*;
@@ -93,6 +94,11 @@ pub use style_analyzer::{
 pub use style_learner::{
     OrganizationalStyle, StyleLearner, StyleLearnerError, StyleLearningResult, StylePattern,
     TermFrequency,
+};
+#[allow(unused_imports)]
+pub use style_transfer::{
+    StyleChange, StyleChangeType, StyleTransfer, StyleTransferConfig, StyleTransferError,
+    StyleTransferMode, StyleTransferRequest, StyleTransferResult, StyleTransferTarget,
 };
 #[allow(unused_imports)]
 pub use templates::{

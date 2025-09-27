@@ -472,6 +472,13 @@ async fn main() {
             commands::analyze_terminology_usage,
             commands::identify_style_patterns,
             commands::get_style_learning_capabilities,
+            // Style transfer commands
+            commands::transfer_content_style,
+            commands::apply_organizational_style,
+            commands::apply_custom_style,
+            commands::preview_style_changes,
+            commands::validate_style_config,
+            commands::get_style_transfer_capabilities,
             // Conversational intelligence commands
             commands::initialize_conversational_intelligence,
             commands::process_conversation,
