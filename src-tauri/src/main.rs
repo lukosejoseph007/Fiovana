@@ -183,6 +183,9 @@ async fn main() {
     // Initialize template manager state
     let template_manager_state: commands::template_commands::TemplateManagerState =
         std::sync::Mutex::new(crate::document::TemplateManager::new_default());
+    // Initialize content adapter state
+    let content_adapter_state: commands::content_adaptation_commands::ContentAdapterState =
+        std::sync::Arc::new(tokio::sync::Mutex::new(None));
 
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
@@ -222,6 +225,7 @@ async fn main() {
         .manage(conversational_intelligence_state)
         .manage(conversation_context_state)
         .manage(template_manager_state)
+        .manage(content_adapter_state)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
         .manage(Arc::new(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
@@ -506,6 +510,15 @@ async fn main() {
             commands::validate_conversion_options,
             commands::get_conversion_statistics,
             commands::get_audience_levels,
+            // Content adaptation commands
+            commands::initialize_content_adapter,
+            commands::adapt_content,
+            commands::batch_adapt_content,
+            commands::get_adaptation_options,
+            commands::get_adaptation_suggestions,
+            commands::preview_adaptation,
+            commands::get_adaptation_status,
+            commands::validate_adaptation_config,
         ])
         .setup(move |app| {
             info!("Application setup complete");

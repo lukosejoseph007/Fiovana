@@ -2,6 +2,7 @@
 // Module for organizing Tauri commands
 
 pub mod ai_commands;
+pub mod content_adaptation_commands;
 pub mod content_classification_commands;
 pub mod conversation_context_commands;
 pub mod conversational_intelligence_commands;
@@ -30,6 +31,7 @@ pub mod workspace_performance_commands;
 // Re-export all commands for easy access
 // Note: deduplication_commands are available but not auto-imported to avoid unused warnings
 pub use ai_commands::*;
+pub use content_adaptation_commands::*;
 pub use content_classification_commands::*;
 pub use conversation_context_commands::*;
 pub use conversational_intelligence_commands::*;

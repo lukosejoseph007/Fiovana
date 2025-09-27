@@ -46,7 +46,7 @@ pub struct SentencePatterns {
     pub typical_structures: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ToneType {
     Formal,
     Informal,
@@ -1011,6 +1011,34 @@ impl StyleAnalyzer {
         }
 
         recommendations
+    }
+
+    /// Analyze style of raw content string
+    pub fn analyze_content_style(&self, content: &str) -> Result<StyleProfile, StyleAnalysisError> {
+        if content.trim().is_empty() {
+            return Err(StyleAnalysisError::InvalidContent(
+                "Content cannot be empty".to_string(),
+            ));
+        }
+
+        let vocabulary = self.analyze_vocabulary(content);
+        let sentence_structure = self.analyze_sentence_structure(content);
+        let tone = self.analyze_tone(content);
+        let structure = self.analyze_structural_patterns(content, "");
+        let formatting = self.analyze_formatting(content);
+        let confidence_score = self.calculate_confidence_score(content);
+
+        Ok(StyleProfile {
+            vocabulary,
+            sentence_structure,
+            tone,
+            structure,
+            formatting,
+            confidence_score,
+            sample_size: content.split_whitespace().count(),
+            document_sources: vec!["raw_content".to_string()],
+            analysis_date: chrono::Utc::now().to_rfc3339(),
+        })
     }
 }
 

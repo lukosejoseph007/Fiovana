@@ -3,6 +3,7 @@
 
 pub mod batch_processor;
 pub mod chunker;
+pub mod content_adapter;
 pub mod content_classifier;
 pub mod content_hasher;
 pub mod deduplication;
@@ -23,6 +24,11 @@ pub mod style_analyzer;
 pub mod templates;
 
 pub use batch_processor::*;
+#[allow(unused_imports)]
+pub use content_adapter::{
+    AdaptationConfig, AdaptationPurpose, AdaptationResult, AudienceType, ComplexityLevel,
+    ContentAdapter, ToneAdjustment,
+};
 #[allow(unused_imports)]
 pub use content_classifier::{
     ContentCategory, ContentClassification, ContentClassifier, DocumentContentAnalysis,
