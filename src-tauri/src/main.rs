@@ -465,6 +465,13 @@ async fn main() {
             commands::analyze_style_group,
             commands::find_style_outliers,
             commands::get_style_recommendations,
+            // Style learning commands
+            commands::learn_organizational_style,
+            commands::get_organizational_style,
+            commands::generate_style_guidelines,
+            commands::analyze_terminology_usage,
+            commands::identify_style_patterns,
+            commands::get_style_learning_capabilities,
             // Conversational intelligence commands
             commands::initialize_conversational_intelligence,
             commands::process_conversation,
