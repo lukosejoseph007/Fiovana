@@ -397,6 +397,11 @@ async fn main() {
             commands::get_output_directory,
             commands::set_output_directory,
             commands::test_document_generation,
+            // Unified output generation commands (Task 6.5)
+            commands::generate_output_unified,
+            commands::generate_from_conversation_unified,
+            commands::get_output_generator_status,
+            commands::get_available_audience_types,
             // Document comparison commands
             commands::init_document_comparison,
             commands::compare_documents_by_path,

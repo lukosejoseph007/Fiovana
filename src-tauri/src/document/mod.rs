@@ -15,6 +15,7 @@ pub mod format_converters;
 pub mod import_errors;
 pub mod indexer;
 pub mod metadata_extractor;
+pub mod output_generator;
 pub mod pdf_parser;
 pub mod progress_persistence;
 pub mod progress_tracker;
@@ -62,6 +63,11 @@ pub use indexer::{
     SearchResult,
 };
 pub use metadata_extractor::*;
+#[allow(unused_imports)]
+pub use output_generator::{
+    GenerationSummary, OutputGenerationConfig, OutputGenerationResult, OutputGenerator,
+    SourceContent, SourceContentType,
+};
 pub use pdf_parser::*;
 pub use progress_persistence::*;
 pub use progress_tracker::*;

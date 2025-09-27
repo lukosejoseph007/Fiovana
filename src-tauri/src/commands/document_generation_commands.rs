@@ -1,9 +1,11 @@
 // src-tauri/src/commands/document_generation_commands.rs
 // Tauri commands for document generation
 
+use crate::ai::AIConfig;
 use crate::document::{
-    convert_parsed_content_to_document, DocumentContent, DocumentGenerator, GenerationOptions,
-    OutputFormat,
+    convert_parsed_content_to_document, AudienceType, DocumentContent, DocumentGenerator,
+    GenerationOptions, OutputFormat, OutputGenerationConfig, OutputGenerationResult,
+    OutputGenerator, SourceContent,
 };
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -37,9 +39,35 @@ pub struct GenerateFromTextRequest {
     pub output_filename: String,
 }
 
+/// Request for unified output generation pipeline
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateOutputRequest {
+    pub source_content: SourceContent,
+    pub config: OutputGenerationConfig,
+}
+
+/// Request for conversation-based document generation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateFromConversationRequest {
+    pub conversation_content: String,
+    pub generation_request: String,
+    pub target_audience: AudienceType,
+    pub output_format: OutputFormat,
+    pub output_filename: String,
+}
+
+/// Response for output generation operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OutputGenerationResponse {
+    pub success: bool,
+    pub result: Option<OutputGenerationResult>,
+    pub error: Option<String>,
+}
+
 // Document generator state
 pub struct DocumentGeneratorState {
     pub generator: Arc<Mutex<Option<DocumentGenerator>>>,
+    pub output_generator: Arc<Mutex<Option<OutputGenerator>>>,
     pub output_directory: Arc<Mutex<PathBuf>>,
 }
 
@@ -48,6 +76,7 @@ impl Default for DocumentGeneratorState {
         let output_dir = std::env::temp_dir().join("proxemic_outputs");
         Self {
             generator: Arc::new(Mutex::new(None)),
+            output_generator: Arc::new(Mutex::new(None)),
             output_directory: Arc::new(Mutex::new(output_dir)),
         }
     }
@@ -59,6 +88,7 @@ pub type DocumentGeneratorAppState = Arc<DocumentGeneratorState>;
 pub async fn init_document_generator(
     generator_state: State<'_, DocumentGeneratorAppState>,
     output_directory: Option<String>,
+    ai_config: Option<AIConfig>,
 ) -> Result<bool, String> {
     let output_dir = match output_directory {
         Some(dir) => PathBuf::from(dir),
@@ -71,11 +101,26 @@ pub async fn init_document_generator(
         *dir_lock = output_dir.clone();
     }
 
-    // Create and store the generator
-    let generator = DocumentGenerator::new(output_dir);
+    // Create and store the basic generator
+    let generator = DocumentGenerator::new(output_dir.clone());
     {
         let mut gen_lock = generator_state.generator.lock().await;
         *gen_lock = Some(generator);
+    }
+
+    // Create and store the output generator if AI config is provided
+    if let Some(ai_cfg) = ai_config {
+        match OutputGenerator::new(ai_cfg, output_dir) {
+            Ok(output_gen) => {
+                let mut output_gen_lock = generator_state.output_generator.lock().await;
+                *output_gen_lock = Some(output_gen);
+                tracing::info!("Output generator initialized with AI configuration");
+            }
+            Err(e) => {
+                tracing::warn!("Failed to initialize output generator: {}", e);
+                // Continue without output generator
+            }
+        }
     }
 
     tracing::info!("Document generator initialized");
@@ -291,6 +336,111 @@ pub async fn test_document_generation(
         }
         Err(e) => Err(e),
     }
+}
+
+/// Generate output using the unified pipeline
+#[tauri::command]
+pub async fn generate_output_unified(
+    generator_state: State<'_, DocumentGeneratorAppState>,
+    request: GenerateOutputRequest,
+) -> Result<OutputGenerationResponse, String> {
+    let output_gen_lock = generator_state.output_generator.lock().await;
+    let output_generator = match output_gen_lock.as_ref() {
+        Some(gen) => gen,
+        None => {
+            return Ok(OutputGenerationResponse {
+                success: false,
+                result: None,
+                error: Some("Output generator not initialized. Please call init_document_generator with AI configuration first.".to_string()),
+            });
+        }
+    };
+
+    match output_generator
+        .generate_output(request.source_content, request.config)
+        .await
+    {
+        Ok(result) => Ok(OutputGenerationResponse {
+            success: result.success,
+            result: Some(result),
+            error: None,
+        }),
+        Err(e) => Ok(OutputGenerationResponse {
+            success: false,
+            result: None,
+            error: Some(format!("Output generation failed: {}", e)),
+        }),
+    }
+}
+
+/// Generate document from conversation using the unified pipeline
+#[tauri::command]
+pub async fn generate_from_conversation_unified(
+    generator_state: State<'_, DocumentGeneratorAppState>,
+    request: GenerateFromConversationRequest,
+) -> Result<OutputGenerationResponse, String> {
+    let output_gen_lock = generator_state.output_generator.lock().await;
+    let output_generator = match output_gen_lock.as_ref() {
+        Some(gen) => gen,
+        None => {
+            return Ok(OutputGenerationResponse {
+                success: false,
+                result: None,
+                error: Some("Output generator not initialized. Please call init_document_generator with AI configuration first.".to_string()),
+            });
+        }
+    };
+
+    match output_generator
+        .generate_from_conversation(
+            &request.conversation_content,
+            &request.generation_request,
+            request.target_audience,
+            request.output_format,
+            &request.output_filename,
+        )
+        .await
+    {
+        Ok(result) => Ok(OutputGenerationResponse {
+            success: result.success,
+            result: Some(result),
+            error: None,
+        }),
+        Err(e) => Ok(OutputGenerationResponse {
+            success: false,
+            result: None,
+            error: Some(format!("Conversation-based generation failed: {}", e)),
+        }),
+    }
+}
+
+/// Get the status of the output generator
+#[tauri::command]
+pub async fn get_output_generator_status(
+    generator_state: State<'_, DocumentGeneratorAppState>,
+) -> Result<bool, String> {
+    let output_gen_lock = generator_state.output_generator.lock().await;
+    Ok(output_gen_lock.is_some())
+}
+
+/// Get available audience types for content adaptation
+#[tauri::command]
+pub async fn get_available_audience_types() -> Result<Vec<String>, String> {
+    let audiences = vec![
+        "General",
+        "Technical",
+        "Executive",
+        "Academic",
+        "Student",
+        "Expert",
+        "Beginner",
+        "Child",
+        "International",
+        "Legal",
+        "Medical",
+        "Business",
+    ];
+    Ok(audiences.into_iter().map(|s| s.to_string()).collect())
 }
 
 #[cfg(test)]
