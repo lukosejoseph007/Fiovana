@@ -271,6 +271,10 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
             session.messages?.map(msg => ({
               ...msg,
               timestamp: new Date(msg.timestamp),
+              responses: msg.responses?.map(response => ({
+                ...response,
+                timestamp: new Date(response.timestamp),
+              })),
             })) || [],
         }))
       }

@@ -240,8 +240,9 @@ const SessionChatInterface: React.FC<SessionChatInterfaceProps> = ({ className =
     }
   }
 
-  const formatTime = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const formatTime = (timestamp: Date | string | number) => {
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp)
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   const copyToClipboard = async (text: string) => {
