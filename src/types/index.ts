@@ -37,7 +37,10 @@ export type {
   DocumentGeneration,
   FormatConversion,
   ComparisonAnalysis,
-  ConversionResult
+  ConversionResult,
+  ConversionOptions,
+  ConversionMetadata,
+  GenerationMetadata
 } from './document'
 export type {
   StyleProfile,
@@ -45,7 +48,9 @@ export type {
   StyleTransfer,
   OrganizationalStyle,
   StyleGuideline,
-  StyleRecommendation
+  StyleRecommendation,
+  StyleMetrics,
+  TransferResult
 } from './style'
 export * from './knowledge'
 export * from './search'
@@ -55,7 +60,11 @@ export type {
   ContentItem,
   ContentAdaptation,
   ContentClassification,
-  ContentTemplate
+  ContentTemplate,
+  TemplateVariable,
+  TemplateMetadata,
+  TemplateUsage,
+  TemplatePerformance
 } from './content'
 export * from './relationship'
 export * from './deduplication'
