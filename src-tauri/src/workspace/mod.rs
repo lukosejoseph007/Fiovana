@@ -15,11 +15,16 @@ pub mod intelligence;
 pub mod manager;
 pub mod performance;
 pub mod types;
+pub mod workspace_analyzer;
 
 pub use config::*;
 pub use intelligence::*;
 pub use manager::*;
 pub use types::*;
+#[allow(unused_imports)]
+pub use workspace_analyzer::{
+    ComprehensiveWorkspaceAnalysis, WorkspaceAnalysisConfig, WorkspaceAnalyzer,
+};
 
 /// Standard workspace directory structure
 pub const WORKSPACE_DIRECTORIES: &[&str] = &[
