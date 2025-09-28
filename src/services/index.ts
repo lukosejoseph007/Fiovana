@@ -16,6 +16,24 @@ export { documentGenerationService, DocumentGenerationService } from './document
 export { formatConversionService, FormatConversionService } from './formatConversionService'
 export { templateService, TemplateService } from './templateService'
 
+// Additional Specialized Services
+export { contentAdaptationService, ContentAdaptationService } from './contentAdaptationService'
+export { contentClassificationService, ContentClassificationService } from './contentClassificationService'
+export { relationshipService, RelationshipService } from './relationshipService'
+export { nlOperationsService, NLOperationsService } from './nlOperationsService'
+export { structureService, StructureService } from './structureService'
+export { healthService, HealthService } from './healthService'
+export { workspaceAnalyzerService, WorkspaceAnalyzerService } from './workspaceAnalyzerService'
+export { workspacePerformanceService, WorkspacePerformanceService } from './workspacePerformanceService'
+export { workspaceBackupService, WorkspaceBackupService } from './workspaceBackupService'
+export { workspaceAiService, WorkspaceAiService } from './workspaceAiService'
+
+// Advanced Integration Services
+export { vectorOperationsService, VectorOperationsService } from './vectorOperationsService'
+export { clusteringService, ClusteringService } from './clusteringService'
+export { multiWorkspaceService, MultiWorkspaceService } from './multiWorkspaceService'
+export { realTimeProcessingService, RealTimeProcessingService } from './realTimeProcessingService'
+
 // Import service instances for use in health checks
 import { workspaceService } from './workspaceService'
 import { documentService } from './documentService'
@@ -31,6 +49,20 @@ import { embeddingService } from './embeddingService'
 import { documentGenerationService } from './documentGenerationService'
 import { formatConversionService } from './formatConversionService'
 import { templateService } from './templateService'
+import { contentAdaptationService } from './contentAdaptationService'
+import { contentClassificationService } from './contentClassificationService'
+import { relationshipService } from './relationshipService'
+import { nlOperationsService } from './nlOperationsService'
+import { structureService } from './structureService'
+import { healthService } from './healthService'
+import { workspaceAnalyzerService } from './workspaceAnalyzerService'
+import { workspacePerformanceService } from './workspacePerformanceService'
+import { workspaceBackupService } from './workspaceBackupService'
+import { workspaceAiService } from './workspaceAiService'
+import { vectorOperationsService } from './vectorOperationsService'
+import { clusteringService } from './clusteringService'
+import { multiWorkspaceService } from './multiWorkspaceService'
+import { realTimeProcessingService } from './realTimeProcessingService'
 
 // Service initialization and management
 export class ServiceManager {
