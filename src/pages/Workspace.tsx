@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { WorkspaceSwitcher } from '../components'
+import { WorkspaceSwitcher, WorkspaceIntelligence } from '../components'
 
 interface RecentWorkspace {
   path: string
@@ -29,9 +29,9 @@ const Workspace: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Workspace Switcher */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-1">
             <div className="bg-white rounded-lg shadow">
               <WorkspaceSwitcher
                 onWorkspaceSelected={handleWorkspaceSelected}
@@ -40,8 +40,9 @@ const Workspace: React.FC = () => {
             </div>
           </div>
 
-          {/* Workspace Details */}
-          <div className="lg:col-span-1">
+          {/* Workspace Details and Intelligence */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Workspace Details */}
             <div className="bg-white rounded-lg shadow p-6">
               {selectedWorkspace ? (
                 <div className="space-y-4">
@@ -100,6 +101,12 @@ const Workspace: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Workspace Intelligence Dashboard */}
+            <WorkspaceIntelligence
+              workspacePath={selectedWorkspace?.path}
+              sessionId={`workspace-session-${selectedWorkspace?.path ? selectedWorkspace.path.replace(/[^a-zA-Z0-9]/g, '-') : 'default'}`}
+            />
           </div>
         </div>
       </div>

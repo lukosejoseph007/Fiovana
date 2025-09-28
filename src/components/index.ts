@@ -4,6 +4,7 @@ export { default as FileWatcherDemo } from './FileWatcherDemo'
 
 // Workspace components
 export { default as WorkspaceSwitcher } from './workspace/WorkspaceSwitcher'
+export { default as WorkspaceIntelligence } from './workspace/WorkspaceIntelligence'
 
 // Deduplication components
 export { default as DuplicateDetectionDialog } from './DuplicateDetectionDialog'
