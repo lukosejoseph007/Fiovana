@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 pub mod backup;
 pub mod config;
 pub mod intelligence;
+pub mod knowledge_analyzer;
 pub mod manager;
 pub mod performance;
 pub mod smart_organizer;
@@ -20,6 +21,12 @@ pub mod workspace_analyzer;
 
 pub use config::*;
 pub use intelligence::*;
+#[allow(unused_imports)]
+pub use knowledge_analyzer::{
+    ExpertRecommendation, IncompleteProcess, KnowledgeAnalysisConfig, KnowledgeAnalyzer,
+    KnowledgeGap, KnowledgeGapAnalysis, KnowledgeGapType, MissingDocumentType, OutdatedContent,
+    PriorityArea, ReferenceGap,
+};
 pub use manager::*;
 #[allow(unused_imports)]
 pub use smart_organizer::{

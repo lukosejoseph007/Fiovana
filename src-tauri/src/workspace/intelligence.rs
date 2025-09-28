@@ -85,7 +85,7 @@ pub enum KnowledgeGapType {
 }
 
 /// Severity level of knowledge gaps
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum GapSeverity {
     Low,
     Medium,

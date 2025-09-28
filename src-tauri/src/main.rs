@@ -550,6 +550,19 @@ async fn main() {
             commands::update_organization_config,
             commands::execute_organization_action,
             commands::calculate_organization_score,
+            // Knowledge gap analysis commands
+            commands::analyze_knowledge_gaps_comprehensive,
+            commands::get_knowledge_gaps,
+            commands::get_missing_document_types,
+            commands::get_incomplete_processes,
+            commands::get_outdated_content,
+            commands::get_reference_gaps,
+            commands::get_expert_recommendations,
+            commands::get_priority_areas,
+            commands::get_knowledge_analysis_config,
+            commands::update_knowledge_analysis_config,
+            commands::calculate_knowledge_completeness_score,
+            commands::get_knowledge_analysis_stats,
         ])
         .setup(move |app| {
             info!("Application setup complete");
