@@ -458,6 +458,12 @@ async fn main() {
             commands::get_workspace_insights,
             commands::get_workspace_health_score,
             commands::compare_workspaces,
+            // Workspace-AI integration commands
+            commands::enable_workspace_ai_integration,
+            commands::get_workspace_insights_for_ai,
+            commands::check_workspace_conversation_status,
+            commands::refresh_workspace_intelligence_for_ai,
+            commands::get_workspace_recommendations_for_ai,
             // Style analysis commands
             commands::analyze_document_style,
             commands::analyze_corpus_style,

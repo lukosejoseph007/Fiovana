@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::ai::prompts::{ConversationTurn, DocumentMetadata};
+use crate::workspace::{WorkspaceAnalysis, WorkspaceRecommendation};
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DocumentRef {
@@ -20,6 +22,7 @@ pub struct DocumentContext {
     pub active_documents: Vec<DocumentRef>,
     pub conversation_history: Vec<ConversationTurn>,
     pub session_metadata: SessionMetadata,
+    pub workspace_intelligence: Option<WorkspaceIntelligenceContext>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +48,53 @@ impl Default for UserPreferences {
             max_context_length: 4000,
         }
     }
+}
+
+/// Workspace intelligence context for AI conversations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceIntelligenceContext {
+    /// Last workspace analysis timestamp
+    pub last_analysis_timestamp: DateTime<Utc>,
+    /// Overall workspace health score (0-100)
+    pub health_score: f32,
+    /// Number of total documents in workspace
+    pub total_documents: usize,
+    /// Top knowledge gaps that need attention
+    pub top_knowledge_gaps: Vec<WorkspaceKnowledgeGap>,
+    /// High-priority workspace recommendations
+    pub priority_recommendations: Vec<WorkspaceRecommendation>,
+    /// Workspace organization insights summary
+    pub organization_summary: WorkspaceOrganizationSummary,
+    /// Content freshness assessment
+    pub content_freshness: ContentFreshnessSummary,
+}
+
+/// Simplified knowledge gap for conversation context
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceKnowledgeGap {
+    pub gap_type: String,
+    pub description: String,
+    pub severity: String,
+    pub priority_score: f64,
+}
+
+/// Organization summary for conversation context
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceOrganizationSummary {
+    pub directory_count: usize,
+    pub avg_directory_utilization: f32,
+    pub naming_consistency_score: f32,
+    pub structure_quality_score: f32,
+}
+
+/// Content freshness summary for conversation context
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContentFreshnessSummary {
+    pub fresh_documents: usize,
+    pub stale_documents: usize,
+    pub outdated_documents: usize,
+    pub average_age_days: f64,
+    pub freshness_score: f32,
 }
 
 pub struct DocumentContextManager {
@@ -82,6 +132,7 @@ impl DocumentContextManager {
                     current_task: None,
                     user_preferences: UserPreferences::default(),
                 },
+                workspace_intelligence: None,
             })
     }
 
@@ -143,6 +194,93 @@ impl DocumentContextManager {
         Ok(())
     }
 
+    /// Update workspace intelligence context for a session
+    #[allow(dead_code)]
+    pub fn update_workspace_intelligence(
+        &mut self,
+        session_id: &str,
+        workspace_analysis: &WorkspaceAnalysis,
+    ) -> Result<()> {
+        let context = self.get_or_create_context(session_id);
+
+        // Extract top 3 knowledge gaps for conversation context
+        let top_knowledge_gaps = workspace_analysis
+            .knowledge_gaps
+            .iter()
+            .take(3)
+            .map(|gap| WorkspaceKnowledgeGap {
+                gap_type: format!("{:?}", gap.gap_type),
+                description: gap.description.clone(),
+                severity: format!("{:?}", gap.severity),
+                priority_score: gap.priority_score,
+            })
+            .collect();
+
+        // Extract top 5 priority recommendations
+        let priority_recommendations = workspace_analysis
+            .recommendations
+            .iter()
+            .take(5)
+            .cloned()
+            .collect();
+
+        // Create organization summary
+        let organization_summary = WorkspaceOrganizationSummary {
+            directory_count: workspace_analysis
+                .organization_insights
+                .directory_utilization
+                .len(),
+            avg_directory_utilization: workspace_analysis
+                .organization_insights
+                .directory_utilization
+                .values()
+                .map(|metrics| metrics.organization_score as f32)
+                .sum::<f32>()
+                / workspace_analysis
+                    .organization_insights
+                    .directory_utilization
+                    .len()
+                    .max(1) as f32,
+            naming_consistency_score: workspace_analysis
+                .organization_insights
+                .naming_consistency
+                .naming_convention_score as f32,
+            structure_quality_score: workspace_analysis.quality_assessment.overall_quality_score
+                as f32,
+        };
+
+        // Create content freshness summary
+        let content_freshness = ContentFreshnessSummary {
+            fresh_documents: (workspace_analysis
+                .productivity_metrics
+                .content_creation_velocity
+                * 7.0) as usize,
+            stale_documents: (workspace_analysis.productivity_metrics.update_frequency * 30.0)
+                as usize,
+            outdated_documents: workspace_analysis
+                .document_overview
+                .total_documents
+                .saturating_sub(
+                    (workspace_analysis.productivity_metrics.update_frequency * 30.0) as usize,
+                ),
+            average_age_days: 30.0, // Placeholder - would need real calculation
+            freshness_score: workspace_analysis.quality_assessment.currency_score as f32 * 100.0,
+        };
+
+        context.workspace_intelligence = Some(WorkspaceIntelligenceContext {
+            last_analysis_timestamp: workspace_analysis.analysis_timestamp,
+            health_score: workspace_analysis.quality_assessment.overall_quality_score as f32
+                * 100.0,
+            total_documents: workspace_analysis.document_overview.total_documents,
+            top_knowledge_gaps,
+            priority_recommendations,
+            organization_summary,
+            content_freshness,
+        });
+
+        Ok(())
+    }
+
     /// Get relevant context for AI processing
     pub fn get_relevant_context(&self, session_id: &str, query: &str) -> String {
         if let Some(context) = self.contexts.get(session_id) {
@@ -190,6 +328,81 @@ impl DocumentContextManager {
             }
         }
 
+        // Add workspace intelligence context
+        if let Some(workspace_intel) = &context.workspace_intelligence {
+            context_parts.push("=== WORKSPACE INTELLIGENCE ===".to_string());
+
+            context_parts.push(format!(
+                "Workspace Health Score: {:.1}/100 ({} documents total)",
+                workspace_intel.health_score, workspace_intel.total_documents
+            ));
+
+            // Add content freshness information
+            context_parts.push(format!(
+                "Content Status: {} fresh, {} stale, {} outdated documents (freshness score: {:.1}/100)",
+                workspace_intel.content_freshness.fresh_documents,
+                workspace_intel.content_freshness.stale_documents,
+                workspace_intel.content_freshness.outdated_documents,
+                workspace_intel.content_freshness.freshness_score
+            ));
+
+            // Add organization summary
+            context_parts.push(format!(
+                "Organization Quality: {:.1}/100 (naming consistency: {:.1}/100, {} directories)",
+                workspace_intel.organization_summary.structure_quality_score * 100.0,
+                workspace_intel
+                    .organization_summary
+                    .naming_consistency_score
+                    * 100.0,
+                workspace_intel.organization_summary.directory_count
+            ));
+
+            // Add top knowledge gaps
+            if !workspace_intel.top_knowledge_gaps.is_empty() {
+                context_parts.push("Top Knowledge Gaps:".to_string());
+                for (i, gap) in workspace_intel.top_knowledge_gaps.iter().enumerate() {
+                    context_parts.push(format!(
+                        "  {}. {} ({}): {}",
+                        i + 1,
+                        gap.gap_type,
+                        gap.severity,
+                        gap.description
+                    ));
+                }
+            }
+
+            // Add priority recommendations
+            if !workspace_intel.priority_recommendations.is_empty() {
+                context_parts.push("Priority Recommendations:".to_string());
+                for (i, rec) in workspace_intel
+                    .priority_recommendations
+                    .iter()
+                    .take(3)
+                    .enumerate()
+                {
+                    context_parts.push(format!(
+                        "  {}. {} (Priority: {:.1}): {}",
+                        i + 1,
+                        rec.title,
+                        match rec.priority {
+                            crate::workspace::intelligence::RecommendationPriority::Urgent => 10.0,
+                            crate::workspace::intelligence::RecommendationPriority::High => 8.0,
+                            crate::workspace::intelligence::RecommendationPriority::Medium => 6.0,
+                            crate::workspace::intelligence::RecommendationPriority::Low => 4.0,
+                        },
+                        rec.description
+                    ));
+                }
+            }
+
+            context_parts.push(format!(
+                "Last Analysis: {}",
+                workspace_intel
+                    .last_analysis_timestamp
+                    .format("%Y-%m-%d %H:%M UTC")
+            ));
+        }
+
         // Add current query context
         context_parts.push("=== CURRENT QUERY ===".to_string());
         context_parts.push(format!("User Question: {}", query));
@@ -197,6 +410,11 @@ impl DocumentContextManager {
         // Add user preferences
         if context.session_metadata.user_preferences.include_citations {
             context_parts.push("\nNote: Please include citations to specific documents when referencing information.".to_string());
+        }
+
+        // Add workspace consultation guidance
+        if context.workspace_intelligence.is_some() {
+            context_parts.push("\nNote: You have access to workspace intelligence data. You can proactively mention workspace health, suggest improvements, identify issues, and act as a workspace consultant. Offer insights about content organization, freshness, and recommend actions to improve the workspace.".to_string());
         }
 
         let response_style = &context

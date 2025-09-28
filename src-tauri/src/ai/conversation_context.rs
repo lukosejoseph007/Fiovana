@@ -1,6 +1,7 @@
 // src-tauri/src/ai/conversation_context.rs
 // Enhanced conversation context management system for multi-turn conversations
 
+use crate::ai::context::WorkspaceIntelligenceContext;
 use anyhow::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -27,6 +28,8 @@ pub struct ConversationSession {
     pub conversation_state: ConversationState,
     /// Session metadata
     pub metadata: SessionMetadata,
+    /// Workspace intelligence context for this session
+    pub workspace_intelligence: Option<WorkspaceIntelligenceContext>,
 }
 
 /// Individual conversation turn with enhanced context
@@ -316,6 +319,7 @@ impl ConversationContextManager {
                     tags: Vec::new(),
                     summary: None,
                 },
+                workspace_intelligence: None,
             })
     }
 
@@ -1583,6 +1587,32 @@ impl ConversationContextManager {
         session.conversation_state.flow_state = ConversationFlowState::ExecutingTask;
 
         Ok(task_id)
+    }
+
+    /// Update workspace intelligence context for a session
+    pub fn update_workspace_intelligence(
+        &mut self,
+        session_id: &str,
+        workspace_intelligence: WorkspaceIntelligenceContext,
+    ) -> Result<()> {
+        let session = self.get_or_create_session(session_id);
+        session.workspace_intelligence = Some(workspace_intelligence);
+        Ok(())
+    }
+
+    /// Get workspace intelligence for a session
+    pub fn get_workspace_intelligence(
+        &self,
+        session_id: &str,
+    ) -> Option<&WorkspaceIntelligenceContext> {
+        self.sessions
+            .get(session_id)
+            .and_then(|session| session.workspace_intelligence.as_ref())
+    }
+
+    /// Check if session has workspace intelligence
+    pub fn has_workspace_intelligence(&self, session_id: &str) -> bool {
+        self.get_workspace_intelligence(session_id).is_some()
     }
 
     /// Get session information
