@@ -1,2 +1,0 @@
-// Custom stores exports
-export {}
