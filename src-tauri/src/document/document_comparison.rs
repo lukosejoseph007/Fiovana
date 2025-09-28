@@ -5,7 +5,10 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::{DocxContent, PdfContent};
+use super::{
+    DocxContent, PdfContent, StyleAnalyzer, StyleProfile, StyleTransfer, StyleTransferConfig,
+    StyleTransferMode, StyleTransferTarget,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DocumentComparisonRequest {
@@ -40,6 +43,8 @@ pub enum ComparisonType {
     StructuralDiff,
     /// Combined comparison with all methods
     Comprehensive,
+    /// Style-preserving comparison for document updates
+    StylePreserving,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,6 +111,9 @@ pub enum DifferenceType {
     Structural,
     Formatting,
     Semantic,
+    StyleChange,
+    ToneShift,
+    VocabularyChange,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,6 +140,57 @@ pub struct MetadataComparison {
     pub creation_date_changed: bool,
     pub modification_date_changed: bool,
     pub other_changes: HashMap<String, (Option<String>, Option<String>)>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StylePreservingResult {
+    pub original_style: StyleProfile,
+    pub updated_style: StyleProfile,
+    pub style_differences: Vec<StyleDifference>,
+    pub style_preservation_score: f64,
+    pub suggested_updates: Vec<StyleConsistentUpdate>,
+    pub preserved_content: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StyleDifference {
+    pub difference_type: StyleDifferenceType,
+    pub severity: DifferenceSeverity,
+    pub description: String,
+    pub original_value: String,
+    pub updated_value: String,
+    pub impact_score: f64,
+    pub preservation_suggestion: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum StyleDifferenceType {
+    ToneChange,
+    VocabularyComplexityShift,
+    FormalityChange,
+    VoiceChange,
+    SentenceStructureChange,
+    TerminologyInconsistency,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StyleConsistentUpdate {
+    pub update_type: UpdateType,
+    pub target_section: String,
+    pub original_text: String,
+    pub suggested_text: String,
+    pub reasoning: String,
+    pub confidence: f64,
+    pub style_preservation_impact: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum UpdateType {
+    ContentUpdate,
+    StyleAdjustment,
+    VocabularyReplacement,
+    ToneCorrection,
+    StructuralAlignment,
 }
 
 pub struct DocumentComparator {
@@ -168,6 +227,10 @@ impl DocumentComparator {
             }
             ComparisonType::Comprehensive => {
                 self.comprehensive_comparison(&content_a, &content_b)
+                    .await?
+            }
+            ComparisonType::StylePreserving => {
+                self.style_preserving_comparison(&content_a, &content_b)
                     .await?
             }
         };
@@ -334,6 +397,55 @@ impl DocumentComparator {
         let overall_similarity = text_sim * 0.4 + semantic_sim * 0.4 + structural_sim * 0.2;
 
         Ok((all_differences, overall_similarity))
+    }
+
+    async fn style_preserving_comparison(
+        &self,
+        content_a: &str,
+        content_b: &str,
+    ) -> Result<(Vec<DocumentDifference>, f64)> {
+        let mut differences = Vec::new();
+
+        // Analyze style of both documents
+        let style_analyzer = StyleAnalyzer::new();
+        let style_a = style_analyzer.analyze_content_style(content_a)?;
+        let style_b = style_analyzer.analyze_content_style(content_b)?;
+
+        // Calculate style similarity
+        let style_similarity = self.calculate_style_similarity(&style_a, &style_b)?;
+
+        // Detect style differences
+        let style_differences = self.detect_style_differences(&style_a, &style_b)?;
+
+        // Convert style differences to document differences
+        for style_diff in style_differences {
+            let diff_type = match style_diff.difference_type {
+                StyleDifferenceType::ToneChange => DifferenceType::ToneShift,
+                StyleDifferenceType::VocabularyComplexityShift => DifferenceType::VocabularyChange,
+                StyleDifferenceType::FormalityChange => DifferenceType::StyleChange,
+                StyleDifferenceType::VoiceChange => DifferenceType::StyleChange,
+                StyleDifferenceType::SentenceStructureChange => DifferenceType::Structural,
+                StyleDifferenceType::TerminologyInconsistency => DifferenceType::VocabularyChange,
+            };
+
+            differences.push(DocumentDifference {
+                diff_type,
+                severity: style_diff.severity,
+                location: DifferenceLocation {
+                    section: None,
+                    paragraph: None,
+                    line: None,
+                    page: None,
+                    character_offset: None,
+                },
+                description: style_diff.description,
+                before: Some(style_diff.original_value),
+                after: Some(style_diff.updated_value),
+                confidence: style_diff.impact_score,
+            });
+        }
+
+        Ok((differences, style_similarity))
     }
 
     fn compare_metadata(
@@ -1015,6 +1127,200 @@ impl DocumentComparator {
             DifferenceType::Modification => DifferenceSeverity::Major,
             _ => DifferenceSeverity::Minor,
         }
+    }
+
+    fn calculate_style_similarity(
+        &self,
+        style_a: &StyleProfile,
+        style_b: &StyleProfile,
+    ) -> Result<f64> {
+        // Calculate similarity based on various style dimensions
+        let tone_similarity = if style_a.tone.primary_tone == style_b.tone.primary_tone {
+            0.8 + (1.0 - (style_a.tone.formality_score - style_b.tone.formality_score).abs()) * 0.2
+        } else {
+            0.3
+        };
+
+        let vocab_similarity = if style_a.vocabulary.complexity == style_b.vocabulary.complexity {
+            1.0
+        } else {
+            0.5
+        };
+
+        let voice_similarity = if style_a.tone.voice_type == style_b.tone.voice_type {
+            1.0
+        } else {
+            0.4
+        };
+
+        // Weighted average
+        let overall_similarity =
+            tone_similarity * 0.4 + vocab_similarity * 0.3 + voice_similarity * 0.3;
+        Ok(overall_similarity)
+    }
+
+    fn detect_style_differences(
+        &self,
+        style_a: &StyleProfile,
+        style_b: &StyleProfile,
+    ) -> Result<Vec<StyleDifference>> {
+        let mut differences = Vec::new();
+
+        // Check tone differences
+        if style_a.tone.primary_tone != style_b.tone.primary_tone {
+            differences.push(StyleDifference {
+                difference_type: StyleDifferenceType::ToneChange,
+                severity: DifferenceSeverity::Major,
+                description: format!(
+                    "Tone changed from {:?} to {:?}",
+                    style_a.tone.primary_tone, style_b.tone.primary_tone
+                ),
+                original_value: format!("{:?}", style_a.tone.primary_tone),
+                updated_value: format!("{:?}", style_b.tone.primary_tone),
+                impact_score: 0.8,
+                preservation_suggestion: format!(
+                    "Consider maintaining the original {:?} tone for consistency",
+                    style_a.tone.primary_tone
+                ),
+            });
+        }
+
+        // Check formality differences
+        let formality_diff = (style_a.tone.formality_score - style_b.tone.formality_score).abs();
+        if formality_diff > 0.3 {
+            differences.push(StyleDifference {
+                difference_type: StyleDifferenceType::FormalityChange,
+                severity: if formality_diff > 0.5 {
+                    DifferenceSeverity::Major
+                } else {
+                    DifferenceSeverity::Minor
+                },
+                description: format!(
+                    "Formality level changed from {:.2} to {:.2}",
+                    style_a.tone.formality_score, style_b.tone.formality_score
+                ),
+                original_value: format!("{:.2}", style_a.tone.formality_score),
+                updated_value: format!("{:.2}", style_b.tone.formality_score),
+                impact_score: formality_diff,
+                preservation_suggestion: "Consider adjusting formality to match original document"
+                    .to_string(),
+            });
+        }
+
+        // Check vocabulary complexity differences
+        if style_a.vocabulary.complexity != style_b.vocabulary.complexity {
+            differences.push(StyleDifference {
+                difference_type: StyleDifferenceType::VocabularyComplexityShift,
+                severity: DifferenceSeverity::Major,
+                description: format!(
+                    "Vocabulary complexity changed from {:?} to {:?}",
+                    style_a.vocabulary.complexity, style_b.vocabulary.complexity
+                ),
+                original_value: format!("{:?}", style_a.vocabulary.complexity),
+                updated_value: format!("{:?}", style_b.vocabulary.complexity),
+                impact_score: 0.7,
+                preservation_suggestion: "Maintain consistent vocabulary complexity level"
+                    .to_string(),
+            });
+        }
+
+        // Check voice differences
+        if style_a.tone.voice_type != style_b.tone.voice_type {
+            differences.push(StyleDifference {
+                difference_type: StyleDifferenceType::VoiceChange,
+                severity: DifferenceSeverity::Major,
+                description: format!(
+                    "Voice type changed from {:?} to {:?}",
+                    style_a.tone.voice_type, style_b.tone.voice_type
+                ),
+                original_value: format!("{:?}", style_a.tone.voice_type),
+                updated_value: format!("{:?}", style_b.tone.voice_type),
+                impact_score: 0.6,
+                preservation_suggestion: "Consider preserving the original voice type".to_string(),
+            });
+        }
+
+        Ok(differences)
+    }
+
+    #[allow(dead_code)]
+    pub async fn generate_style_consistent_updates(
+        &self,
+        original_content: &str,
+        updated_content: &str,
+        target_style: &StyleProfile,
+    ) -> Result<Vec<StyleConsistentUpdate>> {
+        let mut updates = Vec::new();
+
+        // Use style transfer to apply target style to updated content
+        let style_transfer = StyleTransfer::new();
+        let transfer_config = StyleTransferConfig {
+            mode: StyleTransferMode::Conservative,
+            preserve_structure: true,
+            preserve_technical_terms: true,
+            target_formality: Some(target_style.tone.formality_score),
+            target_tone: Some(target_style.tone.primary_tone.clone()),
+            target_voice: Some(target_style.tone.voice_type.clone()),
+            target_complexity: Some(target_style.vocabulary.complexity.clone()),
+            ai_assistance: false, // Conservative approach for document updates
+            confidence_threshold: 0.7,
+        };
+
+        let transfer_request = crate::document::StyleTransferRequest {
+            content: updated_content.to_string(),
+            target_style: StyleTransferTarget::StyleProfile(Box::new(target_style.clone())),
+            config: transfer_config,
+        };
+
+        match style_transfer.transfer_style(transfer_request) {
+            Ok(transfer_result) => {
+                for change in transfer_result.applied_changes {
+                    let update_type = match change.change_type {
+                        crate::document::StyleChangeType::ToneAdjustment => {
+                            UpdateType::ToneCorrection
+                        }
+                        crate::document::StyleChangeType::VocabularyReplacement => {
+                            UpdateType::VocabularyReplacement
+                        }
+                        crate::document::StyleChangeType::FormalityAdjustment => {
+                            UpdateType::StyleAdjustment
+                        }
+                        crate::document::StyleChangeType::VoiceModification => {
+                            UpdateType::StyleAdjustment
+                        }
+                        crate::document::StyleChangeType::StructuralReorganization => {
+                            UpdateType::StructuralAlignment
+                        }
+                        _ => UpdateType::ContentUpdate,
+                    };
+
+                    updates.push(StyleConsistentUpdate {
+                        update_type,
+                        target_section: "main".to_string(),
+                        original_text: change.original_text,
+                        suggested_text: change.modified_text,
+                        reasoning: change.reason,
+                        confidence: change.confidence,
+                        style_preservation_impact: 0.8,
+                    });
+                }
+            }
+            Err(e) => {
+                tracing::warn!("Style transfer failed during update generation: {}", e);
+                // Fallback to basic suggestions
+                updates.push(StyleConsistentUpdate {
+                    update_type: UpdateType::ContentUpdate,
+                    target_section: "main".to_string(),
+                    original_text: original_content.to_string(),
+                    suggested_text: updated_content.to_string(),
+                    reasoning: "Manual review recommended for style consistency".to_string(),
+                    confidence: 0.5,
+                    style_preservation_impact: 0.6,
+                });
+            }
+        }
+
+        Ok(updates)
     }
 }
 
