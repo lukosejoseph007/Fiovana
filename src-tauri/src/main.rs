@@ -538,6 +538,18 @@ async fn main() {
             commands::preview_adaptation,
             commands::get_adaptation_status,
             commands::validate_adaptation_config,
+            // Smart organization commands
+            commands::analyze_organization_comprehensive,
+            commands::get_categorization_suggestions,
+            commands::get_tagging_suggestions,
+            commands::get_folder_structure_suggestions,
+            commands::get_semantic_clusters,
+            commands::get_duplicate_handling_suggestions,
+            commands::get_organization_actions,
+            commands::get_organization_config,
+            commands::update_organization_config,
+            commands::execute_organization_action,
+            commands::calculate_organization_score,
         ])
         .setup(move |app| {
             info!("Application setup complete");

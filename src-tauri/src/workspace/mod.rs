@@ -14,12 +14,19 @@ pub mod config;
 pub mod intelligence;
 pub mod manager;
 pub mod performance;
+pub mod smart_organizer;
 pub mod types;
 pub mod workspace_analyzer;
 
 pub use config::*;
 pub use intelligence::*;
 pub use manager::*;
+#[allow(unused_imports)]
+pub use smart_organizer::{
+    CategorizationSuggestion, DuplicateHandlingSuggestion, FolderStructureSuggestion,
+    OrganizationAction, OrganizationAnalysis, OrganizationConfig, SemanticCluster, SmartOrganizer,
+    TaggingSuggestion,
+};
 pub use types::*;
 #[allow(unused_imports)]
 pub use workspace_analyzer::{
