@@ -79,6 +79,7 @@ tokenizers = "0.20"
 # AI integration dependencies
 reqwest = { version = "0.12", features = ["json", "stream"] }
 url = "2.5"
+fastrand = "2.3.0"
 
 # Event persistence - now using file-based storage
 

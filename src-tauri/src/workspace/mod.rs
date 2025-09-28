@@ -13,6 +13,7 @@ pub mod backup;
 pub mod config;
 pub mod intelligence;
 pub mod knowledge_analyzer;
+pub mod lifecycle_manager;
 pub mod manager;
 pub mod performance;
 pub mod smart_organizer;
@@ -26,6 +27,11 @@ pub use knowledge_analyzer::{
     ExpertRecommendation, IncompleteProcess, KnowledgeAnalysisConfig, KnowledgeAnalyzer,
     KnowledgeGap, KnowledgeGapAnalysis, KnowledgeGapType, MissingDocumentType, OutdatedContent,
     PriorityArea, ReferenceGap,
+};
+#[allow(unused_imports)]
+pub use lifecycle_manager::{
+    ArchivalSuggestion, ConsolidationSuggestion, LifecycleAction, LifecycleAnalysis,
+    LifecycleConfig, LifecycleManager, UpdateRecommendation, UsagePatternAnalysis,
 };
 pub use manager::*;
 #[allow(unused_imports)]

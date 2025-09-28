@@ -4447,6 +4447,7 @@ dependencies = [
  "dirs",
  "dotenvy",
  "dunce",
+ "fastrand",
  "filetime",
  "futures",
  "hex",

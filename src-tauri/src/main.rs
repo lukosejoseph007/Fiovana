@@ -563,6 +563,19 @@ async fn main() {
             commands::update_knowledge_analysis_config,
             commands::calculate_knowledge_completeness_score,
             commands::get_knowledge_analysis_stats,
+            // Content lifecycle management commands
+            commands::analyze_content_lifecycle_comprehensive,
+            commands::get_update_recommendations,
+            commands::get_archival_suggestions,
+            commands::get_consolidation_opportunities,
+            commands::get_usage_statistics,
+            commands::get_priority_actions,
+            commands::calculate_content_freshness_score,
+            commands::get_lifecycle_config,
+            commands::update_lifecycle_config,
+            commands::get_lifecycle_analysis_stats,
+            commands::track_document_access,
+            commands::calculate_workspace_health_score,
         ])
         .setup(move |app| {
             info!("Application setup complete");
