@@ -290,6 +290,7 @@ impl AIOrchestrator {
             follow_up_questions: vec![],
             document_references: vec![],
             action_items: vec![],
+            style_guidance: None,
             metadata: response::ResponseMetadata {
                 processing_time_ms: 0,
                 model_used: self.config.default_model.clone(),

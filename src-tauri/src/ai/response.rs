@@ -9,6 +9,7 @@ use super::conversation_context::ConversationSession;
 use super::intent::{Intent, IntentConfidence};
 use super::ollama::OllamaClient;
 use super::AIConfig;
+use crate::document::StyleAnalyzer;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ResponseType {
@@ -17,6 +18,7 @@ pub enum ResponseType {
     Clarification,
     Error,
     MultiStep,
+    StyleGuidance,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -40,6 +42,43 @@ impl ConfidenceLevel {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum StyleIssueType {
+    Inconsistency, // Style is inconsistent with document/organizational standards
+    Clarity,       // Style affects clarity and readability
+    Tone,          // Inappropriate tone for audience/context
+    Vocabulary,    // Vocabulary level issues (too complex/simple)
+    Structure,     // Structural style issues (formatting, organization)
+    Branding,      // Branding/voice inconsistencies
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum StyleIssueSeverity {
+    Critical, // Must be fixed
+    High,     // Should be fixed
+    Medium,   // Recommended to fix
+    Low,      // Optional improvement
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StyleIssue {
+    pub issue_type: StyleIssueType,
+    pub severity: StyleIssueSeverity,
+    pub description: String,
+    pub location: Option<String>,
+    pub suggestion: String,
+    pub explanation: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StyleGuidance {
+    pub issues: Vec<StyleIssue>,
+    pub overall_assessment: String,
+    pub style_score: f32,
+    pub recommendations: Vec<String>,
+    pub positive_aspects: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIResponse {
     pub response_type: ResponseType,
@@ -52,6 +91,7 @@ pub struct AIResponse {
     pub document_references: Vec<DocumentReferenceContext>,
     pub action_items: Vec<ActionItem>,
     pub metadata: ResponseMetadata,
+    pub style_guidance: Option<StyleGuidance>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,6 +174,8 @@ pub struct ResponseMetadata {
 pub struct ResponseGenerator {
     #[allow(dead_code)]
     system_prompts: std::collections::HashMap<Intent, String>,
+    #[allow(dead_code)]
+    style_analyzer: StyleAnalyzer,
 }
 
 #[allow(dead_code)]
@@ -204,7 +246,10 @@ impl ResponseGenerator {
             Be helpful and guide them toward a clear request.".to_string()
         );
 
-        Self { system_prompts }
+        Self {
+            system_prompts,
+            style_analyzer: StyleAnalyzer::new(),
+        }
     }
 
     pub async fn generate(
@@ -261,6 +306,9 @@ impl ResponseGenerator {
         let action_items = self.generate_action_items(&intent_result.intent, &suggested_actions);
         let reasoning_chain = self.build_reasoning_chain(intent_result, context.is_some(), false);
 
+        // Generate style guidance if content analysis is involved
+        let style_guidance = self.generate_style_guidance(&intent_result.intent, context);
+
         Ok(AIResponse {
             response_type,
             content: ai_response,
@@ -271,6 +319,7 @@ impl ResponseGenerator {
             follow_up_questions,
             document_references,
             action_items,
+            style_guidance,
             metadata: ResponseMetadata {
                 processing_time_ms: processing_time,
                 model_used: config.default_model.clone(),
@@ -716,6 +765,308 @@ impl ResponseGenerator {
     fn init_action_templates(_templates: &mut HashMap<Intent, Vec<SuggestedAction>>) {
         // This method can be expanded with more sophisticated action templates
         // For now, we'll use the existing generate_suggested_actions logic
+    }
+
+    /// Generate style guidance for content analysis and improvement
+    fn generate_style_guidance(
+        &self,
+        intent: &Intent,
+        context: Option<&str>,
+    ) -> Option<StyleGuidance> {
+        // Only provide style guidance for content-related intents
+        match intent {
+            Intent::UpdateContent | Intent::CompareDocuments | Intent::GenerateOutput => {
+                if let Some(content_text) = context {
+                    self.analyze_style_issues(content_text)
+                } else {
+                    // Provide general style guidance when no specific content is available
+                    Some(self.generate_general_style_guidance())
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Analyze specific style issues in the provided content
+    fn analyze_style_issues(&self, content: &str) -> Option<StyleGuidance> {
+        let mut issues = Vec::new();
+        let mut recommendations = Vec::new();
+        let mut positive_aspects = Vec::new();
+        let mut overall_score = 80.0; // Start with a baseline score
+
+        // Analyze various style aspects
+
+        // 1. Check for clarity issues
+        if let Some(clarity_issues) = self.check_clarity_issues(content) {
+            issues.extend(clarity_issues);
+            overall_score -= 10.0;
+        } else {
+            positive_aspects.push("Content is clear and well-structured".to_string());
+        }
+
+        // 2. Check for tone consistency
+        if let Some(tone_issues) = self.check_tone_issues(content) {
+            issues.extend(tone_issues);
+            overall_score -= 15.0;
+        } else {
+            positive_aspects.push("Tone is consistent throughout".to_string());
+        }
+
+        // 3. Check for vocabulary appropriateness
+        if let Some(vocab_issues) = self.check_vocabulary_issues(content) {
+            issues.extend(vocab_issues);
+            overall_score -= 10.0;
+        } else {
+            positive_aspects.push("Vocabulary level is appropriate".to_string());
+        }
+
+        // 4. Check for structural issues
+        if let Some(structure_issues) = self.check_structure_issues(content) {
+            issues.extend(structure_issues);
+            overall_score -= 10.0;
+        } else {
+            positive_aspects.push("Document structure is well-organized".to_string());
+        }
+
+        // Generate recommendations based on issues found
+        if issues.is_empty() {
+            recommendations.push("Your content maintains good style consistency. Consider reviewing for minor improvements in clarity or engagement.".to_string());
+        } else {
+            recommendations.push("Address the identified style issues to improve document consistency and readability.".to_string());
+            if issues.iter().any(|i| i.issue_type == StyleIssueType::Tone) {
+                recommendations.push(
+                    "Consider establishing a style guide for consistent tone across documents."
+                        .to_string(),
+                );
+            }
+            if issues
+                .iter()
+                .any(|i| i.issue_type == StyleIssueType::Vocabulary)
+            {
+                recommendations.push(
+                    "Ensure vocabulary matches your target audience's expertise level.".to_string(),
+                );
+            }
+        }
+
+        let overall_assessment = if overall_score >= 85.0 {
+            "Excellent style consistency with minor areas for improvement.".to_string()
+        } else if overall_score >= 70.0 {
+            "Good style foundation with some inconsistencies to address.".to_string()
+        } else if overall_score >= 50.0 {
+            "Moderate style issues that should be addressed for better consistency.".to_string()
+        } else {
+            "Significant style inconsistencies require attention to improve document quality."
+                .to_string()
+        };
+
+        Some(StyleGuidance {
+            issues,
+            overall_assessment,
+            style_score: overall_score / 100.0,
+            recommendations,
+            positive_aspects,
+        })
+    }
+
+    /// Generate general style guidance when no specific content is provided
+    fn generate_general_style_guidance(&self) -> StyleGuidance {
+        StyleGuidance {
+            issues: vec![],
+            overall_assessment:
+                "I can provide style guidance when you share specific content for analysis."
+                    .to_string(),
+            style_score: 0.0,
+            recommendations: vec![
+                "Share a document or content snippet for detailed style analysis".to_string(),
+                "Consider establishing a style guide for your organization".to_string(),
+                "Regularly review content for tone and vocabulary consistency".to_string(),
+            ],
+            positive_aspects: vec!["Proactive approach to style consistency".to_string()],
+        }
+    }
+
+    /// Check for clarity issues in content
+    fn check_clarity_issues(&self, content: &str) -> Option<Vec<StyleIssue>> {
+        let mut issues = Vec::new();
+
+        // Check for overly long sentences (>30 words)
+        let sentences: Vec<&str> = content.split(&['.', '!', '?'][..]).collect();
+        for (i, sentence) in sentences.iter().enumerate() {
+            let word_count = sentence.split_whitespace().count();
+            if word_count > 30 {
+                issues.push(StyleIssue {
+                    issue_type: StyleIssueType::Clarity,
+                    severity: StyleIssueSeverity::Medium,
+                    description: format!("Sentence {} is very long ({} words)", i + 1, word_count),
+                    location: Some(format!("Sentence {}", i + 1)),
+                    suggestion: "Consider breaking this into shorter, more digestible sentences"
+                        .to_string(),
+                    explanation: "Long sentences can reduce readability and comprehension"
+                        .to_string(),
+                });
+            }
+        }
+
+        // Check for passive voice overuse
+        let passive_indicators = ["was", "were", "been", "being"];
+        let passive_count = passive_indicators
+            .iter()
+            .map(|&indicator| content.matches(indicator).count())
+            .sum::<usize>();
+
+        if passive_count > content.split_whitespace().count() / 20 {
+            issues.push(StyleIssue {
+                issue_type: StyleIssueType::Clarity,
+                severity: StyleIssueSeverity::Low,
+                description: "Frequent use of passive voice detected".to_string(),
+                location: None,
+                suggestion: "Consider using more active voice constructions".to_string(),
+                explanation: "Active voice generally makes content more direct and engaging"
+                    .to_string(),
+            });
+        }
+
+        if issues.is_empty() {
+            None
+        } else {
+            Some(issues)
+        }
+    }
+
+    /// Check for tone consistency issues
+    fn check_tone_issues(&self, content: &str) -> Option<Vec<StyleIssue>> {
+        let mut issues = Vec::new();
+
+        // Check for mixed formality levels
+        let formal_indicators = ["furthermore", "therefore", "consequently", "henceforth"];
+        let informal_indicators = ["it's", "don't", "can't", "you're", "we're"];
+
+        let formal_count = formal_indicators
+            .iter()
+            .map(|&indicator| content.to_lowercase().matches(indicator).count())
+            .sum::<usize>();
+
+        let informal_count = informal_indicators
+            .iter()
+            .map(|&indicator| content.to_lowercase().matches(indicator).count())
+            .sum::<usize>();
+
+        if formal_count > 0 && informal_count > 0 {
+            let ratio = formal_count as f32 / (formal_count + informal_count) as f32;
+            if ratio > 0.3 && ratio < 0.7 {
+                issues.push(StyleIssue {
+                    issue_type: StyleIssueType::Tone,
+                    severity: StyleIssueSeverity::Medium,
+                    description: "Mixed formal and informal language detected".to_string(),
+                    location: None,
+                    suggestion: "Choose either formal or informal tone and maintain consistency".to_string(),
+                    explanation: "Inconsistent formality can confuse readers about the document's intended tone".to_string(),
+                });
+            }
+        }
+
+        if issues.is_empty() {
+            None
+        } else {
+            Some(issues)
+        }
+    }
+
+    /// Check for vocabulary appropriateness issues
+    fn check_vocabulary_issues(&self, content: &str) -> Option<Vec<StyleIssue>> {
+        let mut issues = Vec::new();
+
+        // Check for overly complex words (>12 characters)
+        let words: Vec<&str> = content.split_whitespace().collect();
+        let complex_words: Vec<&str> = words
+            .iter()
+            .filter(|word| word.len() > 12 && word.chars().all(|c| c.is_alphabetic()))
+            .cloned()
+            .collect();
+
+        if complex_words.len() > words.len() / 25 {
+            issues.push(StyleIssue {
+                issue_type: StyleIssueType::Vocabulary,
+                severity: StyleIssueSeverity::Low,
+                description: "High density of complex vocabulary detected".to_string(),
+                location: None,
+                suggestion: "Consider using simpler alternatives for some complex terms"
+                    .to_string(),
+                explanation: "Overly complex vocabulary can reduce accessibility for some readers"
+                    .to_string(),
+            });
+        }
+
+        // Check for jargon overuse (basic heuristic)
+        let jargon_indicators = ["utilize", "facilitate", "endeavor", "leverage"];
+        let jargon_count = jargon_indicators
+            .iter()
+            .map(|&indicator| content.to_lowercase().matches(indicator).count())
+            .sum::<usize>();
+
+        if jargon_count > 5 {
+            issues.push(StyleIssue {
+                issue_type: StyleIssueType::Vocabulary,
+                severity: StyleIssueSeverity::Medium,
+                description: "Potential overuse of business jargon".to_string(),
+                location: None,
+                suggestion: "Consider using more direct, plain language alternatives".to_string(),
+                explanation:
+                    "Excessive jargon can make content less accessible and harder to understand"
+                        .to_string(),
+            });
+        }
+
+        if issues.is_empty() {
+            None
+        } else {
+            Some(issues)
+        }
+    }
+
+    /// Check for structural style issues
+    fn check_structure_issues(&self, content: &str) -> Option<Vec<StyleIssue>> {
+        let mut issues = Vec::new();
+
+        // Check for missing headings/structure in longer content
+        if content.len() > 1000 && !content.contains('\n') {
+            issues.push(StyleIssue {
+                issue_type: StyleIssueType::Structure,
+                severity: StyleIssueSeverity::Medium,
+                description: "Long content appears to lack structural breaks".to_string(),
+                location: None,
+                suggestion: "Consider adding headings, bullet points, or paragraph breaks"
+                    .to_string(),
+                explanation: "Well-structured content is easier to read and navigate".to_string(),
+            });
+        }
+
+        // Check for very short paragraphs (potential formatting issues)
+        let paragraphs: Vec<&str> = content
+            .split('\n')
+            .filter(|p| !p.trim().is_empty())
+            .collect();
+        let short_paragraphs = paragraphs.iter().filter(|p| p.len() < 50).count();
+
+        if short_paragraphs > paragraphs.len() / 2 && paragraphs.len() > 3 {
+            issues.push(StyleIssue {
+                issue_type: StyleIssueType::Structure,
+                severity: StyleIssueSeverity::Low,
+                description: "Many short paragraphs detected".to_string(),
+                location: None,
+                suggestion: "Consider combining related short paragraphs for better flow"
+                    .to_string(),
+                explanation: "Very short paragraphs can create choppy reading experience"
+                    .to_string(),
+            });
+        }
+
+        if issues.is_empty() {
+            None
+        } else {
+            Some(issues)
+        }
     }
 }
 

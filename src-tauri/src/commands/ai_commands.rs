@@ -177,6 +177,7 @@ pub async fn chat_with_ai(
                             follow_up_questions: vec![],
                             document_references: vec![],
                             action_items: vec![],
+                            style_guidance: None,
                             metadata: crate::ai::response::ResponseMetadata {
                                 processing_time_ms: action_result.execution_time_ms,
                                 model_used: "intent_classification".to_string(),
