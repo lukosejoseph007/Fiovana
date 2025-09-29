@@ -7,6 +7,8 @@ import type { IconComponentProps } from '../ui/Icon'
 import DocumentViewer from './DocumentViewer'
 import OperationsToolbar from '../operations/OperationsToolbar'
 import type { OperationInfo } from '../operations/OperationsToolbar'
+import SuggestionEngine from '../operations/SuggestionEngine'
+import type { Suggestion } from '../operations/SuggestionEngine'
 
 interface DocumentCanvasProps {
   workspaceId?: string
@@ -280,6 +282,67 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
     [onModeChange]
   )
 
+  // Handle suggestion acceptance
+  const handleSuggestionAccept = useCallback(
+    async (suggestion: Suggestion) => {
+      console.log('Accepted suggestion:', suggestion)
+
+      // Based on suggestion type, trigger appropriate action
+      switch (suggestion.type) {
+        case 'analyze':
+          if (suggestion.metadata?.documentId) {
+            handleSuggestedAction('analyze')
+          } else {
+            handleSuggestedAction('analyze_workspace')
+          }
+          break
+
+        case 'generate':
+          handleSuggestedAction('generate')
+          break
+
+        case 'compare':
+          handleSuggestedAction('compare')
+          break
+
+        case 'update':
+          handleSuggestedAction('update')
+          break
+
+        case 'organize':
+          handleSuggestedAction('organize')
+          break
+
+        case 'optimize':
+        case 'review':
+        case 'cleanup':
+          // Generic message for these types
+          await handleSendMessage(
+            `I'd like to ${suggestion.type} the workspace. ${suggestion.description}`
+          )
+          break
+
+        default:
+          console.warn('Unknown suggestion type:', suggestion.type)
+      }
+    },
+    [handleSuggestedAction, handleSendMessage]
+  )
+
+  // Handle suggestion dismissal
+  const handleSuggestionDismiss = useCallback((suggestionId: string) => {
+    console.log('Dismissed suggestion:', suggestionId)
+    // Store dismissed suggestions in local storage to persist across sessions
+    try {
+      const dismissed = localStorage.getItem('dismissed_suggestions') || '[]'
+      const dismissedList = JSON.parse(dismissed) as string[]
+      dismissedList.push(suggestionId)
+      localStorage.setItem('dismissed_suggestions', JSON.stringify(dismissedList))
+    } catch (error) {
+      console.error('Failed to save dismissed suggestion:', error)
+    }
+  }, [])
+
   // Load initial data
   useEffect(() => {
     loadWorkspaceRecommendations()
@@ -503,6 +566,26 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                     ))}
                   </div>
                 </div>
+
+                {/* Smart Suggestions */}
+                {workspaceId && (
+                  <div
+                    style={{
+                      marginBottom: designTokens.spacing[8],
+                      maxWidth: '800px',
+                      margin: '0 auto',
+                      width: '100%',
+                    }}
+                  >
+                    <SuggestionEngine
+                      workspaceId={workspaceId}
+                      documentId={documentId || undefined}
+                      onSuggestionAccept={handleSuggestionAccept}
+                      onSuggestionDismiss={handleSuggestionDismiss}
+                      maxSuggestions={3}
+                    />
+                  </div>
+                )}
 
                 {/* Recent Conversations */}
                 {recentSessions.length > 0 && (
