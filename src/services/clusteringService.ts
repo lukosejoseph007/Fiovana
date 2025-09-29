@@ -1,10 +1,6 @@
 // Advanced Clustering Service
 import { apiClient } from '../api'
-import {
-  ClusterResult,
-  ClusterAnalysis,
-  ApiResponse
-} from '../types'
+import { ClusterResult, ClusterAnalysis, ApiResponse } from '../types'
 
 export class ClusteringService {
   /**
@@ -16,7 +12,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_documents_by_content', {
       workspace_id: workspaceId,
-      options: clusteringOptions || {}
+      options: clusteringOptions || {},
     })
   }
 
@@ -29,7 +25,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_documents_by_topics', {
       workspace_id: workspaceId,
-      number_of_clusters: numberOfClusters || 5
+      number_of_clusters: numberOfClusters || 5,
     })
   }
 
@@ -42,7 +38,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_documents_by_style', {
       workspace_id: workspaceId,
-      style_features: styleFeatures || []
+      style_features: styleFeatures || [],
     })
   }
 
@@ -55,7 +51,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_documents_by_time', {
       workspace_id: workspaceId,
-      time_granularity: timeGranularity || 'month'
+      time_granularity: timeGranularity || 'month',
     })
   }
 
@@ -68,7 +64,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_user_behavior', {
       workspace_id: workspaceId,
-      behavior_metrics: behaviorMetrics || []
+      behavior_metrics: behaviorMetrics || [],
     })
   }
 
@@ -83,31 +79,26 @@ export class ClusteringService {
     return apiClient.invoke('perform_multi_dimensional_clustering', {
       workspace_id: workspaceId,
       dimensions,
-      clustering_method: clusteringMethod || 'kmeans'
+      clustering_method: clusteringMethod || 'kmeans',
     })
   }
 
   /**
    * Analyze cluster characteristics
    */
-  async analyzeClusterCharacteristics(
-    clusterId: string
-  ): Promise<ApiResponse<ClusterAnalysis>> {
+  async analyzeClusterCharacteristics(clusterId: string): Promise<ApiResponse<ClusterAnalysis>> {
     return apiClient.invoke('analyze_cluster_characteristics', {
-      cluster_id: clusterId
+      cluster_id: clusterId,
     })
   }
 
   /**
    * Compare clusters
    */
-  async compareClusters(
-    cluster1Id: string,
-    cluster2Id: string
-  ): Promise<ApiResponse<unknown>> {
+  async compareClusters(cluster1Id: string, cluster2Id: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_clusters', {
       cluster1_id: cluster1Id,
-      cluster2_id: cluster2Id
+      cluster2_id: cluster2Id,
     })
   }
 
@@ -120,7 +111,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult>> {
     return apiClient.invoke('merge_clusters', {
       cluster_ids: clusterIds,
-      merge_strategy: mergeStrategy || 'centroid'
+      merge_strategy: mergeStrategy || 'centroid',
     })
   }
 
@@ -135,7 +126,7 @@ export class ClusteringService {
     return apiClient.invoke('split_cluster', {
       cluster_id: clusterId,
       number_of_splits: numberOfSplits,
-      split_method: splitMethod || 'kmeans'
+      split_method: splitMethod || 'kmeans',
     })
   }
 
@@ -148,7 +139,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('refine_clusters', {
       cluster_ids: clusterIds,
-      options: refinementOptions || {}
+      options: refinementOptions || {},
     })
   }
 
@@ -161,7 +152,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_document_cluster', {
       document_id: documentId,
-      cluster_model_id: clusterModelId
+      cluster_model_id: clusterModelId,
     })
   }
 
@@ -174,20 +165,17 @@ export class ClusteringService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_cluster_visualization', {
       cluster_ids: clusterIds,
-      visualization_type: visualizationType || 'scatter'
+      visualization_type: visualizationType || 'scatter',
     })
   }
 
   /**
    * Export cluster results
    */
-  async exportClusters(
-    clusterIds: string[],
-    format?: string
-  ): Promise<ApiResponse<string>> {
+  async exportClusters(clusterIds: string[], format?: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_clusters', {
       cluster_ids: clusterIds,
-      format: format || 'json'
+      format: format || 'json',
     })
   }
 
@@ -196,7 +184,7 @@ export class ClusteringService {
    */
   async getClusterStatistics(clusterId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_cluster_statistics', {
-      cluster_id: clusterId
+      cluster_id: clusterId,
     })
   }
 
@@ -209,7 +197,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_cluster_quality', {
       cluster_ids: clusterIds,
-      validation_metrics: validationMetrics || ['silhouette', 'inertia']
+      validation_metrics: validationMetrics || ['silhouette', 'inertia'],
     })
   }
 
@@ -224,7 +212,7 @@ export class ClusteringService {
     return apiClient.invoke('find_optimal_cluster_count', {
       workspace_id: workspaceId,
       max_clusters: maxClusters || 20,
-      method: method || 'elbow'
+      method: method || 'elbow',
     })
   }
 
@@ -237,7 +225,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_incremental_clustering', {
       existing_clusters: existingClusters,
-      new_document_ids: newDocumentIds
+      new_document_ids: newDocumentIds,
     })
   }
 
@@ -250,7 +238,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('track_cluster_evolution', {
       workspace_id: workspaceId,
-      time_range: timeRange || '30d'
+      time_range: timeRange || '30d',
     })
   }
 
@@ -263,7 +251,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_cluster_report', {
       cluster_ids: clusterIds,
-      options: reportOptions || {}
+      options: reportOptions || {},
     })
   }
 
@@ -276,7 +264,7 @@ export class ClusteringService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_cross_workspace_clustering', {
       workspace_ids: workspaceIds,
-      options: clusteringOptions || {}
+      options: clusteringOptions || {},
     })
   }
 }

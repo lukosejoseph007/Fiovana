@@ -89,7 +89,7 @@ export class AIService {
       model: request.model,
       max_tokens: request.maxTokens,
       temperature: request.temperature,
-      options: request.options || {}
+      options: request.options || {},
     })
   }
 
@@ -103,21 +103,24 @@ export class AIService {
       max_tokens: request.maxTokens,
       temperature: request.temperature,
       stop_sequences: request.stopSequences,
-      options: request.options || {}
+      options: request.options || {},
     })
   }
 
   /**
    * Stream chat completion
    */
-  async streamChat(request: ChatRequest, _onChunk: (chunk: unknown) => void): Promise<ApiResponse<ChatResponse>> {
+  async streamChat(
+    request: ChatRequest,
+    _onChunk: (chunk: unknown) => void
+  ): Promise<ApiResponse<ChatResponse>> {
     // Implementation would use the streaming API
     return apiClient.invoke('ai_chat_stream', {
       messages: request.messages,
       model: request.model,
       max_tokens: request.maxTokens,
       temperature: request.temperature,
-      options: request.options || {}
+      options: request.options || {},
     })
   }
 
@@ -141,7 +144,7 @@ export class AIService {
   async classifyText(text: string, categories?: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_text', {
       text,
-      categories: categories || []
+      categories: categories || [],
     })
   }
 
@@ -151,18 +154,22 @@ export class AIService {
   async summarize(text: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_text', {
       text,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Translate text
    */
-  async translate(text: string, targetLanguage: string, sourceLanguage?: string): Promise<ApiResponse<string>> {
+  async translate(
+    text: string,
+    targetLanguage: string,
+    sourceLanguage?: string
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('translate_text', {
       text,
       target_language: targetLanguage,
-      source_language: sourceLanguage
+      source_language: sourceLanguage,
     })
   }
 
@@ -172,7 +179,7 @@ export class AIService {
   async generateEmbeddings(texts: string[], model?: string): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('generate_embeddings', {
       texts,
-      model: model
+      model: model,
     })
   }
 
@@ -182,7 +189,7 @@ export class AIService {
   async queryDocument(documentId: string, question: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('query_document', {
       document_id: documentId,
-      question
+      question,
     })
   }
 
@@ -191,7 +198,7 @@ export class AIService {
    */
   async getConversationSuggestions(conversationId: string): Promise<ApiResponse<string[]>> {
     return apiClient.invoke('get_conversation_suggestions', {
-      conversation_id: conversationId
+      conversation_id: conversationId,
     })
   }
 
@@ -200,18 +207,22 @@ export class AIService {
    */
   async analyzeConversation(conversationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_conversation', {
-      conversation_id: conversationId
+      conversation_id: conversationId,
     })
   }
 
   /**
    * Generate content based on prompt
    */
-  async generateContent(prompt: string, contentType: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
+  async generateContent(
+    prompt: string,
+    contentType: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_content', {
       prompt,
       content_type: contentType,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -221,7 +232,7 @@ export class AIService {
   async improveText(text: string, improvements: string[]): Promise<ApiResponse<string>> {
     return apiClient.invoke('improve_text', {
       text,
-      improvements
+      improvements,
     })
   }
 
@@ -238,7 +249,7 @@ export class AIService {
   async rewriteText(text: string, style: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('rewrite_text', {
       text,
-      style
+      style,
     })
   }
 
@@ -247,17 +258,20 @@ export class AIService {
    */
   async getUsageStats(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_ai_usage_stats', {
-      timeframe: timeframe || 'last_30_days'
+      timeframe: timeframe || 'last_30_days',
     })
   }
 
   /**
    * Configure AI model settings
    */
-  async configureModel(modelId: string, settings: Record<string, unknown>): Promise<ApiResponse<void>> {
+  async configureModel(
+    modelId: string,
+    settings: Record<string, unknown>
+  ): Promise<ApiResponse<void>> {
     return apiClient.invoke('configure_ai_model', {
       model_id: modelId,
-      settings
+      settings,
     })
   }
 
@@ -273,17 +287,20 @@ export class AIService {
    */
   async getConversationContext(conversationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_conversation_context', {
-      conversation_id: conversationId
+      conversation_id: conversationId,
     })
   }
 
   /**
    * Update conversation context
    */
-  async updateConversationContext(conversationId: string, context: Record<string, unknown>): Promise<ApiResponse<void>> {
+  async updateConversationContext(
+    conversationId: string,
+    context: Record<string, unknown>
+  ): Promise<ApiResponse<void>> {
     return apiClient.invoke('update_conversation_context', {
       conversation_id: conversationId,
-      context
+      context,
     })
   }
 }

@@ -1,9 +1,6 @@
 // Workspace AI Integration Service
 import { apiClient } from '../api'
-import {
-  AIAnalysis,
-  ApiResponse
-} from '../types'
+import { AIAnalysis, ApiResponse } from '../types'
 
 export class WorkspaceAiService {
   /**
@@ -11,7 +8,7 @@ export class WorkspaceAiService {
    */
   async generateWorkspaceInsights(workspaceId: string): Promise<ApiResponse<AIAnalysis>> {
     return apiClient.invoke('generate_workspace_ai_insights', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -24,7 +21,7 @@ export class WorkspaceAiService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_recommend_workspace_content', {
       workspace_id: workspaceId,
-      user_preferences: userPreferences || {}
+      user_preferences: userPreferences || {},
     })
   }
 
@@ -33,7 +30,7 @@ export class WorkspaceAiService {
    */
   async suggestOrganization(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_suggest_workspace_organization', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -42,7 +39,7 @@ export class WorkspaceAiService {
    */
   async analyzeContentGaps(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_analyze_content_gaps', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -51,7 +48,7 @@ export class WorkspaceAiService {
    */
   async optimizeWorkflow(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_optimize_workspace_workflow', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -60,7 +57,7 @@ export class WorkspaceAiService {
    */
   async classifyWorkspaceDocuments(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_classify_workspace_documents', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -69,7 +66,7 @@ export class WorkspaceAiService {
    */
   async detectDuplicates(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_detect_workspace_duplicates', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -78,7 +75,7 @@ export class WorkspaceAiService {
    */
   async assessContentQuality(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_assess_content_quality', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -87,7 +84,7 @@ export class WorkspaceAiService {
    */
   async extractKnowledge(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_extract_workspace_knowledge', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -96,7 +93,7 @@ export class WorkspaceAiService {
    */
   async analyzeProductivity(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_analyze_workspace_productivity', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -105,7 +102,7 @@ export class WorkspaceAiService {
    */
   async analyzeCollaboration(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_analyze_collaboration_patterns', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -114,7 +111,7 @@ export class WorkspaceAiService {
    */
   async summarizeWorkspace(workspaceId: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('ai_summarize_workspace_content', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -123,7 +120,7 @@ export class WorkspaceAiService {
    */
   async predictTrends(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_predict_workspace_trends', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -132,7 +129,7 @@ export class WorkspaceAiService {
    */
   async detectAnomalies(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_detect_workspace_anomalies', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -141,7 +138,7 @@ export class WorkspaceAiService {
    */
   async suggestContentGeneration(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_suggest_content_generation', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -150,7 +147,7 @@ export class WorkspaceAiService {
    */
   async scoreWorkspaceHealth(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_score_workspace_health', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -163,7 +160,7 @@ export class WorkspaceAiService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_generate_personalized_dashboard', {
       workspace_id: workspaceId,
-      user_id: userId
+      user_id: userId,
     })
   }
 
@@ -172,7 +169,7 @@ export class WorkspaceAiService {
    */
   async suggestContentMaintenance(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('ai_suggest_content_maintenance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -185,7 +182,7 @@ export class WorkspaceAiService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('ai_benchmark_workspace', {
       workspace_id: workspaceId,
-      benchmark_criteria: benchmarkCriteria || {}
+      benchmark_criteria: benchmarkCriteria || {},
     })
   }
 
@@ -198,20 +195,17 @@ export class WorkspaceAiService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('ai_answer_workspace_question', {
       workspace_id: workspaceId,
-      question
+      question,
     })
   }
 
   /**
    * Train custom AI model for workspace
    */
-  async trainCustomModel(
-    workspaceId: string,
-    modelConfig: unknown
-  ): Promise<ApiResponse<string>> {
+  async trainCustomModel(workspaceId: string, modelConfig: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('ai_train_custom_workspace_model', {
       workspace_id: workspaceId,
-      model_config: modelConfig
+      model_config: modelConfig,
     })
   }
 }

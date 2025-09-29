@@ -1,7 +1,7 @@
 // Real-time event handling system
-export interface EventSubscriber<T = unknown> {
+export interface EventSubscriber {
   id: string
-  callback: (data: T) => void | Promise<void>
+  callback: (data: unknown) => void | Promise<void>
   options: SubscriptionOptions
   createdAt: Date
   lastTriggered?: Date
@@ -40,7 +40,7 @@ export class EventBus {
     totalEvents: 0,
     eventsByType: {},
     subscriberCount: 0,
-    averageProcessingTime: 0
+    averageProcessingTime: 0,
   }
   private throttleTimers = new Map<string, number>()
   private debounceTimers = new Map<string, number>()
@@ -62,11 +62,14 @@ export class EventBus {
     callback: (data: T) => void | Promise<void>,
     options: SubscriptionOptions = {}
   ): string {
-    const subscriber: EventSubscriber<T> = {
+    const subscriber: EventSubscriber = {
       id: this.generateSubscriberId(),
-      callback,
-      options,
-      createdAt: new Date()
+      callback: callback as (data: unknown) => void | Promise<void>,
+      options: {
+        ...options,
+        filter: options.filter ? (data: unknown) => options.filter!(data as T) : undefined,
+      },
+      createdAt: new Date(),
     }
 
     if (!this.subscribers.has(eventType)) {
@@ -116,7 +119,7 @@ export class EventBus {
       data,
       timestamp: new Date(),
       source,
-      metadata
+      metadata,
     }
 
     // Update metrics
@@ -188,9 +191,7 @@ export class EventBus {
    * Get event history
    */
   getEventHistory(eventType?: string, limit?: number): Event[] {
-    let events = eventType
-      ? this.eventHistory.filter(e => e.type === eventType)
-      : this.eventHistory
+    let events = eventType ? this.eventHistory.filter(e => e.type === eventType) : this.eventHistory
 
     if (limit) {
       events = events.slice(-limit)
@@ -264,7 +265,7 @@ export class EventBus {
         },
         {
           once: true,
-          filter
+          filter: filter ? (data: unknown) => filter(data as T) : undefined,
         }
       )
     })
@@ -278,23 +279,18 @@ export class EventBus {
       emit: (data: T, source?: string, metadata?: Record<string, unknown>) =>
         this.emit(eventType, data, source, metadata),
 
-      subscribe: (
-        callback: (data: T) => void | Promise<void>,
-        options: SubscriptionOptions = {}
-      ) => this.subscribe(eventType, callback, options),
+      subscribe: (callback: (data: T) => void | Promise<void>, options: SubscriptionOptions = {}) =>
+        this.subscribe(eventType, callback, options),
 
       waitFor: (filter?: (data: T) => boolean, timeout?: number) =>
-        this.waitFor(eventType, filter, timeout)
+        this.waitFor(eventType, filter, timeout),
     }
   }
 
   /**
    * Execute a subscriber with error handling and metrics
    */
-  private async executeSubscriber<T>(
-    subscriber: EventSubscriber<T>,
-    event: Event<T>
-  ): Promise<void> {
+  private async executeSubscriber(subscriber: EventSubscriber, event: Event): Promise<void> {
     const startTime = performance.now()
 
     try {
@@ -309,12 +305,16 @@ export class EventBus {
       console.error(`Error in event subscriber ${subscriber.id}:`, error)
 
       // Emit error event
-      this.emit('error', {
-        subscriberId: subscriber.id,
-        eventType: event.type,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date()
-      }, 'eventBus')
+      this.emit(
+        'error',
+        {
+          subscriberId: subscriber.id,
+          eventType: event.type,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date(),
+        },
+        'eventBus'
+      )
     } finally {
       const processingTime = performance.now() - startTime
       this.updateProcessingMetrics(processingTime)
@@ -384,7 +384,7 @@ export const EventTypes = {
   // Progress events
   PROGRESS_UPDATED: 'progress:updated',
   TASK_COMPLETED: 'task:completed',
-  TASK_FAILED: 'task:failed'
+  TASK_FAILED: 'task:failed',
 } as const
 
 // Export singleton instance

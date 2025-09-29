@@ -7,7 +7,7 @@ import {
   VectorQuery,
   VectorSearchResult,
   IndexConfig,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class SearchService {
@@ -19,7 +19,7 @@ export class SearchService {
       text: query.text,
       type: query.type,
       filters: query.filters || [],
-      options: query.options
+      options: query.options,
     })
   }
 
@@ -29,7 +29,7 @@ export class SearchService {
   async keywordSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('keyword_search', {
       text,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -39,7 +39,7 @@ export class SearchService {
   async semanticSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('semantic_search', {
       text,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -49,27 +49,33 @@ export class SearchService {
   async hybridSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('hybrid_search', {
       text,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Search within a specific workspace
    */
-  async searchWorkspace(workspaceId: string, query: SearchQuery): Promise<ApiResponse<SearchResult>> {
+  async searchWorkspace(
+    workspaceId: string,
+    query: SearchQuery
+  ): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('search_workspace', {
       workspace_id: workspaceId,
-      query
+      query,
     })
   }
 
   /**
    * Search within specific documents
    */
-  async searchDocuments(documentIds: string[], query: SearchQuery): Promise<ApiResponse<SearchResult>> {
+  async searchDocuments(
+    documentIds: string[],
+    query: SearchQuery
+  ): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('search_in_documents', {
       document_ids: documentIds,
-      query
+      query,
     })
   }
 
@@ -78,7 +84,7 @@ export class SearchService {
    */
   async getSearchSuggestions(partialQuery: string): Promise<ApiResponse<string[]>> {
     return apiClient.invoke('get_search_suggestions', {
-      partial_query: partialQuery
+      partial_query: partialQuery,
     })
   }
 
@@ -87,7 +93,7 @@ export class SearchService {
    */
   async getSearchHistory(limit?: number): Promise<ApiResponse<SearchQuery[]>> {
     return apiClient.invoke('get_search_history', {
-      limit: limit || 50
+      limit: limit || 50,
     })
   }
 
@@ -97,7 +103,7 @@ export class SearchService {
   async saveSearchQuery(query: SearchQuery, name: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('save_search_query', {
       query,
-      name
+      name,
     })
   }
 
@@ -113,7 +119,7 @@ export class SearchService {
    */
   async updateIndex(config?: IndexConfig): Promise<ApiResponse<void>> {
     return apiClient.invoke('update_search_index', {
-      config: config || {}
+      config: config || {},
     })
   }
 
@@ -150,11 +156,15 @@ export class SearchService {
   /**
    * Create vector space
    */
-  async createVectorSpace(name: string, dimensions: number, model: string): Promise<ApiResponse<VectorSpace>> {
+  async createVectorSpace(
+    name: string,
+    dimensions: number,
+    model: string
+  ): Promise<ApiResponse<VectorSpace>> {
     return apiClient.invoke('create_vector_space', {
       name,
       dimensions,
-      model
+      model,
     })
   }
 
@@ -178,27 +188,33 @@ export class SearchService {
   async addDocumentToVectorSpace(spaceId: string, documentId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('add_document_to_vector_space', {
       space_id: spaceId,
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Remove document from vector space
    */
-  async removeDocumentFromVectorSpace(spaceId: string, documentId: string): Promise<ApiResponse<void>> {
+  async removeDocumentFromVectorSpace(
+    spaceId: string,
+    documentId: string
+  ): Promise<ApiResponse<void>> {
     return apiClient.invoke('remove_document_from_vector_space', {
       space_id: spaceId,
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Perform vector similarity search
    */
-  async vectorSearch(spaceId: string, query: VectorQuery): Promise<ApiResponse<VectorSearchResult>> {
+  async vectorSearch(
+    spaceId: string,
+    query: VectorQuery
+  ): Promise<ApiResponse<VectorSearchResult>> {
     return apiClient.invoke('vector_search', {
       space_id: spaceId,
-      query
+      query,
     })
   }
 
@@ -208,27 +224,33 @@ export class SearchService {
   async findSimilarDocuments(documentId: string, limit?: number): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_similar_documents', {
       document_id: documentId,
-      limit: limit || 10
+      limit: limit || 10,
     })
   }
 
   /**
    * Calculate document similarity
    */
-  async calculateSimilarity(documentAId: string, documentBId: string): Promise<ApiResponse<number>> {
+  async calculateSimilarity(
+    documentAId: string,
+    documentBId: string
+  ): Promise<ApiResponse<number>> {
     return apiClient.invoke('calculate_document_similarity', {
       document_a_id: documentAId,
-      document_b_id: documentBId
+      document_b_id: documentBId,
     })
   }
 
   /**
    * Cluster documents by similarity
    */
-  async clusterDocuments(documentIds: string[], options?: unknown): Promise<ApiResponse<unknown[]>> {
+  async clusterDocuments(
+    documentIds: string[],
+    options?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_documents', {
       document_ids: documentIds,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -245,7 +267,7 @@ export class SearchService {
   async updateDocumentVector(documentId: string, vector?: number[]): Promise<ApiResponse<void>> {
     return apiClient.invoke('update_document_vector', {
       document_id: documentId,
-      vector
+      vector,
     })
   }
 
@@ -269,7 +291,7 @@ export class SearchService {
   async exportVectorSpace(spaceId: string, format: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_vector_space', {
       space_id: spaceId,
-      format
+      format,
     })
   }
 
@@ -279,7 +301,7 @@ export class SearchService {
   async importVectorSpace(filePath: string, format: string): Promise<ApiResponse<VectorSpace>> {
     return apiClient.invoke('import_vector_space', {
       file_path: filePath,
-      format
+      format,
     })
   }
 

@@ -1,28 +1,28 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { designTokens } from '../../styles/tokens';
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface DropdownOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-  icon?: React.ReactNode;
-  description?: string;
+  value: string
+  label: string
+  disabled?: boolean
+  icon?: React.ReactNode
+  description?: string
 }
 
 export interface DropdownProps {
-  options: DropdownOption[];
-  value?: string;
-  onChange?: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  error?: string;
-  size?: 'sm' | 'md' | 'lg';
-  fullWidth?: boolean;
-  searchable?: boolean;
-  clearable?: boolean;
-  maxHeight?: number;
-  className?: string;
-  dropdownClassName?: string;
+  options: DropdownOption[]
+  value?: string
+  onChange?: (value: string) => void
+  placeholder?: string
+  disabled?: boolean
+  error?: string
+  size?: 'sm' | 'md' | 'lg'
+  fullWidth?: boolean
+  searchable?: boolean
+  clearable?: boolean
+  maxHeight?: number
+  className?: string
+  dropdownClassName?: string
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -40,90 +40,94 @@ const Dropdown: React.FC<DropdownProps> = ({
   className = '',
   dropdownClassName = '',
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const selectedOption = options.find(option => option.value === value);
+  const selectedOption = options.find(option => option.value === value)
   const filteredOptions = searchable
-    ? options.filter(option =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        option.value.toLowerCase().includes(searchTerm.toLowerCase())
+    ? options.filter(
+        option =>
+          option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          option.value.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : options;
+    : options
 
-  const handleSelect = useCallback((optionValue: string) => {
-    onChange?.(optionValue);
-    setIsOpen(false);
-    setSearchTerm('');
-    setHighlightedIndex(-1);
-  }, [onChange]);
+  const handleSelect = useCallback(
+    (optionValue: string) => {
+      onChange?.(optionValue)
+      setIsOpen(false)
+      setSearchTerm('')
+      setHighlightedIndex(-1)
+    },
+    [onChange]
+  )
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSearchTerm('');
-        setHighlightedIndex(-1);
+        setIsOpen(false)
+        setSearchTerm('')
+        setHighlightedIndex(-1)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen) return
 
       switch (event.key) {
         case 'ArrowDown':
-          event.preventDefault();
-          setHighlightedIndex(prev =>
-            prev < filteredOptions.length - 1 ? prev + 1 : 0
-          );
-          break;
+          event.preventDefault()
+          setHighlightedIndex(prev => (prev < filteredOptions.length - 1 ? prev + 1 : 0))
+          break
         case 'ArrowUp':
-          event.preventDefault();
-          setHighlightedIndex(prev =>
-            prev > 0 ? prev - 1 : filteredOptions.length - 1
-          );
-          break;
+          event.preventDefault()
+          setHighlightedIndex(prev => (prev > 0 ? prev - 1 : filteredOptions.length - 1))
+          break
         case 'Enter':
-          event.preventDefault();
-          if (highlightedIndex >= 0 && !filteredOptions[highlightedIndex]?.disabled) {
-            handleSelect(filteredOptions[highlightedIndex].value);
+          event.preventDefault()
+          if (
+            highlightedIndex >= 0 &&
+            filteredOptions[highlightedIndex] &&
+            !filteredOptions[highlightedIndex].disabled
+          ) {
+            handleSelect(filteredOptions[highlightedIndex].value)
           }
-          break;
+          break
         case 'Escape':
-          setIsOpen(false);
-          setSearchTerm('');
-          setHighlightedIndex(-1);
-          break;
+          setIsOpen(false)
+          setSearchTerm('')
+          setHighlightedIndex(-1)
+          break
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, highlightedIndex, filteredOptions, handleSelect]);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, highlightedIndex, filteredOptions, handleSelect])
 
   const handleClear = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    onChange?.('');
-    setSearchTerm('');
-  };
+    event.stopPropagation()
+    onChange?.('')
+    setSearchTerm('')
+  }
 
   const toggleDropdown = () => {
-    if (disabled) return;
-    setIsOpen(!isOpen);
+    if (disabled) return
+    setIsOpen(!isOpen)
     if (searchable && !isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
-  };
+  }
 
   // Size variants
   const sizeStyles = {
@@ -142,7 +146,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       padding: `0 ${designTokens.spacing[12]} 0 ${designTokens.spacing[5]}`,
       fontSize: designTokens.typography.fontSize.lg,
     },
-  };
+  }
 
   const triggerStyles = {
     position: 'relative' as const,
@@ -161,7 +165,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     opacity: disabled ? 0.5 : 1,
     outline: 'none',
     ...sizeStyles[size],
-  };
+  }
 
   const dropdownStyles = {
     position: 'absolute' as const,
@@ -177,7 +181,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     maxHeight: `${maxHeight}px`,
     overflowY: 'auto' as const,
     animation: 'slideDown 0.15s ease-out',
-  };
+  }
 
   const optionStyles = {
     display: 'flex',
@@ -188,7 +192,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     fontSize: sizeStyles[size].fontSize,
     color: designTokens.colors.text.primary,
     transition: `background-color ${designTokens.animation.duration.fast}`,
-  };
+  }
 
   const searchInputStyles = {
     width: '100%',
@@ -200,7 +204,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     fontSize: sizeStyles[size].fontSize,
     outline: 'none',
     fontFamily: designTokens.typography.fonts.sans.join(', '),
-  };
+  }
 
   const chevronStyles = {
     position: 'absolute' as const,
@@ -208,7 +212,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     color: designTokens.colors.text.secondary,
     transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
     transition: `transform ${designTokens.animation.duration.fast}`,
-  };
+  }
 
   const clearButtonStyles = {
     position: 'absolute' as const,
@@ -218,7 +222,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     padding: '2px',
     borderRadius: designTokens.borderRadius.sm,
     transition: `color ${designTokens.animation.duration.fast}`,
-  };
+  }
 
   return (
     <>
@@ -236,9 +240,13 @@ const Dropdown: React.FC<DropdownProps> = ({
           }
 
           .proxemic-dropdown-trigger:hover {
-            ${!disabled ? `
+            ${
+              !disabled
+                ? `
               border-color: ${designTokens.colors.border.medium};
-            ` : ''}
+            `
+                : ''
+            }
           }
 
           .proxemic-dropdown-trigger:focus {
@@ -307,7 +315,14 @@ const Dropdown: React.FC<DropdownProps> = ({
               onClick={handleClear}
               aria-label="Clear selection"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -315,7 +330,14 @@ const Dropdown: React.FC<DropdownProps> = ({
           )}
 
           <div style={chevronStyles}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <polyline points="6,9 12,15 18,9" />
             </svg>
           </div>
@@ -333,12 +355,18 @@ const Dropdown: React.FC<DropdownProps> = ({
                 style={searchInputStyles}
                 placeholder="Search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
               />
             )}
 
             {filteredOptions.length === 0 ? (
-              <div style={{ ...optionStyles, cursor: 'default', color: designTokens.colors.text.tertiary }}>
+              <div
+                style={{
+                  ...optionStyles,
+                  cursor: 'default',
+                  color: designTokens.colors.text.tertiary,
+                }}
+              >
                 No options found
               </div>
             ) : (
@@ -357,11 +385,13 @@ const Dropdown: React.FC<DropdownProps> = ({
                   <div>
                     <div>{option.label}</div>
                     {option.description && (
-                      <div style={{
-                        fontSize: designTokens.typography.fontSize.xs,
-                        color: designTokens.colors.text.tertiary,
-                        marginTop: '2px',
-                      }}>
+                      <div
+                        style={{
+                          fontSize: designTokens.typography.fontSize.xs,
+                          color: designTokens.colors.text.tertiary,
+                          marginTop: '2px',
+                        }}
+                      >
                         {option.description}
                       </div>
                     )}
@@ -373,17 +403,19 @@ const Dropdown: React.FC<DropdownProps> = ({
         )}
 
         {error && (
-          <div style={{
-            marginTop: designTokens.spacing[1],
-            color: designTokens.colors.accent.alert,
-            fontSize: designTokens.typography.fontSize.sm,
-          }}>
+          <div
+            style={{
+              marginTop: designTokens.spacing[1],
+              color: designTokens.colors.accent.alert,
+              fontSize: designTokens.typography.fontSize.sm,
+            }}
+          >
             {error}
           </div>
         )}
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Dropdown;
+export default Dropdown

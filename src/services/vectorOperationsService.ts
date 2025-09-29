@@ -1,9 +1,6 @@
 // Vector Operations Service
 import { apiClient } from '../api'
-import {
-  ClusterResult,
-  ApiResponse
-} from '../types'
+import { ClusterResult, ApiResponse } from '../types'
 
 export class VectorOperationsService {
   /**
@@ -15,7 +12,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_vector_clustering', {
       vectors,
-      options: clusteringOptions || {}
+      options: clusteringOptions || {},
     })
   }
 
@@ -30,7 +27,7 @@ export class VectorOperationsService {
     return apiClient.invoke('calculate_vector_similarities', {
       source_vector: sourceVector,
       target_vectors: targetVectors,
-      similarity_metric: similarityMetric || 'cosine'
+      similarity_metric: similarityMetric || 'cosine',
     })
   }
 
@@ -45,7 +42,7 @@ export class VectorOperationsService {
     return apiClient.invoke('reduce_vector_dimensionality', {
       vectors,
       target_dimensions: targetDimensions,
-      method: method || 'pca'
+      method: method || 'pca',
     })
   }
 
@@ -58,7 +55,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_vector_space', {
       vectors,
-      options: analysisOptions || {}
+      options: analysisOptions || {},
     })
   }
 
@@ -71,7 +68,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<number[]>> {
     return apiClient.invoke('find_vector_outliers', {
       vectors,
-      outlier_threshold: outlierThreshold || 2.0
+      outlier_threshold: outlierThreshold || 2.0,
     })
   }
 
@@ -84,7 +81,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('perform_hierarchical_clustering', {
       vectors,
-      linkage_method: linkageMethod || 'ward'
+      linkage_method: linkageMethod || 'ward',
     })
   }
 
@@ -99,7 +96,7 @@ export class VectorOperationsService {
     return apiClient.invoke('perform_kmeans_clustering', {
       vectors,
       k,
-      options: kmeansOptions || {}
+      options: kmeansOptions || {},
     })
   }
 
@@ -114,7 +111,7 @@ export class VectorOperationsService {
     return apiClient.invoke('perform_dbscan_clustering', {
       vectors,
       eps: eps || 0.5,
-      min_samples: minSamples || 5
+      min_samples: minSamples || 5,
     })
   }
 
@@ -123,7 +120,7 @@ export class VectorOperationsService {
    */
   async calculateCentroids(clusters: ClusterResult[]): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('calculate_cluster_centroids', {
-      clusters
+      clusters,
     })
   }
 
@@ -138,7 +135,7 @@ export class VectorOperationsService {
     return apiClient.invoke('interpolate_vectors', {
       vector1,
       vector2,
-      interpolation_factor: interpolationFactor
+      interpolation_factor: interpolationFactor,
     })
   }
 
@@ -155,7 +152,7 @@ export class VectorOperationsService {
       query_vector: queryVector,
       candidate_vectors: candidateVectors,
       k,
-      distance_metric: distanceMetric || 'euclidean'
+      distance_metric: distanceMetric || 'euclidean',
     })
   }
 
@@ -168,7 +165,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('normalize_vectors', {
       vectors,
-      normalization_method: normalizationMethod || 'l2'
+      normalization_method: normalizationMethod || 'l2',
     })
   }
 
@@ -177,7 +174,7 @@ export class VectorOperationsService {
    */
   async calculateVectorStatistics(vectors: number[][]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('calculate_vector_statistics', {
-      vectors
+      vectors,
     })
   }
 
@@ -190,7 +187,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('transform_vectors', {
       vectors,
-      transformation_matrix: transformationMatrix
+      transformation_matrix: transformationMatrix,
     })
   }
 
@@ -203,7 +200,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_cluster_quality', {
       vectors,
-      clusters
+      clusters,
     })
   }
 
@@ -216,7 +213,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('compress_vectors', {
       vectors,
-      compression_ratio: compressionRatio
+      compression_ratio: compressionRatio,
     })
   }
 
@@ -231,7 +228,7 @@ export class VectorOperationsService {
     return apiClient.invoke('build_vector_index', {
       vectors,
       index_type: indexType || 'hnsw',
-      options: indexOptions || {}
+      options: indexOptions || {},
     })
   }
 
@@ -246,7 +243,7 @@ export class VectorOperationsService {
     return apiClient.invoke('search_vector_index', {
       index_id: indexId,
       query_vector: queryVector,
-      k
+      k,
     })
   }
 
@@ -259,7 +256,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<number[]>> {
     return apiClient.invoke('perform_vector_arithmetic', {
       operation,
-      vectors
+      vectors,
     })
   }
 
@@ -272,7 +269,7 @@ export class VectorOperationsService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_vector_density', {
       vectors,
-      options: densityOptions || {}
+      options: densityOptions || {},
     })
   }
 }

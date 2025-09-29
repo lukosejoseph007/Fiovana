@@ -1,8 +1,6 @@
 // Natural Language Operations Service
 import { apiClient } from '../api'
-import {
-  ApiResponse
-} from '../types'
+import { ApiResponse } from '../types'
 
 export class NLOperationsService {
   /**
@@ -10,7 +8,7 @@ export class NLOperationsService {
    */
   async extractNamedEntities(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_named_entities', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -19,7 +17,7 @@ export class NLOperationsService {
    */
   async analyzeSentiment(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_sentiment', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -28,7 +26,7 @@ export class NLOperationsService {
    */
   async extractKeyPhrases(documentId: string): Promise<ApiResponse<string[]>> {
     return apiClient.invoke('extract_key_phrases', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -41,7 +39,7 @@ export class NLOperationsService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_text', {
       document_id: documentId,
-      summary_length: summaryLength || 'medium'
+      summary_length: summaryLength || 'medium',
     })
   }
 
@@ -50,7 +48,7 @@ export class NLOperationsService {
    */
   async detectLanguage(documentId: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('detect_language', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -65,7 +63,7 @@ export class NLOperationsService {
     return apiClient.invoke('translate_document', {
       document_id: documentId,
       target_language: targetLanguage,
-      preserve_formatting: preserveFormatting || true
+      preserve_formatting: preserveFormatting || true,
     })
   }
 
@@ -78,7 +76,7 @@ export class NLOperationsService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_topics', {
       document_id: documentId,
-      number_of_topics: numberOfTopics || 5
+      number_of_topics: numberOfTopics || 5,
     })
   }
 
@@ -87,7 +85,7 @@ export class NLOperationsService {
    */
   async analyzeReadability(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_readability', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -96,20 +94,17 @@ export class NLOperationsService {
    */
   async extractStructure(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_document_structure', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Perform intent classification
    */
-  async classifyIntent(
-    text: string,
-    possibleIntents?: string[]
-  ): Promise<ApiResponse<unknown>> {
+  async classifyIntent(text: string, possibleIntents?: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_intent', {
       text,
-      possible_intents: possibleIntents || []
+      possible_intents: possibleIntents || [],
     })
   }
 
@@ -118,7 +113,7 @@ export class NLOperationsService {
    */
   async extractEntityRelationships(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_entity_relationships', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -131,7 +126,7 @@ export class NLOperationsService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_documents', {
       document_ids: documentIds,
-      number_of_clusters: numberOfClusters || 3
+      number_of_clusters: numberOfClusters || 3,
     })
   }
 
@@ -140,20 +135,17 @@ export class NLOperationsService {
    */
   async generateDocumentEmbeddings(documentId: string): Promise<ApiResponse<number[]>> {
     return apiClient.invoke('generate_document_embeddings', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Perform text classification
    */
-  async classifyText(
-    text: string,
-    categories: string[]
-  ): Promise<ApiResponse<unknown>> {
+  async classifyText(text: string, categories: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_text', {
       text,
-      categories
+      categories,
     })
   }
 
@@ -162,20 +154,17 @@ export class NLOperationsService {
    */
   async extractNLMetadata(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_nl_metadata', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Perform question answering on document
    */
-  async answerQuestion(
-    documentId: string,
-    question: string
-  ): Promise<ApiResponse<string>> {
+  async answerQuestion(documentId: string, question: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('answer_question_about_document', {
       document_id: documentId,
-      question
+      question,
     })
   }
 
@@ -184,7 +173,7 @@ export class NLOperationsService {
    */
   async generateInsights(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_document_insights', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -197,7 +186,7 @@ export class NLOperationsService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('batch_process_nl_operations', {
       document_ids: documentIds,
-      operations
+      operations,
     })
   }
 }

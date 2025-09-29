@@ -1,14 +1,14 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { designTokens } from '../../styles/tokens';
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface TooltipProps {
-  content: React.ReactNode;
-  children: React.ReactNode;
-  placement?: 'top' | 'bottom' | 'left' | 'right';
-  delay?: number;
-  disabled?: boolean;
-  className?: string;
-  contentClassName?: string;
+  content: React.ReactNode
+  children: React.ReactNode
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+  delay?: number
+  disabled?: boolean
+  className?: string
+  contentClassName?: string
 }
 
 const Tooltip: React.FC<TooltipProps> = ({
@@ -20,102 +20,103 @@ const Tooltip: React.FC<TooltipProps> = ({
   className = '',
   contentClassName = '',
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const [isVisible, setIsVisible] = useState(false)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const showTooltip = () => {
-    if (disabled) return;
+    if (disabled) return
 
     timeoutRef.current = setTimeout(() => {
-      setIsVisible(true);
-      calculatePosition();
-    }, delay);
-  };
+      setIsVisible(true)
+      calculatePosition()
+    }, delay)
+  }
 
   const hideTooltip = () => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      clearTimeout(timeoutRef.current)
     }
-    setIsVisible(false);
-  };
+    setIsVisible(false)
+  }
 
   const calculatePosition = useCallback(() => {
-    if (!triggerRef.current || !tooltipRef.current) return;
+    if (!triggerRef.current || !tooltipRef.current) return
 
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+    const triggerRect = triggerRef.current.getBoundingClientRect()
+    const tooltipRect = tooltipRef.current.getBoundingClientRect()
     const viewport = {
       width: window.innerWidth,
       height: window.innerHeight,
-    };
+    }
 
-    let top = 0;
-    let left = 0;
+    let top = 0
+    let left = 0
 
     // Calculate base position based on placement
     switch (placement) {
       case 'top':
-        top = triggerRect.top - tooltipRect.height - 8;
-        left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-        break;
+        top = triggerRect.top - tooltipRect.height - 8
+        left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2
+        break
       case 'bottom':
-        top = triggerRect.bottom + 8;
-        left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-        break;
+        top = triggerRect.bottom + 8
+        left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2
+        break
       case 'left':
-        top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-        left = triggerRect.left - tooltipRect.width - 8;
-        break;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2
+        left = triggerRect.left - tooltipRect.width - 8
+        break
       case 'right':
-        top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-        left = triggerRect.right + 8;
-        break;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2
+        left = triggerRect.right + 8
+        break
     }
 
     // Adjust for viewport boundaries
     if (left < 8) {
-      left = 8;
+      left = 8
     } else if (left + tooltipRect.width > viewport.width - 8) {
-      left = viewport.width - tooltipRect.width - 8;
+      left = viewport.width - tooltipRect.width - 8
     }
 
     if (top < 8) {
-      top = 8;
+      top = 8
     } else if (top + tooltipRect.height > viewport.height - 8) {
-      top = viewport.height - tooltipRect.height - 8;
+      top = viewport.height - tooltipRect.height - 8
     }
 
-    setPosition({ top, left });
-  }, [placement]);
+    setPosition({ top, left })
+  }, [placement])
 
   useEffect(() => {
     if (isVisible) {
-      calculatePosition();
-      window.addEventListener('scroll', calculatePosition);
-      window.addEventListener('resize', calculatePosition);
+      calculatePosition()
+      window.addEventListener('scroll', calculatePosition)
+      window.addEventListener('resize', calculatePosition)
 
       return () => {
-        window.removeEventListener('scroll', calculatePosition);
-        window.removeEventListener('resize', calculatePosition);
-      };
+        window.removeEventListener('scroll', calculatePosition)
+        window.removeEventListener('resize', calculatePosition)
+      }
     }
-  }, [isVisible, placement, calculatePosition]);
+    return undefined
+  }, [isVisible, placement, calculatePosition])
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        clearTimeout(timeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const triggerStyles = {
     display: 'inline-block',
     cursor: 'help',
-  };
+  }
 
   const tooltipStyles = {
     position: 'fixed' as const,
@@ -133,16 +134,16 @@ const Tooltip: React.FC<TooltipProps> = ({
     maxWidth: '300px',
     zIndex: designTokens.zIndex.tooltip,
     opacity: isVisible ? 1 : 0,
-    visibility: isVisible ? 'visible' as const : 'hidden' as const,
+    visibility: isVisible ? ('visible' as const) : ('hidden' as const),
     transition: `opacity ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}, visibility ${designTokens.animation.duration.fast}`,
     pointerEvents: 'none' as const,
     wordWrap: 'break-word' as const,
-  };
+  }
 
   // Arrow styles based on placement
   const getArrowStyles = () => {
-    const arrowSize = 6;
-    const arrowColor = designTokens.colors.surface.primary;
+    const arrowSize = 6
+    const arrowColor = designTokens.colors.surface.primary
     // const borderColor = designTokens.colors.border.medium; // TODO: Use for arrow border
 
     const baseArrowStyles = {
@@ -150,7 +151,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       width: 0,
       height: 0,
       border: `${arrowSize}px solid transparent`,
-    };
+    }
 
     switch (placement) {
       case 'top':
@@ -161,7 +162,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateX(-50%)',
           borderTopColor: arrowColor,
           borderBottom: 'none',
-        };
+        }
       case 'bottom':
         return {
           ...baseArrowStyles,
@@ -170,7 +171,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateX(-50%)',
           borderBottomColor: arrowColor,
           borderTop: 'none',
-        };
+        }
       case 'left':
         return {
           ...baseArrowStyles,
@@ -179,7 +180,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateY(-50%)',
           borderLeftColor: arrowColor,
           borderRight: 'none',
-        };
+        }
       case 'right':
         return {
           ...baseArrowStyles,
@@ -188,11 +189,11 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateY(-50%)',
           borderRightColor: arrowColor,
           borderLeft: 'none',
-        };
+        }
       default:
-        return {};
+        return {}
     }
-  };
+  }
 
   return (
     <>
@@ -220,7 +221,7 @@ const Tooltip: React.FC<TooltipProps> = ({
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default Tooltip;
+export default Tooltip

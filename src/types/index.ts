@@ -25,7 +25,7 @@ export type {
   WorkspaceBackup,
   WorkspaceInsight,
   HealthIssue,
-  BackupMetadata
+  BackupMetadata,
 } from './workspace'
 export type {
   Document,
@@ -39,7 +39,7 @@ export type {
   ConversionResult,
   ConversionOptions,
   ConversionMetadata,
-  GenerationMetadata
+  GenerationMetadata,
 } from './document'
 export type {
   StyleProfile,
@@ -49,7 +49,7 @@ export type {
   StyleGuideline,
   StyleRecommendation,
   StyleMetrics,
-  TransferResult
+  TransferResult,
 } from './style'
 export * from './knowledge'
 export * from './search'
@@ -63,7 +63,7 @@ export type {
   TemplateVariable,
   TemplateMetadata,
   TemplateUsage,
-  TemplatePerformance
+  TemplatePerformance,
 } from './content'
 export * from './relationship'
 export * from './deduplication'

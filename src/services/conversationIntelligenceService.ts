@@ -5,28 +5,36 @@ import {
   ConversationInsight,
   ConversationRecommendation,
   ConversationPerformance,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class ConversationIntelligenceService {
   /**
    * Analyze conversation for insights
    */
-  async analyzeConversation(conversationId: string): Promise<ApiResponse<ConversationIntelligence>> {
-    return apiClient.invoke('analyze_conversation_intelligence', { conversation_id: conversationId })
+  async analyzeConversation(
+    conversationId: string
+  ): Promise<ApiResponse<ConversationIntelligence>> {
+    return apiClient.invoke('analyze_conversation_intelligence', {
+      conversation_id: conversationId,
+    })
   }
 
   /**
    * Get conversation insights
    */
-  async getConversationInsights(conversationId: string): Promise<ApiResponse<ConversationInsight[]>> {
+  async getConversationInsights(
+    conversationId: string
+  ): Promise<ApiResponse<ConversationInsight[]>> {
     return apiClient.invoke('get_conversation_insights', { conversation_id: conversationId })
   }
 
   /**
    * Generate conversation recommendations
    */
-  async getConversationRecommendations(conversationId: string): Promise<ApiResponse<ConversationRecommendation[]>> {
+  async getConversationRecommendations(
+    conversationId: string
+  ): Promise<ApiResponse<ConversationRecommendation[]>> {
     return apiClient.invoke('get_conversation_recommendations', { conversation_id: conversationId })
   }
 
@@ -54,17 +62,22 @@ export class ConversationIntelligenceService {
   /**
    * Measure conversation performance
    */
-  async measureConversationPerformance(conversationId: string): Promise<ApiResponse<ConversationPerformance>> {
+  async measureConversationPerformance(
+    conversationId: string
+  ): Promise<ApiResponse<ConversationPerformance>> {
     return apiClient.invoke('measure_conversation_performance', { conversation_id: conversationId })
   }
 
   /**
    * Summarize conversation
    */
-  async summarizeConversation(conversationId: string, options?: unknown): Promise<ApiResponse<string>> {
+  async summarizeConversation(
+    conversationId: string,
+    options?: unknown
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_conversation', {
       conversation_id: conversationId,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -72,7 +85,9 @@ export class ConversationIntelligenceService {
    * Extract action items from conversation
    */
   async extractActionItems(conversationId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.invoke('extract_conversation_action_items', { conversation_id: conversationId })
+    return apiClient.invoke('extract_conversation_action_items', {
+      conversation_id: conversationId,
+    })
   }
 
   /**
@@ -92,10 +107,13 @@ export class ConversationIntelligenceService {
   /**
    * Compare conversations
    */
-  async compareConversations(conversationAId: string, conversationBId: string): Promise<ApiResponse<unknown>> {
+  async compareConversations(
+    conversationAId: string,
+    conversationBId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_conversations', {
       conversation_a_id: conversationAId,
-      conversation_b_id: conversationBId
+      conversation_b_id: conversationBId,
     })
   }
 
@@ -117,7 +135,9 @@ export class ConversationIntelligenceService {
    * Generate conversation quality score
    */
   async generateQualityScore(conversationId: string): Promise<ApiResponse<number>> {
-    return apiClient.invoke('generate_conversation_quality_score', { conversation_id: conversationId })
+    return apiClient.invoke('generate_conversation_quality_score', {
+      conversation_id: conversationId,
+    })
   }
 
   /**
@@ -130,10 +150,13 @@ export class ConversationIntelligenceService {
   /**
    * Get conversation analytics
    */
-  async getConversationAnalytics(workspaceId?: string, timeframe?: string): Promise<ApiResponse<unknown>> {
+  async getConversationAnalytics(
+    workspaceId?: string,
+    timeframe?: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_conversation_analytics', {
       workspace_id: workspaceId,
-      timeframe: timeframe || 'last_30_days'
+      timeframe: timeframe || 'last_30_days',
     })
   }
 
@@ -147,10 +170,13 @@ export class ConversationIntelligenceService {
   /**
    * Generate conversation report
    */
-  async generateConversationReport(conversationId: string, reportType: string): Promise<ApiResponse<unknown>> {
+  async generateConversationReport(
+    conversationId: string,
+    reportType: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_conversation_report', {
       conversation_id: conversationId,
-      report_type: reportType
+      report_type: reportType,
     })
   }
 
@@ -165,7 +191,9 @@ export class ConversationIntelligenceService {
    * Analyze conversation effectiveness
    */
   async analyzeConversationEffectiveness(conversationIds: string[]): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('analyze_conversation_effectiveness', { conversation_ids: conversationIds })
+    return apiClient.invoke('analyze_conversation_effectiveness', {
+      conversation_ids: conversationIds,
+    })
   }
 }
 

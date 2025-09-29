@@ -1,46 +1,47 @@
-import { useState, useEffect } from 'react';
-import { designTokens } from '../../styles/tokens';
+import { useState, useEffect } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface ResponsiveState {
-  width: number;
-  height: number;
-  isMobile: boolean;
-  isTablet: boolean;
-  isDesktop: boolean;
-  breakpoint: 'mobile' | 'tablet' | 'desktop';
+  width: number
+  height: number
+  isMobile: boolean
+  isTablet: boolean
+  isDesktop: boolean
+  breakpoint: 'mobile' | 'tablet' | 'desktop'
 }
 
 export const useResponsive = (): ResponsiveState => {
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [viewport, setViewport] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
     const updateViewport = () => {
       setViewport({
         width: window.innerWidth,
         height: window.innerHeight,
-      });
-    };
+      })
+    }
 
     // Set initial values
-    updateViewport();
+    updateViewport()
 
     // Listen for resize events
-    window.addEventListener('resize', updateViewport);
+    window.addEventListener('resize', updateViewport)
 
     // Cleanup
-    return () => window.removeEventListener('resize', updateViewport);
-  }, []);
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
 
-  const isMobile = viewport.width < parseInt(designTokens.breakpoints.mobile);
-  const isTablet = viewport.width >= parseInt(designTokens.breakpoints.mobile) &&
-                   viewport.width < parseInt(designTokens.breakpoints.desktop);
-  const isDesktop = viewport.width >= parseInt(designTokens.breakpoints.desktop);
+  const isMobile = viewport.width < parseInt(designTokens.breakpoints.mobile)
+  const isTablet =
+    viewport.width >= parseInt(designTokens.breakpoints.mobile) &&
+    viewport.width < parseInt(designTokens.breakpoints.desktop)
+  const isDesktop = viewport.width >= parseInt(designTokens.breakpoints.desktop)
 
   const getBreakpoint = (): 'mobile' | 'tablet' | 'desktop' => {
-    if (isMobile) return 'mobile';
-    if (isTablet) return 'tablet';
-    return 'desktop';
-  };
+    if (isMobile) return 'mobile'
+    if (isTablet) return 'tablet'
+    return 'desktop'
+  }
 
   return {
     width: viewport.width,
@@ -49,7 +50,7 @@ export const useResponsive = (): ResponsiveState => {
     isTablet,
     isDesktop,
     breakpoint: getBreakpoint(),
-  };
-};
+  }
+}
 
-export default useResponsive;
+export default useResponsive

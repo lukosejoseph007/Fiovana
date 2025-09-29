@@ -8,17 +8,20 @@ import {
   DocumentComparison,
   DocumentGeneration,
   FormatConversion,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class DocumentService {
   /**
    * Process a document - extract content, metadata, and create chunks
    */
-  async processDocument(filePath: string, options?: Record<string, unknown>): Promise<ApiResponse<Document>> {
+  async processDocument(
+    filePath: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<Document>> {
     return apiClient.invoke('process_document', {
       file_path: filePath,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -32,10 +35,13 @@ export class DocumentService {
   /**
    * Update document metadata
    */
-  async updateDocument(documentId: string, updates: Partial<Document>): Promise<ApiResponse<Document>> {
+  async updateDocument(
+    documentId: string,
+    updates: Partial<Document>
+  ): Promise<ApiResponse<Document>> {
     return apiClient.invoke('update_document', {
       document_id: documentId,
-      ...updates
+      ...updates,
     })
   }
 
@@ -49,10 +55,13 @@ export class DocumentService {
   /**
    * List documents in workspace
    */
-  async listDocuments(workspaceId?: string, filters?: Record<string, unknown>): Promise<ApiResponse<Document[]>> {
+  async listDocuments(
+    workspaceId?: string,
+    filters?: Record<string, unknown>
+  ): Promise<ApiResponse<Document[]>> {
     return apiClient.invoke('list_documents', {
       workspace_id: workspaceId,
-      filters: filters || {}
+      filters: filters || {},
     })
   }
 
@@ -73,10 +82,13 @@ export class DocumentService {
   /**
    * Chunk document into smaller pieces
    */
-  async chunkDocument(documentId: string, options?: Record<string, unknown>): Promise<ApiResponse<DocumentChunk[]>> {
+  async chunkDocument(
+    documentId: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<DocumentChunk[]>> {
     return apiClient.invoke('chunk_document', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -104,32 +116,43 @@ export class DocumentService {
   /**
    * Compare two documents
    */
-  async compareDocuments(documentAId: string, documentBId: string, options?: Record<string, unknown>): Promise<ApiResponse<DocumentComparison>> {
+  async compareDocuments(
+    documentAId: string,
+    documentBId: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<DocumentComparison>> {
     return apiClient.invoke('compare_documents', {
       document_a_id: documentAId,
       document_b_id: documentBId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate document from template
    */
-  async generateDocument(templateId: string, parameters: Record<string, unknown>): Promise<ApiResponse<DocumentGeneration>> {
+  async generateDocument(
+    templateId: string,
+    parameters: Record<string, unknown>
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document', {
       template_id: templateId,
-      parameters
+      parameters,
     })
   }
 
   /**
    * Convert document format
    */
-  async convertFormat(documentId: string, targetFormat: string, options?: Record<string, unknown>): Promise<ApiResponse<FormatConversion>> {
+  async convertFormat(
+    documentId: string,
+    targetFormat: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_document_format', {
       document_id: documentId,
       target_format: targetFormat,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -150,10 +173,13 @@ export class DocumentService {
   /**
    * Merge multiple documents
    */
-  async mergeDocuments(documentIds: string[], options?: Record<string, unknown>): Promise<ApiResponse<Document>> {
+  async mergeDocuments(
+    documentIds: string[],
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<Document>> {
     return apiClient.invoke('merge_documents', {
       document_ids: documentIds,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -163,7 +189,7 @@ export class DocumentService {
   async splitDocument(documentId: string, criteria: unknown): Promise<ApiResponse<Document[]>> {
     return apiClient.invoke('split_document', {
       document_id: documentId,
-      criteria
+      criteria,
     })
   }
 
@@ -205,20 +231,26 @@ export class DocumentService {
   /**
    * Summarize document content
    */
-  async summarizeDocument(documentId: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
+  async summarizeDocument(
+    documentId: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_document', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Translate document content
    */
-  async translateDocument(documentId: string, targetLanguage: string): Promise<ApiResponse<Document>> {
+  async translateDocument(
+    documentId: string,
+    targetLanguage: string
+  ): Promise<ApiResponse<Document>> {
     return apiClient.invoke('translate_document', {
       document_id: documentId,
-      target_language: targetLanguage
+      target_language: targetLanguage,
     })
   }
 
@@ -242,7 +274,7 @@ export class DocumentService {
   async createVersion(documentId: string, versionInfo: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('create_document_version', {
       document_id: documentId,
-      version_info: versionInfo
+      version_info: versionInfo,
     })
   }
 }

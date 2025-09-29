@@ -1,9 +1,6 @@
 // Workspace Backup Service
 import { apiClient } from '../api'
-import {
-  BackupInfo,
-  ApiResponse
-} from '../types'
+import { BackupInfo, ApiResponse } from '../types'
 
 export class WorkspaceBackupService {
   /**
@@ -15,7 +12,7 @@ export class WorkspaceBackupService {
   ): Promise<ApiResponse<BackupInfo>> {
     return apiClient.invoke('create_workspace_backup', {
       workspace_id: workspaceId,
-      options: backupOptions || {}
+      options: backupOptions || {},
     })
   }
 
@@ -30,7 +27,7 @@ export class WorkspaceBackupService {
     return apiClient.invoke('restore_workspace_backup', {
       workspace_id: workspaceId,
       backup_id: backupId,
-      options: restoreOptions || {}
+      options: restoreOptions || {},
     })
   }
 
@@ -39,7 +36,7 @@ export class WorkspaceBackupService {
    */
   async listBackups(workspaceId: string): Promise<ApiResponse<BackupInfo[]>> {
     return apiClient.invoke('list_workspace_backups', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -48,7 +45,7 @@ export class WorkspaceBackupService {
    */
   async deleteBackup(backupId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('delete_workspace_backup', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
@@ -57,7 +54,7 @@ export class WorkspaceBackupService {
    */
   async getBackupDetails(backupId: string): Promise<ApiResponse<BackupInfo>> {
     return apiClient.invoke('get_backup_details', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
@@ -72,7 +69,7 @@ export class WorkspaceBackupService {
     return apiClient.invoke('schedule_workspace_backup', {
       workspace_id: workspaceId,
       schedule,
-      options: backupOptions || {}
+      options: backupOptions || {},
     })
   }
 
@@ -81,7 +78,7 @@ export class WorkspaceBackupService {
    */
   async cancelScheduledBackup(scheduleId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('cancel_scheduled_backup', {
-      schedule_id: scheduleId
+      schedule_id: scheduleId,
     })
   }
 
@@ -90,7 +87,7 @@ export class WorkspaceBackupService {
    */
   async verifyBackup(backupId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('verify_backup_integrity', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
@@ -103,7 +100,7 @@ export class WorkspaceBackupService {
   ): Promise<ApiResponse<BackupInfo>> {
     return apiClient.invoke('create_incremental_backup', {
       workspace_id: workspaceId,
-      last_backup_id: lastBackupId
+      last_backup_id: lastBackupId,
     })
   }
 
@@ -118,7 +115,7 @@ export class WorkspaceBackupService {
     return apiClient.invoke('export_backup', {
       backup_id: backupId,
       export_destination: exportDestination,
-      options: exportOptions || {}
+      options: exportOptions || {},
     })
   }
 
@@ -133,20 +130,17 @@ export class WorkspaceBackupService {
     return apiClient.invoke('import_backup', {
       import_source: importSource,
       workspace_id: workspaceId,
-      options: importOptions || {}
+      options: importOptions || {},
     })
   }
 
   /**
    * Compare backup versions
    */
-  async compareBackups(
-    backupId1: string,
-    backupId2: string
-  ): Promise<ApiResponse<unknown>> {
+  async compareBackups(backupId1: string, backupId2: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_backup_versions', {
       backup_id_1: backupId1,
-      backup_id_2: backupId2
+      backup_id_2: backupId2,
     })
   }
 
@@ -155,7 +149,7 @@ export class WorkspaceBackupService {
    */
   async getBackupStorageUsage(workspaceId?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_backup_storage_usage', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -168,7 +162,7 @@ export class WorkspaceBackupService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('cleanup_old_backups', {
       workspace_id: workspaceId,
-      retention_policy: retentionPolicy
+      retention_policy: retentionPolicy,
     })
   }
 
@@ -181,7 +175,7 @@ export class WorkspaceBackupService {
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_backup_retention_policy', {
       workspace_id: workspaceId,
-      retention_policy: retentionPolicy
+      retention_policy: retentionPolicy,
     })
   }
 
@@ -190,7 +184,7 @@ export class WorkspaceBackupService {
    */
   async getBackupStatus(backupId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_backup_status', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
@@ -199,7 +193,7 @@ export class WorkspaceBackupService {
    */
   async pauseBackup(backupId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('pause_backup_operation', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
@@ -208,20 +202,17 @@ export class WorkspaceBackupService {
    */
   async resumeBackup(backupId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('resume_backup_operation', {
-      backup_id: backupId
+      backup_id: backupId,
     })
   }
 
   /**
    * Get backup logs
    */
-  async getBackupLogs(
-    backupId: string,
-    logLevel?: string
-  ): Promise<ApiResponse<unknown[]>> {
+  async getBackupLogs(backupId: string, logLevel?: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_backup_logs', {
       backup_id: backupId,
-      log_level: logLevel || 'info'
+      log_level: logLevel || 'info',
     })
   }
 }

@@ -5,27 +5,33 @@ import {
   StyleAnalysis,
   StyleMetrics,
   StyleRecommendation,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class StyleAnalysisService {
   /**
    * Analyze document style and create style profile
    */
-  async analyzeDocumentStyle(documentId: string, options?: unknown): Promise<ApiResponse<StyleAnalysis>> {
+  async analyzeDocumentStyle(
+    documentId: string,
+    options?: unknown
+  ): Promise<ApiResponse<StyleAnalysis>> {
     return apiClient.invoke('analyze_document_style', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Create style profile from document
    */
-  async createStyleProfile(documentId: string, profileName: string): Promise<ApiResponse<StyleProfile>> {
+  async createStyleProfile(
+    documentId: string,
+    profileName: string
+  ): Promise<ApiResponse<StyleProfile>> {
     return apiClient.invoke('create_style_profile', {
       document_id: documentId,
-      profile_name: profileName
+      profile_name: profileName,
     })
   }
 
@@ -46,10 +52,13 @@ export class StyleAnalysisService {
   /**
    * Update style profile
    */
-  async updateStyleProfile(profileId: string, updates: Partial<StyleProfile>): Promise<ApiResponse<StyleProfile>> {
+  async updateStyleProfile(
+    profileId: string,
+    updates: Partial<StyleProfile>
+  ): Promise<ApiResponse<StyleProfile>> {
     return apiClient.invoke('update_style_profile', {
       profile_id: profileId,
-      ...updates
+      ...updates,
     })
   }
 
@@ -63,10 +72,13 @@ export class StyleAnalysisService {
   /**
    * Compare styles between documents
    */
-  async compareDocumentStyles(documentAId: string, documentBId: string): Promise<ApiResponse<unknown>> {
+  async compareDocumentStyles(
+    documentAId: string,
+    documentBId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_document_styles', {
       document_a_id: documentAId,
-      document_b_id: documentBId
+      document_b_id: documentBId,
     })
   }
 
@@ -101,10 +113,13 @@ export class StyleAnalysisService {
   /**
    * Learn style from multiple documents
    */
-  async learnStyleFromDocuments(documentIds: string[], styleName: string): Promise<ApiResponse<StyleProfile>> {
+  async learnStyleFromDocuments(
+    documentIds: string[],
+    styleName: string
+  ): Promise<ApiResponse<StyleProfile>> {
     return apiClient.invoke('learn_style_from_documents', {
       document_ids: documentIds,
-      style_name: styleName
+      style_name: styleName,
     })
   }
 
@@ -125,10 +140,13 @@ export class StyleAnalysisService {
   /**
    * Detect style anomalies
    */
-  async detectStyleAnomalies(documentId: string, referenceStyleId?: string): Promise<ApiResponse<unknown[]>> {
+  async detectStyleAnomalies(
+    documentId: string,
+    referenceStyleId?: string
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('detect_style_anomalies', {
       document_id: documentId,
-      reference_style_id: referenceStyleId
+      reference_style_id: referenceStyleId,
     })
   }
 
@@ -138,7 +156,7 @@ export class StyleAnalysisService {
   async generateStyleReport(documentId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_style_report', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 }

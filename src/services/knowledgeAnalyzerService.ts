@@ -6,38 +6,48 @@ import {
   KnowledgeBase,
   KnowledgeDomain,
   GapRecommendation,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class KnowledgeAnalyzerService {
   /**
    * Analyze knowledge gaps in workspace
    */
-  async analyzeKnowledgeGaps(workspaceId: string, options?: unknown): Promise<ApiResponse<KnowledgeGapAnalysis>> {
+  async analyzeKnowledgeGaps(
+    workspaceId: string,
+    options?: unknown
+  ): Promise<ApiResponse<KnowledgeGapAnalysis>> {
     return apiClient.invoke('analyze_knowledge_gaps', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Identify specific knowledge gap
    */
-  async identifyKnowledgeGap(documentId: string, domain?: string): Promise<ApiResponse<KnowledgeGap[]>> {
+  async identifyKnowledgeGap(
+    documentId: string,
+    domain?: string
+  ): Promise<ApiResponse<KnowledgeGap[]>> {
     return apiClient.invoke('identify_knowledge_gap', {
       document_id: documentId,
-      domain: domain
+      domain: domain,
     })
   }
 
   /**
    * Create knowledge base
    */
-  async createKnowledgeBase(name: string, description: string, workspaceId?: string): Promise<ApiResponse<KnowledgeBase>> {
+  async createKnowledgeBase(
+    name: string,
+    description: string,
+    workspaceId?: string
+  ): Promise<ApiResponse<KnowledgeBase>> {
     return apiClient.invoke('create_knowledge_base', {
       name,
       description,
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -51,10 +61,13 @@ export class KnowledgeAnalyzerService {
   /**
    * Update knowledge base
    */
-  async updateKnowledgeBase(knowledgeBaseId: string, updates: Partial<KnowledgeBase>): Promise<ApiResponse<KnowledgeBase>> {
+  async updateKnowledgeBase(
+    knowledgeBaseId: string,
+    updates: Partial<KnowledgeBase>
+  ): Promise<ApiResponse<KnowledgeBase>> {
     return apiClient.invoke('update_knowledge_base', {
       knowledge_base_id: knowledgeBaseId,
-      ...updates
+      ...updates,
     })
   }
 
@@ -68,20 +81,26 @@ export class KnowledgeAnalyzerService {
   /**
    * Add document to knowledge base
    */
-  async addDocumentToKnowledgeBase(knowledgeBaseId: string, documentId: string): Promise<ApiResponse<void>> {
+  async addDocumentToKnowledgeBase(
+    knowledgeBaseId: string,
+    documentId: string
+  ): Promise<ApiResponse<void>> {
     return apiClient.invoke('add_document_to_knowledge_base', {
       knowledge_base_id: knowledgeBaseId,
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
   /**
    * Remove document from knowledge base
    */
-  async removeDocumentFromKnowledgeBase(knowledgeBaseId: string, documentId: string): Promise<ApiResponse<void>> {
+  async removeDocumentFromKnowledgeBase(
+    knowledgeBaseId: string,
+    documentId: string
+  ): Promise<ApiResponse<void>> {
     return apiClient.invoke('remove_document_from_knowledge_base', {
       knowledge_base_id: knowledgeBaseId,
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -102,10 +121,13 @@ export class KnowledgeAnalyzerService {
   /**
    * Prioritize knowledge gaps
    */
-  async prioritizeKnowledgeGaps(workspaceId: string, criteria?: unknown): Promise<ApiResponse<KnowledgeGap[]>> {
+  async prioritizeKnowledgeGaps(
+    workspaceId: string,
+    criteria?: unknown
+  ): Promise<ApiResponse<KnowledgeGap[]>> {
     return apiClient.invoke('prioritize_knowledge_gaps', {
       workspace_id: workspaceId,
-      criteria: criteria || {}
+      criteria: criteria || {},
     })
   }
 
@@ -122,7 +144,7 @@ export class KnowledgeAnalyzerService {
   async markGapAsResolved(gapId: string, resolutionDetails: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('mark_gap_as_resolved', {
       gap_id: gapId,
-      resolution_details: resolutionDetails
+      resolution_details: resolutionDetails,
     })
   }
 
@@ -153,7 +175,7 @@ export class KnowledgeAnalyzerService {
   async extractKnowledge(documentIds: string[], domain?: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_knowledge', {
       document_ids: documentIds,
-      domain: domain
+      domain: domain,
     })
   }
 
@@ -167,10 +189,13 @@ export class KnowledgeAnalyzerService {
   /**
    * Get knowledge trends
    */
-  async getKnowledgeTrends(knowledgeBaseId: string, timeframe?: string): Promise<ApiResponse<unknown[]>> {
+  async getKnowledgeTrends(
+    knowledgeBaseId: string,
+    timeframe?: string
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_knowledge_trends', {
       knowledge_base_id: knowledgeBaseId,
-      timeframe: timeframe || 'last_30_days'
+      timeframe: timeframe || 'last_30_days',
     })
   }
 }

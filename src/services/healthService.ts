@@ -1,10 +1,6 @@
 // System Health Service
 import { apiClient } from '../api'
-import {
-  SystemHealth,
-  HealthMetrics,
-  ApiResponse
-} from '../types'
+import { SystemHealth, HealthMetrics, ApiResponse } from '../types'
 
 export class HealthService {
   /**
@@ -19,7 +15,7 @@ export class HealthService {
    */
   async getWorkspaceHealth(workspaceId: string): Promise<ApiResponse<HealthMetrics>> {
     return apiClient.invoke('get_workspace_health', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -130,7 +126,7 @@ export class HealthService {
   ): Promise<ApiResponse<HealthMetrics[]>> {
     return apiClient.invoke('get_health_history', {
       time_range: timeRange || '24h',
-      metrics: metrics || []
+      metrics: metrics || [],
     })
   }
 
@@ -139,20 +135,17 @@ export class HealthService {
    */
   async exportHealthReport(format?: 'json' | 'csv' | 'pdf'): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_health_report', {
-      format: format || 'json'
+      format: format || 'json',
     })
   }
 
   /**
    * Schedule health checks
    */
-  async scheduleHealthCheck(
-    schedule: string,
-    checkTypes: string[]
-  ): Promise<ApiResponse<string>> {
+  async scheduleHealthCheck(schedule: string, checkTypes: string[]): Promise<ApiResponse<string>> {
     return apiClient.invoke('schedule_health_check', {
       schedule,
-      check_types: checkTypes
+      check_types: checkTypes,
     })
   }
 
@@ -189,7 +182,7 @@ export class HealthService {
    */
   async clearHealthAlerts(alertIds?: string[]): Promise<ApiResponse<void>> {
     return apiClient.invoke('clear_health_alerts', {
-      alert_ids: alertIds || []
+      alert_ids: alertIds || [],
     })
   }
 }

@@ -8,7 +8,7 @@ import {
   EmbeddingSettings,
   EmbeddingJob,
   EmbeddingComparison,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class EmbeddingService {
@@ -19,7 +19,7 @@ export class EmbeddingService {
     return apiClient.invoke('generate_embeddings', {
       text: request.text,
       model: request.model,
-      options: request.options
+      options: request.options,
     })
   }
 
@@ -47,20 +47,26 @@ export class EmbeddingService {
   /**
    * Generate document embeddings
    */
-  async generateDocumentEmbeddings(documentId: string, model?: string): Promise<ApiResponse<EmbeddingResponse>> {
+  async generateDocumentEmbeddings(
+    documentId: string,
+    model?: string
+  ): Promise<ApiResponse<EmbeddingResponse>> {
     return apiClient.invoke('generate_document_embeddings', {
       document_id: documentId,
-      model: model
+      model: model,
     })
   }
 
   /**
    * Batch generate embeddings
    */
-  async batchGenerateEmbeddings(texts: string[], model?: string): Promise<ApiResponse<EmbeddingJob>> {
+  async batchGenerateEmbeddings(
+    texts: string[],
+    model?: string
+  ): Promise<ApiResponse<EmbeddingJob>> {
     return apiClient.invoke('batch_generate_embeddings', {
       texts,
-      model: model
+      model: model,
     })
   }
 
@@ -81,10 +87,13 @@ export class EmbeddingService {
   /**
    * Get cached embeddings
    */
-  async getCachedEmbeddings(textHash: string, model: string): Promise<ApiResponse<EmbeddingCache | null>> {
+  async getCachedEmbeddings(
+    textHash: string,
+    model: string
+  ): Promise<ApiResponse<EmbeddingCache | null>> {
     return apiClient.invoke('get_cached_embeddings', {
       text_hash: textHash,
-      model: model
+      model: model,
     })
   }
 
@@ -98,22 +107,30 @@ export class EmbeddingService {
   /**
    * Compare embeddings
    */
-  async compareEmbeddings(embeddingA: number[], embeddingB: number[], method?: string): Promise<ApiResponse<EmbeddingComparison>> {
+  async compareEmbeddings(
+    embeddingA: number[],
+    embeddingB: number[],
+    method?: string
+  ): Promise<ApiResponse<EmbeddingComparison>> {
     return apiClient.invoke('compare_embeddings', {
       embedding_a: embeddingA,
       embedding_b: embeddingB,
-      method: method || 'cosine'
+      method: method || 'cosine',
     })
   }
 
   /**
    * Find similar embeddings
    */
-  async findSimilarEmbeddings(embedding: number[], threshold?: number, limit?: number): Promise<ApiResponse<unknown[]>> {
+  async findSimilarEmbeddings(
+    embedding: number[],
+    threshold?: number,
+    limit?: number
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_similar_embeddings', {
       embedding,
       threshold: threshold || 0.7,
-      limit: limit || 10
+      limit: limit || 10,
     })
   }
 
@@ -127,7 +144,9 @@ export class EmbeddingService {
   /**
    * Update embedding settings
    */
-  async updateEmbeddingSettings(settings: Partial<EmbeddingSettings>): Promise<ApiResponse<EmbeddingSettings>> {
+  async updateEmbeddingSettings(
+    settings: Partial<EmbeddingSettings>
+  ): Promise<ApiResponse<EmbeddingSettings>> {
     return apiClient.invoke('update_embedding_settings', settings)
   }
 
@@ -143,7 +162,7 @@ export class EmbeddingService {
    */
   async getEmbeddingStatistics(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_embedding_statistics', {
-      timeframe: timeframe || 'last_30_days'
+      timeframe: timeframe || 'last_30_days',
     })
   }
 
@@ -157,10 +176,13 @@ export class EmbeddingService {
   /**
    * Export embeddings
    */
-  async exportEmbeddings(format: string, filters?: Record<string, unknown>): Promise<ApiResponse<string>> {
+  async exportEmbeddings(
+    format: string,
+    filters?: Record<string, unknown>
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_embeddings', {
       format,
-      filters: filters || {}
+      filters: filters || {},
     })
   }
 
@@ -170,27 +192,33 @@ export class EmbeddingService {
   async importEmbeddings(filePath: string, format: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('import_embeddings', {
       file_path: filePath,
-      format
+      format,
     })
   }
 
   /**
    * Cluster embeddings
    */
-  async clusterEmbeddings(embeddings: number[][], options?: unknown): Promise<ApiResponse<unknown[]>> {
+  async clusterEmbeddings(
+    embeddings: number[][],
+    options?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_embeddings', {
       embeddings,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Reduce embedding dimensions
    */
-  async reduceEmbeddingDimensions(embeddings: number[][], targetDimensions: number): Promise<ApiResponse<number[][]>> {
+  async reduceEmbeddingDimensions(
+    embeddings: number[][],
+    targetDimensions: number
+  ): Promise<ApiResponse<number[][]>> {
     return apiClient.invoke('reduce_embedding_dimensions', {
       embeddings,
-      target_dimensions: targetDimensions
+      target_dimensions: targetDimensions,
     })
   }
 
@@ -204,10 +232,13 @@ export class EmbeddingService {
   /**
    * Get embedding usage report
    */
-  async getEmbeddingUsageReport(startDate?: string, endDate?: string): Promise<ApiResponse<unknown>> {
+  async getEmbeddingUsageReport(
+    startDate?: string,
+    endDate?: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_embedding_usage_report', {
       start_date: startDate,
-      end_date: endDate
+      end_date: endDate,
     })
   }
 }

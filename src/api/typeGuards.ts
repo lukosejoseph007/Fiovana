@@ -8,7 +8,7 @@ import {
   KnowledgeGap,
   SearchResult,
   EmbeddingResponse,
-  Conversation
+  Conversation,
 } from '../types'
 
 /**
@@ -44,10 +44,7 @@ export function isStringOrDate(value: unknown): value is string | Date {
   return isString(value) || isDate(value)
 }
 
-export function hasProperty<T extends string>(
-  obj: unknown,
-  prop: T
-): obj is Record<T, unknown> {
+export function hasProperty<T extends string>(obj: unknown, prop: T): obj is Record<T, unknown> {
   return isObject(obj) && prop in obj
 }
 
@@ -75,7 +72,14 @@ export function isWorkspaceConfig(value: unknown): value is WorkspaceConfig {
 export function isWorkspaceAnalysis(value: unknown): value is WorkspaceAnalysis {
   return (
     isObject(value) &&
-    hasProperties(value, 'overview', 'health', 'insights', 'performanceMetrics', 'organizationSuggestions') &&
+    hasProperties(
+      value,
+      'overview',
+      'health',
+      'insights',
+      'performanceMetrics',
+      'organizationSuggestions'
+    ) &&
     isObject(value.overview) &&
     isObject(value.health) &&
     isArray(value.insights) &&
@@ -88,7 +92,17 @@ export function isWorkspaceAnalysis(value: unknown): value is WorkspaceAnalysis 
 export function isDocument(value: unknown): value is Document {
   return (
     isObject(value) &&
-    hasProperties(value, 'id', 'name', 'path', 'type', 'size', 'createdAt', 'updatedAt', 'metadata') &&
+    hasProperties(
+      value,
+      'id',
+      'name',
+      'path',
+      'type',
+      'size',
+      'createdAt',
+      'updatedAt',
+      'metadata'
+    ) &&
     isString(value.id) &&
     isString(value.name) &&
     isString(value.path) &&
@@ -103,7 +117,15 @@ export function isDocument(value: unknown): value is Document {
 export function isDocumentComparison(value: unknown): value is DocumentComparison {
   return (
     isObject(value) &&
-    hasProperties(value, 'documentA', 'documentB', 'similarity', 'differences', 'commonElements', 'analysis') &&
+    hasProperties(
+      value,
+      'documentA',
+      'documentB',
+      'similarity',
+      'differences',
+      'commonElements',
+      'analysis'
+    ) &&
     isString(value.documentA) &&
     isString(value.documentB) &&
     isNumber(value.similarity) &&
@@ -117,7 +139,16 @@ export function isDocumentComparison(value: unknown): value is DocumentCompariso
 export function isStyleProfile(value: unknown): value is StyleProfile {
   return (
     isObject(value) &&
-    hasProperties(value, 'id', 'name', 'source', 'features', 'patterns', 'confidence', 'createdAt') &&
+    hasProperties(
+      value,
+      'id',
+      'name',
+      'source',
+      'features',
+      'patterns',
+      'confidence',
+      'createdAt'
+    ) &&
     isString(value.id) &&
     isString(value.name) &&
     isString(value.source) &&
@@ -132,7 +163,17 @@ export function isStyleProfile(value: unknown): value is StyleProfile {
 export function isKnowledgeGap(value: unknown): value is KnowledgeGap {
   return (
     isObject(value) &&
-    hasProperties(value, 'id', 'type', 'severity', 'description', 'impact', 'suggestedSources', 'priority', 'identifiedAt') &&
+    hasProperties(
+      value,
+      'id',
+      'type',
+      'severity',
+      'description',
+      'impact',
+      'suggestedSources',
+      'priority',
+      'identifiedAt'
+    ) &&
     isString(value.id) &&
     isString(value.type) &&
     isString(value.severity) &&
@@ -161,7 +202,15 @@ export function isSearchResult(value: unknown): value is SearchResult {
 export function isEmbeddingResponse(value: unknown): value is EmbeddingResponse {
   return (
     isObject(value) &&
-    hasProperties(value, 'embeddings', 'model', 'dimensions', 'tokenUsage', 'processingTime', 'metadata') &&
+    hasProperties(
+      value,
+      'embeddings',
+      'model',
+      'dimensions',
+      'tokenUsage',
+      'processingTime',
+      'metadata'
+    ) &&
     isArray(value.embeddings) &&
     isString(value.model) &&
     isNumber(value.dimensions) &&
@@ -175,7 +224,18 @@ export function isEmbeddingResponse(value: unknown): value is EmbeddingResponse 
 export function isConversation(value: unknown): value is Conversation {
   return (
     isObject(value) &&
-    hasProperties(value, 'id', 'title', 'participants', 'messages', 'context', 'metadata', 'createdAt', 'updatedAt', 'status') &&
+    hasProperties(
+      value,
+      'id',
+      'title',
+      'participants',
+      'messages',
+      'context',
+      'metadata',
+      'createdAt',
+      'updatedAt',
+      'status'
+    ) &&
     isString(value.id) &&
     isString(value.title) &&
     isArray(value.participants) &&
@@ -250,7 +310,7 @@ export class ObjectValidator {
     return {
       valid: errors.length === 0,
       errors,
-      path: this.path.join('.')
+      path: this.path.join('.'),
     }
   }
 
@@ -307,14 +367,14 @@ export function validateRequired(value: unknown, name: string): ValidationResult
     return {
       valid: false,
       errors: [`${name} is required`],
-      path: name
+      path: name,
     }
   }
 
   return {
     valid: true,
     errors: [],
-    path: name
+    path: name,
   }
 }
 
@@ -336,7 +396,7 @@ export function validateNumberRange(
     return {
       valid: false,
       errors: [`${name} must be a number`],
-      path: name
+      path: name,
     }
   }
 
@@ -344,13 +404,13 @@ export function validateNumberRange(
     return {
       valid: false,
       errors: [`${name} must be between ${min} and ${max}`],
-      path: name
+      path: name,
     }
   }
 
   return {
     valid: true,
     errors: [],
-    path: name
+    path: name,
   }
 }

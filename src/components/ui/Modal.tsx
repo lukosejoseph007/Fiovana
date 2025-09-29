@@ -1,18 +1,18 @@
-import React, { useEffect, useRef } from 'react';
-import { designTokens } from '../../styles/tokens';
+import React, { useEffect, useRef } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  variant?: 'default' | 'glass';
-  closeOnOverlayClick?: boolean;
-  closeOnEscape?: boolean;
-  showCloseButton?: boolean;
-  title?: string;
-  children: React.ReactNode;
-  className?: string;
-  overlayClassName?: string;
+  isOpen: boolean
+  onClose: () => void
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  variant?: 'default' | 'glass'
+  closeOnOverlayClick?: boolean
+  closeOnEscape?: boolean
+  showCloseButton?: boolean
+  title?: string
+  children: React.ReactNode
+  className?: string
+  overlayClassName?: string
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -28,59 +28,59 @@ const Modal: React.FC<ModalProps> = ({
   className = '',
   overlayClassName = '',
 }) => {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   // Handle escape key
   useEffect(() => {
-    if (!closeOnEscape) return;
+    if (!closeOnEscape) return
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
-        onClose();
+        onClose()
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose, closeOnEscape]);
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose, closeOnEscape])
 
   // Focus management
   useEffect(() => {
     if (isOpen) {
       // Store the previously focused element
-      previousFocusRef.current = document.activeElement as HTMLElement;
+      previousFocusRef.current = document.activeElement as HTMLElement
 
       // Focus the modal
       if (modalRef.current) {
-        modalRef.current.focus();
+        modalRef.current.focus()
       }
 
       // Prevent body scroll
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden'
     } else {
       // Restore focus
       if (previousFocusRef.current) {
-        previousFocusRef.current.focus();
+        previousFocusRef.current.focus()
       }
 
       // Restore body scroll
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = 'unset'
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
 
   // Handle overlay click
   const handleOverlayClick = (event: React.MouseEvent) => {
     if (closeOnOverlayClick && event.target === event.currentTarget) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const overlayStyles = {
     position: 'fixed' as const,
@@ -96,7 +96,7 @@ const Modal: React.FC<ModalProps> = ({
     padding: designTokens.spacing[4],
     zIndex: designTokens.zIndex.modal,
     animation: 'fadeIn 0.2s ease-out',
-  };
+  }
 
   // Size variants
   const sizeStyles = {
@@ -122,23 +122,22 @@ const Modal: React.FC<ModalProps> = ({
       maxWidth: 'none',
       maxHeight: 'none',
     },
-  };
+  }
 
   const modalStyles = {
-    backgroundColor: variant === 'glass'
-      ? designTokens.colors.glass.white10
-      : designTokens.colors.surface.secondary,
+    backgroundColor:
+      variant === 'glass'
+        ? designTokens.colors.glass.white10
+        : designTokens.colors.surface.secondary,
     backdropFilter: variant === 'glass' ? designTokens.colors.glass.backdrop : 'none',
     border: `1px solid ${designTokens.colors.border.subtle}`,
     borderRadius: designTokens.borderRadius.xl,
-    boxShadow: variant === 'glass'
-      ? designTokens.shadows.glassStrong
-      : designTokens.shadows['2xl'],
+    boxShadow: variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows['2xl'],
     outline: 'none',
     overflow: 'hidden',
     animation: 'scaleIn 0.2s ease-out',
     ...sizeStyles[size],
-  };
+  }
 
   const headerStyles = {
     padding: designTokens.layout.modal.padding,
@@ -146,7 +145,7 @@ const Modal: React.FC<ModalProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-  };
+  }
 
   const titleStyles = {
     fontSize: designTokens.typography.fontSize.xl,
@@ -154,7 +153,7 @@ const Modal: React.FC<ModalProps> = ({
     color: designTokens.colors.text.primary,
     margin: 0,
     fontFamily: designTokens.typography.fonts.sans.join(', '),
-  };
+  }
 
   const closeButtonStyles = {
     background: 'none',
@@ -169,14 +168,14 @@ const Modal: React.FC<ModalProps> = ({
     width: '32px',
     height: '32px',
     transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
-  };
+  }
 
   const contentStyles = {
     padding: designTokens.layout.modal.padding,
     maxHeight: size === 'full' ? 'calc(95vh - 120px)' : '70vh',
     overflowY: 'auto' as const,
     color: designTokens.colors.text.primary,
-  };
+  }
 
   return (
     <>
@@ -275,16 +274,13 @@ const Modal: React.FC<ModalProps> = ({
             </div>
           )}
 
-          <div
-            className="proxemic-modal-content"
-            style={contentStyles}
-          >
+          <div className="proxemic-modal-content" style={contentStyles}>
             {children}
           </div>
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal

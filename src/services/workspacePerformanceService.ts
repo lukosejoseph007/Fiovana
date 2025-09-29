@@ -1,9 +1,6 @@
 // Workspace Performance Service
 import { apiClient } from '../api'
-import {
-  PerformanceMetrics,
-  ApiResponse
-} from '../types'
+import { PerformanceMetrics, ApiResponse } from '../types'
 
 export class WorkspacePerformanceService {
   /**
@@ -11,7 +8,7 @@ export class WorkspacePerformanceService {
    */
   async monitorPerformance(workspaceId: string): Promise<ApiResponse<PerformanceMetrics>> {
     return apiClient.invoke('monitor_workspace_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -24,7 +21,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<PerformanceMetrics[]>> {
     return apiClient.invoke('get_workspace_performance_history', {
       workspace_id: workspaceId,
-      time_range: timeRange || '7d'
+      time_range: timeRange || '7d',
     })
   }
 
@@ -33,7 +30,7 @@ export class WorkspacePerformanceService {
    */
   async analyzeBottlenecks(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_performance_bottlenecks', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -46,7 +43,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_workspace_performance', {
       workspace_id: workspaceId,
-      options: optimizationOptions || {}
+      options: optimizationOptions || {},
     })
   }
 
@@ -55,7 +52,7 @@ export class WorkspacePerformanceService {
    */
   async monitorDocumentProcessing(workspaceId: string): Promise<ApiResponse<PerformanceMetrics>> {
     return apiClient.invoke('monitor_document_processing_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -64,7 +61,7 @@ export class WorkspacePerformanceService {
    */
   async monitorSearchPerformance(workspaceId: string): Promise<ApiResponse<PerformanceMetrics>> {
     return apiClient.invoke('monitor_search_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -73,7 +70,7 @@ export class WorkspacePerformanceService {
    */
   async monitorAIPerformance(workspaceId: string): Promise<ApiResponse<PerformanceMetrics>> {
     return apiClient.invoke('monitor_ai_service_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -82,7 +79,7 @@ export class WorkspacePerformanceService {
    */
   async getPerformanceAlerts(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_performance_alerts', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -95,7 +92,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_performance_thresholds', {
       workspace_id: workspaceId,
-      thresholds
+      thresholds,
     })
   }
 
@@ -108,18 +105,16 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_performance_report', {
       workspace_id: workspaceId,
-      options: reportOptions || {}
+      options: reportOptions || {},
     })
   }
 
   /**
    * Compare performance across workspaces
    */
-  async compareWorkspacePerformance(
-    workspaceIds: string[]
-  ): Promise<ApiResponse<unknown>> {
+  async compareWorkspacePerformance(workspaceIds: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_workspace_performance', {
-      workspace_ids: workspaceIds
+      workspace_ids: workspaceIds,
     })
   }
 
@@ -128,7 +123,7 @@ export class WorkspacePerformanceService {
    */
   async predictPerformanceTrends(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_performance_trends', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -137,7 +132,7 @@ export class WorkspacePerformanceService {
    */
   async monitorResourceUtilization(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('monitor_resource_utilization', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -146,7 +141,7 @@ export class WorkspacePerformanceService {
    */
   async analyzeQueryPerformance(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_query_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -155,7 +150,7 @@ export class WorkspacePerformanceService {
    */
   async optimizeIndexPerformance(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_index_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -164,7 +159,7 @@ export class WorkspacePerformanceService {
    */
   async monitorCachePerformance(workspaceId: string): Promise<ApiResponse<PerformanceMetrics>> {
     return apiClient.invoke('monitor_cache_performance', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -177,7 +172,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('clear_performance_alerts', {
       workspace_id: workspaceId,
-      alert_ids: alertIds || []
+      alert_ids: alertIds || [],
     })
   }
 
@@ -190,7 +185,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('schedule_performance_analysis', {
       workspace_id: workspaceId,
-      schedule
+      schedule,
     })
   }
 
@@ -203,7 +198,7 @@ export class WorkspacePerformanceService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_performance_metrics', {
       workspace_id: workspaceId,
-      format: format || 'json'
+      format: format || 'json',
     })
   }
 }

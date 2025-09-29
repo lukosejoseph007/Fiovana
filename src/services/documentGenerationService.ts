@@ -1,72 +1,89 @@
 // Document Generation Service
 import { apiClient } from '../api'
-import {
-  DocumentGeneration,
-  GenerationMetadata,
-  ApiResponse
-} from '../types'
+import { DocumentGeneration, GenerationMetadata, ApiResponse } from '../types'
 
 export class DocumentGenerationService {
   /**
    * Generate document from template
    */
-  async generateFromTemplate(templateId: string, parameters: Record<string, unknown>, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromTemplate(
+    templateId: string,
+    parameters: Record<string, unknown>,
+    options?: unknown
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_template', {
       template_id: templateId,
       parameters,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate document from prompt
    */
-  async generateFromPrompt(prompt: string, format: string, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromPrompt(
+    prompt: string,
+    format: string,
+    options?: unknown
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_prompt', {
       prompt,
       format,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate document outline
    */
-  async generateOutline(topic: string, documentType: string, options?: unknown): Promise<ApiResponse<unknown>> {
+  async generateOutline(
+    topic: string,
+    documentType: string,
+    options?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_document_outline', {
       topic,
       document_type: documentType,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate content sections
    */
-  async generateContentSections(outline: unknown, parameters?: unknown): Promise<ApiResponse<unknown[]>> {
+  async generateContentSections(
+    outline: unknown,
+    parameters?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_content_sections', {
       outline,
-      parameters: parameters || {}
+      parameters: parameters || {},
     })
   }
 
   /**
    * Expand document section
    */
-  async expandDocumentSection(sectionId: string, targetLength?: number): Promise<ApiResponse<string>> {
+  async expandDocumentSection(
+    sectionId: string,
+    targetLength?: number
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('expand_document_section', {
       section_id: sectionId,
-      target_length: targetLength
+      target_length: targetLength,
     })
   }
 
   /**
    * Generate document summary
    */
-  async generateDocumentSummary(documentId: string, options?: unknown): Promise<ApiResponse<string>> {
+  async generateDocumentSummary(
+    documentId: string,
+    options?: unknown
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_document_summary', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -76,37 +93,46 @@ export class DocumentGenerationService {
   async generateBibliography(sources: unknown[], style: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_bibliography', {
       sources,
-      style
+      style,
     })
   }
 
   /**
    * Generate table of contents
    */
-  async generateTableOfContents(documentId: string, options?: unknown): Promise<ApiResponse<unknown>> {
+  async generateTableOfContents(
+    documentId: string,
+    options?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_table_of_contents', {
       document_id: documentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate document variations
    */
-  async generateDocumentVariations(documentId: string, variationTypes: string[]): Promise<ApiResponse<DocumentGeneration[]>> {
+  async generateDocumentVariations(
+    documentId: string,
+    variationTypes: string[]
+  ): Promise<ApiResponse<DocumentGeneration[]>> {
     return apiClient.invoke('generate_document_variations', {
       document_id: documentId,
-      variation_types: variationTypes
+      variation_types: variationTypes,
     })
   }
 
   /**
    * Auto-complete document
    */
-  async autoCompleteDocument(documentId: string, fromPosition?: number): Promise<ApiResponse<string>> {
+  async autoCompleteDocument(
+    documentId: string,
+    fromPosition?: number
+  ): Promise<ApiResponse<string>> {
     return apiClient.invoke('auto_complete_document', {
       document_id: documentId,
-      from_position: fromPosition
+      from_position: fromPosition,
     })
   }
 
@@ -127,20 +153,26 @@ export class DocumentGenerationService {
   /**
    * Improve generated content
    */
-  async improveGeneratedContent(generationId: string, improvementType: string): Promise<ApiResponse<DocumentGeneration>> {
+  async improveGeneratedContent(
+    generationId: string,
+    improvementType: string
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('improve_generated_content', {
       generation_id: generationId,
-      improvement_type: improvementType
+      improvement_type: improvementType,
     })
   }
 
   /**
    * Generate content with constraints
    */
-  async generateWithConstraints(prompt: string, constraints: unknown): Promise<ApiResponse<DocumentGeneration>> {
+  async generateWithConstraints(
+    prompt: string,
+    constraints: unknown
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_content_with_constraints', {
       prompt,
-      constraints
+      constraints,
     })
   }
 
@@ -175,31 +207,41 @@ export class DocumentGenerationService {
   /**
    * Generate document from data
    */
-  async generateFromData(data: unknown, templateType: string, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromData(
+    data: unknown,
+    templateType: string,
+    options?: unknown
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_data', {
       data,
       template_type: templateType,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Generate multilingual content
    */
-  async generateMultilingualContent(prompt: string, languages: string[]): Promise<ApiResponse<DocumentGeneration[]>> {
+  async generateMultilingualContent(
+    prompt: string,
+    languages: string[]
+  ): Promise<ApiResponse<DocumentGeneration[]>> {
     return apiClient.invoke('generate_multilingual_content', {
       prompt,
-      languages
+      languages,
     })
   }
 
   /**
    * Customize generation parameters
    */
-  async customizeGenerationParameters(generationId: string, parameters: unknown): Promise<ApiResponse<DocumentGeneration>> {
+  async customizeGenerationParameters(
+    generationId: string,
+    parameters: unknown
+  ): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('customize_generation_parameters', {
       generation_id: generationId,
-      parameters
+      parameters,
     })
   }
 }

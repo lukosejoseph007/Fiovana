@@ -1,17 +1,17 @@
-import React from 'react';
-import { designTokens } from '../../styles/tokens';
+import React from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface ProgressProps {
-  value: number;
-  max?: number;
-  variant?: 'default' | 'confidence' | 'health' | 'ai';
-  size?: 'sm' | 'md' | 'lg';
-  showLabel?: boolean;
-  label?: string;
-  showPercentage?: boolean;
-  animated?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
+  value: number
+  max?: number
+  variant?: 'default' | 'confidence' | 'health' | 'ai'
+  size?: 'sm' | 'md' | 'lg'
+  showLabel?: boolean
+  label?: string
+  showPercentage?: boolean
+  animated?: boolean
+  className?: string
+  style?: React.CSSProperties
 }
 
 const Progress: React.FC<ProgressProps> = ({
@@ -26,7 +26,7 @@ const Progress: React.FC<ProgressProps> = ({
   className = '',
   style,
 }) => {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
 
   // Size variants
   const sizeStyles = {
@@ -42,32 +42,32 @@ const Progress: React.FC<ProgressProps> = ({
       height: '8px',
       fontSize: designTokens.typography.fontSize.base,
     },
-  };
+  }
 
   // Variant colors
   const getVariantColor = () => {
     switch (variant) {
       case 'confidence':
-        if (percentage >= 80) return designTokens.colors.confidence.high;
-        if (percentage >= 60) return designTokens.colors.confidence.medium;
-        if (percentage >= 40) return designTokens.colors.confidence.low;
-        return designTokens.colors.confidence.critical;
+        if (percentage >= 80) return designTokens.colors.confidence.high
+        if (percentage >= 60) return designTokens.colors.confidence.medium
+        if (percentage >= 40) return designTokens.colors.confidence.low
+        return designTokens.colors.confidence.critical
       case 'health':
-        if (percentage >= 90) return designTokens.colors.confidence.high;
-        if (percentage >= 70) return designTokens.colors.confidence.medium;
-        if (percentage >= 50) return designTokens.colors.confidence.low;
-        return designTokens.colors.confidence.critical;
+        if (percentage >= 90) return designTokens.colors.confidence.high
+        if (percentage >= 70) return designTokens.colors.confidence.medium
+        if (percentage >= 50) return designTokens.colors.confidence.low
+        return designTokens.colors.confidence.critical
       case 'ai':
-        return designTokens.colors.accent.ai;
+        return designTokens.colors.accent.ai
       default:
-        return designTokens.colors.accent.semantic;
+        return designTokens.colors.accent.semantic
     }
-  };
+  }
 
   const containerStyles = {
     width: '100%',
     ...style,
-  };
+  }
 
   const trackStyles = {
     width: '100%',
@@ -77,17 +77,19 @@ const Progress: React.FC<ProgressProps> = ({
     overflow: 'hidden' as const,
     position: 'relative' as const,
     border: `1px solid ${designTokens.colors.border.subtle}`,
-  };
+  }
 
   const fillStyles = {
     height: '100%',
     width: `${percentage}%`,
     backgroundColor: getVariantColor(),
     borderRadius: 'inherit',
-    transition: animated ? `width ${designTokens.animation.duration.slow} ${designTokens.animation.easing.easeOut}` : 'none',
+    transition: animated
+      ? `width ${designTokens.animation.duration.slow} ${designTokens.animation.easing.easeOut}`
+      : 'none',
     position: 'relative' as const,
     overflow: 'hidden' as const,
-  };
+  }
 
   const labelContainerStyles = {
     display: 'flex',
@@ -97,7 +99,7 @@ const Progress: React.FC<ProgressProps> = ({
     fontSize: sizeStyles[size].fontSize,
     color: designTokens.colors.text.primary,
     fontFamily: designTokens.typography.fonts.sans.join(', '),
-  };
+  }
 
   const percentageStyles = {
     fontSize: sizeStyles[size].fontSize,
@@ -105,24 +107,27 @@ const Progress: React.FC<ProgressProps> = ({
     fontWeight: designTokens.typography.fontWeight.medium,
     minWidth: '3ch',
     textAlign: 'right' as const,
-  };
+  }
 
   // Animated shimmer effect for AI variant
-  const shimmerStyles = variant === 'ai' && animated ? {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: `linear-gradient(
+  const shimmerStyles =
+    variant === 'ai' && animated
+      ? {
+          position: 'absolute' as const,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(
       90deg,
       transparent,
       rgba(255, 255, 255, 0.2),
       transparent
     )`,
-    animation: 'shimmer 2s infinite',
-    transform: 'translateX(-100%)',
-  } : {};
+          animation: 'shimmer 2s infinite',
+          transform: 'translateX(-100%)',
+        }
+      : {}
 
   return (
     <>
@@ -149,11 +154,7 @@ const Progress: React.FC<ProgressProps> = ({
                 {label || `Progress`}
               </span>
             )}
-            {showPercentage && (
-              <span style={percentageStyles}>
-                {Math.round(percentage)}%
-              </span>
-            )}
+            {showPercentage && <span style={percentageStyles}>{Math.round(percentage)}%</span>}
           </div>
         )}
 
@@ -171,20 +172,20 @@ const Progress: React.FC<ProgressProps> = ({
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
 // Specialized progress components for common use cases
-export const ConfidenceProgress: React.FC<Omit<ProgressProps, 'variant'>> = (props) => (
+export const ConfidenceProgress: React.FC<Omit<ProgressProps, 'variant'>> = props => (
   <Progress {...props} variant="confidence" />
-);
+)
 
-export const HealthProgress: React.FC<Omit<ProgressProps, 'variant'>> = (props) => (
+export const HealthProgress: React.FC<Omit<ProgressProps, 'variant'>> = props => (
   <Progress {...props} variant="health" />
-);
+)
 
-export const AIProgress: React.FC<Omit<ProgressProps, 'variant'>> = (props) => (
+export const AIProgress: React.FC<Omit<ProgressProps, 'variant'>> = props => (
   <Progress {...props} variant="ai" animated />
-);
+)
 
-export default Progress;
+export default Progress

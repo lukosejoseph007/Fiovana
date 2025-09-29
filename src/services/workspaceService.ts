@@ -7,18 +7,20 @@ import {
   WorkspaceMetrics,
   WorkspaceComparison,
   WorkspaceBackup,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class WorkspaceService {
   /**
    * Create a new workspace
    */
-  async createWorkspace(config: Omit<WorkspaceConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<WorkspaceConfig>> {
+  async createWorkspace(
+    config: Omit<WorkspaceConfig, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<ApiResponse<WorkspaceConfig>> {
     return apiClient.invoke('create_workspace', {
       name: config.name,
       path: config.path,
-      description: config.description
+      description: config.description,
     })
   }
 
@@ -32,10 +34,13 @@ export class WorkspaceService {
   /**
    * Update workspace configuration
    */
-  async updateWorkspace(workspaceId: string, updates: Partial<WorkspaceConfig>): Promise<ApiResponse<WorkspaceConfig>> {
+  async updateWorkspace(
+    workspaceId: string,
+    updates: Partial<WorkspaceConfig>
+  ): Promise<ApiResponse<WorkspaceConfig>> {
     return apiClient.invoke('update_workspace', {
       workspace_id: workspaceId,
-      ...updates
+      ...updates,
     })
   }
 
@@ -77,10 +82,13 @@ export class WorkspaceService {
   /**
    * Compare two workspaces
    */
-  async compareWorkspaces(workspaceAId: string, workspaceBId: string): Promise<ApiResponse<WorkspaceComparison>> {
+  async compareWorkspaces(
+    workspaceAId: string,
+    workspaceBId: string
+  ): Promise<ApiResponse<WorkspaceComparison>> {
     return apiClient.invoke('compare_workspaces', {
       workspace_a_id: workspaceAId,
-      workspace_b_id: workspaceBId
+      workspace_b_id: workspaceBId,
     })
   }
 
@@ -97,17 +105,20 @@ export class WorkspaceService {
   async optimizeWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_workspace', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Backup workspace
    */
-  async backupWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<WorkspaceBackup>> {
+  async backupWorkspace(
+    workspaceId: string,
+    options?: unknown
+  ): Promise<ApiResponse<WorkspaceBackup>> {
     return apiClient.invoke('backup_workspace', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -145,7 +156,7 @@ export class WorkspaceService {
   async configureWorkspaceAI(workspaceId: string, config: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('configure_workspace_ai', {
       workspace_id: workspaceId,
-      config
+      config,
     })
   }
 
@@ -159,10 +170,13 @@ export class WorkspaceService {
   /**
    * Generate workspace report
    */
-  async generateWorkspaceReport(workspaceId: string, reportType: string): Promise<ApiResponse<unknown>> {
+  async generateWorkspaceReport(
+    workspaceId: string,
+    reportType: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_workspace_report', {
       workspace_id: workspaceId,
-      report_type: reportType
+      report_type: reportType,
     })
   }
 
@@ -172,7 +186,7 @@ export class WorkspaceService {
   async getActivityFeed(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_activity', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 }

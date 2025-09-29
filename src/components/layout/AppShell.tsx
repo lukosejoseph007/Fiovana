@@ -1,56 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { designTokens } from '../../styles/tokens';
-import { LayoutContext } from './useLayoutContext';
+import React, { useState, useEffect } from 'react'
+import { designTokens } from '../../styles/tokens'
+import { LayoutContext, useLayout } from './useLayoutContext'
 
 export interface AppShellProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface LayoutContextType {
-  navigationCollapsed: boolean;
-  intelligenceCollapsed: boolean;
-  toggleNavigation: () => void;
-  toggleIntelligence: () => void;
-  isMobile: boolean;
-  isTablet: boolean;
-  isDesktop: boolean;
+  navigationCollapsed: boolean
+  intelligenceCollapsed: boolean
+  toggleNavigation: () => void
+  toggleIntelligence: () => void
+  isMobile: boolean
+  isTablet: boolean
+  isDesktop: boolean
 }
 
 const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) => {
-  const [navigationCollapsed, setNavigationCollapsed] = useState(false);
-  const [intelligenceCollapsed, setIntelligenceCollapsed] = useState(false);
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [navigationCollapsed, setNavigationCollapsed] = useState(false)
+  const [intelligenceCollapsed, setIntelligenceCollapsed] = useState(false)
+  const [viewport, setViewport] = useState({ width: 0, height: 0 })
 
   // Responsive breakpoint detection
   useEffect(() => {
     const updateViewport = () => {
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
-    };
+      setViewport({ width: window.innerWidth, height: window.innerHeight })
+    }
 
-    updateViewport();
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
-  }, []);
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
 
-  const isMobile = viewport.width < parseInt(designTokens.breakpoints.mobile);
-  const isTablet = viewport.width >= parseInt(designTokens.breakpoints.mobile) &&
-                   viewport.width < parseInt(designTokens.breakpoints.desktop);
-  const isDesktop = viewport.width >= parseInt(designTokens.breakpoints.desktop);
+  const isMobile = viewport.width < parseInt(designTokens.breakpoints.mobile)
+  const isTablet =
+    viewport.width >= parseInt(designTokens.breakpoints.mobile) &&
+    viewport.width < parseInt(designTokens.breakpoints.desktop)
+  const isDesktop = viewport.width >= parseInt(designTokens.breakpoints.desktop)
 
   // Auto-collapse panels on smaller screens
   useEffect(() => {
     if (isMobile) {
-      setNavigationCollapsed(true);
-      setIntelligenceCollapsed(true);
+      setNavigationCollapsed(true)
+      setIntelligenceCollapsed(true)
     } else if (isTablet) {
-      setIntelligenceCollapsed(true);
+      setIntelligenceCollapsed(true)
     }
-  }, [isMobile, isTablet]);
+  }, [isMobile, isTablet])
 
-  const toggleNavigation = () => setNavigationCollapsed(!navigationCollapsed);
-  const toggleIntelligence = () => setIntelligenceCollapsed(!intelligenceCollapsed);
+  const toggleNavigation = () => setNavigationCollapsed(!navigationCollapsed)
+  const toggleIntelligence = () => setIntelligenceCollapsed(!intelligenceCollapsed)
 
   const layoutContextValue: LayoutContextType = {
     navigationCollapsed,
@@ -60,7 +61,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
     isMobile,
     isTablet,
     isDesktop,
-  };
+  }
 
   const containerStyles = {
     display: 'flex',
@@ -71,8 +72,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
     fontFamily: designTokens.typography.fonts.sans.join(', '),
     overflow: 'hidden',
     ...style,
-  };
-
+  }
 
   return (
     <LayoutContext.Provider value={layoutContextValue}>
@@ -80,18 +80,18 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
         {children}
       </div>
     </LayoutContext.Provider>
-  );
-};
+  )
+}
 
 // Header Component
 export interface HeaderProps {
-  children?: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children?: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Header: React.FC<HeaderProps> = ({ children, className = '', style }) => {
-  const { isMobile, toggleNavigation, toggleIntelligence } = useLayout();
+  const { isMobile, toggleNavigation, toggleIntelligence } = useLayout()
 
   const headerStyles = {
     height: designTokens.layout.header.height,
@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({ children, className = '', style 
     zIndex: designTokens.zIndex.sticky,
     flexShrink: 0,
     ...style,
-  };
+  }
 
   return (
     <header className={`proxemic-header ${className}`} style={headerStyles}>
@@ -127,7 +127,14 @@ export const Header: React.FC<HeaderProps> = ({ children, className = '', style 
             }}
             aria-label="Toggle navigation"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="18" x2="21" y2="18" />
@@ -147,7 +154,14 @@ export const Header: React.FC<HeaderProps> = ({ children, className = '', style 
             }}
             aria-label="Toggle intelligence panel"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <circle cx="12" cy="12" r="3" />
               <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
             </svg>
@@ -155,14 +169,14 @@ export const Header: React.FC<HeaderProps> = ({ children, className = '', style 
         </div>
       )}
     </header>
-  );
-};
+  )
+}
 
 // Main Layout Container
 export interface MainProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Main: React.FC<MainProps> = ({ children, className = '', style }) => {
@@ -172,29 +186,30 @@ export const Main: React.FC<MainProps> = ({ children, className = '', style }) =
     overflow: 'hidden',
     position: 'relative' as const,
     ...style,
-  };
+  }
 
   return (
     <main className={`proxemic-main ${className}`} style={mainStyles}>
       {children}
     </main>
-  );
-};
+  )
+}
 
 // Navigation Panel
 export interface NavigationProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ children, className = '', style }) => {
-  const { navigationCollapsed, isMobile, isDesktop } = useLayout();
+  const { navigationCollapsed, isMobile, isDesktop } = useLayout()
 
-  const shouldShow = isDesktop || (!navigationCollapsed && !isDesktop);
-  const width = navigationCollapsed && isDesktop
-    ? designTokens.layout.navigation.collapsedWidth
-    : designTokens.layout.navigation.width;
+  const shouldShow = isDesktop || (!navigationCollapsed && !isDesktop)
+  const width =
+    navigationCollapsed && isDesktop
+      ? designTokens.layout.navigation.collapsedWidth
+      : designTokens.layout.navigation.width
 
   const navigationStyles = {
     width: shouldShow ? width : '0',
@@ -203,23 +218,23 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
     borderRight: shouldShow ? `1px solid ${designTokens.colors.border.subtle}` : 'none',
     overflow: 'hidden' as const,
     transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.easeOut}`,
-    position: isMobile ? 'absolute' as const : 'relative' as const,
+    position: isMobile ? ('absolute' as const) : ('relative' as const),
     top: isMobile ? 0 : 'auto',
     left: isMobile ? 0 : 'auto',
     height: isMobile ? '100%' : 'auto',
     zIndex: isMobile ? designTokens.zIndex.overlay : 'auto',
     flexShrink: 0,
     ...style,
-  };
+  }
 
   const contentStyles = {
     width: designTokens.layout.navigation.width,
     height: '100%',
     overflow: 'auto' as const,
     padding: designTokens.spacing[4],
-  };
+  }
 
-  if (!shouldShow) return null;
+  if (!shouldShow) return null
 
   return (
     <>
@@ -239,19 +254,17 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
       )}
 
       <nav className={`proxemic-navigation ${className}`} style={navigationStyles}>
-        <div style={contentStyles}>
-          {children}
-        </div>
+        <div style={contentStyles}>{children}</div>
       </nav>
     </>
-  );
-};
+  )
+}
 
 // Document Canvas
 export interface CanvasProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Canvas: React.FC<CanvasProps> = ({ children, className = '', style }) => {
@@ -263,26 +276,26 @@ export const Canvas: React.FC<CanvasProps> = ({ children, className = '', style 
     minWidth: designTokens.layout.canvas.minWidth,
     padding: designTokens.layout.canvas.padding,
     ...style,
-  };
+  }
 
   return (
     <div className={`proxemic-canvas ${className}`} style={canvasStyles}>
       {children}
     </div>
-  );
-};
+  )
+}
 
 // Intelligence Panel
 export interface IntelligenceProps {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
 }
 
 export const Intelligence: React.FC<IntelligenceProps> = ({ children, className = '', style }) => {
-  const { intelligenceCollapsed, isMobile, isDesktop } = useLayout();
+  const { intelligenceCollapsed, isMobile, isDesktop } = useLayout()
 
-  const shouldShow = isDesktop && !intelligenceCollapsed;
+  const shouldShow = isDesktop && !intelligenceCollapsed
 
   const intelligenceStyles = {
     width: shouldShow ? designTokens.layout.intelligence.width : '0',
@@ -292,23 +305,23 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
     borderLeft: shouldShow ? `1px solid ${designTokens.colors.border.subtle}` : 'none',
     overflow: 'hidden' as const,
     transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.easeOut}`,
-    position: isMobile ? 'absolute' as const : 'relative' as const,
+    position: isMobile ? ('absolute' as const) : ('relative' as const),
     top: isMobile ? 0 : 'auto',
     right: isMobile ? 0 : 'auto',
     height: isMobile ? '100%' : 'auto',
     zIndex: isMobile ? designTokens.zIndex.overlay : 'auto',
     flexShrink: 0,
     ...style,
-  };
+  }
 
   const contentStyles = {
     width: designTokens.layout.intelligence.width,
     height: '100%',
     overflow: 'auto' as const,
     padding: designTokens.spacing[4],
-  };
+  }
 
-  if (!shouldShow) return null;
+  if (!shouldShow) return null
 
   return (
     <>
@@ -328,19 +341,26 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
       )}
 
       <aside className={`proxemic-intelligence ${className}`} style={intelligenceStyles}>
-        <div style={contentStyles}>
-          {children}
-        </div>
+        <div style={contentStyles}>{children}</div>
       </aside>
     </>
-  );
-};
+  )
+}
 
-// Compound component pattern
-AppShell.Header = Header;
-AppShell.Main = Main;
-AppShell.Navigation = Navigation;
-AppShell.Canvas = Canvas;
-AppShell.Intelligence = Intelligence;
+// Compound component pattern with proper typing
+interface AppShellComponent extends React.FC<AppShellProps> {
+  Header: typeof Header
+  Main: typeof Main
+  Navigation: typeof Navigation
+  Canvas: typeof Canvas
+  Intelligence: typeof Intelligence
+}
 
-export default AppShell;
+const AppShellWithSubComponents = AppShell as AppShellComponent
+AppShellWithSubComponents.Header = Header
+AppShellWithSubComponents.Main = Main
+AppShellWithSubComponents.Navigation = Navigation
+AppShellWithSubComponents.Canvas = Canvas
+AppShellWithSubComponents.Intelligence = Intelligence
+
+export default AppShellWithSubComponents

@@ -9,14 +9,14 @@ export enum ErrorType {
   RATE_LIMIT = 'RATE_LIMIT',
   SERVER_ERROR = 'SERVER_ERROR',
   CLIENT_ERROR = 'CLIENT_ERROR',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
 }
 
 export enum ErrorSeverity {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export interface ErrorContext {
@@ -85,7 +85,7 @@ export class ApiError extends Error {
       retryable: this.retryable,
       retryAfter: this.retryAfter,
       suggestions: this.suggestions,
-      documentation: this.documentation
+      documentation: this.documentation,
     }
   }
 }
@@ -168,7 +168,7 @@ export class ErrorHandler {
       errorsByType: Object.fromEntries(typeCount),
       errorsBySeverity: Object.fromEntries(severityCount),
       lastError: this.errorLog[this.errorLog.length - 1],
-      errorRate: this.calculateErrorRate()
+      errorRate: this.calculateErrorRate(),
     }
   }
 
@@ -194,13 +194,13 @@ export class ErrorHandler {
     const timestamp = Date.now()
     const fullContext: ErrorContext = {
       timestamp,
-      ...context
+      ...context,
     }
 
     if (error instanceof ApiError) {
       return {
         ...error.toJSON(),
-        context: { ...error.context, ...fullContext }
+        context: { ...error.context, ...fullContext },
       }
     }
 
@@ -214,10 +214,10 @@ export class ErrorHandler {
         message: error.message,
         context: {
           ...fullContext,
-          stackTrace: error.stack
+          stackTrace: error.stack,
         },
         retryable,
-        suggestions
+        suggestions,
       }
     }
 
@@ -230,7 +230,7 @@ export class ErrorHandler {
       message,
       context: fullContext,
       retryable: false,
-      suggestions: ['Check the error details and try again']
+      suggestions: ['Check the error details and try again'],
     }
   }
 
@@ -247,12 +247,16 @@ export class ErrorHandler {
     const name = error.name.toLowerCase()
 
     // Network-related errors
-    if (message.includes('network') || message.includes('connection') || message.includes('fetch')) {
+    if (
+      message.includes('network') ||
+      message.includes('connection') ||
+      message.includes('fetch')
+    ) {
       return {
         type: ErrorType.NETWORK,
         severity: ErrorSeverity.HIGH,
         retryable: true,
-        suggestions: ['Check your internet connection', 'Try again in a few moments']
+        suggestions: ['Check your internet connection', 'Try again in a few moments'],
       }
     }
 
@@ -262,17 +266,21 @@ export class ErrorHandler {
         type: ErrorType.TIMEOUT,
         severity: ErrorSeverity.MEDIUM,
         retryable: true,
-        suggestions: ['The operation took too long', 'Try breaking the task into smaller parts']
+        suggestions: ['The operation took too long', 'Try breaking the task into smaller parts'],
       }
     }
 
     // Validation errors
-    if (message.includes('validation') || message.includes('invalid') || name.includes('validation')) {
+    if (
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      name.includes('validation')
+    ) {
       return {
         type: ErrorType.VALIDATION,
         severity: ErrorSeverity.LOW,
         retryable: false,
-        suggestions: ['Check the input parameters', 'Ensure all required fields are provided']
+        suggestions: ['Check the input parameters', 'Ensure all required fields are provided'],
       }
     }
 
@@ -282,7 +290,7 @@ export class ErrorHandler {
         type: ErrorType.AUTHENTICATION,
         severity: ErrorSeverity.HIGH,
         retryable: false,
-        suggestions: ['Check your authentication credentials', 'You may need to log in again']
+        suggestions: ['Check your authentication credentials', 'You may need to log in again'],
       }
     }
 
@@ -292,7 +300,7 @@ export class ErrorHandler {
         type: ErrorType.AUTHORIZATION,
         severity: ErrorSeverity.HIGH,
         retryable: false,
-        suggestions: ['You do not have permission for this operation', 'Contact an administrator']
+        suggestions: ['You do not have permission for this operation', 'Contact an administrator'],
       }
     }
 
@@ -302,7 +310,7 @@ export class ErrorHandler {
         type: ErrorType.NOT_FOUND,
         severity: ErrorSeverity.MEDIUM,
         retryable: false,
-        suggestions: ['The requested resource was not found', 'Check the path or identifier']
+        suggestions: ['The requested resource was not found', 'Check the path or identifier'],
       }
     }
 
@@ -312,7 +320,7 @@ export class ErrorHandler {
         type: ErrorType.RATE_LIMIT,
         severity: ErrorSeverity.MEDIUM,
         retryable: true,
-        suggestions: ['You are making requests too quickly', 'Wait a moment before trying again']
+        suggestions: ['You are making requests too quickly', 'Wait a moment before trying again'],
       }
     }
 
@@ -322,7 +330,7 @@ export class ErrorHandler {
         type: ErrorType.SERVER_ERROR,
         severity: ErrorSeverity.HIGH,
         retryable: true,
-        suggestions: ['There was a server error', 'Try again later or contact support']
+        suggestions: ['There was a server error', 'Try again later or contact support'],
       }
     }
 
@@ -331,7 +339,7 @@ export class ErrorHandler {
       type: ErrorType.CLIENT_ERROR,
       severity: ErrorSeverity.MEDIUM,
       retryable: false,
-      suggestions: ['An unexpected error occurred', 'Check the error details for more information']
+      suggestions: ['An unexpected error occurred', 'Check the error details for more information'],
     }
   }
 
@@ -395,19 +403,19 @@ export class ErrorHandler {
     this.registerRecoveryStrategy(ErrorType.NETWORK, {
       type: 'retry',
       config: { maxRetries: 3, backoff: 'exponential' },
-      description: 'Retry network requests with exponential backoff'
+      description: 'Retry network requests with exponential backoff',
     })
 
     this.registerRecoveryStrategy(ErrorType.TIMEOUT, {
       type: 'retry',
       config: { maxRetries: 2, timeout: 'extended' },
-      description: 'Retry with extended timeout'
+      description: 'Retry with extended timeout',
     })
 
     this.registerRecoveryStrategy(ErrorType.RATE_LIMIT, {
       type: 'retry',
       config: { respectRetryAfter: true },
-      description: 'Retry after rate limit reset'
+      description: 'Retry after rate limit reset',
     })
   }
 

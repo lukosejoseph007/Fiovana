@@ -5,29 +5,37 @@ import {
   ConversionOptions,
   ConversionResult,
   ConversionMetadata,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class FormatConversionService {
   /**
    * Convert document format
    */
-  async convertDocument(documentId: string, targetFormat: string, options?: ConversionOptions): Promise<ApiResponse<FormatConversion>> {
+  async convertDocument(
+    documentId: string,
+    targetFormat: string,
+    options?: ConversionOptions
+  ): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_document_format', {
       document_id: documentId,
       target_format: targetFormat,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Convert file by path
    */
-  async convertFile(filePath: string, targetFormat: string, options?: ConversionOptions): Promise<ApiResponse<ConversionResult>> {
+  async convertFile(
+    filePath: string,
+    targetFormat: string,
+    options?: ConversionOptions
+  ): Promise<ApiResponse<ConversionResult>> {
     return apiClient.invoke('convert_file_format', {
       file_path: filePath,
       target_format: targetFormat,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -48,11 +56,15 @@ export class FormatConversionService {
   /**
    * Batch convert documents
    */
-  async batchConvert(documentIds: string[], targetFormat: string, options?: ConversionOptions): Promise<ApiResponse<FormatConversion[]>> {
+  async batchConvert(
+    documentIds: string[],
+    targetFormat: string,
+    options?: ConversionOptions
+  ): Promise<ApiResponse<FormatConversion[]>> {
     return apiClient.invoke('batch_convert_documents', {
       document_ids: documentIds,
       target_format: targetFormat,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -62,7 +74,7 @@ export class FormatConversionService {
   async previewConversion(documentId: string, targetFormat: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_format_conversion', {
       document_id: documentId,
-      target_format: targetFormat
+      target_format: targetFormat,
     })
   }
 
@@ -97,21 +109,28 @@ export class FormatConversionService {
   /**
    * Optimize conversion settings
    */
-  async optimizeConversionSettings(sourceFormat: string, targetFormat: string): Promise<ApiResponse<ConversionOptions>> {
+  async optimizeConversionSettings(
+    sourceFormat: string,
+    targetFormat: string
+  ): Promise<ApiResponse<ConversionOptions>> {
     return apiClient.invoke('optimize_conversion_settings', {
       source_format: sourceFormat,
-      target_format: targetFormat
+      target_format: targetFormat,
     })
   }
 
   /**
    * Convert with custom mapping
    */
-  async convertWithMapping(documentId: string, targetFormat: string, mapping: Record<string, string>): Promise<ApiResponse<FormatConversion>> {
+  async convertWithMapping(
+    documentId: string,
+    targetFormat: string,
+    mapping: Record<string, string>
+  ): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_with_custom_mapping', {
       document_id: documentId,
       target_format: targetFormat,
-      mapping
+      mapping,
     })
   }
 
@@ -125,10 +144,13 @@ export class FormatConversionService {
   /**
    * Compare conversion results
    */
-  async compareConversionResults(conversionAId: string, conversionBId: string): Promise<ApiResponse<unknown>> {
+  async compareConversionResults(
+    conversionAId: string,
+    conversionBId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_conversion_results', {
       conversion_a_id: conversionAId,
-      conversion_b_id: conversionBId
+      conversion_b_id: conversionBId,
     })
   }
 
@@ -142,21 +164,28 @@ export class FormatConversionService {
   /**
    * Validate format compatibility
    */
-  async validateFormatCompatibility(sourceFormat: string, targetFormat: string): Promise<ApiResponse<boolean>> {
+  async validateFormatCompatibility(
+    sourceFormat: string,
+    targetFormat: string
+  ): Promise<ApiResponse<boolean>> {
     return apiClient.invoke('validate_format_compatibility', {
       source_format: sourceFormat,
-      target_format: targetFormat
+      target_format: targetFormat,
     })
   }
 
   /**
    * Convert with preservation rules
    */
-  async convertWithPreservation(documentId: string, targetFormat: string, preservationRules: unknown): Promise<ApiResponse<FormatConversion>> {
+  async convertWithPreservation(
+    documentId: string,
+    targetFormat: string,
+    preservationRules: unknown
+  ): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_with_preservation', {
       document_id: documentId,
       target_format: targetFormat,
-      preservation_rules: preservationRules
+      preservation_rules: preservationRules,
     })
   }
 
@@ -186,7 +215,7 @@ export class FormatConversionService {
    */
   async getConversionAnalytics(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_conversion_analytics', {
-      timeframe: timeframe || 'last_30_days'
+      timeframe: timeframe || 'last_30_days',
     })
   }
 }

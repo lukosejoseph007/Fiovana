@@ -1,14 +1,14 @@
-import React from 'react';
-import { designTokens } from '../../styles/tokens';
+import React from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'confidence' | 'status' | 'health' | 'ai' | 'success' | 'warning' | 'error';
-  size?: 'sm' | 'md' | 'lg';
-  shape?: 'rounded' | 'pill' | 'square';
-  dot?: boolean;
-  outlined?: boolean;
-  pulsing?: boolean;
-  children?: React.ReactNode;
+  variant?: 'default' | 'confidence' | 'status' | 'health' | 'ai' | 'success' | 'warning' | 'error'
+  size?: 'sm' | 'md' | 'lg'
+  shape?: 'rounded' | 'pill' | 'square'
+  dot?: boolean
+  outlined?: boolean
+  pulsing?: boolean
+  children?: React.ReactNode
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -49,14 +49,14 @@ const Badge: React.FC<BadgeProps> = ({
       lineHeight: '1',
       minWidth: dot ? '12px' : '28px',
     },
-  };
+  }
 
   // Shape variants
   const shapeStyles = {
     rounded: { borderRadius: designTokens.borderRadius.md },
     pill: { borderRadius: designTokens.borderRadius.full },
     square: { borderRadius: designTokens.borderRadius.sm },
-  };
+  }
 
   // Variant colors
   const getVariantStyles = () => {
@@ -68,7 +68,9 @@ const Badge: React.FC<BadgeProps> = ({
       },
       confidence: {
         backgroundColor: outlined ? 'transparent' : designTokens.colors.confidence.medium,
-        color: outlined ? designTokens.colors.confidence.medium : designTokens.colors.surface.primary,
+        color: outlined
+          ? designTokens.colors.confidence.medium
+          : designTokens.colors.surface.primary,
         border: `1px solid ${designTokens.colors.confidence.medium}`,
       },
       status: {
@@ -98,13 +100,15 @@ const Badge: React.FC<BadgeProps> = ({
       },
       error: {
         backgroundColor: outlined ? 'transparent' : designTokens.colors.confidence.critical,
-        color: outlined ? designTokens.colors.confidence.critical : designTokens.colors.surface.primary,
+        color: outlined
+          ? designTokens.colors.confidence.critical
+          : designTokens.colors.surface.primary,
         border: `1px solid ${designTokens.colors.confidence.critical}`,
       },
-    };
+    }
 
-    return variants[variant];
-  };
+    return variants[variant]
+  }
 
   const baseStyles = {
     display: 'inline-flex',
@@ -118,7 +122,7 @@ const Badge: React.FC<BadgeProps> = ({
     position: 'relative' as const,
     transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
     width: dot ? sizeStyles[size].minWidth : 'auto',
-  };
+  }
 
   const combinedStyles = {
     ...baseStyles,
@@ -126,12 +130,14 @@ const Badge: React.FC<BadgeProps> = ({
     ...shapeStyles[shape],
     ...getVariantStyles(),
     ...style,
-  };
+  }
 
   // Pulsing animation
-  const pulsingStyles = pulsing ? {
-    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-  } : {};
+  const pulsingStyles = pulsing
+    ? {
+        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      }
+    : {}
 
   return (
     <>
@@ -158,53 +164,44 @@ const Badge: React.FC<BadgeProps> = ({
         {!dot && children}
       </span>
     </>
-  );
-};
+  )
+}
 
 // Specialized badge components for common use cases
-export const StatusBadge: React.FC<Omit<BadgeProps, 'variant'> & { status: 'online' | 'offline' | 'away' | 'busy' }> = ({
-  status,
-  ...props
-}) => {
+export const StatusBadge: React.FC<
+  Omit<BadgeProps, 'variant'> & { status: 'online' | 'offline' | 'away' | 'busy' }
+> = ({ status, ...props }) => {
   const statusVariants = {
     online: { variant: 'success' as const, children: 'Online' },
     offline: { variant: 'default' as const, children: 'Offline' },
     away: { variant: 'warning' as const, children: 'Away' },
     busy: { variant: 'error' as const, children: 'Busy' },
-  };
+  }
 
-  return <Badge {...props} {...statusVariants[status]} />;
-};
+  return <Badge {...props} {...statusVariants[status]} />
+}
 
-export const ConfidenceBadge: React.FC<Omit<BadgeProps, 'variant' | 'children'> & { confidence: number }> = ({
-  confidence,
-  ...props
-}) => {
+export const ConfidenceBadge: React.FC<
+  Omit<BadgeProps, 'variant' | 'children'> & { confidence: number }
+> = ({ confidence, ...props }) => {
   const getConfidenceVariant = () => {
-    if (confidence >= 80) return 'success';
-    if (confidence >= 60) return 'confidence';
-    if (confidence >= 40) return 'warning';
-    return 'error';
-  };
+    if (confidence >= 80) return 'success'
+    if (confidence >= 60) return 'confidence'
+    if (confidence >= 40) return 'warning'
+    return 'error'
+  }
 
   return (
     <Badge {...props} variant={getConfidenceVariant() as BadgeProps['variant']}>
       {Math.round(confidence)}%
     </Badge>
-  );
-};
+  )
+}
 
-export const AIStatusBadge: React.FC<Omit<BadgeProps, 'variant' | 'children'> & { thinking?: boolean }> = ({
-  thinking = false,
-  ...props
-}) => (
-  <Badge
-    {...props}
-    variant="ai"
-    pulsing={thinking}
-    dot
-    size="sm"
-  />
-);
+export const AIStatusBadge: React.FC<
+  Omit<BadgeProps, 'variant' | 'children'> & { thinking?: boolean }
+> = ({ thinking = false, ...props }) => (
+  <Badge {...props} variant="ai" pulsing={thinking} dot size="sm" />
+)
 
-export default Badge;
+export default Badge

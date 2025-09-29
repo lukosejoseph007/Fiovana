@@ -1,18 +1,18 @@
-import React from 'react';
-import { designTokens } from '../../styles/tokens';
+import React from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface AvatarProps {
-  src?: string;
-  alt?: string;
-  name?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  variant?: 'circular' | 'rounded' | 'square';
-  status?: 'online' | 'offline' | 'away' | 'busy';
-  showStatus?: boolean;
-  fallbackIcon?: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-  onClick?: () => void;
+  src?: string
+  alt?: string
+  name?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  variant?: 'circular' | 'rounded' | 'square'
+  status?: 'online' | 'offline' | 'away' | 'busy'
+  showStatus?: boolean
+  fallbackIcon?: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  onClick?: () => void
 }
 
 const Avatar: React.FC<AvatarProps> = ({
@@ -60,14 +60,14 @@ const Avatar: React.FC<AvatarProps> = ({
       height: '80px',
       fontSize: designTokens.typography.fontSize['2xl'],
     },
-  };
+  }
 
   // Variant styles
   const variantStyles = {
     circular: { borderRadius: designTokens.borderRadius.full },
     rounded: { borderRadius: designTokens.borderRadius.lg },
     square: { borderRadius: designTokens.borderRadius.md },
-  };
+  }
 
   // Status colors
   const statusColors = {
@@ -75,7 +75,7 @@ const Avatar: React.FC<AvatarProps> = ({
     offline: designTokens.colors.text.tertiary,
     away: designTokens.colors.confidence.medium,
     busy: designTokens.colors.confidence.critical,
-  };
+  }
 
   // Generate initials from name
   const getInitials = (name: string) => {
@@ -84,12 +84,12 @@ const Avatar: React.FC<AvatarProps> = ({
       .map(word => word.charAt(0))
       .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   // Generate background color from name
   const getBackgroundColor = (name: string) => {
-    if (!name) return designTokens.colors.surface.tertiary;
+    if (!name) return designTokens.colors.surface.tertiary
 
     const colors = [
       designTokens.colors.accent.ai,
@@ -97,15 +97,15 @@ const Avatar: React.FC<AvatarProps> = ({
       designTokens.colors.confidence.medium,
       designTokens.colors.accent.info,
       designTokens.colors.confidence.low,
-    ];
+    ]
 
-    let hash = 0;
+    let hash = 0
     for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
     }
 
-    return colors[Math.abs(hash) % colors.length];
-  };
+    return colors[Math.abs(hash) % colors.length]
+  }
 
   const baseStyles = {
     position: 'relative' as const,
@@ -125,14 +125,14 @@ const Avatar: React.FC<AvatarProps> = ({
     ...sizeStyles[size],
     ...variantStyles[variant],
     ...style,
-  };
+  }
 
   const imageStyles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover' as const,
     objectPosition: 'center',
-  };
+  }
 
   const statusIndicatorSize = {
     xs: '8px',
@@ -141,7 +141,7 @@ const Avatar: React.FC<AvatarProps> = ({
     lg: '14px',
     xl: '16px',
     '2xl': '20px',
-  };
+  }
 
   const statusStyles = {
     position: 'absolute' as const,
@@ -153,7 +153,7 @@ const Avatar: React.FC<AvatarProps> = ({
     border: `2px solid ${designTokens.colors.surface.secondary}`,
     borderRadius: designTokens.borderRadius.full,
     transform: 'translate(25%, 25%)',
-  };
+  }
 
   const DefaultIcon = () => (
     <svg
@@ -169,7 +169,7 @@ const Avatar: React.FC<AvatarProps> = ({
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
-  );
+  )
 
   return (
     <>
@@ -204,9 +204,9 @@ const Avatar: React.FC<AvatarProps> = ({
             src={src}
             alt={alt || (name ? `Avatar for ${name}` : 'Avatar')}
             style={imageStyles}
-            onError={(e) => {
+            onError={e => {
               // Hide image on error to show fallback
-              (e.target as HTMLImageElement).style.display = 'none';
+              ;(e.target as HTMLImageElement).style.display = 'none'
             }}
           />
         ) : name ? (
@@ -217,24 +217,19 @@ const Avatar: React.FC<AvatarProps> = ({
           <DefaultIcon />
         )}
 
-        {showStatus && status && (
-          <div
-            style={statusStyles}
-            aria-label={`Status: ${status}`}
-          />
-        )}
+        {showStatus && status && <div style={statusStyles} aria-label={`Status: ${status}`} />}
       </div>
     </>
-  );
-};
+  )
+}
 
 // Avatar Group for displaying multiple avatars
 export interface AvatarGroupProps {
-  avatars: Array<Omit<AvatarProps, 'size'> & { id: string }>;
-  size?: AvatarProps['size'];
-  max?: number;
-  spacing?: 'tight' | 'normal' | 'loose';
-  className?: string;
+  avatars: Array<Omit<AvatarProps, 'size'> & { id: string }>
+  size?: AvatarProps['size']
+  max?: number
+  spacing?: 'tight' | 'normal' | 'loose'
+  className?: string
 }
 
 export const AvatarGroup: React.FC<AvatarGroupProps> = ({
@@ -244,30 +239,30 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
   spacing = 'normal',
   className = '',
 }) => {
-  const visibleAvatars = avatars.slice(0, max);
-  const remainingCount = Math.max(0, avatars.length - max);
+  const visibleAvatars = avatars.slice(0, max)
+  const remainingCount = Math.max(0, avatars.length - max)
 
   const spacingValues = {
     tight: '-8px',
     normal: '-4px',
     loose: '4px',
-  };
+  }
 
   const groupStyles = {
     display: 'flex',
     alignItems: 'center',
-  };
+  }
 
   const avatarWrapperStyles = {
     marginLeft: spacingValues[spacing],
     position: 'relative' as const,
     zIndex: 1,
-  };
+  }
 
   const remainingStyles = {
     ...avatarWrapperStyles,
     zIndex: 0,
-  };
+  }
 
   return (
     <div className={`proxemic-avatar-group ${className}`} style={groupStyles}>
@@ -297,7 +292,7 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Avatar;
+export default Avatar

@@ -20,7 +20,7 @@ export type {
   BatchSummary,
   StreamProgress,
   StreamChunk,
-  PerformanceMetric
+  PerformanceMetric,
 } from './client'
 
 export type {
@@ -31,22 +31,17 @@ export type {
   CommandModule,
   ValidationResult,
   CommandHelp,
-  ParameterInfo
+  ParameterInfo,
 } from './commandRegistry'
 
 export type {
   ErrorContext,
   ErrorDetail,
   ErrorRecoveryStrategy,
-  ErrorStatistics
+  ErrorStatistics,
 } from './errorHandler'
 
-export type {
-  EventSubscriber,
-  SubscriptionOptions,
-  Event,
-  EventMetrics
-} from './eventBus'
+export type { EventSubscriber, SubscriptionOptions, Event, EventMetrics } from './eventBus'
 
 // Convenience function to initialize the entire API system
 export async function initializeApiSystem(): Promise<void> {
@@ -55,11 +50,11 @@ export async function initializeApiSystem(): Promise<void> {
     await commandRegistry.initialize()
 
     // Set up global error handling
-    errorHandler.onError((error) => {
+    errorHandler.onError(error => {
       // Emit error events for system-wide error handling
       eventBus.emit('system:error', {
         error: error.toJSON(),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
       // Log critical errors
@@ -88,11 +83,11 @@ function setupPerformanceMonitoring(): void {
     eventBus.emit('system:performance', {
       api: {
         commandMetrics: Object.fromEntries(metrics),
-        totalCommands: metrics.size
+        totalCommands: metrics.size,
       },
       events: eventMetrics,
       errors: errorStats,
-      timestamp: new Date()
+      timestamp: new Date(),
     })
   }, 30000) // Every 30 seconds
 }

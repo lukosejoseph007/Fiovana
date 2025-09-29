@@ -1,9 +1,6 @@
 // Content Classification Service
 import { apiClient } from '../api'
-import {
-  ContentClassification,
-  ApiResponse
-} from '../types'
+import { ContentClassification, ApiResponse } from '../types'
 
 export class ContentClassificationService {
   /**
@@ -11,7 +8,7 @@ export class ContentClassificationService {
    */
   async classifyContentType(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_content_type', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -20,7 +17,7 @@ export class ContentClassificationService {
    */
   async classifyTopic(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_topic', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -29,7 +26,7 @@ export class ContentClassificationService {
    */
   async classifySentiment(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_sentiment', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -38,7 +35,7 @@ export class ContentClassificationService {
    */
   async classifyComplexity(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_complexity', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -47,7 +44,7 @@ export class ContentClassificationService {
    */
   async classifyAudience(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_audience', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -56,7 +53,7 @@ export class ContentClassificationService {
    */
   async classifyUrgency(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_urgency', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -65,7 +62,7 @@ export class ContentClassificationService {
    */
   async classifyFormat(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_format', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -74,7 +71,7 @@ export class ContentClassificationService {
    */
   async classifyQuality(documentId: string): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('classify_quality', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -87,7 +84,7 @@ export class ContentClassificationService {
   ): Promise<ApiResponse<ContentClassification[]>> {
     return apiClient.invoke('classify_multi_dimensional', {
       document_id: documentId,
-      dimensions
+      dimensions,
     })
   }
 
@@ -100,7 +97,7 @@ export class ContentClassificationService {
   ): Promise<ApiResponse<ContentClassification[]>> {
     return apiClient.invoke('batch_classify_content', {
       document_ids: documentIds,
-      classification_types: classificationTypes
+      classification_types: classificationTypes,
     })
   }
 
@@ -113,7 +110,7 @@ export class ContentClassificationService {
   ): Promise<ApiResponse<number>> {
     return apiClient.invoke('get_classification_confidence', {
       document_id: documentId,
-      classification_type: classificationType
+      classification_type: classificationType,
     })
   }
 
@@ -126,7 +123,7 @@ export class ContentClassificationService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('train_custom_classifier', {
       training_data: trainingData,
-      classifier_config: classifierConfig
+      classifier_config: classifierConfig,
     })
   }
 
@@ -139,16 +136,18 @@ export class ContentClassificationService {
   ): Promise<ApiResponse<ContentClassification>> {
     return apiClient.invoke('apply_custom_classifier', {
       document_id: documentId,
-      classifier_model_id: classifierModelId
+      classifier_model_id: classifierModelId,
     })
   }
 
   /**
    * Get classification history for document
    */
-  async getClassificationHistory(documentId: string): Promise<ApiResponse<ContentClassification[]>> {
+  async getClassificationHistory(
+    documentId: string
+  ): Promise<ApiResponse<ContentClassification[]>> {
     return apiClient.invoke('get_classification_history', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 }

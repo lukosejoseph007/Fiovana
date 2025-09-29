@@ -1,9 +1,6 @@
 // Content Adaptation Service
 import { apiClient } from '../api'
-import {
-  ContentAdaptation,
-  ApiResponse
-} from '../types'
+import { ContentAdaptation, ApiResponse } from '../types'
 
 export class ContentAdaptationService {
   /**
@@ -17,7 +14,7 @@ export class ContentAdaptationService {
     return apiClient.invoke('adapt_content_for_audience', {
       document_id: documentId,
       target_audience: targetAudience,
-      options: adaptationOptions || {}
+      options: adaptationOptions || {},
     })
   }
 
@@ -32,7 +29,7 @@ export class ContentAdaptationService {
     return apiClient.invoke('adapt_content_for_format', {
       document_id: documentId,
       target_format: targetFormat,
-      options: formatOptions || {}
+      options: formatOptions || {},
     })
   }
 
@@ -47,7 +44,7 @@ export class ContentAdaptationService {
     return apiClient.invoke('adapt_content_complexity', {
       document_id: documentId,
       complexity_level: complexityLevel,
-      options: adaptationOptions || {}
+      options: adaptationOptions || {},
     })
   }
 
@@ -62,7 +59,7 @@ export class ContentAdaptationService {
     return apiClient.invoke('adapt_content_length', {
       document_id: documentId,
       target_length: targetLength,
-      options: lengthOptions || {}
+      options: lengthOptions || {},
     })
   }
 
@@ -77,7 +74,7 @@ export class ContentAdaptationService {
     return apiClient.invoke('adapt_content_tone', {
       document_id: documentId,
       target_tone: targetTone,
-      options: toneOptions || {}
+      options: toneOptions || {},
     })
   }
 
@@ -87,14 +84,14 @@ export class ContentAdaptationService {
   async batchAdaptContent(
     documentId: string,
     adaptations: Array<{
-      type: 'audience' | 'format' | 'complexity' | 'length' | 'tone',
-      target: string | number,
+      type: 'audience' | 'format' | 'complexity' | 'length' | 'tone'
+      target: string | number
       options?: unknown
     }>
   ): Promise<ApiResponse<ContentAdaptation[]>> {
     return apiClient.invoke('batch_adapt_content', {
       document_id: documentId,
-      adaptations
+      adaptations,
     })
   }
 
@@ -103,7 +100,7 @@ export class ContentAdaptationService {
    */
   async getAdaptationHistory(documentId: string): Promise<ApiResponse<ContentAdaptation[]>> {
     return apiClient.invoke('get_adaptation_history', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -120,7 +117,7 @@ export class ContentAdaptationService {
       document_id: documentId,
       adaptation_type: adaptationType,
       adaptation_target: adaptationTarget,
-      options: previewOptions || {}
+      options: previewOptions || {},
     })
   }
 
@@ -133,7 +130,7 @@ export class ContentAdaptationService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_adaptation_requirements', {
       document_id: documentId,
-      target_context: targetContext
+      target_context: targetContext,
     })
   }
 }

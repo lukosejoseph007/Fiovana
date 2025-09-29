@@ -1,12 +1,18 @@
 // Centralized Tauri invoke wrapper
 import { ApiResponse } from '../types'
 
+interface CacheEntry {
+  data: unknown
+  timestamp: number
+  ttl: number
+}
+
 // Mock implementation for development
 const mockTauri = {
   invoke: async (command: string, args: unknown = {}) => {
     console.log(`[MOCK] Tauri command: ${command}`, args)
     return { success: true, data: null }
-  }
+  },
 }
 
 // Safely import Tauri invoke
@@ -14,12 +20,16 @@ let tauriInvoke: (command: string, args?: unknown) => Promise<unknown>
 
 async function initTauriInvoke() {
   try {
-    // Dynamic import to avoid compilation errors when Tauri is not available
-    const { invoke } = await import('@tauri-apps/api/tauri')
-    tauriInvoke = typeof window !== 'undefined' && (window as unknown as { __TAURI__?: boolean }).__TAURI__
-      ? invoke
-      : mockTauri.invoke
+    // Check if we're in a Tauri environment at runtime
+    if (typeof window !== 'undefined' && (window as unknown as { __TAURI__?: unknown }).__TAURI__) {
+      // Use dynamic import string to avoid TypeScript resolution
+      const tauriModule = await import(/* webpackIgnore: true */ '@tauri-apps' + '/api/tauri')
+      tauriInvoke = tauriModule.invoke
+    } else {
+      tauriInvoke = mockTauri.invoke
+    }
   } catch {
+    // Fallback to mock if Tauri is not available
     tauriInvoke = mockTauri.invoke
   }
 }
@@ -32,7 +42,7 @@ initTauriInvoke().catch(() => {
 
 export class TauriApiClient {
   private static instance: TauriApiClient
-  private commandCache = new Map<string, unknown>()
+  private commandCache = new Map<string, CacheEntry>()
   private performanceMetrics = new Map<string, PerformanceMetric>()
 
   private constructor() {
@@ -67,12 +77,12 @@ export class TauriApiClient {
         const cacheKey = this.generateCacheKey(command, args)
         const cached = this.commandCache.get(cacheKey)
         if (cached && !this.isCacheExpired(cached)) {
-          return this.createSuccessResponse(cached.data, { fromCache: true })
+          return this.createSuccessResponse(cached.data as T, { fromCache: true })
         }
       }
 
       // Execute command
-      const result = await tauriInvoke(command, args) as T
+      const result = (await tauriInvoke(command, args)) as T
       const endTime = performance.now()
 
       // Record performance metrics
@@ -84,15 +94,14 @@ export class TauriApiClient {
         this.commandCache.set(cacheKey, {
           data: result,
           timestamp: Date.now(),
-          ttl: options.cacheTtl || 300000 // 5 minutes default
+          ttl: options.cacheTtl || 300000, // 5 minutes default
         })
       }
 
       return this.createSuccessResponse(result, {
         executionTime: endTime - startTime,
-        command
+        command,
       })
-
     } catch (error) {
       const endTime = performance.now()
       this.recordPerformance(command, endTime - startTime, false)
@@ -102,7 +111,7 @@ export class TauriApiClient {
         {
           command,
           args,
-          executionTime: endTime - startTime
+          executionTime: endTime - startTime,
         }
       )
     }
@@ -130,14 +139,14 @@ export class TauriApiClient {
               index: i + index,
               success: result.success,
               data: result.data,
-              error: result.error
+              error: result.error,
             }
           } catch (error) {
             return {
               index: i + index,
               success: false,
               data: undefined,
-              error: error instanceof Error ? error.message : 'Unknown error'
+              error: error instanceof Error ? error.message : 'Unknown error',
             }
           }
         })
@@ -157,10 +166,9 @@ export class TauriApiClient {
           total: commands.length,
           successful,
           failed,
-          executionTime: endTime - startTime
-        }
+          executionTime: endTime - startTime,
+        },
       }
-
     } catch (error) {
       const endTime = performance.now()
       return {
@@ -171,8 +179,8 @@ export class TauriApiClient {
           total: commands.length,
           successful: 0,
           failed: commands.length,
-          executionTime: endTime - startTime
-        }
+          executionTime: endTime - startTime,
+        },
       }
     }
   }
@@ -191,18 +199,18 @@ export class TauriApiClient {
       try {
         // For now, we'll simulate streaming by polling
         // In a real implementation, this would use Tauri events
-        const result = await tauriInvoke(command, args) as T
+        const result = (await tauriInvoke(command, args)) as T
         yield {
           type: 'data' as const,
           data: result,
           progress: 100,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }
       } catch (error) {
         yield {
           type: 'error' as const,
           error: error instanceof Error ? error.message : 'Stream error',
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }
       }
     }
@@ -255,19 +263,25 @@ export class TauriApiClient {
     return Date.now() - cacheEntry.timestamp > cacheEntry.ttl
   }
 
-  private createSuccessResponse<T>(data: T, metadata: Record<string, unknown> = {}): ApiResponse<T> {
+  private createSuccessResponse<T>(
+    data: T,
+    metadata: Record<string, unknown> = {}
+  ): ApiResponse<T> {
     return {
       success: true,
       data,
-      metadata
+      metadata,
     }
   }
 
-  private createErrorResponse(error: string, metadata: Record<string, unknown> = {}): ApiResponse {
+  private createErrorResponse<T = never>(
+    error: string,
+    metadata: Record<string, unknown> = {}
+  ): ApiResponse<T> {
     return {
       success: false,
       error,
-      metadata
+      metadata,
     }
   }
 
@@ -280,7 +294,7 @@ export class TauriApiClient {
       averageDuration: 0,
       minDuration: Infinity,
       maxDuration: 0,
-      lastCall: Date.now()
+      lastCall: Date.now(),
     }
 
     metric.totalCalls++
@@ -290,7 +304,8 @@ export class TauriApiClient {
       metric.failedCalls++
     }
 
-    metric.averageDuration = (metric.averageDuration * (metric.totalCalls - 1) + duration) / metric.totalCalls
+    metric.averageDuration =
+      (metric.averageDuration * (metric.totalCalls - 1) + duration) / metric.totalCalls
     metric.minDuration = Math.min(metric.minDuration, duration)
     metric.maxDuration = Math.max(metric.maxDuration, duration)
     metric.lastCall = Date.now()
@@ -373,12 +388,6 @@ export interface PerformanceMetric {
   minDuration: number
   maxDuration: number
   lastCall: number
-}
-
-interface CacheEntry {
-  data: unknown
-  timestamp: number
-  ttl: number
 }
 
 // Export singleton instance

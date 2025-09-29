@@ -1,12 +1,12 @@
-import React, { forwardRef } from 'react';
-import { designTokens } from '../../styles/tokens';
+import React, { forwardRef } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'glass' | 'elevated';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
-  hoverable?: boolean;
-  clickable?: boolean;
-  borderless?: boolean;
+  variant?: 'default' | 'glass' | 'elevated'
+  padding?: 'none' | 'sm' | 'md' | 'lg'
+  hoverable?: boolean
+  clickable?: boolean
+  borderless?: boolean
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -30,7 +30,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       position: 'relative' as const,
       overflow: 'hidden' as const,
       cursor: clickable ? 'pointer' : 'default',
-    };
+    }
 
     // Padding variants
     const paddingStyles = {
@@ -38,7 +38,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       sm: { padding: designTokens.spacing[3] },
       md: { padding: designTokens.spacing[4] },
       lg: { padding: designTokens.spacing[6] },
-    };
+    }
 
     // Variant styles
     const variantStyles = {
@@ -58,29 +58,34 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         border: borderless ? 'none' : `1px solid ${designTokens.variants.card.elevated.border}`,
         boxShadow: designTokens.variants.card.elevated.shadow,
       },
-    };
+    }
 
     const combinedStyles = {
       ...baseStyles,
       ...paddingStyles[padding],
       ...variantStyles[variant],
       ...style,
-    };
-
+    }
 
     return (
       <>
         <style>
           {`
             .proxemic-card {
-              ${(hoverable || clickable) ? `
+              ${
+                hoverable || clickable
+                  ? `
                 &:hover {
                   transform: translateY(-2px);
                   box-shadow: ${variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg};
                 }
-              ` : ''}
+              `
+                  : ''
+              }
 
-              ${clickable ? `
+              ${
+                clickable
+                  ? `
                 &:active {
                   transform: translateY(0px);
                   box-shadow: ${variant === 'glass' ? designTokens.shadows.glassMedium : designTokens.shadows.md};
@@ -91,7 +96,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
                   box-shadow: ${variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg},
                              0 0 0 3px ${designTokens.colors.state.focus}40;
                 }
-              ` : ''}
+              `
+                  : ''
+              }
             }
 
             .proxemic-card-hoverable:hover {
@@ -127,11 +134,11 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           {children}
         </div>
       </>
-    );
+    )
   }
-);
+)
 
-Card.displayName = 'Card';
+Card.displayName = 'Card'
 
 // Card compound components for better composition
 export const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -148,9 +155,9 @@ export const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
       {children}
     </div>
   )
-);
+)
 
-CardHeader.displayName = 'CardHeader';
+CardHeader.displayName = 'CardHeader'
 
 export const CardBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ children, className = '', style, ...props }, ref) => (
@@ -166,9 +173,9 @@ export const CardBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
       {children}
     </div>
   )
-);
+)
 
-CardBody.displayName = 'CardBody';
+CardBody.displayName = 'CardBody'
 
 export const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ children, className = '', style, ...props }, ref) => (
@@ -186,8 +193,8 @@ export const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
       {children}
     </div>
   )
-);
+)
 
-CardFooter.displayName = 'CardFooter';
+CardFooter.displayName = 'CardFooter'
 
-export default Card;
+export default Card

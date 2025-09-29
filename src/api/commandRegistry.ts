@@ -104,10 +104,8 @@ export class CommandRegistry {
    */
   searchCommands(pattern: string): CommandDefinition[] {
     const regex = new RegExp(pattern, 'i')
-    return Array.from(this.commands.values()).filter(cmd =>
-      regex.test(cmd.name) ||
-      regex.test(cmd.description) ||
-      regex.test(cmd.module)
+    return Array.from(this.commands.values()).filter(
+      cmd => regex.test(cmd.name) || regex.test(cmd.description) || regex.test(cmd.module)
     )
   }
 
@@ -119,7 +117,7 @@ export class CommandRegistry {
     if (!command) {
       return {
         valid: false,
-        errors: [`Unknown command: ${commandName}`]
+        errors: [`Unknown command: ${commandName}`],
       }
     }
 
@@ -153,7 +151,7 @@ export class CommandRegistry {
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     }
   }
 
@@ -174,11 +172,11 @@ export class CommandRegistry {
         type: p.type,
         required: p.required,
         description: p.description,
-        defaultValue: p.defaultValue
+        defaultValue: p.defaultValue,
       })),
       examples: command.examples || [],
       deprecated: command.deprecated,
-      since: command.since
+      since: command.since,
     }
   }
 
@@ -205,9 +203,10 @@ export class CommandRegistry {
         }
 
         // Generate command function type
-        const paramType = command.parameters.length > 0
-          ? `${this.toPascalCase(command.name)}Params`
-          : 'Record<string, never>'
+        const paramType =
+          command.parameters.length > 0
+            ? `${this.toPascalCase(command.name)}Params`
+            : 'Record<string, never>'
 
         output += `  export type ${this.toPascalCase(command.name)}Command = `
         output += `(params: ${paramType}) => Promise<${command.returnType}>\n\n`
@@ -241,7 +240,7 @@ export class CommandRegistry {
       { name: 'deduplication', description: 'Content deduplication' },
       { name: 'progress', description: 'Progress tracking and monitoring' },
       { name: 'health', description: 'System health monitoring' },
-      { name: 'backup', description: 'Backup and restore operations' }
+      { name: 'backup', description: 'Backup and restore operations' },
     ]
 
     for (const moduleDef of moduleDefinitions) {
@@ -255,7 +254,7 @@ export class CommandRegistry {
           description: moduleDef.description!,
           commands: moduleCommands,
           version: '1.0.0',
-          status: 'active'
+          status: 'active',
         }
 
         this.modules.set(module.name, module)
@@ -287,35 +286,48 @@ export class CommandRegistry {
             module: moduleName,
             description: 'Analyze workspace structure and provide insights',
             parameters: [
-              { name: 'workspace_path', type: 'string', required: true, description: 'Path to workspace' }
+              {
+                name: 'workspace_path',
+                type: 'string',
+                required: true,
+                description: 'Path to workspace',
+              },
             ],
-            returnType: 'WorkspaceAnalysis'
+            returnType: 'WorkspaceAnalysis',
           },
           {
             name: 'get_workspace_health',
             module: moduleName,
             description: 'Get workspace health metrics',
             parameters: [
-              { name: 'workspace_id', type: 'string', required: true, description: 'Workspace identifier' }
+              {
+                name: 'workspace_id',
+                type: 'string',
+                required: true,
+                description: 'Workspace identifier',
+              },
             ],
-            returnType: 'WorkspaceHealth'
+            returnType: 'WorkspaceHealth',
           }
         )
         break
 
       case 'document':
-        placeholderCommands.push(
-          {
-            name: 'process_document',
-            module: moduleName,
-            description: 'Process and analyze a document',
-            parameters: [
-              { name: 'file_path', type: 'string', required: true, description: 'Path to document' },
-              { name: 'options', type: 'ProcessingOptions', required: false, description: 'Processing options' }
-            ],
-            returnType: 'DocumentProcessingResult'
-          }
-        )
+        placeholderCommands.push({
+          name: 'process_document',
+          module: moduleName,
+          description: 'Process and analyze a document',
+          parameters: [
+            { name: 'file_path', type: 'string', required: true, description: 'Path to document' },
+            {
+              name: 'options',
+              type: 'ProcessingOptions',
+              required: false,
+              description: 'Processing options',
+            },
+          ],
+          returnType: 'DocumentProcessingResult',
+        })
         break
     }
 
@@ -376,12 +388,18 @@ export class CommandRegistry {
 
   private isValidType(value: unknown, expectedType: string): boolean {
     switch (expectedType) {
-      case 'string': return typeof value === 'string'
-      case 'number': return typeof value === 'number'
-      case 'boolean': return typeof value === 'boolean'
-      case 'object': return typeof value === 'object' && value !== null
-      case 'array': return Array.isArray(value)
-      default: return true // Unknown types pass validation
+      case 'string':
+        return typeof value === 'string'
+      case 'number':
+        return typeof value === 'number'
+      case 'boolean':
+        return typeof value === 'boolean'
+      case 'object':
+        return typeof value === 'object' && value !== null
+      case 'array':
+        return Array.isArray(value)
+      default:
+        return true // Unknown types pass validation
     }
   }
 

@@ -1,9 +1,6 @@
 // Relationship Service
 import { apiClient } from '../api'
-import {
-  DocumentRelationship,
-  ApiResponse
-} from '../types'
+import { DocumentRelationship, ApiResponse } from '../types'
 
 export class RelationshipService {
   /**
@@ -13,7 +10,7 @@ export class RelationshipService {
     documentIds: string[]
   ): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('analyze_document_relationships', {
-      document_ids: documentIds
+      document_ids: documentIds,
     })
   }
 
@@ -28,7 +25,7 @@ export class RelationshipService {
     return apiClient.invoke('find_similar_documents', {
       document_id: documentId,
       similarity_threshold: similarityThreshold || 0.7,
-      max_results: maxResults || 10
+      max_results: maxResults || 10,
     })
   }
 
@@ -37,7 +34,7 @@ export class RelationshipService {
    */
   async findDocumentDependencies(documentId: string): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('find_document_dependencies', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -46,7 +43,7 @@ export class RelationshipService {
    */
   async findReferencingDocuments(documentId: string): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('find_referencing_documents', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -59,7 +56,7 @@ export class RelationshipService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('build_relationship_graph', {
       workspace_id: workspaceId,
-      include_metadata: includeMetadata || false
+      include_metadata: includeMetadata || false,
     })
   }
 
@@ -70,7 +67,7 @@ export class RelationshipService {
     documentIds: string[]
   ): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('analyze_semantic_relationships', {
-      document_ids: documentIds
+      document_ids: documentIds,
     })
   }
 
@@ -83,7 +80,7 @@ export class RelationshipService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('find_content_overlap', {
       document_id_1: documentId1,
-      document_id_2: documentId2
+      document_id_2: documentId2,
     })
   }
 
@@ -96,7 +93,7 @@ export class RelationshipService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('identify_document_clusters', {
       workspace_id: workspaceId,
-      options: clusteringOptions || {}
+      options: clusteringOptions || {},
     })
   }
 
@@ -105,7 +102,7 @@ export class RelationshipService {
    */
   async trackDocumentEvolution(documentId: string): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('track_document_evolution', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -116,7 +113,7 @@ export class RelationshipService {
     workspaceId: string
   ): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('analyze_citation_relationships', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
@@ -129,7 +126,7 @@ export class RelationshipService {
   ): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('find_topically_related', {
       document_id: documentId,
-      topics: topics || []
+      topics: topics || [],
     })
   }
 
@@ -144,7 +141,7 @@ export class RelationshipService {
     return apiClient.invoke('calculate_relationship_strength', {
       document_id_1: documentId1,
       document_id_2: documentId2,
-      relationship_type: relationshipType
+      relationship_type: relationshipType,
     })
   }
 
@@ -153,7 +150,7 @@ export class RelationshipService {
    */
   async getRelationshipHistory(documentId: string): Promise<ApiResponse<DocumentRelationship[]>> {
     return apiClient.invoke('get_relationship_history', {
-      document_id: documentId
+      document_id: documentId,
     })
   }
 
@@ -166,7 +163,7 @@ export class RelationshipService {
   ): Promise<ApiResponse<DocumentRelationship>> {
     return apiClient.invoke('update_relationship_metadata', {
       relationship_id: relationshipId,
-      metadata
+      metadata,
     })
   }
 }

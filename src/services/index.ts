@@ -10,7 +10,10 @@ export { styleTransferService, StyleTransferService } from './styleTransferServi
 export { knowledgeAnalyzerService, KnowledgeAnalyzerService } from './knowledgeAnalyzerService'
 export { smartOrganizerService, SmartOrganizerService } from './smartOrganizerService'
 export { contentLifecycleService, ContentLifecycleService } from './contentLifecycleService'
-export { conversationIntelligenceService, ConversationIntelligenceService } from './conversationIntelligenceService'
+export {
+  conversationIntelligenceService,
+  ConversationIntelligenceService,
+} from './conversationIntelligenceService'
 export { embeddingService, EmbeddingService } from './embeddingService'
 export { documentGenerationService, DocumentGenerationService } from './documentGenerationService'
 export { formatConversionService, FormatConversionService } from './formatConversionService'
@@ -18,13 +21,19 @@ export { templateService, TemplateService } from './templateService'
 
 // Additional Specialized Services
 export { contentAdaptationService, ContentAdaptationService } from './contentAdaptationService'
-export { contentClassificationService, ContentClassificationService } from './contentClassificationService'
+export {
+  contentClassificationService,
+  ContentClassificationService,
+} from './contentClassificationService'
 export { relationshipService, RelationshipService } from './relationshipService'
 export { nlOperationsService, NLOperationsService } from './nlOperationsService'
 export { structureService, StructureService } from './structureService'
 export { healthService, HealthService } from './healthService'
 export { workspaceAnalyzerService, WorkspaceAnalyzerService } from './workspaceAnalyzerService'
-export { workspacePerformanceService, WorkspacePerformanceService } from './workspacePerformanceService'
+export {
+  workspacePerformanceService,
+  WorkspacePerformanceService,
+} from './workspacePerformanceService'
 export { workspaceBackupService, WorkspaceBackupService } from './workspaceBackupService'
 export { workspaceAiService, WorkspaceAiService } from './workspaceAiService'
 
@@ -125,13 +134,22 @@ export class ServiceManager {
         { name: 'styleAnalysis', test: () => styleAnalysisService.listStyleProfiles() },
         { name: 'styleTransfer', test: () => styleTransferService.getTransferHistory('test') },
         { name: 'knowledgeAnalyzer', test: () => knowledgeAnalyzerService.listKnowledgeBases() },
-        { name: 'smartOrganizer', test: () => smartOrganizerService.getOrganizationPerformance('test') },
+        {
+          name: 'smartOrganizer',
+          test: () => smartOrganizerService.getOrganizationPerformance('test'),
+        },
         { name: 'contentLifecycle', test: () => contentLifecycleService.getPendingActions() },
-        { name: 'conversationIntelligence', test: () => conversationIntelligenceService.getConversationAnalytics() },
+        {
+          name: 'conversationIntelligence',
+          test: () => conversationIntelligenceService.getConversationAnalytics(),
+        },
         { name: 'embedding', test: () => embeddingService.getEmbeddingModels() },
-        { name: 'documentGeneration', test: () => documentGenerationService.getGenerationHistory() },
+        {
+          name: 'documentGeneration',
+          test: () => documentGenerationService.getGenerationHistory(),
+        },
         { name: 'formatConversion', test: () => formatConversionService.getSupportedFormats() },
-        { name: 'template', test: () => templateService.getTemplateCategories() }
+        { name: 'template', test: () => templateService.getTemplateCategories() },
       ]
 
       for (const { name, test } of tests) {

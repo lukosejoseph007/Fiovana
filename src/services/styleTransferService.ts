@@ -1,72 +1,87 @@
 // Style Transfer Service
 import { apiClient } from '../api'
-import {
-  StyleTransfer,
-  TransferResult,
-  OrganizationalStyle,
-  ApiResponse
-} from '../types'
+import { StyleTransfer, TransferResult, OrganizationalStyle, ApiResponse } from '../types'
 
 export class StyleTransferService {
   /**
    * Transfer style from one document to another
    */
-  async transferStyle(sourceDocumentId: string, targetDocumentId: string, options?: unknown): Promise<ApiResponse<StyleTransfer>> {
+  async transferStyle(
+    sourceDocumentId: string,
+    targetDocumentId: string,
+    options?: unknown
+  ): Promise<ApiResponse<StyleTransfer>> {
     return apiClient.invoke('transfer_document_style', {
       source_document_id: sourceDocumentId,
       target_document_id: targetDocumentId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Apply style profile to document
    */
-  async applyStyleProfile(documentId: string, styleProfileId: string, options?: unknown): Promise<ApiResponse<TransferResult>> {
+  async applyStyleProfile(
+    documentId: string,
+    styleProfileId: string,
+    options?: unknown
+  ): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('apply_style_profile', {
       document_id: documentId,
       style_profile_id: styleProfileId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Transform document to organizational style
    */
-  async applyOrganizationalStyle(documentId: string, organizationId: string): Promise<ApiResponse<TransferResult>> {
+  async applyOrganizationalStyle(
+    documentId: string,
+    organizationId: string
+  ): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('apply_organizational_style', {
       document_id: documentId,
-      organization_id: organizationId
+      organization_id: organizationId,
     })
   }
 
   /**
    * Preview style transfer before applying
    */
-  async previewStyleTransfer(documentId: string, styleProfileId: string): Promise<ApiResponse<unknown>> {
+  async previewStyleTransfer(
+    documentId: string,
+    styleProfileId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_style_transfer', {
       document_id: documentId,
-      style_profile_id: styleProfileId
+      style_profile_id: styleProfileId,
     })
   }
 
   /**
    * Batch style transfer for multiple documents
    */
-  async batchStyleTransfer(documentIds: string[], styleProfileId: string): Promise<ApiResponse<TransferResult[]>> {
+  async batchStyleTransfer(
+    documentIds: string[],
+    styleProfileId: string
+  ): Promise<ApiResponse<TransferResult[]>> {
     return apiClient.invoke('batch_style_transfer', {
       document_ids: documentIds,
-      style_profile_id: styleProfileId
+      style_profile_id: styleProfileId,
     })
   }
 
   /**
    * Customize style transfer parameters
    */
-  async customizeTransferParameters(transferId: string, parameters: unknown): Promise<ApiResponse<TransferResult>> {
+  async customizeTransferParameters(
+    transferId: string,
+    parameters: unknown
+  ): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('customize_transfer_parameters', {
       transfer_id: transferId,
-      parameters
+      parameters,
     })
   }
 
@@ -101,40 +116,52 @@ export class StyleTransferService {
   /**
    * Fine-tune style transfer
    */
-  async fineTuneTransfer(transferId: string, adjustments: unknown): Promise<ApiResponse<TransferResult>> {
+  async fineTuneTransfer(
+    transferId: string,
+    adjustments: unknown
+  ): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('fine_tune_style_transfer', {
       transfer_id: transferId,
-      adjustments
+      adjustments,
     })
   }
 
   /**
    * Create organizational style guide
    */
-  async createOrganizationalStyle(organizationId: string, styleData: unknown): Promise<ApiResponse<OrganizationalStyle>> {
+  async createOrganizationalStyle(
+    organizationId: string,
+    styleData: unknown
+  ): Promise<ApiResponse<OrganizationalStyle>> {
     return apiClient.invoke('create_organizational_style', {
       organization_id: organizationId,
-      style_data: styleData
+      style_data: styleData,
     })
   }
 
   /**
    * Update organizational style guide
    */
-  async updateOrganizationalStyle(styleId: string, updates: unknown): Promise<ApiResponse<OrganizationalStyle>> {
+  async updateOrganizationalStyle(
+    styleId: string,
+    updates: unknown
+  ): Promise<ApiResponse<OrganizationalStyle>> {
     return apiClient.invoke('update_organizational_style', {
       style_id: styleId,
-      updates
+      updates,
     })
   }
 
   /**
    * Get organizational style compliance
    */
-  async checkStyleCompliance(documentId: string, organizationId: string): Promise<ApiResponse<unknown>> {
+  async checkStyleCompliance(
+    documentId: string,
+    organizationId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('check_style_compliance', {
       document_id: documentId,
-      organization_id: organizationId
+      organization_id: organizationId,
     })
   }
 

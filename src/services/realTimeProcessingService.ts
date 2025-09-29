@@ -1,9 +1,6 @@
 // Real-Time Processing Service
 import { apiClient } from '../api'
-import {
-  ProcessingPipeline,
-  ApiResponse
-} from '../types'
+import { ProcessingPipeline, ApiResponse } from '../types'
 
 export class RealTimeProcessingService {
   /**
@@ -13,7 +10,7 @@ export class RealTimeProcessingService {
     pipelineConfig: unknown
   ): Promise<ApiResponse<ProcessingPipeline>> {
     return apiClient.invoke('create_realtime_processing_pipeline', {
-      pipeline_config: pipelineConfig
+      pipeline_config: pipelineConfig,
     })
   }
 
@@ -22,7 +19,7 @@ export class RealTimeProcessingService {
    */
   async startPipeline(pipelineId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('start_processing_pipeline', {
-      pipeline_id: pipelineId
+      pipeline_id: pipelineId,
     })
   }
 
@@ -31,7 +28,7 @@ export class RealTimeProcessingService {
    */
   async stopPipeline(pipelineId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('stop_processing_pipeline', {
-      pipeline_id: pipelineId
+      pipeline_id: pipelineId,
     })
   }
 
@@ -40,7 +37,7 @@ export class RealTimeProcessingService {
    */
   async getPipelineStatus(pipelineId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_pipeline_status', {
-      pipeline_id: pipelineId
+      pipeline_id: pipelineId,
     })
   }
 
@@ -53,7 +50,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('process_document_realtime', {
       document_id: documentId,
-      options: processingOptions || {}
+      options: processingOptions || {},
     })
   }
 
@@ -66,7 +63,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('stream_processing_events', {
       workspace_id: workspaceId,
-      event_types: eventTypes || []
+      event_types: eventTypes || [],
     })
   }
 
@@ -79,7 +76,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('create_realtime_event_handler', {
       event_type: eventType,
-      handler_config: handlerConfig
+      handler_config: handlerConfig,
     })
   }
 
@@ -92,7 +89,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('subscribe_to_realtime_events', {
       event_types: eventTypes,
-      subscription_config: subscriptionConfig || {}
+      subscription_config: subscriptionConfig || {},
     })
   }
 
@@ -101,7 +98,7 @@ export class RealTimeProcessingService {
    */
   async unsubscribeFromEvents(subscriptionId: string): Promise<ApiResponse<void>> {
     return apiClient.invoke('unsubscribe_from_realtime_events', {
-      subscription_id: subscriptionId
+      subscription_id: subscriptionId,
     })
   }
 
@@ -114,7 +111,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('process_batch_realtime', {
       document_ids: documentIds,
-      options: batchOptions || {}
+      options: batchOptions || {},
     })
   }
 
@@ -123,42 +120,35 @@ export class RealTimeProcessingService {
    */
   async monitorProcessingQueue(workspaceId?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('monitor_realtime_processing_queue', {
-      workspace_id: workspaceId
+      workspace_id: workspaceId,
     })
   }
 
   /**
    * Configure real-time triggers
    */
-  async configureTriggers(
-    triggerConfigs: unknown[]
-  ): Promise<ApiResponse<string[]>> {
+  async configureTriggers(triggerConfigs: unknown[]): Promise<ApiResponse<string[]>> {
     return apiClient.invoke('configure_realtime_triggers', {
-      trigger_configs: triggerConfigs
+      trigger_configs: triggerConfigs,
     })
   }
 
   /**
    * Create real-time workflow
    */
-  async createWorkflow(
-    workflowDefinition: unknown
-  ): Promise<ApiResponse<string>> {
+  async createWorkflow(workflowDefinition: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('create_realtime_workflow', {
-      workflow_definition: workflowDefinition
+      workflow_definition: workflowDefinition,
     })
   }
 
   /**
    * Execute real-time workflow
    */
-  async executeWorkflow(
-    workflowId: string,
-    inputData?: unknown
-  ): Promise<ApiResponse<unknown>> {
+  async executeWorkflow(workflowId: string, inputData?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('execute_realtime_workflow', {
       workflow_id: workflowId,
-      input_data: inputData || {}
+      input_data: inputData || {},
     })
   }
 
@@ -167,7 +157,7 @@ export class RealTimeProcessingService {
    */
   async monitorWorkflowExecution(workflowId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('monitor_workflow_execution', {
-      workflow_id: workflowId
+      workflow_id: workflowId,
     })
   }
 
@@ -182,7 +172,7 @@ export class RealTimeProcessingService {
     return apiClient.invoke('handle_realtime_document_changes', {
       document_id: documentId,
       change_type: changeType,
-      change_data: changeData
+      change_data: changeData,
     })
   }
 
@@ -197,7 +187,7 @@ export class RealTimeProcessingService {
     return apiClient.invoke('process_search_realtime', {
       query,
       workspace_id: workspaceId,
-      options: searchOptions || {}
+      options: searchOptions || {},
     })
   }
 
@@ -210,18 +200,16 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('stream_realtime_analytics', {
       workspace_id: workspaceId,
-      analytics_config: analyticsConfig || {}
+      analytics_config: analyticsConfig || {},
     })
   }
 
   /**
    * Configure real-time notifications
    */
-  async configureNotifications(
-    notificationConfig: unknown
-  ): Promise<ApiResponse<string>> {
+  async configureNotifications(notificationConfig: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('configure_realtime_notifications', {
-      notification_config: notificationConfig
+      notification_config: notificationConfig,
     })
   }
 
@@ -234,7 +222,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('process_ai_realtime', {
       operation,
-      operation_data: operationData
+      operation_data: operationData,
     })
   }
 
@@ -247,7 +235,7 @@ export class RealTimeProcessingService {
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('handle_realtime_collaboration_events', {
       workspace_id: workspaceId,
-      event_data: eventData
+      event_data: eventData,
     })
   }
 
@@ -261,55 +249,45 @@ export class RealTimeProcessingService {
   /**
    * Configure real-time error handling
    */
-  async configureErrorHandling(
-    errorHandlingConfig: unknown
-  ): Promise<ApiResponse<string>> {
+  async configureErrorHandling(errorHandlingConfig: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('configure_realtime_error_handling', {
-      error_handling_config: errorHandlingConfig
+      error_handling_config: errorHandlingConfig,
     })
   }
 
   /**
    * Process real-time backup operations
    */
-  async processBackupRealTime(
-    backupConfig: unknown
-  ): Promise<ApiResponse<unknown>> {
+  async processBackupRealTime(backupConfig: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('process_backup_realtime', {
-      backup_config: backupConfig
+      backup_config: backupConfig,
     })
   }
 
   /**
    * Stream processing metrics
    */
-  async streamProcessingMetrics(
-    pipelineId?: string
-  ): Promise<ApiResponse<unknown>> {
+  async streamProcessingMetrics(pipelineId?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('stream_processing_metrics', {
-      pipeline_id: pipelineId
+      pipeline_id: pipelineId,
     })
   }
 
   /**
    * Configure processing throttling
    */
-  async configureThrottling(
-    throttlingConfig: unknown
-  ): Promise<ApiResponse<void>> {
+  async configureThrottling(throttlingConfig: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('configure_processing_throttling', {
-      throttling_config: throttlingConfig
+      throttling_config: throttlingConfig,
     })
   }
 
   /**
    * Get real-time processing statistics
    */
-  async getProcessingStatistics(
-    timeRange?: string
-  ): Promise<ApiResponse<unknown>> {
+  async getProcessingStatistics(timeRange?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_realtime_processing_statistics', {
-      time_range: timeRange || '1h'
+      time_range: timeRange || '1h',
     })
   }
 }

@@ -1,13 +1,13 @@
-import React, { forwardRef } from 'react';
-import { designTokens } from '../../styles/tokens';
+import React, { forwardRef } from 'react'
+import { designTokens } from '../../styles/tokens'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'minimal';
-  size?: 'sm' | 'md' | 'lg';
-  isLoading?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  fullWidth?: boolean;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'minimal'
+  size?: 'sm' | 'md' | 'lg'
+  isLoading?: boolean
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  fullWidth?: boolean
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -43,7 +43,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       userSelect: 'none' as const,
       width: fullWidth ? '100%' : 'auto',
       opacity: disabled || isLoading ? 0.5 : 1,
-    };
+    }
 
     // Size variants
     const sizeStyles = {
@@ -65,7 +65,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         fontSize: designTokens.typography.fontSize.lg,
         lineHeight: designTokens.typography.lineHeight.normal,
       },
-    };
+    }
 
     // Variant styles
     const variantStyles = {
@@ -73,29 +73,38 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         backgroundColor: designTokens.variants.button.primary.background,
         color: designTokens.variants.button.primary.color,
         boxShadow: designTokens.shadows.base,
-        '&:hover': !disabled && !isLoading ? {
-          backgroundColor: designTokens.variants.button.primary.hover,
-          transform: `translateY(-1px)`,
-          boxShadow: designTokens.shadows.md,
-        } : {},
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: designTokens.variants.button.primary.hover,
+                transform: `translateY(-1px)`,
+                boxShadow: designTokens.shadows.md,
+              }
+            : {},
         '&:focus': {
           boxShadow: `0 0 0 3px ${designTokens.colors.state.focus}40`,
         },
-        '&:active': !disabled && !isLoading ? {
-          transform: `translateY(0)`,
-          backgroundColor: designTokens.variants.button.primary.hover,
-        } : {},
+        '&:active':
+          !disabled && !isLoading
+            ? {
+                transform: `translateY(0)`,
+                backgroundColor: designTokens.variants.button.primary.hover,
+              }
+            : {},
       },
       secondary: {
         backgroundColor: designTokens.variants.button.secondary.background,
         color: designTokens.variants.button.secondary.color,
         border: `1px solid ${designTokens.colors.border.subtle}`,
-        '&:hover': !disabled && !isLoading ? {
-          backgroundColor: designTokens.variants.button.secondary.hover,
-          borderColor: designTokens.colors.border.medium,
-          transform: `translateY(-1px)`,
-          boxShadow: designTokens.shadows.sm,
-        } : {},
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: designTokens.variants.button.secondary.hover,
+                borderColor: designTokens.colors.border.medium,
+                transform: `translateY(-1px)`,
+                boxShadow: designTokens.shadows.sm,
+              }
+            : {},
         '&:focus': {
           borderColor: designTokens.colors.state.focus,
           boxShadow: `0 0 0 3px ${designTokens.colors.state.focus}40`,
@@ -104,10 +113,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ghost: {
         backgroundColor: designTokens.variants.button.ghost.background,
         color: designTokens.variants.button.ghost.color,
-        '&:hover': !disabled && !isLoading ? {
-          backgroundColor: designTokens.variants.button.ghost.hover,
-          color: designTokens.colors.text.primary,
-        } : {},
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: designTokens.variants.button.ghost.hover,
+                color: designTokens.colors.text.primary,
+              }
+            : {},
         '&:focus': {
           backgroundColor: designTokens.variants.button.ghost.hover,
           boxShadow: `0 0 0 3px ${designTokens.colors.state.focus}40`,
@@ -117,21 +129,24 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         backgroundColor: designTokens.variants.button.minimal.background,
         color: designTokens.variants.button.minimal.color,
         padding: `0 ${designTokens.spacing[2]}`,
-        '&:hover': !disabled && !isLoading ? {
-          backgroundColor: designTokens.variants.button.minimal.hover,
-        } : {},
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: designTokens.variants.button.minimal.hover,
+              }
+            : {},
         '&:focus': {
           backgroundColor: designTokens.variants.button.minimal.hover,
           boxShadow: `0 0 0 2px ${designTokens.colors.state.focus}40`,
         },
       },
-    };
+    }
 
     const combinedStyles = {
       ...baseStyles,
       ...sizeStyles[size],
       ...variantStyles[variant],
-    };
+    }
 
     const LoadingSpinner = () => (
       <div
@@ -144,7 +159,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           animation: 'spin 1s linear infinite',
         }}
       />
-    );
+    )
 
     return (
       <>
@@ -156,50 +171,86 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             }
 
             .proxemic-button:hover {
-              ${!disabled && !isLoading && variant === 'primary' ? `
+              ${
+                !disabled && !isLoading && variant === 'primary'
+                  ? `
                 background-color: ${designTokens.variants.button.primary.hover};
                 transform: translateY(-1px);
                 box-shadow: ${designTokens.shadows.md};
-              ` : ''}
-              ${!disabled && !isLoading && variant === 'secondary' ? `
+              `
+                  : ''
+              }
+              ${
+                !disabled && !isLoading && variant === 'secondary'
+                  ? `
                 background-color: ${designTokens.variants.button.secondary.hover};
                 border-color: ${designTokens.colors.border.medium};
                 transform: translateY(-1px);
                 box-shadow: ${designTokens.shadows.sm};
-              ` : ''}
-              ${!disabled && !isLoading && variant === 'ghost' ? `
+              `
+                  : ''
+              }
+              ${
+                !disabled && !isLoading && variant === 'ghost'
+                  ? `
                 background-color: ${designTokens.variants.button.ghost.hover};
                 color: ${designTokens.colors.text.primary};
-              ` : ''}
-              ${!disabled && !isLoading && variant === 'minimal' ? `
+              `
+                  : ''
+              }
+              ${
+                !disabled && !isLoading && variant === 'minimal'
+                  ? `
                 background-color: ${designTokens.variants.button.minimal.hover};
-              ` : ''}
+              `
+                  : ''
+              }
             }
 
             .proxemic-button:focus {
               outline: none;
-              ${variant === 'primary' ? `
+              ${
+                variant === 'primary'
+                  ? `
                 box-shadow: 0 0 0 3px ${designTokens.colors.state.focus}40;
-              ` : ''}
-              ${variant === 'secondary' ? `
+              `
+                  : ''
+              }
+              ${
+                variant === 'secondary'
+                  ? `
                 border-color: ${designTokens.colors.state.focus};
                 box-shadow: 0 0 0 3px ${designTokens.colors.state.focus}40;
-              ` : ''}
-              ${variant === 'ghost' ? `
+              `
+                  : ''
+              }
+              ${
+                variant === 'ghost'
+                  ? `
                 background-color: ${designTokens.variants.button.ghost.hover};
                 box-shadow: 0 0 0 3px ${designTokens.colors.state.focus}40;
-              ` : ''}
-              ${variant === 'minimal' ? `
+              `
+                  : ''
+              }
+              ${
+                variant === 'minimal'
+                  ? `
                 background-color: ${designTokens.variants.button.minimal.hover};
                 box-shadow: 0 0 0 2px ${designTokens.colors.state.focus}40;
-              ` : ''}
+              `
+                  : ''
+              }
             }
 
             .proxemic-button:active {
-              ${!disabled && !isLoading && variant === 'primary' ? `
+              ${
+                !disabled && !isLoading && variant === 'primary'
+                  ? `
                 transform: translateY(0);
                 background-color: ${designTokens.variants.button.primary.hover};
-              ` : ''}
+              `
+                  : ''
+              }
             }
           `}
         </style>
@@ -214,17 +265,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <LoadingSpinner />
           ) : (
             <>
-              {leftIcon && <span style={{ display: 'flex', alignItems: 'center' }}>{leftIcon}</span>}
+              {leftIcon && (
+                <span style={{ display: 'flex', alignItems: 'center' }}>{leftIcon}</span>
+              )}
               {children && <span>{children}</span>}
-              {rightIcon && <span style={{ display: 'flex', alignItems: 'center' }}>{rightIcon}</span>}
+              {rightIcon && (
+                <span style={{ display: 'flex', alignItems: 'center' }}>{rightIcon}</span>
+              )}
             </>
           )}
         </button>
       </>
-    );
+    )
   }
-);
+)
 
-Button.displayName = 'Button';
+Button.displayName = 'Button'
 
-export default Button;
+export default Button

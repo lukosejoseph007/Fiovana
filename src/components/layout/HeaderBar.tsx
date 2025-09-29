@@ -1,14 +1,79 @@
-import React from 'react';
-import { designTokens } from '../../styles/tokens';
-import { useLayout } from './AppShell';
+import React, { useCallback, useEffect } from 'react'
+import { designTokens } from '../../styles/tokens'
+import { useLayout } from './useLayoutContext'
+import { Dropdown, Icon } from '../ui'
 
 export interface HeaderBarProps {
-  className?: string;
-  style?: React.CSSProperties;
+  className?: string
+  style?: React.CSSProperties
+  currentWorkspace?: {
+    id: string
+    name: string
+  }
+  workspaces?: Array<{
+    id: string
+    name: string
+  }>
+  user?: {
+    name: string
+    avatar?: string
+  }
+  collaborators?: Array<{
+    id: string
+    name: string
+    avatar?: string
+    isActive: boolean
+  }>
+  aiStatus?: {
+    isConnected: boolean
+    isProcessing: boolean
+    provider?: string
+  }
+  documentContext?: {
+    currentDocument?: string
+    breadcrumbs?: Array<{
+      label: string
+      path: string
+    }>
+  }
+  onWorkspaceChange?: (workspaceId: string) => void
+  onSearch?: (query: string) => void
+  onSettingsClick?: () => void
+  onCommandPaletteOpen?: () => void
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
-  const { isMobile } = useLayout();
+const HeaderBar: React.FC<HeaderBarProps> = ({
+  className = '',
+  style,
+  currentWorkspace,
+  workspaces = [],
+  collaborators = [],
+  aiStatus = { isConnected: false, isProcessing: false },
+  documentContext,
+  onWorkspaceChange,
+  onSearch: _onSearch,
+  onSettingsClick,
+  onCommandPaletteOpen,
+}) => {
+  const { isMobile } = useLayout()
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cmd+K or Ctrl+K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault()
+        onCommandPaletteOpen?.()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onCommandPaletteOpen])
+
+  const handleSearchFocus = useCallback(() => {
+    onCommandPaletteOpen?.()
+  }, [onCommandPaletteOpen])
 
   const headerContentStyles = {
     display: 'flex',
@@ -16,14 +81,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
     justifyContent: 'space-between',
     width: '100%',
     height: '100%',
-  };
+  }
 
   const leftZoneStyles = {
     display: 'flex',
     alignItems: 'center',
     width: isMobile ? 'auto' : designTokens.layout.navigation.width,
     flexShrink: 0,
-  };
+  }
 
   const centerZoneStyles = {
     flex: 1,
@@ -32,14 +97,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
     justifyContent: 'center',
     maxWidth: '600px',
     margin: `0 ${designTokens.spacing[4]}`,
-  };
+  }
 
   const rightZoneStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: designTokens.spacing[3],
     flexShrink: 0,
-  };
+  }
 
   const logoStyles = {
     fontSize: designTokens.typography.fontSize.xl,
@@ -47,7 +112,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
     color: designTokens.colors.text.primary,
     textDecoration: 'none',
     letterSpacing: designTokens.typography.letterSpacing.wide,
-  };
+  }
 
   const searchBarStyles = {
     width: '100%',
@@ -62,7 +127,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
     outline: 'none',
     transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
     fontFamily: designTokens.typography.fonts.sans.join(', '),
-  };
+  }
 
   return (
     <>
@@ -101,7 +166,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
         `}
       </style>
 
-      <div className={`proxemic-header-bar ${className}`} style={{ ...headerContentStyles, ...style }}>
+      <div
+        className={`proxemic-header-bar ${className}`}
+        style={{ ...headerContentStyles, ...style }}
+      >
         {/* Left Zone - Logo and Workspace Selector */}
         <div style={leftZoneStyles}>
           <a href="/" style={logoStyles}>
@@ -110,70 +178,164 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ className = '', style }) => {
 
           {!isMobile && (
             <div style={{ marginLeft: designTokens.spacing[4] }}>
-              <WorkspaceSelector />
+              <WorkspaceSelector
+                currentWorkspace={currentWorkspace}
+                workspaces={workspaces}
+                onWorkspaceChange={onWorkspaceChange}
+              />
             </div>
           )}
         </div>
 
-        {/* Center Zone - Search/Command Bar */}
+        {/* Center Zone - Search/Command Bar or Breadcrumbs */}
         <div style={centerZoneStyles}>
-          <input
-            className="proxemic-search-bar"
-            style={searchBarStyles}
-            placeholder="Search, ask, or type / for commands..."
-            onFocus={() => {
-              // TODO: Open command palette
-              console.log('Open command palette');
-            }}
-          />
+          {documentContext?.breadcrumbs?.length ? (
+            <BreadcrumbNavigation breadcrumbs={documentContext.breadcrumbs} />
+          ) : (
+            <div style={{ width: '100%', position: 'relative' }}>
+              <input
+                className="proxemic-search-bar"
+                style={searchBarStyles}
+                placeholder="Search, ask, or type / for commands..."
+                onFocus={handleSearchFocus}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  right: designTokens.spacing[3],
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: designTokens.typography.fontSize.xs,
+                  color: designTokens.colors.text.tertiary,
+                  pointerEvents: 'none',
+                }}
+              >
+                ⌘K
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Zone - Collaborators, AI Status, Settings */}
         <div style={rightZoneStyles}>
-          <CollaboratorAvatars />
-          <AIStatusIndicator />
-          <SettingsButton />
+          <CollaboratorAvatars collaborators={collaborators} />
+          <AIStatusIndicator aiStatus={aiStatus} />
+          <SettingsButton onSettingsClick={onSettingsClick} />
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-// Workspace Selector Component
-const WorkspaceSelector: React.FC = () => {
-  const selectorStyles = {
-    background: 'none',
-    border: 'none',
-    color: designTokens.colors.text.secondary,
-    fontSize: designTokens.typography.fontSize.sm,
-    cursor: 'pointer',
-    padding: `${designTokens.spacing[1]} ${designTokens.spacing[2]}`,
-    borderRadius: designTokens.borderRadius.md,
+// Breadcrumb Navigation Component
+interface BreadcrumbNavigationProps {
+  breadcrumbs: Array<{
+    label: string
+    path: string
+  }>
+}
+
+const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({ breadcrumbs }) => {
+  const breadcrumbStyles = {
     display: 'flex',
     alignItems: 'center',
-    gap: designTokens.spacing[1],
+    gap: designTokens.spacing[2],
+    fontSize: designTokens.typography.fontSize.sm,
+    color: designTokens.colors.text.secondary,
+  }
+
+  const breadcrumbItemStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: designTokens.spacing[2],
+  }
+
+  const breadcrumbLinkStyles = {
+    color: designTokens.colors.text.secondary,
+    textDecoration: 'none',
+    padding: `${designTokens.spacing[1]} ${designTokens.spacing[2]}`,
+    borderRadius: designTokens.borderRadius.sm,
     transition: `color ${designTokens.animation.duration.fast}`,
-  };
+    cursor: 'pointer',
+  }
+
+  const breadcrumbSeparatorStyles = {
+    color: designTokens.colors.text.tertiary,
+    fontSize: designTokens.typography.fontSize.xs,
+  }
 
   return (
-    <button style={selectorStyles} className="proxemic-header-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <polyline points="9,22 9,12 15,12 15,22" />
-      </svg>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="6,9 12,15 18,9" />
-      </svg>
-    </button>
-  );
-};
+    <div style={breadcrumbStyles}>
+      {breadcrumbs.map((breadcrumb, index) => (
+        <div key={breadcrumb.path} style={breadcrumbItemStyles}>
+          <span
+            style={breadcrumbLinkStyles}
+            className="proxemic-header-icon"
+            onClick={() => {
+              // TODO: Navigate to breadcrumb path
+              console.log('Navigate to:', breadcrumb.path)
+            }}
+          >
+            {breadcrumb.label}
+          </span>
+          {index < breadcrumbs.length - 1 && <span style={breadcrumbSeparatorStyles}>/</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Workspace Selector Component
+interface WorkspaceSelectorProps {
+  currentWorkspace?: {
+    id: string
+    name: string
+  }
+  workspaces?: Array<{
+    id: string
+    name: string
+  }>
+  onWorkspaceChange?: (workspaceId: string) => void
+}
+
+const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
+  currentWorkspace,
+  workspaces = [],
+  onWorkspaceChange,
+}) => {
+  const workspaceOptions = workspaces.map(workspace => ({
+    value: workspace.id,
+    label: workspace.name,
+  }))
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <Dropdown
+        options={workspaceOptions}
+        value={currentWorkspace?.id}
+        onChange={onWorkspaceChange}
+        placeholder="Select Workspace"
+        size="sm"
+      />
+    </div>
+  )
+}
 
 // Collaborator Avatars Component
-const CollaboratorAvatars: React.FC = () => {
+interface CollaboratorAvatarsProps {
+  collaborators?: Array<{
+    id: string
+    name: string
+    avatar?: string
+    isActive: boolean
+  }>
+}
+
+const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({ collaborators = [] }) => {
   const avatarGroupStyles = {
     display: 'flex',
     alignItems: 'center',
-  };
+  }
 
   const avatarStyles = {
     width: '28px',
@@ -188,38 +350,98 @@ const CollaboratorAvatars: React.FC = () => {
     fontSize: designTokens.typography.fontSize.xs,
     fontWeight: designTokens.typography.fontWeight.semibold,
     color: designTokens.colors.surface.primary,
-  };
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
 
   return (
     <div style={avatarGroupStyles}>
-      <div style={avatarStyles} className="proxemic-avatar-status">
-        JD
-      </div>
+      {collaborators.slice(0, 3).map((collaborator, index) => (
+        <div
+          key={collaborator.id}
+          style={{
+            ...avatarStyles,
+            marginLeft: index > 0 ? '-8px' : '0',
+            zIndex: collaborators.length - index,
+            backgroundColor: collaborator.isActive
+              ? designTokens.colors.accent.ai
+              : designTokens.colors.text.tertiary,
+          }}
+          className={collaborator.isActive ? 'proxemic-avatar-status' : ''}
+          title={`${collaborator.name} (${collaborator.isActive ? 'Active' : 'Offline'})`}
+        >
+          {collaborator.avatar ? (
+            <img
+              src={collaborator.avatar}
+              alt={collaborator.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            getInitials(collaborator.name)
+          )}
+        </div>
+      ))}
+      {collaborators.length > 3 && (
+        <div
+          style={{
+            ...avatarStyles,
+            marginLeft: '-8px',
+            backgroundColor: designTokens.colors.text.tertiary,
+            fontSize: designTokens.typography.fontSize.xs,
+          }}
+          title={`+${collaborators.length - 3} more collaborators`}
+        >
+          +{collaborators.length - 3}
+        </div>
+      )}
     </div>
-  );
-};
+  )
+}
 
 // AI Status Indicator Component
-const AIStatusIndicator: React.FC = () => {
-  const [isThinking, setIsThinking] = React.useState(false);
+interface AIStatusIndicatorProps {
+  aiStatus?: {
+    isConnected: boolean
+    isProcessing: boolean
+    provider?: string
+  }
+}
+
+const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({
+  aiStatus = { isConnected: false, isProcessing: false },
+}) => {
+  const getStatusColor = () => {
+    if (!aiStatus.isConnected) return designTokens.colors.text.tertiary
+    if (aiStatus.isProcessing) return designTokens.colors.accent.ai
+    return designTokens.colors.confidence.high
+  }
+
+  const getStatusText = () => {
+    if (!aiStatus.isConnected) return 'AI Disconnected'
+    if (aiStatus.isProcessing) return 'AI Processing...'
+    return `AI Ready${aiStatus.provider ? ` (${aiStatus.provider})` : ''}`
+  }
 
   const indicatorStyles = {
     width: '12px',
     height: '12px',
     borderRadius: '50%',
-    backgroundColor: isThinking ? designTokens.colors.accent.ai : designTokens.colors.confidence.high,
-    animation: isThinking ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
+    backgroundColor: getStatusColor(),
+    animation: aiStatus.isProcessing ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
     cursor: 'pointer',
-  };
-
-  React.useEffect(() => {
-    // Simulate AI thinking state
-    const interval = setInterval(() => {
-      setIsThinking(prev => !prev);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+  }
 
   return (
     <>
@@ -236,17 +458,17 @@ const AIStatusIndicator: React.FC = () => {
         `}
       </style>
 
-      <div
-        style={indicatorStyles}
-        title={isThinking ? 'AI is thinking...' : 'AI ready'}
-        aria-label={isThinking ? 'AI is thinking' : 'AI ready'}
-      />
+      <div style={indicatorStyles} title={getStatusText()} aria-label={getStatusText()} />
     </>
-  );
-};
+  )
+}
 
 // Settings Button Component
-const SettingsButton: React.FC = () => {
+interface SettingsButtonProps {
+  onSettingsClick?: () => void
+}
+
+const SettingsButton: React.FC<SettingsButtonProps> = ({ onSettingsClick }) => {
   const buttonStyles = {
     background: 'none',
     border: 'none',
@@ -258,24 +480,18 @@ const SettingsButton: React.FC = () => {
     alignItems: 'center',
     justifyContent: 'center',
     transition: `all ${designTokens.animation.duration.fast}`,
-  };
+  }
 
   return (
     <button
       style={buttonStyles}
       className="proxemic-header-icon"
       aria-label="Settings"
-      onClick={() => {
-        // TODO: Open settings modal
-        console.log('Open settings');
-      }}
+      onClick={onSettingsClick}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
-      </svg>
+      <Icon name="Settings" size={18} />
     </button>
-  );
-};
+  )
+}
 
-export default HeaderBar;
+export default HeaderBar

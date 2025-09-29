@@ -5,7 +5,7 @@ import {
   OrganizationSuggestion,
   AutomationRule,
   OrganizationPerformance,
-  ApiResponse
+  ApiResponse,
 } from '../types'
 
 export class SmartOrganizerService {
@@ -19,10 +19,13 @@ export class SmartOrganizerService {
   /**
    * Generate organization suggestions
    */
-  async generateOrganizationSuggestions(workspaceId: string, options?: unknown): Promise<ApiResponse<OrganizationSuggestion[]>> {
+  async generateOrganizationSuggestions(
+    workspaceId: string,
+    options?: unknown
+  ): Promise<ApiResponse<OrganizationSuggestion[]>> {
     return apiClient.invoke('generate_organization_suggestions', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 
@@ -36,20 +39,26 @@ export class SmartOrganizerService {
   /**
    * Create automation rule
    */
-  async createAutomationRule(workspaceId: string, ruleData: unknown): Promise<ApiResponse<AutomationRule>> {
+  async createAutomationRule(
+    workspaceId: string,
+    ruleData: unknown
+  ): Promise<ApiResponse<AutomationRule>> {
     return apiClient.invoke('create_automation_rule', {
       workspace_id: workspaceId,
-      rule_data: ruleData
+      rule_data: ruleData,
     })
   }
 
   /**
    * Update automation rule
    */
-  async updateAutomationRule(ruleId: string, updates: Partial<AutomationRule>): Promise<ApiResponse<AutomationRule>> {
+  async updateAutomationRule(
+    ruleId: string,
+    updates: Partial<AutomationRule>
+  ): Promise<ApiResponse<AutomationRule>> {
     return apiClient.invoke('update_automation_rule', {
       rule_id: ruleId,
-      ...updates
+      ...updates,
     })
   }
 
@@ -87,7 +96,7 @@ export class SmartOrganizerService {
   async testAutomationRule(ruleId: string, testData?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('test_automation_rule', {
       rule_id: ruleId,
-      test_data: testData || {}
+      test_data: testData || {},
     })
   }
 
@@ -115,20 +124,26 @@ export class SmartOrganizerService {
   /**
    * Auto-organize workspace
    */
-  async autoOrganizeWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
+  async autoOrganizeWorkspace(
+    workspaceId: string,
+    options?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('auto_organize_workspace', {
       workspace_id: workspaceId,
-      options: options || {}
+      options: options || {},
     })
   }
 
   /**
    * Preview organization changes
    */
-  async previewOrganizationChanges(workspaceId: string, suggestionIds: string[]): Promise<ApiResponse<unknown>> {
+  async previewOrganizationChanges(
+    workspaceId: string,
+    suggestionIds: string[]
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_organization_changes', {
       workspace_id: workspaceId,
-      suggestion_ids: suggestionIds
+      suggestion_ids: suggestionIds,
     })
   }
 
@@ -142,7 +157,9 @@ export class SmartOrganizerService {
   /**
    * Get organization performance metrics
    */
-  async getOrganizationPerformance(workspaceId: string): Promise<ApiResponse<OrganizationPerformance>> {
+  async getOrganizationPerformance(
+    workspaceId: string
+  ): Promise<ApiResponse<OrganizationPerformance>> {
     return apiClient.invoke('get_organization_performance', { workspace_id: workspaceId })
   }
 
@@ -157,26 +174,34 @@ export class SmartOrganizerService {
    * Suggest duplicate resolution
    */
   async suggestDuplicateResolution(duplicateGroupId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.invoke('suggest_duplicate_resolution', { duplicate_group_id: duplicateGroupId })
+    return apiClient.invoke('suggest_duplicate_resolution', {
+      duplicate_group_id: duplicateGroupId,
+    })
   }
 
   /**
    * Create organization template
    */
-  async createOrganizationTemplate(workspaceId: string, templateName: string): Promise<ApiResponse<unknown>> {
+  async createOrganizationTemplate(
+    workspaceId: string,
+    templateName: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('create_organization_template', {
       workspace_id: workspaceId,
-      template_name: templateName
+      template_name: templateName,
     })
   }
 
   /**
    * Apply organization template
    */
-  async applyOrganizationTemplate(workspaceId: string, templateId: string): Promise<ApiResponse<unknown>> {
+  async applyOrganizationTemplate(
+    workspaceId: string,
+    templateId: string
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('apply_organization_template', {
       workspace_id: workspaceId,
-      template_id: templateId
+      template_id: templateId,
     })
   }
 
