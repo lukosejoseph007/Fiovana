@@ -59,7 +59,7 @@ export class FormatConversionService {
   /**
    * Preview conversion
    */
-  async previewConversion(documentId: string, targetFormat: string): Promise<ApiResponse<any>> {
+  async previewConversion(documentId: string, targetFormat: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_format_conversion', {
       document_id: documentId,
       target_format: targetFormat
@@ -90,7 +90,7 @@ export class FormatConversionService {
   /**
    * Validate conversion quality
    */
-  async validateConversionQuality(conversionId: string): Promise<ApiResponse<any>> {
+  async validateConversionQuality(conversionId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_conversion_quality', { conversion_id: conversionId })
   }
 
@@ -125,7 +125,7 @@ export class FormatConversionService {
   /**
    * Compare conversion results
    */
-  async compareConversionResults(conversionAId: string, conversionBId: string): Promise<ApiResponse<any>> {
+  async compareConversionResults(conversionAId: string, conversionBId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_conversion_results', {
       conversion_a_id: conversionAId,
       conversion_b_id: conversionBId
@@ -135,7 +135,7 @@ export class FormatConversionService {
   /**
    * Get format specifications
    */
-  async getFormatSpecifications(format: string): Promise<ApiResponse<any>> {
+  async getFormatSpecifications(format: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_format_specifications', { format })
   }
 
@@ -152,7 +152,7 @@ export class FormatConversionService {
   /**
    * Convert with preservation rules
    */
-  async convertWithPreservation(documentId: string, targetFormat: string, preservationRules: any): Promise<ApiResponse<FormatConversion>> {
+  async convertWithPreservation(documentId: string, targetFormat: string, preservationRules: unknown): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_with_preservation', {
       document_id: documentId,
       target_format: targetFormat,
@@ -170,21 +170,21 @@ export class FormatConversionService {
   /**
    * Generate conversion report
    */
-  async generateConversionReport(conversionId: string): Promise<ApiResponse<any>> {
+  async generateConversionReport(conversionId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_conversion_report', { conversion_id: conversionId })
   }
 
   /**
    * Set conversion preferences
    */
-  async setConversionPreferences(preferences: any): Promise<ApiResponse<void>> {
+  async setConversionPreferences(preferences: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_conversion_preferences', { preferences })
   }
 
   /**
    * Get conversion analytics
    */
-  async getConversionAnalytics(timeframe?: string): Promise<ApiResponse<any>> {
+  async getConversionAnalytics(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_conversion_analytics', {
       timeframe: timeframe || 'last_30_days'
     })

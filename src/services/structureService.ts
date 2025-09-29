@@ -19,7 +19,7 @@ export class StructureService {
   /**
    * Extract document hierarchy
    */
-  async extractHierarchy(documentId: string): Promise<ApiResponse<any>> {
+  async extractHierarchy(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_document_hierarchy', {
       document_id: documentId
     })
@@ -28,7 +28,7 @@ export class StructureService {
   /**
    * Identify document sections
    */
-  async identifySections(documentId: string): Promise<ApiResponse<any[]>> {
+  async identifySections(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('identify_document_sections', {
       document_id: documentId
     })
@@ -37,7 +37,7 @@ export class StructureService {
   /**
    * Extract table of contents
    */
-  async extractTableOfContents(documentId: string): Promise<ApiResponse<any[]>> {
+  async extractTableOfContents(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_table_of_contents', {
       document_id: documentId
     })
@@ -46,7 +46,7 @@ export class StructureService {
   /**
    * Analyze document flow and organization
    */
-  async analyzeDocumentFlow(documentId: string): Promise<ApiResponse<any>> {
+  async analyzeDocumentFlow(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_document_flow', {
       document_id: documentId
     })
@@ -57,7 +57,7 @@ export class StructureService {
    */
   async identifyStructuralPatterns(
     documentIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('identify_structural_patterns', {
       document_ids: documentIds
     })
@@ -66,7 +66,7 @@ export class StructureService {
   /**
    * Extract document outline
    */
-  async extractOutline(documentId: string): Promise<ApiResponse<any>> {
+  async extractOutline(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_document_outline', {
       document_id: documentId
     })
@@ -75,7 +75,7 @@ export class StructureService {
   /**
    * Analyze paragraph structure
    */
-  async analyzeParagraphStructure(documentId: string): Promise<ApiResponse<any[]>> {
+  async analyzeParagraphStructure(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_paragraph_structure', {
       document_id: documentId
     })
@@ -84,7 +84,7 @@ export class StructureService {
   /**
    * Identify document components
    */
-  async identifyComponents(documentId: string): Promise<ApiResponse<any[]>> {
+  async identifyComponents(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('identify_document_components', {
       document_id: documentId
     })
@@ -95,7 +95,7 @@ export class StructureService {
    */
   async analyzeStructuralConsistency(
     documentIds: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_structural_consistency', {
       document_ids: documentIds
     })
@@ -104,7 +104,7 @@ export class StructureService {
   /**
    * Generate structure-based navigation
    */
-  async generateStructureNavigation(documentId: string): Promise<ApiResponse<any>> {
+  async generateStructureNavigation(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_structure_navigation', {
       document_id: documentId
     })
@@ -116,7 +116,7 @@ export class StructureService {
   async compareStructures(
     documentId1: string,
     documentId2: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_document_structures', {
       document_id_1: documentId1,
       document_id_2: documentId2
@@ -126,7 +126,7 @@ export class StructureService {
   /**
    * Suggest structure improvements
    */
-  async suggestStructureImprovements(documentId: string): Promise<ApiResponse<any[]>> {
+  async suggestStructureImprovements(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('suggest_structure_improvements', {
       document_id: documentId
     })
@@ -137,8 +137,8 @@ export class StructureService {
    */
   async validateStructure(
     documentId: string,
-    structureRules?: any
-  ): Promise<ApiResponse<any>> {
+    structureRules?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_document_structure', {
       document_id: documentId,
       structure_rules: structureRules || {}
@@ -148,7 +148,7 @@ export class StructureService {
   /**
    * Extract structural metadata
    */
-  async extractStructuralMetadata(documentId: string): Promise<ApiResponse<any>> {
+  async extractStructuralMetadata(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_structural_metadata', {
       document_id: documentId
     })
@@ -159,7 +159,7 @@ export class StructureService {
    */
   async reorganizeStructure(
     documentId: string,
-    reorganizationPlan: any
+    reorganizationPlan: unknown
   ): Promise<ApiResponse<Document>> {
     return apiClient.invoke('reorganize_document_structure', {
       document_id: documentId,
@@ -173,7 +173,7 @@ export class StructureService {
   async generateStructureTemplate(
     documentIds: string[],
     templateName: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_structure_template', {
       document_ids: documentIds,
       template_name: templateName

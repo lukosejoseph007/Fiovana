@@ -188,7 +188,7 @@ export const ConfidenceBadge: React.FC<Omit<BadgeProps, 'variant' | 'children'> 
   };
 
   return (
-    <Badge {...props} variant={getConfidenceVariant() as any}>
+    <Badge {...props} variant={getConfidenceVariant() as BadgeProps['variant']}>
       {Math.round(confidence)}%
     </Badge>
   );

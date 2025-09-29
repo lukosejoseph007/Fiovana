@@ -85,7 +85,7 @@ export interface LifecycleEvent {
   action: string
   actor: string
   details: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface SmartOrganization {
@@ -120,13 +120,13 @@ export interface AutomationRule {
 
 export interface RuleCondition {
   type: string
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   description: string
 }
 
 export interface RuleAction {
   type: 'move' | 'tag' | 'categorize' | 'notify' | 'archive'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   description: string
 }
 

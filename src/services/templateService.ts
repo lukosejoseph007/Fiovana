@@ -3,7 +3,6 @@ import { apiClient } from '../api'
 import {
   ContentTemplate,
   TemplateVariable,
-  TemplateMetadata,
   TemplateUsage,
   TemplatePerformance,
   ApiResponse
@@ -54,7 +53,7 @@ export class TemplateService {
   /**
    * Search templates
    */
-  async searchTemplates(query: string, filters?: any): Promise<ApiResponse<ContentTemplate[]>> {
+  async searchTemplates(query: string, filters?: Record<string, unknown>): Promise<ApiResponse<ContentTemplate[]>> {
     return apiClient.invoke('search_templates', {
       query,
       filters: filters || {}
@@ -64,14 +63,14 @@ export class TemplateService {
   /**
    * Validate template
    */
-  async validateTemplate(templateId: string): Promise<ApiResponse<any>> {
+  async validateTemplate(templateId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_template', { template_id: templateId })
   }
 
   /**
    * Preview template with variables
    */
-  async previewTemplate(templateId: string, variables: Record<string, any>): Promise<ApiResponse<string>> {
+  async previewTemplate(templateId: string, variables: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('preview_template', {
       template_id: templateId,
       variables
@@ -81,7 +80,7 @@ export class TemplateService {
   /**
    * Render template
    */
-  async renderTemplate(templateId: string, variables: Record<string, any>, options?: any): Promise<ApiResponse<string>> {
+  async renderTemplate(templateId: string, variables: Record<string, unknown>, options?: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('render_template', {
       template_id: templateId,
       variables,
@@ -175,7 +174,7 @@ export class TemplateService {
   /**
    * Import template
    */
-  async importTemplate(templateData: any, format: string): Promise<ApiResponse<ContentTemplate>> {
+  async importTemplate(templateData: unknown, format: string): Promise<ApiResponse<ContentTemplate>> {
     return apiClient.invoke('import_template', {
       template_data: templateData,
       format
@@ -206,7 +205,7 @@ export class TemplateService {
   /**
    * Analyze template effectiveness
    */
-  async analyzeTemplateEffectiveness(templateId: string): Promise<ApiResponse<any>> {
+  async analyzeTemplateEffectiveness(templateId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_template_effectiveness', { template_id: templateId })
   }
 

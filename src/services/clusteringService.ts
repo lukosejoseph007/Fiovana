@@ -12,7 +12,7 @@ export class ClusteringService {
    */
   async clusterDocumentsByContent(
     workspaceId: string,
-    clusteringOptions?: any
+    clusteringOptions?: unknown
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('cluster_documents_by_content', {
       workspace_id: workspaceId,
@@ -104,7 +104,7 @@ export class ClusteringService {
   async compareClusters(
     cluster1Id: string,
     cluster2Id: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_clusters', {
       cluster1_id: cluster1Id,
       cluster2_id: cluster2Id
@@ -144,7 +144,7 @@ export class ClusteringService {
    */
   async refineClusters(
     clusterIds: string[],
-    refinementOptions?: any
+    refinementOptions?: unknown
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('refine_clusters', {
       cluster_ids: clusterIds,
@@ -158,7 +158,7 @@ export class ClusteringService {
   async predictDocumentCluster(
     documentId: string,
     clusterModelId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_document_cluster', {
       document_id: documentId,
       cluster_model_id: clusterModelId
@@ -171,7 +171,7 @@ export class ClusteringService {
   async generateClusterVisualization(
     clusterIds: string[],
     visualizationType?: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_cluster_visualization', {
       cluster_ids: clusterIds,
       visualization_type: visualizationType || 'scatter'
@@ -194,7 +194,7 @@ export class ClusteringService {
   /**
    * Get cluster statistics
    */
-  async getClusterStatistics(clusterId: string): Promise<ApiResponse<any>> {
+  async getClusterStatistics(clusterId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_cluster_statistics', {
       cluster_id: clusterId
     })
@@ -206,7 +206,7 @@ export class ClusteringService {
   async validateClusterQuality(
     clusterIds: string[],
     validationMetrics?: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_cluster_quality', {
       cluster_ids: clusterIds,
       validation_metrics: validationMetrics || ['silhouette', 'inertia']
@@ -247,7 +247,7 @@ export class ClusteringService {
   async trackClusterEvolution(
     workspaceId: string,
     timeRange?: string
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('track_cluster_evolution', {
       workspace_id: workspaceId,
       time_range: timeRange || '30d'
@@ -259,8 +259,8 @@ export class ClusteringService {
    */
   async generateClusterReport(
     clusterIds: string[],
-    reportOptions?: any
-  ): Promise<ApiResponse<any>> {
+    reportOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_cluster_report', {
       cluster_ids: clusterIds,
       options: reportOptions || {}
@@ -272,7 +272,7 @@ export class ClusteringService {
    */
   async performCrossWorkspaceClustering(
     workspaceIds: string[],
-    clusteringOptions?: any
+    clusteringOptions?: unknown
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_cross_workspace_clustering', {
       workspace_ids: workspaceIds,

@@ -3,7 +3,6 @@ import { apiClient } from '../api'
 import {
   DocumentGeneration,
   GenerationMetadata,
-  ContentTemplate,
   ApiResponse
 } from '../types'
 
@@ -11,7 +10,7 @@ export class DocumentGenerationService {
   /**
    * Generate document from template
    */
-  async generateFromTemplate(templateId: string, parameters: Record<string, any>, options?: any): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromTemplate(templateId: string, parameters: Record<string, unknown>, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_template', {
       template_id: templateId,
       parameters,
@@ -22,7 +21,7 @@ export class DocumentGenerationService {
   /**
    * Generate document from prompt
    */
-  async generateFromPrompt(prompt: string, format: string, options?: any): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromPrompt(prompt: string, format: string, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_prompt', {
       prompt,
       format,
@@ -33,7 +32,7 @@ export class DocumentGenerationService {
   /**
    * Generate document outline
    */
-  async generateOutline(topic: string, documentType: string, options?: any): Promise<ApiResponse<any>> {
+  async generateOutline(topic: string, documentType: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_document_outline', {
       topic,
       document_type: documentType,
@@ -44,7 +43,7 @@ export class DocumentGenerationService {
   /**
    * Generate content sections
    */
-  async generateContentSections(outline: any, parameters?: any): Promise<ApiResponse<any[]>> {
+  async generateContentSections(outline: unknown, parameters?: unknown): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_content_sections', {
       outline,
       parameters: parameters || {}
@@ -64,7 +63,7 @@ export class DocumentGenerationService {
   /**
    * Generate document summary
    */
-  async generateDocumentSummary(documentId: string, options?: any): Promise<ApiResponse<string>> {
+  async generateDocumentSummary(documentId: string, options?: unknown): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_document_summary', {
       document_id: documentId,
       options: options || {}
@@ -74,7 +73,7 @@ export class DocumentGenerationService {
   /**
    * Generate bibliography
    */
-  async generateBibliography(sources: any[], style: string): Promise<ApiResponse<string>> {
+  async generateBibliography(sources: unknown[], style: string): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_bibliography', {
       sources,
       style
@@ -84,7 +83,7 @@ export class DocumentGenerationService {
   /**
    * Generate table of contents
    */
-  async generateTableOfContents(documentId: string, options?: any): Promise<ApiResponse<any>> {
+  async generateTableOfContents(documentId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_table_of_contents', {
       document_id: documentId,
       options: options || {}
@@ -121,7 +120,7 @@ export class DocumentGenerationService {
   /**
    * Validate generated content
    */
-  async validateGeneratedContent(generationId: string): Promise<ApiResponse<any>> {
+  async validateGeneratedContent(generationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_generated_content', { generation_id: generationId })
   }
 
@@ -138,7 +137,7 @@ export class DocumentGenerationService {
   /**
    * Generate content with constraints
    */
-  async generateWithConstraints(prompt: string, constraints: any): Promise<ApiResponse<DocumentGeneration>> {
+  async generateWithConstraints(prompt: string, constraints: unknown): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_content_with_constraints', {
       prompt,
       constraints
@@ -148,7 +147,7 @@ export class DocumentGenerationService {
   /**
    * Batch document generation
    */
-  async batchGenerate(requests: any[]): Promise<ApiResponse<DocumentGeneration[]>> {
+  async batchGenerate(requests: unknown[]): Promise<ApiResponse<DocumentGeneration[]>> {
     return apiClient.invoke('batch_document_generation', { requests })
   }
 
@@ -162,7 +161,7 @@ export class DocumentGenerationService {
   /**
    * Get generation status
    */
-  async getGenerationStatus(generationId: string): Promise<ApiResponse<any>> {
+  async getGenerationStatus(generationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_generation_status', { generation_id: generationId })
   }
 
@@ -176,7 +175,7 @@ export class DocumentGenerationService {
   /**
    * Generate document from data
    */
-  async generateFromData(data: any, templateType: string, options?: any): Promise<ApiResponse<DocumentGeneration>> {
+  async generateFromData(data: unknown, templateType: string, options?: unknown): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document_from_data', {
       data,
       template_type: templateType,
@@ -197,7 +196,7 @@ export class DocumentGenerationService {
   /**
    * Customize generation parameters
    */
-  async customizeGenerationParameters(generationId: string, parameters: any): Promise<ApiResponse<DocumentGeneration>> {
+  async customizeGenerationParameters(generationId: string, parameters: unknown): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('customize_generation_parameters', {
       generation_id: generationId,
       parameters

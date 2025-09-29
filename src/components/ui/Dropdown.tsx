@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { designTokens } from '../../styles/tokens';
 
 export interface DropdownOption {
@@ -54,6 +54,13 @@ const Dropdown: React.FC<DropdownProps> = ({
       )
     : options;
 
+  const handleSelect = useCallback((optionValue: string) => {
+    onChange?.(optionValue);
+    setIsOpen(false);
+    setSearchTerm('');
+    setHighlightedIndex(-1);
+  }, [onChange]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -102,14 +109,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, highlightedIndex, filteredOptions]);
-
-  const handleSelect = (optionValue: string) => {
-    onChange?.(optionValue);
-    setIsOpen(false);
-    setSearchTerm('');
-    setHighlightedIndex(-1);
-  };
+  }, [isOpen, highlightedIndex, filteredOptions, handleSelect]);
 
   const handleClear = (event: React.MouseEvent) => {
     event.stopPropagation();

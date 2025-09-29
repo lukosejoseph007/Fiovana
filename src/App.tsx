@@ -1,95 +1,284 @@
-import React from 'react'
+import React from 'react';
+import AppShell from './components/layout/AppShell';
+import HeaderBar from './components/layout/HeaderBar';
+import { Card, Button, Badge, Progress } from './components/ui';
 
 const App: React.FC = () => {
-  const completedTasks = [
-    'Phase 1: Complete UI Reset ✅',
-    'Comprehensive TypeScript Types (321+ commands) ✅',
-    'Centralized API Client & Command Registry ✅',
-    'Error Handling & Type Validation ✅',
-    'Service Layer Architecture ✅',
-    'Workspace Intelligence Services ✅',
-    'Document Processing Services ✅',
-    'AI Integration Services ✅',
-    'Search & Vector Services ✅',
-    'TypeScript Compilation ✅'
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-            <svg
-              className="h-10 w-10 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Proxemic</h1>
-          <p className="text-xl text-gray-600 mb-2">Document Intelligence Platform</p>
-          <p className="text-lg text-green-600 font-semibold">✨ Architecture Reset Complete ✨</p>
+    <AppShell>
+      {/* Header */}
+      <AppShell.Header>
+        <HeaderBar />
+      </AppShell.Header>
+
+      {/* Main Content Area */}
+      <AppShell.Main>
+        {/* Navigation Panel */}
+        <AppShell.Navigation>
+          <NavigationContent />
+        </AppShell.Navigation>
+
+        {/* Document Canvas */}
+        <AppShell.Canvas>
+          <CanvasContent />
+        </AppShell.Canvas>
+
+        {/* Intelligence Panel */}
+        <AppShell.Intelligence>
+          <IntelligenceContent />
+        </AppShell.Intelligence>
+      </AppShell.Main>
+    </AppShell>
+  );
+};
+
+// Navigation Panel Content
+const NavigationContent: React.FC = () => {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          Workspace Intelligence
+        </h3>
+        <Progress value={92} variant="health" showLabel label="Health Score" showPercentage />
+        <div style={{ fontSize: '12px', color: '#a8a8a8', marginTop: '8px' }}>
+          47 documents analyzed
         </div>
+        <div style={{ fontSize: '12px', color: '#a8a8a8' }}>
+          3 recommendations
+        </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">🚀 Implementation Complete</h2>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-            {completedTasks.map((task, index) => (
-              <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg">
-                <span className="text-sm text-gray-700">{task}</span>
-              </div>
-            ))}
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          Active Documents
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00ff88' }} />
+            <span style={{ fontSize: '13px', color: '#ffffff' }}>user-guide.docx</span>
+            <Badge variant="ai" size="sm">editing</Badge>
           </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-800 mb-3">📊 What's Been Accomplished</h3>
-            <ul className="space-y-2 text-sm text-blue-700">
-              <li>• <strong>Complete Frontend Reset:</strong> Clean slate with modern React architecture</li>
-              <li>• <strong>Type-Safe Integration:</strong> Comprehensive TypeScript types for 321+ backend commands</li>
-              <li>• <strong>Scalable API Layer:</strong> Centralized client with command registry and error handling</li>
-              <li>• <strong>Service Architecture:</strong> Modular services for all major functionality areas</li>
-              <li>• <strong>Backend Integration:</strong> Full access to workspace intelligence, AI, search, and document processing</li>
-            </ul>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#6b6b6b' }} />
+            <span style={{ fontSize: '13px', color: '#a8a8a8' }}>technical-spec.pdf</span>
+            <Badge variant="default" size="sm">referenced</Badge>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">🎯 Next Steps</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🎨</span>
-              </div>
-              <h4 className="font-semibold text-gray-800 mb-2">UI Components</h4>
-              <p className="text-sm text-gray-600">Build modern React components for workspace, documents, and AI features</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🔌</span>
-              </div>
-              <h4 className="font-semibold text-gray-800 mb-2">Integration</h4>
-              <p className="text-sm text-gray-600">Connect UI components to the new service layer</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">✨</span>
-              </div>
-              <h4 className="font-semibold text-gray-800 mb-2">Features</h4>
-              <p className="text-sm text-gray-600">Implement advanced features like workspace analytics and AI chat</p>
-            </div>
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          Recent Conversations
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '13px', color: '#a8a8a8', cursor: 'pointer' }}>
+            "Update training materials"
+          </div>
+          <div style={{ fontSize: '13px', color: '#a8a8a8', cursor: 'pointer' }}>
+            "Compare API documentation"
+          </div>
+          <div style={{ fontSize: '13px', color: '#00d4ff', cursor: 'pointer' }}>
+            View all...
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          Smart Collections
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px' }}>📊</span>
+            <span style={{ fontSize: '13px', color: '#a8a8a8' }}>Needs Review</span>
+            <Badge variant="warning" size="sm">3</Badge>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px' }}>🔄</span>
+            <span style={{ fontSize: '13px', color: '#a8a8a8' }}>Recently Updated</span>
+            <Badge variant="success" size="sm">8</Badge>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px' }}>⚠️</span>
+            <span style={{ fontSize: '13px', color: '#a8a8a8' }}>Outdated Content</span>
+            <Badge variant="error" size="sm">2</Badge>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default App
+// Document Canvas Content
+const CanvasContent: React.FC = () => {
+  return (
+    <div style={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '32px',
+      textAlign: 'center'
+    }}>
+      <div>
+        <h1 style={{
+          fontSize: '32px',
+          fontWeight: '300',
+          color: '#0a0a0b',
+          marginBottom: '16px',
+          letterSpacing: '-0.025em'
+        }}>
+          Welcome back. What would you like to work on today?
+        </h1>
+
+        <Card variant="glass" padding="lg" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: '#0a0a0b',
+            marginBottom: '16px'
+          }}>
+            Continue from yesterday:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+            <Button variant="ghost" size="sm">• Update user guide</Button>
+            <Button variant="ghost" size="sm">• Review API changes</Button>
+          </div>
+        </Card>
+      </div>
+
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        padding: '24px',
+        border: '2px dashed #e0e0e0',
+        borderRadius: '12px',
+        color: '#6b6b6b',
+        fontSize: '16px'
+      }}>
+        Type or drag documents here...
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Button variant="primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14,2 14,8 20,8" />
+          </svg>
+          Import Document
+        </Button>
+        <Button variant="secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          Search Content
+        </Button>
+        <Button variant="ghost">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          AI Assistant
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Intelligence Panel Content
+const IntelligenceContent: React.FC = () => {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          AI Assistant
+        </h3>
+
+        <Card variant="glass" padding="md">
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '14px', color: '#ffffff', marginBottom: '8px' }}>
+              How can I help with your documents today?
+            </div>
+            <Button variant="ghost" size="sm" fullWidth>
+              Suggested: Compare recent changes...
+            </Button>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '8px',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <input
+              style={{
+                flex: 1,
+                background: 'none',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+              placeholder="Type a message..."
+            />
+            <Button variant="primary" size="sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22,2 15,22 11,13 2,9 22,2" />
+              </svg>
+            </Button>
+          </div>
+        </Card>
+      </div>
+
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '12px' }}>
+          Document Analysis
+        </h3>
+
+        <Card variant="default" padding="md">
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '12px', color: '#a8a8a8' }}>Structure</span>
+              <span style={{ fontSize: '12px', color: '#ffffff' }}>100%</span>
+            </div>
+            <Progress value={100} variant="confidence" size="sm" />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '12px', color: '#a8a8a8' }}>Clarity</span>
+              <span style={{ fontSize: '12px', color: '#ffffff' }}>82%</span>
+            </div>
+            <Progress value={82} variant="confidence" size="sm" />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '12px', color: '#a8a8a8' }}>Completeness</span>
+              <span style={{ fontSize: '12px', color: '#ffffff' }}>85%</span>
+            </div>
+            <Progress value={85} variant="confidence" size="sm" />
+          </div>
+
+          <div style={{ fontSize: '12px', color: '#a8a8a8', marginBottom: '8px' }}>
+            24 concepts identified<br />
+            12 procedures mapped<br />
+            3 gaps detected
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button variant="ghost" size="sm">View Details</Button>
+            <Button variant="secondary" size="sm">Get Suggestions</Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default App;

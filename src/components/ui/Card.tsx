@@ -67,15 +67,6 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       ...style,
     };
 
-    const hoverStyles = hoverable || clickable ? {
-      transform: 'translateY(-2px)',
-      boxShadow: variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg,
-    } : {};
-
-    const activeStyles = clickable ? {
-      transform: 'translateY(0px)',
-      boxShadow: variant === 'glass' ? designTokens.shadows.glassMedium : designTokens.shadows.md,
-    } : {};
 
     return (
       <>

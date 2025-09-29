@@ -26,7 +26,7 @@ export class SearchService {
   /**
    * Perform keyword-based search
    */
-  async keywordSearch(text: string, options?: any): Promise<ApiResponse<SearchResult>> {
+  async keywordSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('keyword_search', {
       text,
       options: options || {}
@@ -36,7 +36,7 @@ export class SearchService {
   /**
    * Perform semantic search using embeddings
    */
-  async semanticSearch(text: string, options?: any): Promise<ApiResponse<SearchResult>> {
+  async semanticSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('semantic_search', {
       text,
       options: options || {}
@@ -46,7 +46,7 @@ export class SearchService {
   /**
    * Perform hybrid search (keyword + semantic)
    */
-  async hybridSearch(text: string, options?: any): Promise<ApiResponse<SearchResult>> {
+  async hybridSearch(text: string, options?: unknown): Promise<ApiResponse<SearchResult>> {
     return apiClient.invoke('hybrid_search', {
       text,
       options: options || {}
@@ -104,7 +104,7 @@ export class SearchService {
   /**
    * Get saved search queries
    */
-  async getSavedQueries(): Promise<ApiResponse<any[]>> {
+  async getSavedQueries(): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_saved_queries')
   }
 
@@ -120,7 +120,7 @@ export class SearchService {
   /**
    * Get index status
    */
-  async getIndexStatus(): Promise<ApiResponse<any>> {
+  async getIndexStatus(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_index_status')
   }
 
@@ -141,7 +141,7 @@ export class SearchService {
   /**
    * Get index statistics
    */
-  async getIndexStats(): Promise<ApiResponse<any>> {
+  async getIndexStats(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_index_stats')
   }
 
@@ -205,7 +205,7 @@ export class SearchService {
   /**
    * Find similar documents using vectors
    */
-  async findSimilarDocuments(documentId: string, limit?: number): Promise<ApiResponse<any[]>> {
+  async findSimilarDocuments(documentId: string, limit?: number): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_similar_documents', {
       document_id: documentId,
       limit: limit || 10
@@ -225,7 +225,7 @@ export class SearchService {
   /**
    * Cluster documents by similarity
    */
-  async clusterDocuments(documentIds: string[], options?: any): Promise<ApiResponse<any[]>> {
+  async clusterDocuments(documentIds: string[], options?: unknown): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_documents', {
       document_ids: documentIds,
       options: options || {}
@@ -252,14 +252,14 @@ export class SearchService {
   /**
    * Batch vector operations
    */
-  async batchVectorOperations(operations: any[]): Promise<ApiResponse<any[]>> {
+  async batchVectorOperations(operations: unknown[]): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('batch_vector_operations', { operations })
   }
 
   /**
    * Get vector space statistics
    */
-  async getVectorSpaceStats(spaceId: string): Promise<ApiResponse<any>> {
+  async getVectorSpaceStats(spaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_vector_space_stats', { space_id: spaceId })
   }
 
@@ -293,7 +293,7 @@ export class SearchService {
   /**
    * Get search performance metrics
    */
-  async getSearchMetrics(): Promise<ApiResponse<any>> {
+  async getSearchMetrics(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_search_metrics')
   }
 }

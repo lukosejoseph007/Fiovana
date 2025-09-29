@@ -87,14 +87,14 @@ export class WorkspaceService {
   /**
    * Get workspace insights and recommendations
    */
-  async getWorkspaceInsights(workspaceId: string): Promise<ApiResponse<any>> {
+  async getWorkspaceInsights(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_insights', { workspace_id: workspaceId })
   }
 
   /**
    * Optimize workspace organization
    */
-  async optimizeWorkspace(workspaceId: string, options?: any): Promise<ApiResponse<any>> {
+  async optimizeWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_workspace', {
       workspace_id: workspaceId,
       options: options || {}
@@ -104,7 +104,7 @@ export class WorkspaceService {
   /**
    * Backup workspace
    */
-  async backupWorkspace(workspaceId: string, options?: any): Promise<ApiResponse<WorkspaceBackup>> {
+  async backupWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<WorkspaceBackup>> {
     return apiClient.invoke('backup_workspace', {
       workspace_id: workspaceId,
       options: options || {}
@@ -128,21 +128,21 @@ export class WorkspaceService {
   /**
    * Scan workspace for issues
    */
-  async scanWorkspace(workspaceId: string): Promise<ApiResponse<any>> {
+  async scanWorkspace(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('scan_workspace', { workspace_id: workspaceId })
   }
 
   /**
    * Get workspace performance metrics
    */
-  async getPerformanceMetrics(workspaceId: string): Promise<ApiResponse<any>> {
+  async getPerformanceMetrics(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_performance', { workspace_id: workspaceId })
   }
 
   /**
    * Set workspace AI configuration
    */
-  async configureWorkspaceAI(workspaceId: string, config: any): Promise<ApiResponse<any>> {
+  async configureWorkspaceAI(workspaceId: string, config: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('configure_workspace_ai', {
       workspace_id: workspaceId,
       config
@@ -152,14 +152,14 @@ export class WorkspaceService {
   /**
    * Get workspace AI status
    */
-  async getWorkspaceAIStatus(workspaceId: string): Promise<ApiResponse<any>> {
+  async getWorkspaceAIStatus(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_ai_status', { workspace_id: workspaceId })
   }
 
   /**
    * Generate workspace report
    */
-  async generateWorkspaceReport(workspaceId: string, reportType: string): Promise<ApiResponse<any>> {
+  async generateWorkspaceReport(workspaceId: string, reportType: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_workspace_report', {
       workspace_id: workspaceId,
       report_type: reportType
@@ -169,7 +169,7 @@ export class WorkspaceService {
   /**
    * Get workspace activity feed
    */
-  async getActivityFeed(workspaceId: string, options?: any): Promise<ApiResponse<any>> {
+  async getActivityFeed(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_activity', {
       workspace_id: workspaceId,
       options: options || {}

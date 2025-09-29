@@ -1,7 +1,6 @@
 // Relationship Service
 import { apiClient } from '../api'
 import {
-  Document,
   DocumentRelationship,
   ApiResponse
 } from '../types'
@@ -57,7 +56,7 @@ export class RelationshipService {
   async buildRelationshipGraph(
     workspaceId: string,
     includeMetadata?: boolean
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('build_relationship_graph', {
       workspace_id: workspaceId,
       include_metadata: includeMetadata || false
@@ -81,7 +80,7 @@ export class RelationshipService {
   async findContentOverlap(
     documentId1: string,
     documentId2: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('find_content_overlap', {
       document_id_1: documentId1,
       document_id_2: documentId2
@@ -93,8 +92,8 @@ export class RelationshipService {
    */
   async identifyDocumentClusters(
     workspaceId: string,
-    clusteringOptions?: any
-  ): Promise<ApiResponse<any[]>> {
+    clusteringOptions?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('identify_document_clusters', {
       workspace_id: workspaceId,
       options: clusteringOptions || {}
@@ -163,7 +162,7 @@ export class RelationshipService {
    */
   async updateRelationshipMetadata(
     relationshipId: string,
-    metadata: any
+    metadata: unknown
   ): Promise<ApiResponse<DocumentRelationship>> {
     return apiClient.invoke('update_relationship_metadata', {
       relationship_id: relationshipId,

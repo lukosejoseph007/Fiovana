@@ -3,7 +3,6 @@ import { apiClient } from '../api'
 import {
   StyleTransfer,
   TransferResult,
-  StyleProfile,
   OrganizationalStyle,
   ApiResponse
 } from '../types'
@@ -12,7 +11,7 @@ export class StyleTransferService {
   /**
    * Transfer style from one document to another
    */
-  async transferStyle(sourceDocumentId: string, targetDocumentId: string, options?: any): Promise<ApiResponse<StyleTransfer>> {
+  async transferStyle(sourceDocumentId: string, targetDocumentId: string, options?: unknown): Promise<ApiResponse<StyleTransfer>> {
     return apiClient.invoke('transfer_document_style', {
       source_document_id: sourceDocumentId,
       target_document_id: targetDocumentId,
@@ -23,7 +22,7 @@ export class StyleTransferService {
   /**
    * Apply style profile to document
    */
-  async applyStyleProfile(documentId: string, styleProfileId: string, options?: any): Promise<ApiResponse<TransferResult>> {
+  async applyStyleProfile(documentId: string, styleProfileId: string, options?: unknown): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('apply_style_profile', {
       document_id: documentId,
       style_profile_id: styleProfileId,
@@ -44,7 +43,7 @@ export class StyleTransferService {
   /**
    * Preview style transfer before applying
    */
-  async previewStyleTransfer(documentId: string, styleProfileId: string): Promise<ApiResponse<any>> {
+  async previewStyleTransfer(documentId: string, styleProfileId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_style_transfer', {
       document_id: documentId,
       style_profile_id: styleProfileId
@@ -64,7 +63,7 @@ export class StyleTransferService {
   /**
    * Customize style transfer parameters
    */
-  async customizeTransferParameters(transferId: string, parameters: any): Promise<ApiResponse<TransferResult>> {
+  async customizeTransferParameters(transferId: string, parameters: unknown): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('customize_transfer_parameters', {
       transfer_id: transferId,
       parameters
@@ -74,7 +73,7 @@ export class StyleTransferService {
   /**
    * Revert style transfer
    */
-  async revertStyleTransfer(transferId: string): Promise<ApiResponse<any>> {
+  async revertStyleTransfer(transferId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('revert_style_transfer', { transfer_id: transferId })
   }
 
@@ -88,21 +87,21 @@ export class StyleTransferService {
   /**
    * Validate style transfer quality
    */
-  async validateTransferQuality(transferId: string): Promise<ApiResponse<any>> {
+  async validateTransferQuality(transferId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_transfer_quality', { transfer_id: transferId })
   }
 
   /**
    * Get transfer recommendations
    */
-  async getTransferRecommendations(documentId: string): Promise<ApiResponse<any[]>> {
+  async getTransferRecommendations(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_transfer_recommendations', { document_id: documentId })
   }
 
   /**
    * Fine-tune style transfer
    */
-  async fineTuneTransfer(transferId: string, adjustments: any): Promise<ApiResponse<TransferResult>> {
+  async fineTuneTransfer(transferId: string, adjustments: unknown): Promise<ApiResponse<TransferResult>> {
     return apiClient.invoke('fine_tune_style_transfer', {
       transfer_id: transferId,
       adjustments
@@ -112,7 +111,7 @@ export class StyleTransferService {
   /**
    * Create organizational style guide
    */
-  async createOrganizationalStyle(organizationId: string, styleData: any): Promise<ApiResponse<OrganizationalStyle>> {
+  async createOrganizationalStyle(organizationId: string, styleData: unknown): Promise<ApiResponse<OrganizationalStyle>> {
     return apiClient.invoke('create_organizational_style', {
       organization_id: organizationId,
       style_data: styleData
@@ -122,7 +121,7 @@ export class StyleTransferService {
   /**
    * Update organizational style guide
    */
-  async updateOrganizationalStyle(styleId: string, updates: any): Promise<ApiResponse<OrganizationalStyle>> {
+  async updateOrganizationalStyle(styleId: string, updates: unknown): Promise<ApiResponse<OrganizationalStyle>> {
     return apiClient.invoke('update_organizational_style', {
       style_id: styleId,
       updates
@@ -132,7 +131,7 @@ export class StyleTransferService {
   /**
    * Get organizational style compliance
    */
-  async checkStyleCompliance(documentId: string, organizationId: string): Promise<ApiResponse<any>> {
+  async checkStyleCompliance(documentId: string, organizationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('check_style_compliance', {
       document_id: documentId,
       organization_id: organizationId
@@ -142,7 +141,7 @@ export class StyleTransferService {
   /**
    * Generate style transfer report
    */
-  async generateTransferReport(transferId: string): Promise<ApiResponse<any>> {
+  async generateTransferReport(transferId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_transfer_report', { transfer_id: transferId })
   }
 }

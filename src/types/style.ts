@@ -12,7 +12,7 @@ export interface StyleProfile {
 export interface StyleFeature {
   type: 'vocabulary' | 'syntax' | 'structure' | 'tone' | 'formatting'
   name: string
-  value: any
+  value: unknown
   weight: number
   description: string
 }
@@ -127,7 +127,7 @@ export interface TemplateVariable {
   name: string
   type: 'string' | 'number' | 'date' | 'list' | 'object'
   required: boolean
-  defaultValue?: any
+  defaultValue?: unknown
   description: string
 }
 

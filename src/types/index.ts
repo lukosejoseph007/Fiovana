@@ -78,7 +78,7 @@ export interface ClusterResult {
   members: string[]
   size: number
   quality: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ClusterAnalysis {
@@ -121,7 +121,7 @@ export interface Workspace {
   documents: Document[]
   createdAt: Date
   updatedAt: Date
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface WorkspaceComparison {
@@ -146,7 +146,7 @@ export interface BackupInfo {
   timestamp: Date
   size: number
   status: 'pending' | 'completed' | 'failed'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface PerformanceMetrics {
@@ -161,13 +161,13 @@ export interface AIAnalysis {
   insights: string[]
   confidence: number
   recommendations: string[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface DocumentStructure {
   hierarchy: StructureNode[]
   sections: StructureSection[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface StructureNode {
@@ -191,7 +191,7 @@ export interface VectorOperation {
   operation: string
   input: number[][]
   output: number[][]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ProcessingPipeline {
@@ -206,7 +206,7 @@ export interface PipelineStage {
   id: string
   name: string
   processor: string
-  config: Record<string, any>
+  config: Record<string, unknown>
   status: 'pending' | 'running' | 'completed' | 'failed'
 }
 
@@ -220,14 +220,14 @@ export interface PipelineMetrics {
 export interface StreamProcessor {
   id: string
   type: string
-  config: Record<string, any>
+  config: Record<string, unknown>
   isActive: boolean
 }
 
 export interface RealTimeEvent {
   id: string
   type: string
-  data: any
+  data: unknown
   timestamp: Date
   source: string
 }
@@ -236,20 +236,20 @@ export interface NLOperation {
   id: string
   operation: string
   input: string
-  output: any
+  output: unknown
   confidence: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Common utility types used across modules
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   items: T[]
   total: number
   page: number
@@ -258,7 +258,7 @@ export interface PaginatedResponse<T = any> {
   hasPrevious: boolean
 }
 
-export interface BatchOperation<T = any> {
+export interface BatchOperation<T = unknown> {
   id: string
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
   items: T[]
@@ -269,13 +269,13 @@ export interface BatchOperation<T = any> {
   completedAt?: Date
 }
 
-export interface BatchResult<T = any> {
+export interface BatchResult<T = unknown> {
   successful: T[]
   failed: FailedItem<T>[]
   summary: BatchSummary
 }
 
-export interface FailedItem<T = any> {
+export interface FailedItem<T = unknown> {
   item: T
   error: string
   retryable: boolean

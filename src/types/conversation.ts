@@ -16,7 +16,7 @@ export interface Participant {
   name: string
   role: 'user' | 'assistant' | 'system' | 'guest'
   avatar?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface Message {
@@ -43,7 +43,7 @@ export interface MessageMetadata {
 export interface Intent {
   name: string
   confidence: number
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 }
 
 export interface Entity {

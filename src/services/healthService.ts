@@ -110,14 +110,14 @@ export class HealthService {
   /**
    * Get health alerts and warnings
    */
-  async getHealthAlerts(): Promise<ApiResponse<any[]>> {
+  async getHealthAlerts(): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_health_alerts', {})
   }
 
   /**
    * Set health monitoring thresholds
    */
-  async setHealthThresholds(thresholds: any): Promise<ApiResponse<void>> {
+  async setHealthThresholds(thresholds: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_health_thresholds', { thresholds })
   }
 
@@ -159,28 +159,28 @@ export class HealthService {
   /**
    * Get system resource utilization
    */
-  async getResourceUtilization(): Promise<ApiResponse<any>> {
+  async getResourceUtilization(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_resource_utilization', {})
   }
 
   /**
    * Check service dependencies
    */
-  async checkServiceDependencies(): Promise<ApiResponse<any[]>> {
+  async checkServiceDependencies(): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('check_service_dependencies', {})
   }
 
   /**
    * Validate system configuration
    */
-  async validateSystemConfiguration(): Promise<ApiResponse<any>> {
+  async validateSystemConfiguration(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_system_configuration', {})
   }
 
   /**
    * Get uptime statistics
    */
-  async getUptimeStatistics(): Promise<ApiResponse<any>> {
+  async getUptimeStatistics(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_uptime_statistics', {})
   }
 

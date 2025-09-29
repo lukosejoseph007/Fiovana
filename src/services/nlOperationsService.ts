@@ -1,8 +1,6 @@
 // Natural Language Operations Service
 import { apiClient } from '../api'
 import {
-  Document,
-  NLOperation,
   ApiResponse
 } from '../types'
 
@@ -10,7 +8,7 @@ export class NLOperationsService {
   /**
    * Extract named entities from document
    */
-  async extractNamedEntities(documentId: string): Promise<ApiResponse<any[]>> {
+  async extractNamedEntities(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_named_entities', {
       document_id: documentId
     })
@@ -19,7 +17,7 @@ export class NLOperationsService {
   /**
    * Perform sentiment analysis
    */
-  async analyzeSentiment(documentId: string): Promise<ApiResponse<any>> {
+  async analyzeSentiment(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_sentiment', {
       document_id: documentId
     })
@@ -77,7 +75,7 @@ export class NLOperationsService {
   async extractTopics(
     documentId: string,
     numberOfTopics?: number
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_topics', {
       document_id: documentId,
       number_of_topics: numberOfTopics || 5
@@ -87,7 +85,7 @@ export class NLOperationsService {
   /**
    * Analyze readability metrics
    */
-  async analyzeReadability(documentId: string): Promise<ApiResponse<any>> {
+  async analyzeReadability(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_readability', {
       document_id: documentId
     })
@@ -96,7 +94,7 @@ export class NLOperationsService {
   /**
    * Extract document structure
    */
-  async extractStructure(documentId: string): Promise<ApiResponse<any>> {
+  async extractStructure(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_document_structure', {
       document_id: documentId
     })
@@ -108,7 +106,7 @@ export class NLOperationsService {
   async classifyIntent(
     text: string,
     possibleIntents?: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_intent', {
       text,
       possible_intents: possibleIntents || []
@@ -118,7 +116,7 @@ export class NLOperationsService {
   /**
    * Extract relationships between entities
    */
-  async extractEntityRelationships(documentId: string): Promise<ApiResponse<any[]>> {
+  async extractEntityRelationships(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_entity_relationships', {
       document_id: documentId
     })
@@ -130,7 +128,7 @@ export class NLOperationsService {
   async clusterDocuments(
     documentIds: string[],
     numberOfClusters?: number
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_documents', {
       document_ids: documentIds,
       number_of_clusters: numberOfClusters || 3
@@ -152,7 +150,7 @@ export class NLOperationsService {
   async classifyText(
     text: string,
     categories: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_text', {
       text,
       categories
@@ -162,7 +160,7 @@ export class NLOperationsService {
   /**
    * Extract document metadata through NL processing
    */
-  async extractNLMetadata(documentId: string): Promise<ApiResponse<any>> {
+  async extractNLMetadata(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('extract_nl_metadata', {
       document_id: documentId
     })
@@ -184,7 +182,7 @@ export class NLOperationsService {
   /**
    * Generate document insights
    */
-  async generateInsights(documentId: string): Promise<ApiResponse<any[]>> {
+  async generateInsights(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_document_insights', {
       document_id: documentId
     })
@@ -196,7 +194,7 @@ export class NLOperationsService {
   async batchProcessNL(
     documentIds: string[],
     operations: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('batch_process_nl_operations', {
       document_ids: documentIds,
       operations

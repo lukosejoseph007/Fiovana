@@ -9,7 +9,7 @@ export interface SearchQuery {
 export interface SearchFilter {
   field: string
   operator: 'equals' | 'contains' | 'gt' | 'lt' | 'range' | 'in'
-  value: any
+  value: unknown
 }
 
 export interface SearchOptions {
@@ -37,7 +37,7 @@ export interface SearchResultItem {
   content: string
   score: number
   highlights: Highlight[]
-  metadata: any
+  metadata: unknown
   path: string
 }
 
@@ -56,7 +56,7 @@ export interface HighlightPosition {
 export interface SearchMetadata {
   algorithm: string
   indexVersion: string
-  debugInfo?: any
+  debugInfo?: unknown
   performance: PerformanceMetrics
 }
 
@@ -112,7 +112,7 @@ export interface VectorQuery {
 
 export interface VectorFilter {
   field: string
-  value: any
+  value: unknown
   operator: 'equals' | 'in' | 'range'
 }
 
@@ -127,7 +127,7 @@ export interface VectorResultItem {
   documentId: string
   similarity: number
   vector?: number[]
-  metadata?: any
+  metadata?: unknown
   content?: string
 }
 
@@ -147,7 +147,7 @@ export interface VectorPerformanceMetrics {
 
 export interface IndexConfig {
   type: 'inverted' | 'vector' | 'hybrid'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   updateFrequency: 'realtime' | 'batch' | 'manual'
   optimization: IndexOptimization
 }

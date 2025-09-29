@@ -1,7 +1,6 @@
 // Multi-Workspace Analysis Service
 import { apiClient } from '../api'
 import {
-  Workspace,
   WorkspaceComparison,
   MultiWorkspaceAnalysis,
   ApiResponse
@@ -26,7 +25,7 @@ export class MultiWorkspaceService {
    */
   async analyzeCrossWorkspaceRelationships(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_cross_workspace_relationships', {
       workspace_ids: workspaceIds
     })
@@ -38,8 +37,8 @@ export class MultiWorkspaceService {
   async searchAcrossWorkspaces(
     workspaceIds: string[],
     query: string,
-    searchOptions?: any
-  ): Promise<ApiResponse<any[]>> {
+    searchOptions?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('search_across_workspaces', {
       workspace_ids: workspaceIds,
       query,
@@ -52,7 +51,7 @@ export class MultiWorkspaceService {
    */
   async analyzeContentDistribution(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_content_distribution', {
       workspace_ids: workspaceIds
     })
@@ -64,7 +63,7 @@ export class MultiWorkspaceService {
   async findCrossWorkspaceDuplicates(
     workspaceIds: string[],
     duplicateThreshold?: number
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_cross_workspace_duplicates', {
       workspace_ids: workspaceIds,
       duplicate_threshold: duplicateThreshold || 0.8
@@ -76,7 +75,7 @@ export class MultiWorkspaceService {
    */
   async analyzeCollaborationPatterns(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_multi_workspace_collaboration', {
       workspace_ids: workspaceIds
     })
@@ -101,7 +100,7 @@ export class MultiWorkspaceService {
   async benchmarkWorkspacePerformance(
     workspaceIds: string[],
     benchmarkMetrics?: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('benchmark_multi_workspace_performance', {
       workspace_ids: workspaceIds,
       benchmark_metrics: benchmarkMetrics || []
@@ -114,7 +113,7 @@ export class MultiWorkspaceService {
   async analyzeGrowthTrends(
     workspaceIds: string[],
     timeRange?: string
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_multi_workspace_growth_trends', {
       workspace_ids: workspaceIds,
       time_range: timeRange || '6m'
@@ -126,7 +125,7 @@ export class MultiWorkspaceService {
    */
   async findKnowledgeGaps(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_multi_workspace_knowledge_gaps', {
       workspace_ids: workspaceIds
     })
@@ -137,7 +136,7 @@ export class MultiWorkspaceService {
    */
   async analyzeContentQualityDistribution(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_multi_workspace_content_quality', {
       workspace_ids: workspaceIds
     })
@@ -148,7 +147,7 @@ export class MultiWorkspaceService {
    */
   async analyzeCrossWorkspaceStyles(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_cross_workspace_styles', {
       workspace_ids: workspaceIds
     })
@@ -160,7 +159,7 @@ export class MultiWorkspaceService {
   async generateMigrationRecommendations(
     sourceWorkspaceId: string,
     targetWorkspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_workspace_migration_recommendations', {
       source_workspace_id: sourceWorkspaceId,
       target_workspace_ids: targetWorkspaceIds
@@ -173,7 +172,7 @@ export class MultiWorkspaceService {
   async analyzeUsagePatterns(
     workspaceIds: string[],
     timeRange?: string
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_multi_workspace_usage_patterns', {
       workspace_ids: workspaceIds,
       time_range: timeRange || '30d'
@@ -185,7 +184,7 @@ export class MultiWorkspaceService {
    */
   async performSecurityAnalysis(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('perform_multi_workspace_security_analysis', {
       workspace_ids: workspaceIds
     })
@@ -196,7 +195,7 @@ export class MultiWorkspaceService {
    */
   async generateConsolidationRecommendations(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_workspace_consolidation_recommendations', {
       workspace_ids: workspaceIds
     })
@@ -207,7 +206,7 @@ export class MultiWorkspaceService {
    */
   async analyzeResourceUtilization(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_multi_workspace_resource_utilization', {
       workspace_ids: workspaceIds
     })
@@ -218,8 +217,8 @@ export class MultiWorkspaceService {
    */
   async performComplianceCheck(
     workspaceIds: string[],
-    complianceRules?: any[]
-  ): Promise<ApiResponse<any[]>> {
+    complianceRules?: unknown[]
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('perform_multi_workspace_compliance_check', {
       workspace_ids: workspaceIds,
       compliance_rules: complianceRules || []
@@ -232,8 +231,8 @@ export class MultiWorkspaceService {
   async generateMultiWorkspaceReport(
     workspaceIds: string[],
     reportType?: string,
-    reportOptions?: any
-  ): Promise<ApiResponse<any>> {
+    reportOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_multi_workspace_report', {
       workspace_ids: workspaceIds,
       report_type: reportType || 'comprehensive',
@@ -246,7 +245,7 @@ export class MultiWorkspaceService {
    */
   async analyzeWorkspaceInterdependencies(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_workspace_interdependencies', {
       workspace_ids: workspaceIds
     })
@@ -257,8 +256,8 @@ export class MultiWorkspaceService {
    */
   async coordinateMultiWorkspaceBackup(
     workspaceIds: string[],
-    backupOptions?: any
-  ): Promise<ApiResponse<any[]>> {
+    backupOptions?: unknown
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('coordinate_multi_workspace_backup', {
       workspace_ids: workspaceIds,
       options: backupOptions || {}
@@ -272,7 +271,7 @@ export class MultiWorkspaceService {
     sourceWorkspaceId: string,
     targetWorkspaceIds: string[],
     configurationTypes?: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('synchronize_workspace_configurations', {
       source_workspace_id: sourceWorkspaceId,
       target_workspace_ids: targetWorkspaceIds,
@@ -284,8 +283,8 @@ export class MultiWorkspaceService {
    * Perform cross-workspace data migration
    */
   async performCrossWorkspaceMigration(
-    migrationPlan: any
-  ): Promise<ApiResponse<any>> {
+    migrationPlan: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('perform_cross_workspace_migration', {
       migration_plan: migrationPlan
     })
@@ -296,7 +295,7 @@ export class MultiWorkspaceService {
    */
   async monitorMultiWorkspaceHealth(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('monitor_multi_workspace_health', {
       workspace_ids: workspaceIds
     })

@@ -1,7 +1,6 @@
 // Workspace Performance Service
 import { apiClient } from '../api'
 import {
-  Workspace,
   PerformanceMetrics,
   ApiResponse
 } from '../types'
@@ -32,7 +31,7 @@ export class WorkspacePerformanceService {
   /**
    * Analyze performance bottlenecks
    */
-  async analyzeBottlenecks(workspaceId: string): Promise<ApiResponse<any[]>> {
+  async analyzeBottlenecks(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_performance_bottlenecks', {
       workspace_id: workspaceId
     })
@@ -43,8 +42,8 @@ export class WorkspacePerformanceService {
    */
   async optimizePerformance(
     workspaceId: string,
-    optimizationOptions?: any
-  ): Promise<ApiResponse<any>> {
+    optimizationOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_workspace_performance', {
       workspace_id: workspaceId,
       options: optimizationOptions || {}
@@ -81,7 +80,7 @@ export class WorkspacePerformanceService {
   /**
    * Get performance alerts
    */
-  async getPerformanceAlerts(workspaceId: string): Promise<ApiResponse<any[]>> {
+  async getPerformanceAlerts(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_performance_alerts', {
       workspace_id: workspaceId
     })
@@ -92,7 +91,7 @@ export class WorkspacePerformanceService {
    */
   async setPerformanceThresholds(
     workspaceId: string,
-    thresholds: any
+    thresholds: unknown
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_performance_thresholds', {
       workspace_id: workspaceId,
@@ -105,8 +104,8 @@ export class WorkspacePerformanceService {
    */
   async generatePerformanceReport(
     workspaceId: string,
-    reportOptions?: any
-  ): Promise<ApiResponse<any>> {
+    reportOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_performance_report', {
       workspace_id: workspaceId,
       options: reportOptions || {}
@@ -118,7 +117,7 @@ export class WorkspacePerformanceService {
    */
   async compareWorkspacePerformance(
     workspaceIds: string[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_workspace_performance', {
       workspace_ids: workspaceIds
     })
@@ -127,7 +126,7 @@ export class WorkspacePerformanceService {
   /**
    * Predict performance trends
    */
-  async predictPerformanceTrends(workspaceId: string): Promise<ApiResponse<any>> {
+  async predictPerformanceTrends(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_performance_trends', {
       workspace_id: workspaceId
     })
@@ -136,7 +135,7 @@ export class WorkspacePerformanceService {
   /**
    * Monitor resource utilization
    */
-  async monitorResourceUtilization(workspaceId: string): Promise<ApiResponse<any>> {
+  async monitorResourceUtilization(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('monitor_resource_utilization', {
       workspace_id: workspaceId
     })
@@ -145,7 +144,7 @@ export class WorkspacePerformanceService {
   /**
    * Analyze query performance
    */
-  async analyzeQueryPerformance(workspaceId: string): Promise<ApiResponse<any>> {
+  async analyzeQueryPerformance(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_query_performance', {
       workspace_id: workspaceId
     })
@@ -154,7 +153,7 @@ export class WorkspacePerformanceService {
   /**
    * Optimize index performance
    */
-  async optimizeIndexPerformance(workspaceId: string): Promise<ApiResponse<any>> {
+  async optimizeIndexPerformance(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_index_performance', {
       workspace_id: workspaceId
     })

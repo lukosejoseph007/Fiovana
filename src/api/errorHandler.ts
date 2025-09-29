@@ -21,13 +21,13 @@ export enum ErrorSeverity {
 
 export interface ErrorContext {
   command?: string
-  parameters?: Record<string, any>
+  parameters?: Record<string, unknown>
   timestamp: number
   userAgent?: string
   sessionId?: string
   userId?: string
   stackTrace?: string
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 }
 
 export interface ErrorDetail {
@@ -45,7 +45,7 @@ export interface ErrorDetail {
 
 export interface ErrorRecoveryStrategy {
   type: 'retry' | 'fallback' | 'ignore' | 'escalate'
-  config: Record<string, any>
+  config: Record<string, unknown>
   description: string
 }
 
@@ -153,7 +153,7 @@ export class ErrorHandler {
   getErrorStatistics(): ErrorStatistics {
     const typeCount = new Map<ErrorType, number>()
     const severityCount = new Map<ErrorSeverity, number>()
-    let totalErrors = this.errorLog.length
+    const totalErrors = this.errorLog.length
     let retryableErrors = 0
 
     for (const error of this.errorLog) {

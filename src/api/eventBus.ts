@@ -1,5 +1,5 @@
 // Real-time event handling system
-export interface EventSubscriber<T = any> {
+export interface EventSubscriber<T = unknown> {
   id: string
   callback: (data: T) => void | Promise<void>
   options: SubscriptionOptions
@@ -9,19 +9,19 @@ export interface EventSubscriber<T = any> {
 
 export interface SubscriptionOptions {
   once?: boolean
-  filter?: (data: any) => boolean
+  filter?: (data: unknown) => boolean
   priority?: number
   throttle?: number
   debounce?: number
 }
 
-export interface Event<T = any> {
+export interface Event<T = unknown> {
   id: string
   type: string
   data: T
   timestamp: Date
   source?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface EventMetrics {
@@ -57,7 +57,7 @@ export class EventBus {
   /**
    * Subscribe to events of a specific type
    */
-  subscribe<T = any>(
+  subscribe<T = unknown>(
     eventType: string,
     callback: (data: T) => void | Promise<void>,
     options: SubscriptionOptions = {}
@@ -104,11 +104,11 @@ export class EventBus {
   /**
    * Emit an event to all subscribers
    */
-  async emit<T = any>(
+  async emit<T = unknown>(
     eventType: string,
     data: T,
     source?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     const event: Event<T> = {
       id: this.generateEventId(),
@@ -172,7 +172,7 @@ export class EventBus {
           this.debounceTimers.delete(debounceKey)
         }, subscriber.options.debounce)
 
-        this.debounceTimers.set(debounceKey, timer as any)
+        this.debounceTimers.set(debounceKey, timer as unknown as number)
         continue
       }
 
@@ -229,13 +229,13 @@ export class EventBus {
   /**
    * Wait for a specific event (Promise-based)
    */
-  waitFor<T = any>(
+  waitFor<T = unknown>(
     eventType: string,
     filter?: (data: T) => boolean,
     timeout?: number
   ): Promise<T> {
     return new Promise((resolve, reject) => {
-      let subscriptionId: string
+      let subscriptionId: string = ''
       let timeoutId: number | undefined
 
       const cleanup = () => {
@@ -252,7 +252,7 @@ export class EventBus {
         timeoutId = setTimeout(() => {
           cleanup()
           reject(new Error(`Timeout waiting for event: ${eventType}`))
-        }, timeout) as any
+        }, timeout) as unknown as number
       }
 
       // Subscribe to the event
@@ -273,9 +273,9 @@ export class EventBus {
   /**
    * Create a typed event emitter for a specific event type
    */
-  createTypedEmitter<T = any>(eventType: string) {
+  createTypedEmitter<T = unknown>(eventType: string) {
     return {
-      emit: (data: T, source?: string, metadata?: Record<string, any>) =>
+      emit: (data: T, source?: string, metadata?: Record<string, unknown>) =>
         this.emit(eventType, data, source, metadata),
 
       subscribe: (

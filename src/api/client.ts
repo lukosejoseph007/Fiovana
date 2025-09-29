@@ -3,27 +3,36 @@ import { ApiResponse } from '../types'
 
 // Mock implementation for development
 const mockTauri = {
-  invoke: async (command: string, args: any) => {
+  invoke: async (command: string, args: unknown = {}) => {
     console.log(`[MOCK] Tauri command: ${command}`, args)
     return { success: true, data: null }
   }
 }
 
 // Safely import Tauri invoke
-let tauriInvoke: (command: string, args?: any) => Promise<any>
-try {
-  // Dynamic import to avoid compilation errors when Tauri is not available
-  const { invoke } = require('@tauri-apps/api/tauri')
-  tauriInvoke = typeof window !== 'undefined' && (window as any).__TAURI__
-    ? invoke
-    : mockTauri.invoke
-} catch {
-  tauriInvoke = mockTauri.invoke
+let tauriInvoke: (command: string, args?: unknown) => Promise<unknown>
+
+async function initTauriInvoke() {
+  try {
+    // Dynamic import to avoid compilation errors when Tauri is not available
+    const { invoke } = await import('@tauri-apps/api/tauri')
+    tauriInvoke = typeof window !== 'undefined' && (window as unknown as { __TAURI__?: boolean }).__TAURI__
+      ? invoke
+      : mockTauri.invoke
+  } catch {
+    tauriInvoke = mockTauri.invoke
+  }
 }
+
+// Initialize immediately
+tauriInvoke = mockTauri.invoke
+initTauriInvoke().catch(() => {
+  tauriInvoke = mockTauri.invoke
+})
 
 export class TauriApiClient {
   private static instance: TauriApiClient
-  private commandCache = new Map<string, any>()
+  private commandCache = new Map<string, unknown>()
   private performanceMetrics = new Map<string, PerformanceMetric>()
 
   private constructor() {
@@ -40,9 +49,9 @@ export class TauriApiClient {
   /**
    * Universal command invoker with automatic error handling and type safety
    */
-  async invoke<T = any>(
+  async invoke<T = unknown>(
     command: string,
-    args: Record<string, any> = {},
+    args: Record<string, unknown> = {},
     options: InvokeOptions = {}
   ): Promise<ApiResponse<T>> {
     const startTime = performance.now()
@@ -102,7 +111,7 @@ export class TauriApiClient {
   /**
    * Batch command execution with parallel processing
    */
-  async invokeBatch<T = any>(
+  async invokeBatch<T = unknown>(
     commands: BatchCommand[],
     options: BatchOptions = {}
   ): Promise<BatchResponse<T>> {
@@ -171,10 +180,10 @@ export class TauriApiClient {
   /**
    * Stream-based command execution for long-running operations
    */
-  async invokeStream<T = any>(
+  async invokeStream<T = unknown>(
     command: string,
-    args: Record<string, any> = {},
-    onProgress?: (progress: StreamProgress<T>) => void
+    args: Record<string, unknown> = {},
+    _onProgress?: (progress: StreamProgress<T>) => void
   ): Promise<AsyncGenerator<StreamChunk<T>, void, unknown>> {
     // Implementation for streaming commands
     // This would typically use Tauri's event system for real-time updates
@@ -232,13 +241,13 @@ export class TauriApiClient {
   /**
    * Validate if a command exists
    */
-  private isValidCommand(command: string): boolean {
+  private isValidCommand(_command: string): boolean {
     // In a real implementation, this would check against the command registry
     // For now, accept all commands
     return true
   }
 
-  private generateCacheKey(command: string, args: Record<string, any>): string {
+  private generateCacheKey(command: string, args: Record<string, unknown>): string {
     return `${command}:${JSON.stringify(args)}`
   }
 
@@ -246,7 +255,7 @@ export class TauriApiClient {
     return Date.now() - cacheEntry.timestamp > cacheEntry.ttl
   }
 
-  private createSuccessResponse<T>(data: T, metadata: Record<string, any> = {}): ApiResponse<T> {
+  private createSuccessResponse<T>(data: T, metadata: Record<string, unknown> = {}): ApiResponse<T> {
     return {
       success: true,
       data,
@@ -254,7 +263,7 @@ export class TauriApiClient {
     }
   }
 
-  private createErrorResponse(error: string, metadata: Record<string, any> = {}): ApiResponse {
+  private createErrorResponse(error: string, metadata: Record<string, unknown> = {}): ApiResponse {
     return {
       success: false,
       error,
@@ -292,7 +301,6 @@ export class TauriApiClient {
   private setupPerformanceMonitoring(): void {
     // Set up periodic cleanup of old cache entries
     setInterval(() => {
-      const now = Date.now()
       for (const [key, entry] of this.commandCache.entries()) {
         if (this.isCacheExpired(entry)) {
           this.commandCache.delete(key)
@@ -312,7 +320,7 @@ export interface InvokeOptions {
 
 export interface BatchCommand {
   command: string
-  args: Record<string, any>
+  args: Record<string, unknown>
   options?: InvokeOptions
 }
 
@@ -321,14 +329,14 @@ export interface BatchOptions {
   stopOnError?: boolean
 }
 
-export interface BatchResponse<T = any> {
+export interface BatchResponse<T = unknown> {
   success: boolean
   results: BatchResult<T>[]
   error?: string
   summary: BatchSummary
 }
 
-export interface BatchResult<T = any> {
+export interface BatchResult<T = unknown> {
   index: number
   success: boolean
   data?: T
@@ -342,13 +350,13 @@ export interface BatchSummary {
   executionTime: number
 }
 
-export interface StreamProgress<T = any> {
+export interface StreamProgress<T = unknown> {
   progress: number
   data?: T
   message?: string
 }
 
-export interface StreamChunk<T = any> {
+export interface StreamChunk<T = unknown> {
   type: 'data' | 'progress' | 'error' | 'complete'
   data?: T
   progress?: number
@@ -368,7 +376,7 @@ export interface PerformanceMetric {
 }
 
 interface CacheEntry {
-  data: any
+  data: unknown
   timestamp: number
   ttl: number
 }

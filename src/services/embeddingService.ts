@@ -109,7 +109,7 @@ export class EmbeddingService {
   /**
    * Find similar embeddings
    */
-  async findSimilarEmbeddings(embedding: number[], threshold?: number, limit?: number): Promise<ApiResponse<any[]>> {
+  async findSimilarEmbeddings(embedding: number[], threshold?: number, limit?: number): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_similar_embeddings', {
       embedding,
       threshold: threshold || 0.7,
@@ -141,7 +141,7 @@ export class EmbeddingService {
   /**
    * Get embedding statistics
    */
-  async getEmbeddingStatistics(timeframe?: string): Promise<ApiResponse<any>> {
+  async getEmbeddingStatistics(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_embedding_statistics', {
       timeframe: timeframe || 'last_30_days'
     })
@@ -150,14 +150,14 @@ export class EmbeddingService {
   /**
    * Optimize embedding storage
    */
-  async optimizeEmbeddingStorage(): Promise<ApiResponse<any>> {
+  async optimizeEmbeddingStorage(): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_embedding_storage')
   }
 
   /**
    * Export embeddings
    */
-  async exportEmbeddings(format: string, filters?: any): Promise<ApiResponse<string>> {
+  async exportEmbeddings(format: string, filters?: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_embeddings', {
       format,
       filters: filters || {}
@@ -167,7 +167,7 @@ export class EmbeddingService {
   /**
    * Import embeddings
    */
-  async importEmbeddings(filePath: string, format: string): Promise<ApiResponse<any>> {
+  async importEmbeddings(filePath: string, format: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('import_embeddings', {
       file_path: filePath,
       format
@@ -177,7 +177,7 @@ export class EmbeddingService {
   /**
    * Cluster embeddings
    */
-  async clusterEmbeddings(embeddings: number[][], options?: any): Promise<ApiResponse<any[]>> {
+  async clusterEmbeddings(embeddings: number[][], options?: unknown): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('cluster_embeddings', {
       embeddings,
       options: options || {}
@@ -197,14 +197,14 @@ export class EmbeddingService {
   /**
    * Analyze embedding quality
    */
-  async analyzeEmbeddingQuality(embeddings: number[][]): Promise<ApiResponse<any>> {
+  async analyzeEmbeddingQuality(embeddings: number[][]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_embedding_quality', { embeddings })
   }
 
   /**
    * Get embedding usage report
    */
-  async getEmbeddingUsageReport(startDate?: string, endDate?: string): Promise<ApiResponse<any>> {
+  async getEmbeddingUsageReport(startDate?: string, endDate?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_embedding_usage_report', {
       start_date: startDate,
       end_date: endDate

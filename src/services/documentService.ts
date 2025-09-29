@@ -15,7 +15,7 @@ export class DocumentService {
   /**
    * Process a document - extract content, metadata, and create chunks
    */
-  async processDocument(filePath: string, options?: any): Promise<ApiResponse<Document>> {
+  async processDocument(filePath: string, options?: Record<string, unknown>): Promise<ApiResponse<Document>> {
     return apiClient.invoke('process_document', {
       file_path: filePath,
       options: options || {}
@@ -49,7 +49,7 @@ export class DocumentService {
   /**
    * List documents in workspace
    */
-  async listDocuments(workspaceId?: string, filters?: any): Promise<ApiResponse<Document[]>> {
+  async listDocuments(workspaceId?: string, filters?: Record<string, unknown>): Promise<ApiResponse<Document[]>> {
     return apiClient.invoke('list_documents', {
       workspace_id: workspaceId,
       filters: filters || {}
@@ -73,7 +73,7 @@ export class DocumentService {
   /**
    * Chunk document into smaller pieces
    */
-  async chunkDocument(documentId: string, options?: any): Promise<ApiResponse<DocumentChunk[]>> {
+  async chunkDocument(documentId: string, options?: Record<string, unknown>): Promise<ApiResponse<DocumentChunk[]>> {
     return apiClient.invoke('chunk_document', {
       document_id: documentId,
       options: options || {}
@@ -104,7 +104,7 @@ export class DocumentService {
   /**
    * Compare two documents
    */
-  async compareDocuments(documentAId: string, documentBId: string, options?: any): Promise<ApiResponse<DocumentComparison>> {
+  async compareDocuments(documentAId: string, documentBId: string, options?: Record<string, unknown>): Promise<ApiResponse<DocumentComparison>> {
     return apiClient.invoke('compare_documents', {
       document_a_id: documentAId,
       document_b_id: documentBId,
@@ -115,7 +115,7 @@ export class DocumentService {
   /**
    * Generate document from template
    */
-  async generateDocument(templateId: string, parameters: Record<string, any>): Promise<ApiResponse<DocumentGeneration>> {
+  async generateDocument(templateId: string, parameters: Record<string, unknown>): Promise<ApiResponse<DocumentGeneration>> {
     return apiClient.invoke('generate_document', {
       template_id: templateId,
       parameters
@@ -125,7 +125,7 @@ export class DocumentService {
   /**
    * Convert document format
    */
-  async convertFormat(documentId: string, targetFormat: string, options?: any): Promise<ApiResponse<FormatConversion>> {
+  async convertFormat(documentId: string, targetFormat: string, options?: Record<string, unknown>): Promise<ApiResponse<FormatConversion>> {
     return apiClient.invoke('convert_document_format', {
       document_id: documentId,
       target_format: targetFormat,
@@ -136,7 +136,7 @@ export class DocumentService {
   /**
    * Validate document structure
    */
-  async validateDocument(documentId: string): Promise<ApiResponse<any>> {
+  async validateDocument(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_document', { document_id: documentId })
   }
 
@@ -150,7 +150,7 @@ export class DocumentService {
   /**
    * Merge multiple documents
    */
-  async mergeDocuments(documentIds: string[], options?: any): Promise<ApiResponse<Document>> {
+  async mergeDocuments(documentIds: string[], options?: Record<string, unknown>): Promise<ApiResponse<Document>> {
     return apiClient.invoke('merge_documents', {
       document_ids: documentIds,
       options: options || {}
@@ -160,7 +160,7 @@ export class DocumentService {
   /**
    * Split document into multiple parts
    */
-  async splitDocument(documentId: string, criteria: any): Promise<ApiResponse<Document[]>> {
+  async splitDocument(documentId: string, criteria: unknown): Promise<ApiResponse<Document[]>> {
     return apiClient.invoke('split_document', {
       document_id: documentId,
       criteria
@@ -170,14 +170,14 @@ export class DocumentService {
   /**
    * Analyze document structure
    */
-  async analyzeStructure(documentId: string): Promise<ApiResponse<any>> {
+  async analyzeStructure(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_document_structure', { document_id: documentId })
   }
 
   /**
    * Get document statistics
    */
-  async getDocumentStats(documentId: string): Promise<ApiResponse<any>> {
+  async getDocumentStats(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_document_stats', { document_id: documentId })
   }
 
@@ -191,21 +191,21 @@ export class DocumentService {
   /**
    * Classify document content
    */
-  async classifyDocument(documentId: string): Promise<ApiResponse<any>> {
+  async classifyDocument(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_document', { document_id: documentId })
   }
 
   /**
    * Extract entities from document
    */
-  async extractEntities(documentId: string): Promise<ApiResponse<any[]>> {
+  async extractEntities(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_document_entities', { document_id: documentId })
   }
 
   /**
    * Summarize document content
    */
-  async summarizeDocument(documentId: string, options?: any): Promise<ApiResponse<string>> {
+  async summarizeDocument(documentId: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_document', {
       document_id: documentId,
       options: options || {}
@@ -225,21 +225,21 @@ export class DocumentService {
   /**
    * Check document for plagiarism
    */
-  async checkPlagiarism(documentId: string): Promise<ApiResponse<any>> {
+  async checkPlagiarism(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('check_document_plagiarism', { document_id: documentId })
   }
 
   /**
    * Get document version history
    */
-  async getVersionHistory(documentId: string): Promise<ApiResponse<any[]>> {
+  async getVersionHistory(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_document_versions', { document_id: documentId })
   }
 
   /**
    * Create document version
    */
-  async createVersion(documentId: string, versionInfo: any): Promise<ApiResponse<any>> {
+  async createVersion(documentId: string, versionInfo: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('create_document_version', {
       document_id: documentId,
       version_info: versionInfo

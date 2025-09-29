@@ -21,7 +21,7 @@ export interface DocumentMetadata {
   wordCount?: number
   pageCount?: number
   extractedText?: string
-  customFields: Record<string, any>
+  customFields: Record<string, unknown>
 }
 
 export interface DocumentChunk {
@@ -62,7 +62,7 @@ export interface IndexTerm {
 export interface IndexMetadata {
   version: string
   algorithm: string
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   processingTime: number
 }
 
@@ -106,7 +106,7 @@ export interface ComparisonAnalysis {
 
 export interface DocumentGeneration {
   templateId?: string
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   content: string
   format: 'markdown' | 'html' | 'pdf' | 'docx' | 'txt'
   metadata: GenerationMetadata

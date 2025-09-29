@@ -12,7 +12,7 @@ export class StyleAnalysisService {
   /**
    * Analyze document style and create style profile
    */
-  async analyzeDocumentStyle(documentId: string, options?: any): Promise<ApiResponse<StyleAnalysis>> {
+  async analyzeDocumentStyle(documentId: string, options?: unknown): Promise<ApiResponse<StyleAnalysis>> {
     return apiClient.invoke('analyze_document_style', {
       document_id: documentId,
       options: options || {}
@@ -63,7 +63,7 @@ export class StyleAnalysisService {
   /**
    * Compare styles between documents
    */
-  async compareDocumentStyles(documentAId: string, documentBId: string): Promise<ApiResponse<any>> {
+  async compareDocumentStyles(documentAId: string, documentBId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_document_styles', {
       document_a_id: documentAId,
       document_b_id: documentBId
@@ -80,14 +80,14 @@ export class StyleAnalysisService {
   /**
    * Analyze writing style patterns
    */
-  async analyzeWritingPatterns(documentId: string): Promise<ApiResponse<any>> {
+  async analyzeWritingPatterns(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_writing_patterns', { document_id: documentId })
   }
 
   /**
    * Extract style features from document
    */
-  async extractStyleFeatures(documentId: string): Promise<ApiResponse<any[]>> {
+  async extractStyleFeatures(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_style_features', { document_id: documentId })
   }
 
@@ -111,21 +111,21 @@ export class StyleAnalysisService {
   /**
    * Validate style consistency
    */
-  async validateStyleConsistency(documentIds: string[]): Promise<ApiResponse<any>> {
+  async validateStyleConsistency(documentIds: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('validate_style_consistency', { document_ids: documentIds })
   }
 
   /**
    * Get style evolution over time
    */
-  async getStyleEvolution(documentIds: string[]): Promise<ApiResponse<any>> {
+  async getStyleEvolution(documentIds: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_style_evolution', { document_ids: documentIds })
   }
 
   /**
    * Detect style anomalies
    */
-  async detectStyleAnomalies(documentId: string, referenceStyleId?: string): Promise<ApiResponse<any[]>> {
+  async detectStyleAnomalies(documentId: string, referenceStyleId?: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('detect_style_anomalies', {
       document_id: documentId,
       reference_style_id: referenceStyleId
@@ -135,7 +135,7 @@ export class StyleAnalysisService {
   /**
    * Generate style report
    */
-  async generateStyleReport(documentId: string, options?: any): Promise<ApiResponse<any>> {
+  async generateStyleReport(documentId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_style_report', {
       document_id: documentId,
       options: options || {}

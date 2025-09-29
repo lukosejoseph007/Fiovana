@@ -1,5 +1,5 @@
 // Dynamic command discovery and registry
-import { apiClient } from './client'
+// import { apiClient } from './client' // TODO: Use when needed
 
 export interface CommandDefinition {
   name: string
@@ -17,7 +17,7 @@ export interface ParameterDefinition {
   type: string
   required: boolean
   description: string
-  defaultValue?: any
+  defaultValue?: unknown
   validation?: ValidationRule
 }
 
@@ -25,16 +25,16 @@ export interface ValidationRule {
   pattern?: string
   min?: number
   max?: number
-  options?: any[]
-  custom?: (value: any) => boolean | string
+  options?: unknown[]
+  custom?: (value: unknown) => boolean | string
 }
 
 export interface CommandExample {
   title: string
   description: string
   code: string
-  parameters: Record<string, any>
-  expectedResult?: any
+  parameters: Record<string, unknown>
+  expectedResult?: unknown
 }
 
 export interface CommandModule {
@@ -114,7 +114,7 @@ export class CommandRegistry {
   /**
    * Validate command parameters
    */
-  validateParameters(commandName: string, parameters: Record<string, any>): ValidationResult {
+  validateParameters(commandName: string, parameters: Record<string, unknown>): ValidationResult {
     const command = this.getCommand(commandName)
     if (!command) {
       return {
@@ -325,7 +325,7 @@ export class CommandRegistry {
   /**
    * Validate a single parameter
    */
-  private validateParameter(param: ParameterDefinition, value: any): ValidationResult {
+  private validateParameter(param: ParameterDefinition, value: unknown): ValidationResult {
     const errors: string[] = []
     const warnings: string[] = []
 
@@ -374,7 +374,7 @@ export class CommandRegistry {
     return { valid: errors.length === 0, errors, warnings }
   }
 
-  private isValidType(value: any, expectedType: string): boolean {
+  private isValidType(value: unknown, expectedType: string): boolean {
     switch (expectedType) {
       case 'string': return typeof value === 'string'
       case 'number': return typeof value === 'number'
@@ -429,7 +429,7 @@ export interface ParameterInfo {
   type: string
   required: boolean
   description: string
-  defaultValue?: any
+  defaultValue?: unknown
 }
 
 // Export singleton instance

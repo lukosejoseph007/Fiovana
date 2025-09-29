@@ -19,7 +19,7 @@ export class SmartOrganizerService {
   /**
    * Generate organization suggestions
    */
-  async generateOrganizationSuggestions(workspaceId: string, options?: any): Promise<ApiResponse<OrganizationSuggestion[]>> {
+  async generateOrganizationSuggestions(workspaceId: string, options?: unknown): Promise<ApiResponse<OrganizationSuggestion[]>> {
     return apiClient.invoke('generate_organization_suggestions', {
       workspace_id: workspaceId,
       options: options || {}
@@ -29,14 +29,14 @@ export class SmartOrganizerService {
   /**
    * Apply organization suggestion
    */
-  async applyOrganizationSuggestion(suggestionId: string): Promise<ApiResponse<any>> {
+  async applyOrganizationSuggestion(suggestionId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('apply_organization_suggestion', { suggestion_id: suggestionId })
   }
 
   /**
    * Create automation rule
    */
-  async createAutomationRule(workspaceId: string, ruleData: any): Promise<ApiResponse<AutomationRule>> {
+  async createAutomationRule(workspaceId: string, ruleData: unknown): Promise<ApiResponse<AutomationRule>> {
     return apiClient.invoke('create_automation_rule', {
       workspace_id: workspaceId,
       rule_data: ruleData
@@ -84,7 +84,7 @@ export class SmartOrganizerService {
   /**
    * Test automation rule
    */
-  async testAutomationRule(ruleId: string, testData?: any): Promise<ApiResponse<any>> {
+  async testAutomationRule(ruleId: string, testData?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('test_automation_rule', {
       rule_id: ruleId,
       test_data: testData || {}
@@ -94,28 +94,28 @@ export class SmartOrganizerService {
   /**
    * Get automation rule performance
    */
-  async getRulePerformance(ruleId: string): Promise<ApiResponse<any>> {
+  async getRulePerformance(ruleId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_rule_performance', { rule_id: ruleId })
   }
 
   /**
    * Analyze file organization patterns
    */
-  async analyzeOrganizationPatterns(workspaceId: string): Promise<ApiResponse<any[]>> {
+  async analyzeOrganizationPatterns(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_organization_patterns', { workspace_id: workspaceId })
   }
 
   /**
    * Suggest file categorization
    */
-  async suggestFileCategorization(documentId: string): Promise<ApiResponse<any[]>> {
+  async suggestFileCategorization(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('suggest_file_categorization', { document_id: documentId })
   }
 
   /**
    * Auto-organize workspace
    */
-  async autoOrganizeWorkspace(workspaceId: string, options?: any): Promise<ApiResponse<any>> {
+  async autoOrganizeWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('auto_organize_workspace', {
       workspace_id: workspaceId,
       options: options || {}
@@ -125,7 +125,7 @@ export class SmartOrganizerService {
   /**
    * Preview organization changes
    */
-  async previewOrganizationChanges(workspaceId: string, suggestionIds: string[]): Promise<ApiResponse<any>> {
+  async previewOrganizationChanges(workspaceId: string, suggestionIds: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_organization_changes', {
       workspace_id: workspaceId,
       suggestion_ids: suggestionIds
@@ -135,7 +135,7 @@ export class SmartOrganizerService {
   /**
    * Rollback organization changes
    */
-  async rollbackOrganizationChanges(changeId: string): Promise<ApiResponse<any>> {
+  async rollbackOrganizationChanges(changeId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('rollback_organization_changes', { change_id: changeId })
   }
 
@@ -149,21 +149,21 @@ export class SmartOrganizerService {
   /**
    * Analyze duplicate files
    */
-  async analyzeDuplicateFiles(workspaceId: string): Promise<ApiResponse<any[]>> {
+  async analyzeDuplicateFiles(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_duplicate_files', { workspace_id: workspaceId })
   }
 
   /**
    * Suggest duplicate resolution
    */
-  async suggestDuplicateResolution(duplicateGroupId: string): Promise<ApiResponse<any[]>> {
+  async suggestDuplicateResolution(duplicateGroupId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('suggest_duplicate_resolution', { duplicate_group_id: duplicateGroupId })
   }
 
   /**
    * Create organization template
    */
-  async createOrganizationTemplate(workspaceId: string, templateName: string): Promise<ApiResponse<any>> {
+  async createOrganizationTemplate(workspaceId: string, templateName: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('create_organization_template', {
       workspace_id: workspaceId,
       template_name: templateName
@@ -173,7 +173,7 @@ export class SmartOrganizerService {
   /**
    * Apply organization template
    */
-  async applyOrganizationTemplate(workspaceId: string, templateId: string): Promise<ApiResponse<any>> {
+  async applyOrganizationTemplate(workspaceId: string, templateId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('apply_organization_template', {
       workspace_id: workspaceId,
       template_id: templateId
@@ -183,7 +183,7 @@ export class SmartOrganizerService {
   /**
    * Generate organization report
    */
-  async generateOrganizationReport(workspaceId: string): Promise<ApiResponse<any>> {
+  async generateOrganizationReport(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_organization_report', { workspace_id: workspaceId })
   }
 }

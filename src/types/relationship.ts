@@ -21,7 +21,7 @@ export interface RelationshipType {
 export interface RelationshipMetadata {
   method: 'semantic_similarity' | 'citation_analysis' | 'content_overlap' | 'temporal_proximity'
   evidence: Evidence[]
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   qualityScore: number
 }
 
@@ -55,7 +55,7 @@ export interface GraphNode {
   documentId: string
   label: string
   type: string
-  properties: Record<string, any>
+  properties: Record<string, unknown>
   position?: GraphPosition
   style?: NodeStyle
 }
@@ -81,7 +81,7 @@ export interface GraphEdge {
   label?: string
   weight: number
   style?: EdgeStyle
-  properties: Record<string, any>
+  properties: Record<string, unknown>
 }
 
 export interface EdgeStyle {
@@ -154,7 +154,7 @@ export interface RelationshipQuery {
 export interface RelationshipFilter {
   field: string
   operator: 'equals' | 'contains' | 'gt' | 'lt' | 'in'
-  value: any
+  value: unknown
 }
 
 export interface RelationshipAnalysis {

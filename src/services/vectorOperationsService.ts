@@ -1,7 +1,6 @@
 // Vector Operations Service
 import { apiClient } from '../api'
 import {
-  VectorOperation,
   ClusterResult,
   ApiResponse
 } from '../types'
@@ -12,7 +11,7 @@ export class VectorOperationsService {
    */
   async performVectorClustering(
     vectors: number[][],
-    clusteringOptions?: any
+    clusteringOptions?: unknown
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_vector_clustering', {
       vectors,
@@ -55,8 +54,8 @@ export class VectorOperationsService {
    */
   async analyzeVectorSpace(
     vectors: number[][],
-    analysisOptions?: any
-  ): Promise<ApiResponse<any>> {
+    analysisOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_vector_space', {
       vectors,
       options: analysisOptions || {}
@@ -82,7 +81,7 @@ export class VectorOperationsService {
   async performHierarchicalClustering(
     vectors: number[][],
     linkageMethod?: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('perform_hierarchical_clustering', {
       vectors,
       linkage_method: linkageMethod || 'ward'
@@ -95,7 +94,7 @@ export class VectorOperationsService {
   async performKMeansClustering(
     vectors: number[][],
     k: number,
-    kmeansOptions?: any
+    kmeansOptions?: unknown
   ): Promise<ApiResponse<ClusterResult[]>> {
     return apiClient.invoke('perform_kmeans_clustering', {
       vectors,
@@ -151,7 +150,7 @@ export class VectorOperationsService {
     candidateVectors: number[][],
     k: number,
     distanceMetric?: string
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('find_nearest_neighbors', {
       query_vector: queryVector,
       candidate_vectors: candidateVectors,
@@ -176,7 +175,7 @@ export class VectorOperationsService {
   /**
    * Calculate vector statistics
    */
-  async calculateVectorStatistics(vectors: number[][]): Promise<ApiResponse<any>> {
+  async calculateVectorStatistics(vectors: number[][]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('calculate_vector_statistics', {
       vectors
     })
@@ -201,7 +200,7 @@ export class VectorOperationsService {
   async analyzeClusterQuality(
     vectors: number[][],
     clusters: ClusterResult[]
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_cluster_quality', {
       vectors,
       clusters
@@ -227,7 +226,7 @@ export class VectorOperationsService {
   async buildVectorIndex(
     vectors: number[][],
     indexType?: string,
-    indexOptions?: any
+    indexOptions?: unknown
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('build_vector_index', {
       vectors,
@@ -243,7 +242,7 @@ export class VectorOperationsService {
     indexId: string,
     queryVector: number[],
     k: number
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('search_vector_index', {
       index_id: indexId,
       query_vector: queryVector,
@@ -269,8 +268,8 @@ export class VectorOperationsService {
    */
   async analyzeVectorDensity(
     vectors: number[][],
-    densityOptions?: any
-  ): Promise<ApiResponse<any>> {
+    densityOptions?: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_vector_density', {
       vectors,
       options: densityOptions || {}

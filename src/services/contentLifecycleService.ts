@@ -40,7 +40,7 @@ export class ContentLifecycleService {
   /**
    * Execute lifecycle action
    */
-  async executeLifecycleAction(actionId: string): Promise<ApiResponse<any>> {
+  async executeLifecycleAction(actionId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('execute_lifecycle_action', { action_id: actionId })
   }
 
@@ -68,21 +68,21 @@ export class ContentLifecycleService {
   /**
    * Analyze content aging
    */
-  async analyzeContentAging(workspaceId?: string): Promise<ApiResponse<any[]>> {
+  async analyzeContentAging(workspaceId?: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_content_aging', { workspace_id: workspaceId })
   }
 
   /**
    * Get lifecycle recommendations
    */
-  async getLifecycleRecommendations(documentId: string): Promise<ApiResponse<any[]>> {
+  async getLifecycleRecommendations(documentId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_lifecycle_recommendations', { document_id: documentId })
   }
 
   /**
    * Set lifecycle policies
    */
-  async setLifecyclePolicies(workspaceId: string, policies: any): Promise<ApiResponse<void>> {
+  async setLifecyclePolicies(workspaceId: string, policies: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_lifecycle_policies', {
       workspace_id: workspaceId,
       policies
@@ -92,14 +92,14 @@ export class ContentLifecycleService {
   /**
    * Get lifecycle policies
    */
-  async getLifecyclePolicies(workspaceId: string): Promise<ApiResponse<any>> {
+  async getLifecyclePolicies(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_lifecycle_policies', { workspace_id: workspaceId })
   }
 
   /**
    * Archive content
    */
-  async archiveContent(documentId: string, archiveLocation?: string): Promise<ApiResponse<any>> {
+  async archiveContent(documentId: string, archiveLocation?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('archive_content', {
       document_id: documentId,
       archive_location: archiveLocation
@@ -109,14 +109,14 @@ export class ContentLifecycleService {
   /**
    * Restore content from archive
    */
-  async restoreContent(documentId: string): Promise<ApiResponse<any>> {
+  async restoreContent(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('restore_content', { document_id: documentId })
   }
 
   /**
    * Get content retention status
    */
-  async getRetentionStatus(documentId: string): Promise<ApiResponse<any>> {
+  async getRetentionStatus(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_retention_status', { document_id: documentId })
   }
 
@@ -133,21 +133,21 @@ export class ContentLifecycleService {
   /**
    * Monitor content usage
    */
-  async monitorContentUsage(documentIds: string[]): Promise<ApiResponse<any[]>> {
+  async monitorContentUsage(documentIds: string[]): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('monitor_content_usage', { document_ids: documentIds })
   }
 
   /**
    * Predict content lifecycle
    */
-  async predictContentLifecycle(documentId: string): Promise<ApiResponse<any>> {
+  async predictContentLifecycle(documentId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_content_lifecycle', { document_id: documentId })
   }
 
   /**
    * Get lifecycle analytics
    */
-  async getLifecycleAnalytics(workspaceId: string, timeframe?: string): Promise<ApiResponse<any>> {
+  async getLifecycleAnalytics(workspaceId: string, timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_lifecycle_analytics', {
       workspace_id: workspaceId,
       timeframe: timeframe || 'last_30_days'
@@ -157,7 +157,7 @@ export class ContentLifecycleService {
   /**
    * Trigger content review
    */
-  async triggerContentReview(documentId: string, reviewType: string): Promise<ApiResponse<any>> {
+  async triggerContentReview(documentId: string, reviewType: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('trigger_content_review', {
       document_id: documentId,
       review_type: reviewType
@@ -167,7 +167,7 @@ export class ContentLifecycleService {
   /**
    * Complete content review
    */
-  async completeContentReview(reviewId: string, reviewData: any): Promise<ApiResponse<void>> {
+  async completeContentReview(reviewId: string, reviewData: unknown): Promise<ApiResponse<void>> {
     return apiClient.invoke('complete_content_review', {
       review_id: reviewId,
       review_data: reviewData
@@ -184,7 +184,7 @@ export class ContentLifecycleService {
   /**
    * Bulk lifecycle operations
    */
-  async bulkLifecycleOperations(operations: any[]): Promise<ApiResponse<any[]>> {
+  async bulkLifecycleOperations(operations: unknown[]): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('bulk_lifecycle_operations', { operations })
   }
 }

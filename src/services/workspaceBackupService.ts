@@ -1,7 +1,6 @@
 // Workspace Backup Service
 import { apiClient } from '../api'
 import {
-  Workspace,
   BackupInfo,
   ApiResponse
 } from '../types'
@@ -12,7 +11,7 @@ export class WorkspaceBackupService {
    */
   async createBackup(
     workspaceId: string,
-    backupOptions?: any
+    backupOptions?: unknown
   ): Promise<ApiResponse<BackupInfo>> {
     return apiClient.invoke('create_workspace_backup', {
       workspace_id: workspaceId,
@@ -26,7 +25,7 @@ export class WorkspaceBackupService {
   async restoreBackup(
     workspaceId: string,
     backupId: string,
-    restoreOptions?: any
+    restoreOptions?: unknown
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('restore_workspace_backup', {
       workspace_id: workspaceId,
@@ -68,7 +67,7 @@ export class WorkspaceBackupService {
   async scheduleBackup(
     workspaceId: string,
     schedule: string,
-    backupOptions?: any
+    backupOptions?: unknown
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('schedule_workspace_backup', {
       workspace_id: workspaceId,
@@ -89,7 +88,7 @@ export class WorkspaceBackupService {
   /**
    * Verify backup integrity
    */
-  async verifyBackup(backupId: string): Promise<ApiResponse<any>> {
+  async verifyBackup(backupId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('verify_backup_integrity', {
       backup_id: backupId
     })
@@ -114,7 +113,7 @@ export class WorkspaceBackupService {
   async exportBackup(
     backupId: string,
     exportDestination: string,
-    exportOptions?: any
+    exportOptions?: unknown
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('export_backup', {
       backup_id: backupId,
@@ -129,7 +128,7 @@ export class WorkspaceBackupService {
   async importBackup(
     importSource: string,
     workspaceId: string,
-    importOptions?: any
+    importOptions?: unknown
   ): Promise<ApiResponse<BackupInfo>> {
     return apiClient.invoke('import_backup', {
       import_source: importSource,
@@ -144,7 +143,7 @@ export class WorkspaceBackupService {
   async compareBackups(
     backupId1: string,
     backupId2: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_backup_versions', {
       backup_id_1: backupId1,
       backup_id_2: backupId2
@@ -154,7 +153,7 @@ export class WorkspaceBackupService {
   /**
    * Get backup storage usage
    */
-  async getBackupStorageUsage(workspaceId?: string): Promise<ApiResponse<any>> {
+  async getBackupStorageUsage(workspaceId?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_backup_storage_usage', {
       workspace_id: workspaceId
     })
@@ -165,8 +164,8 @@ export class WorkspaceBackupService {
    */
   async cleanupOldBackups(
     workspaceId: string,
-    retentionPolicy: any
-  ): Promise<ApiResponse<any>> {
+    retentionPolicy: unknown
+  ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('cleanup_old_backups', {
       workspace_id: workspaceId,
       retention_policy: retentionPolicy
@@ -178,7 +177,7 @@ export class WorkspaceBackupService {
    */
   async setRetentionPolicy(
     workspaceId: string,
-    retentionPolicy: any
+    retentionPolicy: unknown
   ): Promise<ApiResponse<void>> {
     return apiClient.invoke('set_backup_retention_policy', {
       workspace_id: workspaceId,
@@ -189,7 +188,7 @@ export class WorkspaceBackupService {
   /**
    * Get backup status
    */
-  async getBackupStatus(backupId: string): Promise<ApiResponse<any>> {
+  async getBackupStatus(backupId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_backup_status', {
       backup_id: backupId
     })
@@ -219,7 +218,7 @@ export class WorkspaceBackupService {
   async getBackupLogs(
     backupId: string,
     logLevel?: string
-  ): Promise<ApiResponse<any[]>> {
+  ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_backup_logs', {
       backup_id: backupId,
       log_level: logLevel || 'info'

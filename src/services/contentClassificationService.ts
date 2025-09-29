@@ -1,7 +1,6 @@
 // Content Classification Service
 import { apiClient } from '../api'
 import {
-  Document,
   ContentClassification,
   ApiResponse
 } from '../types'
@@ -122,8 +121,8 @@ export class ContentClassificationService {
    * Train custom classification model
    */
   async trainCustomClassifier(
-    trainingData: any[],
-    classifierConfig: any
+    trainingData: unknown[],
+    classifierConfig: Record<string, unknown>
   ): Promise<ApiResponse<string>> {
     return apiClient.invoke('train_custom_classifier', {
       training_data: trainingData,

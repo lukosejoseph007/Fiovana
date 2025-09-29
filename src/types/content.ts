@@ -23,7 +23,7 @@ export interface ContentMetadata {
   author?: string
   tags: string[]
   category?: string
-  customFields: Record<string, any>
+  customFields: Record<string, unknown>
 }
 
 export interface ContentStatus {
@@ -44,7 +44,7 @@ export interface ContentAdaptation {
 
 export interface AdaptationRule {
   type: 'format' | 'style' | 'length' | 'audience' | 'platform'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   priority: number
   description: string
 }
@@ -85,7 +85,7 @@ export interface AdaptationMetadata {
   processingTime: number
   model?: string
   version: string
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 }
 
 export interface ContentClassification {
@@ -111,7 +111,7 @@ export interface SubCategory {
 
 export interface CategoryAttribute {
   name: string
-  value: any
+  value: unknown
   confidence: number
   description: string
 }
@@ -133,7 +133,7 @@ export interface TemplateVariable {
   name: string
   type: 'text' | 'number' | 'date' | 'boolean' | 'list' | 'object'
   required: boolean
-  defaultValue?: any
+  defaultValue?: unknown
   validation?: ValidationRule
   description: string
 }
@@ -144,12 +144,12 @@ export interface ValidationRule {
   maxLength?: number
   min?: number
   max?: number
-  options?: any[]
+  options?: unknown[]
 }
 
 export interface TemplateConstraint {
   type: 'length' | 'format' | 'content' | 'style'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   description: string
   severity: 'warning' | 'error'
 }

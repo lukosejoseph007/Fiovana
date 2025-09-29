@@ -321,7 +321,7 @@ export function validateRequired(value: unknown, name: string): ValidationResult
 export function validateStringEnum<T extends string>(
   value: unknown,
   allowedValues: readonly T[],
-  name: string
+  _name: string
 ): value is T {
   return isString(value) && (allowedValues as readonly string[]).includes(value)
 }

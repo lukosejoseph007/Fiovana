@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { designTokens } from '../../styles/tokens';
 
 export interface TooltipProps {
@@ -42,7 +42,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     setIsVisible(false);
   };
 
-  const calculatePosition = () => {
+  const calculatePosition = useCallback(() => {
     if (!triggerRef.current || !tooltipRef.current) return;
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
@@ -89,7 +89,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     }
 
     setPosition({ top, left });
-  };
+  }, [placement]);
 
   useEffect(() => {
     if (isVisible) {
@@ -102,7 +102,7 @@ const Tooltip: React.FC<TooltipProps> = ({
         window.removeEventListener('resize', calculatePosition);
       };
     }
-  }, [isVisible, placement]);
+  }, [isVisible, placement, calculatePosition]);
 
   useEffect(() => {
     return () => {
@@ -143,7 +143,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   const getArrowStyles = () => {
     const arrowSize = 6;
     const arrowColor = designTokens.colors.surface.primary;
-    const borderColor = designTokens.colors.border.medium;
+    // const borderColor = designTokens.colors.border.medium; // TODO: Use for arrow border
 
     const baseArrowStyles = {
       position: 'absolute' as const,

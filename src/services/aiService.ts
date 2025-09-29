@@ -15,7 +15,7 @@ export interface AIModel {
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
   content: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ChatRequest {
@@ -23,7 +23,7 @@ export interface ChatRequest {
   model?: string
   maxTokens?: number
   temperature?: number
-  options?: Record<string, any>
+  options?: Record<string, unknown>
 }
 
 export interface ChatResponse {
@@ -31,7 +31,7 @@ export interface ChatResponse {
   usage: TokenUsage
   model: string
   finishReason: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface TokenUsage {
@@ -47,7 +47,7 @@ export interface CompletionRequest {
   maxTokens?: number
   temperature?: number
   stopSequences?: string[]
-  options?: Record<string, any>
+  options?: Record<string, unknown>
 }
 
 export interface CompletionResponse {
@@ -55,7 +55,7 @@ export interface CompletionResponse {
   usage: TokenUsage
   model: string
   finishReason: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export class AIService {
@@ -110,7 +110,7 @@ export class AIService {
   /**
    * Stream chat completion
    */
-  async streamChat(request: ChatRequest, onChunk: (chunk: any) => void): Promise<ApiResponse<ChatResponse>> {
+  async streamChat(request: ChatRequest, _onChunk: (chunk: unknown) => void): Promise<ApiResponse<ChatResponse>> {
     // Implementation would use the streaming API
     return apiClient.invoke('ai_chat_stream', {
       messages: request.messages,
@@ -124,21 +124,21 @@ export class AIService {
   /**
    * Analyze text sentiment
    */
-  async analyzeSentiment(text: string): Promise<ApiResponse<any>> {
+  async analyzeSentiment(text: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_sentiment', { text })
   }
 
   /**
    * Extract entities from text
    */
-  async extractEntities(text: string): Promise<ApiResponse<any[]>> {
+  async extractEntities(text: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('extract_entities', { text })
   }
 
   /**
    * Classify text content
    */
-  async classifyText(text: string, categories?: string[]): Promise<ApiResponse<any>> {
+  async classifyText(text: string, categories?: string[]): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('classify_text', {
       text,
       categories: categories || []
@@ -148,7 +148,7 @@ export class AIService {
   /**
    * Summarize text
    */
-  async summarize(text: string, options?: any): Promise<ApiResponse<string>> {
+  async summarize(text: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('summarize_text', {
       text,
       options: options || {}
@@ -198,7 +198,7 @@ export class AIService {
   /**
    * Analyze conversation for insights
    */
-  async analyzeConversation(conversationId: string): Promise<ApiResponse<any>> {
+  async analyzeConversation(conversationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_conversation', {
       conversation_id: conversationId
     })
@@ -207,7 +207,7 @@ export class AIService {
   /**
    * Generate content based on prompt
    */
-  async generateContent(prompt: string, contentType: string, options?: any): Promise<ApiResponse<string>> {
+  async generateContent(prompt: string, contentType: string, options?: Record<string, unknown>): Promise<ApiResponse<string>> {
     return apiClient.invoke('generate_content', {
       prompt,
       content_type: contentType,
@@ -228,7 +228,7 @@ export class AIService {
   /**
    * Check text for grammar and style
    */
-  async checkGrammar(text: string): Promise<ApiResponse<any>> {
+  async checkGrammar(text: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('check_grammar', { text })
   }
 
@@ -245,7 +245,7 @@ export class AIService {
   /**
    * Get AI model usage statistics
    */
-  async getUsageStats(timeframe?: string): Promise<ApiResponse<any>> {
+  async getUsageStats(timeframe?: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_ai_usage_stats', {
       timeframe: timeframe || 'last_30_days'
     })
@@ -254,7 +254,7 @@ export class AIService {
   /**
    * Configure AI model settings
    */
-  async configureModel(modelId: string, settings: any): Promise<ApiResponse<void>> {
+  async configureModel(modelId: string, settings: Record<string, unknown>): Promise<ApiResponse<void>> {
     return apiClient.invoke('configure_ai_model', {
       model_id: modelId,
       settings
@@ -271,7 +271,7 @@ export class AIService {
   /**
    * Get AI conversation context
    */
-  async getConversationContext(conversationId: string): Promise<ApiResponse<any>> {
+  async getConversationContext(conversationId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_conversation_context', {
       conversation_id: conversationId
     })
@@ -280,7 +280,7 @@ export class AIService {
   /**
    * Update conversation context
    */
-  async updateConversationContext(conversationId: string, context: any): Promise<ApiResponse<void>> {
+  async updateConversationContext(conversationId: string, context: Record<string, unknown>): Promise<ApiResponse<void>> {
     return apiClient.invoke('update_conversation_context', {
       conversation_id: conversationId,
       context
