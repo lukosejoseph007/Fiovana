@@ -5,6 +5,8 @@ import { designTokens } from '../../styles/tokens'
 import { Message, WorkspaceHealth } from '../../types'
 import type { IconComponentProps } from '../ui/Icon'
 import DocumentViewer from './DocumentViewer'
+import OperationsToolbar from '../operations/OperationsToolbar'
+import type { OperationInfo } from '../operations/OperationsToolbar'
 
 interface DocumentCanvasProps {
   workspaceId?: string
@@ -768,6 +770,28 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
           </Button>
         </div>
       )}
+
+      {/* Operations Toolbar - Always visible at bottom */}
+      <OperationsToolbar
+        documentId={documentId || undefined}
+        workspaceContext={{
+          workspaceId,
+          documentCount: recentSessions.length,
+          health: workspaceHealth,
+        }}
+        onOperationStart={(operation: OperationInfo) => {
+          console.log('Operation started:', operation)
+          // Handle operation start (e.g., show modal for confirmation)
+        }}
+        onOperationComplete={(operation: OperationInfo, result: unknown) => {
+          console.log('Operation completed:', operation, result)
+          // Handle operation completion (e.g., refresh data, show success)
+        }}
+        onOperationError={(operation: OperationInfo, error: Error) => {
+          console.error('Operation error:', operation, error)
+          // Handle operation error (e.g., show error message)
+        }}
+      />
     </div>
   )
 }

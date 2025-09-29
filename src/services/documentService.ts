@@ -277,6 +277,19 @@ export class DocumentService {
       version_info: versionInfo,
     })
   }
+
+  /**
+   * Comprehensive document analysis (structure + content + style)
+   */
+  async analyzeDocument(
+    documentId: string,
+    options?: Record<string, unknown>
+  ): Promise<ApiResponse<unknown>> {
+    return apiClient.invoke('analyze_document', {
+      document_id: documentId,
+      options: options || {},
+    })
+  }
 }
 
 export const documentService = new DocumentService()
