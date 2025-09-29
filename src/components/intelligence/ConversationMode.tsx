@@ -1,16 +1,22 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { designTokens } from '../../styles/tokens'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Icon from '../ui/Icon'
 import Badge from '../ui/Badge'
 import { aiService, ChatMessage, ChatRequest } from '../../services/aiService'
-// import { conversationIntelligenceService } from '../../services/conversationIntelligenceService'
 
 export interface ConversationModeProps {
   contextData?: unknown
   className?: string
   style?: React.CSSProperties
+}
+
+interface DocumentReference {
+  id: string
+  name: string
+  excerpt?: string
+  relevance?: number
 }
 
 interface ConversationState {
@@ -20,14 +26,21 @@ interface ConversationState {
   sessionId: string | null
   suggestedActions: string[]
   followupQuestions: string[]
+  documentReferences: DocumentReference[]
+  isTyping: boolean
 }
 
 interface MessageDisplayProps {
   message: ChatMessage
   isLatest?: boolean
+  documentReferences?: DocumentReference[]
 }
 
-const MessageDisplay: React.FC<MessageDisplayProps> = ({ message, isLatest = false }) => {
+const MessageDisplay: React.FC<MessageDisplayProps> = ({
+  message,
+  isLatest = false,
+  documentReferences = [],
+}) => {
   const isUser = message.role === 'user'
   const isSystem = message.role === 'system'
 
@@ -96,6 +109,71 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({ message, isLatest = fal
       <div style={avatarStyles}>{isUser ? 'U' : <Icon name="Cpu" size={16} />}</div>
       <div style={bubbleStyles}>
         <p style={contentStyles}>{message.content}</p>
+
+        {/* Document References */}
+        {!isUser && documentReferences.length > 0 && (
+          <div
+            style={{
+              marginTop: designTokens.spacing[3],
+              paddingTop: designTokens.spacing[2],
+              borderTop: `1px solid ${designTokens.colors.border.subtle}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: designTokens.typography.fontSize.xs,
+                color: designTokens.colors.text.secondary,
+                fontWeight: designTokens.typography.fontWeight.semibold,
+                marginBottom: designTokens.spacing[1],
+                display: 'flex',
+                alignItems: 'center',
+                gap: designTokens.spacing[1],
+              }}
+            >
+              <Icon name="FileText" size={12} />
+              Referenced Documents
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: designTokens.spacing[1] }}>
+              {documentReferences.map(ref => (
+                <div
+                  key={ref.id}
+                  style={{
+                    padding: designTokens.spacing[2],
+                    backgroundColor: designTokens.colors.surface.primary,
+                    borderRadius: designTokens.borderRadius.sm,
+                    border: `1px solid ${designTokens.colors.border.subtle}`,
+                    cursor: 'pointer',
+                    transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+                  }}
+                  className="document-reference-card"
+                >
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.xs,
+                      fontWeight: designTokens.typography.fontWeight.medium,
+                      color: designTokens.colors.text.primary,
+                      marginBottom: ref.excerpt ? designTokens.spacing[1] : 0,
+                    }}
+                  >
+                    {ref.name}
+                  </div>
+                  {ref.excerpt && (
+                    <div
+                      style={{
+                        fontSize: designTokens.typography.fontSize.xs,
+                        color: designTokens.colors.text.tertiary,
+                        lineHeight: designTokens.typography.lineHeight.snug,
+                      }}
+                    >
+                      {ref.excerpt}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {isLatest && !isUser && (
           <div
             style={{
@@ -128,9 +206,18 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
     sessionId: null,
     suggestedActions: [],
     followupQuestions: [],
+    documentReferences: [],
+    isTyping: false,
   })
   const [inputValue, setInputValue] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [conversationState.messages])
 
   // Initialize conversation with welcome message
   useEffect(() => {
@@ -167,6 +254,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
         ...prev,
         messages: [...prev.messages, userMessage],
         isLoading: true,
+        isTyping: true,
         error: null,
       }))
 
@@ -191,6 +279,10 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
             metadata: response.data.metadata,
           }
 
+          // Extract document references from metadata if available
+          const docRefs: DocumentReference[] =
+            (response.data.metadata?.documentReferences as DocumentReference[]) || []
+
           // Get conversation suggestions for follow-up
           const suggestionsResponse = await aiService.getConversationSuggestions(
             conversationState.sessionId || 'current'
@@ -200,6 +292,8 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
             ...prev,
             messages: [...prev.messages, assistantMessage],
             isLoading: false,
+            isTyping: false,
+            documentReferences: docRefs,
             followupQuestions: suggestionsResponse.success ? suggestionsResponse.data || [] : [],
           }))
         } else {
@@ -209,6 +303,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
         setConversationState(prev => ({
           ...prev,
           isLoading: false,
+          isTyping: false,
           error: error instanceof Error ? error.message : 'An error occurred',
         }))
       }
@@ -220,6 +315,70 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
       contextData,
     ]
   )
+
+  // Export conversation to JSON
+  const handleExportConversation = useCallback(() => {
+    const exportData = {
+      sessionId: conversationState.sessionId,
+      timestamp: new Date().toISOString(),
+      messages: conversationState.messages,
+      metadata: {
+        contextData,
+      },
+    }
+
+    const dataStr = JSON.stringify(exportData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `proxemic-conversation-${Date.now()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [conversationState.messages, conversationState.sessionId, contextData])
+
+  // Import conversation from JSON
+  const handleImportConversation = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  // Handle file selection for import
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = e => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string)
+        if (importedData.messages && Array.isArray(importedData.messages)) {
+          setConversationState(prev => ({
+            ...prev,
+            messages: importedData.messages,
+            sessionId: importedData.sessionId || null,
+          }))
+        } else {
+          throw new Error('Invalid conversation format')
+        }
+      } catch (error) {
+        setConversationState(prev => ({
+          ...prev,
+          error:
+            error instanceof Error
+              ? `Import failed: ${error.message}`
+              : 'Failed to import conversation',
+        }))
+      }
+    }
+    reader.readAsText(file)
+
+    // Reset file input
+    if (event.target) {
+      event.target.value = ''
+    }
+  }, [])
 
   // Handle input submission
   const handleSubmit = useCallback(
@@ -286,6 +445,85 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
 
   return (
     <div className={`proxemic-conversation-mode ${className}`} style={containerStyles}>
+      {/* Conversation Header with Actions */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: `${designTokens.spacing[2]} ${designTokens.spacing[3]}`,
+          borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
+          backgroundColor: designTokens.colors.surface.tertiary,
+        }}
+      >
+        <div
+          style={{
+            fontSize: designTokens.typography.fontSize.xs,
+            color: designTokens.colors.text.secondary,
+            display: 'flex',
+            alignItems: 'center',
+            gap: designTokens.spacing[2],
+          }}
+        >
+          <Icon name="MessageCircle" size={14} />
+          {conversationState.messages.filter(m => m.role !== 'system').length} messages
+        </div>
+        <div style={{ display: 'flex', gap: designTokens.spacing[2] }}>
+          <button
+            onClick={handleExportConversation}
+            disabled={conversationState.messages.length <= 1}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: designTokens.spacing[1],
+              padding: `${designTokens.spacing[1]} ${designTokens.spacing[2]}`,
+              fontSize: designTokens.typography.fontSize.xs,
+              color: designTokens.colors.text.secondary,
+              backgroundColor: 'transparent',
+              border: `1px solid ${designTokens.colors.border.subtle}`,
+              borderRadius: designTokens.borderRadius.sm,
+              cursor: 'pointer',
+              transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+            }}
+            className="export-button"
+            title="Export conversation"
+          >
+            <Icon name="Share2" size={12} />
+            Export
+          </button>
+          <button
+            onClick={handleImportConversation}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: designTokens.spacing[1],
+              padding: `${designTokens.spacing[1]} ${designTokens.spacing[2]}`,
+              fontSize: designTokens.typography.fontSize.xs,
+              color: designTokens.colors.text.secondary,
+              backgroundColor: 'transparent',
+              border: `1px solid ${designTokens.colors.border.subtle}`,
+              borderRadius: designTokens.borderRadius.sm,
+              cursor: 'pointer',
+              transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+            }}
+            className="import-button"
+            title="Import conversation"
+          >
+            <Icon name="ArrowRight" size={12} />
+            Import
+          </button>
+        </div>
+      </div>
+
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+
       {/* Messages Container */}
       <div className="messages-container" style={messagesContainerStyles}>
         {conversationState.messages.map((message, index) => (
@@ -293,11 +531,24 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
             key={`${message.role}-${index}`}
             message={message}
             isLatest={index === conversationState.messages.length - 1}
+            documentReferences={
+              index === conversationState.messages.length - 1
+                ? conversationState.documentReferences
+                : []
+            }
           />
         ))}
 
+        {/* Typing Indicator */}
+        {conversationState.isTyping && (
+          <div style={loadingIndicatorStyles}>
+            <Icon name="Loader" size={16} className="animate-spin" />
+            AI is typing...
+          </div>
+        )}
+
         {/* Loading Indicator */}
-        {conversationState.isLoading && (
+        {conversationState.isLoading && !conversationState.isTyping && (
           <div style={loadingIndicatorStyles}>
             <Icon name="Loader" size={16} className="animate-spin" />
             AI is thinking...
@@ -318,6 +569,9 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
             {conversationState.error}
           </div>
         )}
+
+        {/* Auto-scroll anchor */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Container */}
@@ -391,6 +645,24 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
           .proxemic-conversation-mode .suggestion-badge:hover {
             background-color: ${designTokens.colors.state.hover};
             transform: translateY(-1px);
+          }
+
+          .proxemic-conversation-mode .export-button:hover,
+          .proxemic-conversation-mode .import-button:hover {
+            background-color: ${designTokens.colors.state.hover};
+            color: ${designTokens.colors.text.primary};
+            border-color: ${designTokens.colors.border.medium};
+          }
+
+          .proxemic-conversation-mode .export-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          .proxemic-conversation-mode .document-reference-card:hover {
+            background-color: ${designTokens.colors.state.hover};
+            border-color: ${designTokens.colors.border.medium};
+            transform: translateX(2px);
           }
 
           /* Custom scrollbar for messages container */
