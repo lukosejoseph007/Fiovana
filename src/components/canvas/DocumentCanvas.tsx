@@ -4,6 +4,7 @@ import { aiService, workspaceService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Message, WorkspaceHealth } from '../../types'
 import type { IconComponentProps } from '../ui/Icon'
+import DocumentViewer from './DocumentViewer'
 
 interface DocumentCanvasProps {
   workspaceId?: string
@@ -679,8 +680,21 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
         </>
       )}
 
-      {/* Document Mode Placeholder */}
-      {mode === 'document' && (
+      {/* Document Mode */}
+      {mode === 'document' && documentId && (
+        <DocumentViewer
+          documentId={documentId}
+          _workspaceId={workspaceId}
+          onClose={() => handleModeChange('chat')}
+          onAISuggestionSelect={(suggestion) => {
+            console.log('AI suggestion selected:', suggestion)
+            // This could trigger actions like opening a modal or adding content to chat
+          }}
+        />
+      )}
+
+      {/* Document Mode - No Document Selected */}
+      {mode === 'document' && !documentId && (
         <div
           style={{
             flex: 1,
@@ -699,7 +713,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
               fontSize: designTokens.typography.fontSize.lg,
             }}
           >
-            Document view will be implemented in Task 3.2
+            No document selected
           </div>
           <Button variant="secondary" onClick={() => handleModeChange('chat')}>
             Return to Chat
