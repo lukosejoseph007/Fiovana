@@ -21,6 +21,12 @@ import {
   UserIcon,
   CollaborationIcon,
   ChevronDownIcon,
+  AlertIcon,
+  ColumnsIcon,
+  LayersIcon,
+  FilterIcon,
+  XIcon,
+  LinkIcon,
 } from './index'
 
 // Utility function to get document type icon component
@@ -64,6 +70,14 @@ export const Icons = {
 
   // Navigation elements
   ChevronDown: ChevronDownIcon,
+
+  // Common UI elements
+  Alert: AlertIcon,
+  Columns: ColumnsIcon,
+  Layers: LayersIcon,
+  Filter: FilterIcon,
+  X: XIcon,
+  Link: LinkIcon,
 
   // Utility
   getDocumentTypeIcon,

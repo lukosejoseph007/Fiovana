@@ -686,7 +686,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
           documentId={documentId}
           _workspaceId={workspaceId}
           onClose={() => handleModeChange('chat')}
-          onAISuggestionSelect={(suggestion) => {
+          onAISuggestionSelect={suggestion => {
             console.log('AI suggestion selected:', suggestion)
             // This could trigger actions like opening a modal or adding content to chat
           }}

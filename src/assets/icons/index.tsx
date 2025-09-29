@@ -441,3 +441,142 @@ export const ChevronDownIcon: React.FC<IconProps> = ({
     <polyline points="6,9 12,15 18,9" />
   </svg>
 )
+
+export const AlertIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
+  </svg>
+)
+
+export const ColumnsIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <rect x="3" y="3" width="7" height="18" />
+    <rect x="14" y="3" width="7" height="18" />
+  </svg>
+)
+
+export const LayersIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polygon points="12,2 2,7 12,12 22,7" />
+    <polyline points="2,17 12,22 22,17" />
+    <polyline points="2,12 12,17 22,12" />
+  </svg>
+)
+
+export const FilterIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" />
+  </svg>
+)
+
+export const XIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+)
+
+export const LinkIcon: React.FC<IconProps> = ({
+  size = 16,
+  color = 'currentColor',
+  className = '',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+)
