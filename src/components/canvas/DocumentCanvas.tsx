@@ -301,7 +301,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        background: designTokens.colors.background.canvas,
+        background: designTokens.colors.surface.primary,
         position: 'relative',
       }}
       onDragOver={handleDragOver}
@@ -334,7 +334,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
               fontWeight: designTokens.typography.fontWeight.medium,
             }}
           >
-            <Icon name="Document" size="2xl" />
+            <Icon name="Document" size="xl" />
             <div style={{ marginTop: designTokens.spacing[2] }}>Drop documents here to analyze</div>
           </div>
         </div>
@@ -343,11 +343,59 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
       {/* Chat Interface */}
       {mode === 'chat' && (
         <>
+          {/* Home Button - Only show when there are messages (in conversation) */}
+          {messages.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: designTokens.spacing[4],
+                left: designTokens.spacing[6],
+                zIndex: designTokens.zIndex.sticky,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setMessages([])
+                  setCurrentInput('')
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: designTokens.spacing[2],
+                  padding: `${designTokens.spacing[2]} ${designTokens.spacing[3]}`,
+                  backgroundColor: designTokens.colors.surface.secondary,
+                  border: `1px solid ${designTokens.colors.border.subtle}`,
+                  borderRadius: designTokens.borderRadius.md,
+                  color: designTokens.colors.text.secondary,
+                  fontSize: designTokens.typography.fontSize.sm,
+                  fontWeight: designTokens.typography.fontWeight.medium,
+                  cursor: 'pointer',
+                  transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = designTokens.colors.state.hover
+                  e.currentTarget.style.borderColor = designTokens.colors.accent.ai
+                  e.currentTarget.style.color = designTokens.colors.text.primary
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = designTokens.colors.surface.secondary
+                  e.currentTarget.style.borderColor = designTokens.colors.border.subtle
+                  e.currentTarget.style.color = designTokens.colors.text.secondary
+                }}
+                title="Return to home screen"
+              >
+                <Icon name="ChevronDown" size={16} style={{ transform: 'rotate(90deg)' }} />
+                Home
+              </button>
+            </div>
+          )}
+
           {/* Messages Area */}
           <div
             style={{
               flex: 1,
-              padding: designTokens.spacing[6],
+              padding: `${designTokens.spacing[4]} ${designTokens.spacing[6]}`,
+              paddingTop: messages.length > 0 ? designTokens.spacing[12] : designTokens.spacing[4],
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
@@ -374,7 +422,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                     style={{
                       fontSize: designTokens.typography.fontSize['2xl'],
                       fontWeight: designTokens.typography.fontWeight.medium,
-                      color: designTokens.colors.text.inverse,
+                      color: designTokens.colors.text.primary,
                       marginBottom: designTokens.spacing[4],
                     }}
                   >
@@ -388,7 +436,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                     style={{
                       fontSize: designTokens.typography.fontSize.lg,
                       fontWeight: designTokens.typography.fontWeight.medium,
-                      color: designTokens.colors.text.inverse,
+                      color: designTokens.colors.text.primary,
                       marginBottom: designTokens.spacing[4],
                       textAlign: 'center',
                     }}
@@ -424,7 +472,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                         >
                           <Icon
                             name={action.icon}
-                            size="lg"
+                            size="md"
                             color={designTokens.colors.accent.ai}
                           />
                           <div style={{ flex: 1 }}>
@@ -432,7 +480,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                               style={{
                                 fontSize: designTokens.typography.fontSize.base,
                                 fontWeight: designTokens.typography.fontWeight.medium,
-                                color: designTokens.colors.text.inverse,
+                                color: designTokens.colors.text.primary,
                                 marginBottom: designTokens.spacing[1],
                               }}
                             >
@@ -461,7 +509,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                       style={{
                         fontSize: designTokens.typography.fontSize.lg,
                         fontWeight: designTokens.typography.fontWeight.medium,
-                        color: designTokens.colors.text.inverse,
+                        color: designTokens.colors.text.primary,
                         marginBottom: designTokens.spacing[4],
                         textAlign: 'center',
                       }}
@@ -631,9 +679,9 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
           {/* Input Area */}
           <div
             style={{
-              padding: designTokens.spacing[4],
+              padding: `${designTokens.spacing[4]} ${designTokens.spacing[6]}`,
               borderTop: `1px solid ${designTokens.colors.border.subtle}`,
-              background: designTokens.colors.background.paper,
+              background: designTokens.colors.surface.secondary,
             }}
           >
             <div style={{ display: 'flex', gap: designTokens.spacing[2], alignItems: 'flex-end' }}>
@@ -705,7 +753,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
             gap: designTokens.spacing[4],
           }}
         >
-          <Icon name="Document" size="3xl" color={designTokens.colors.text.tertiary} />
+          <Icon name="Document" size="xl" color={designTokens.colors.text.tertiary} />
           <div
             style={{
               textAlign: 'center',

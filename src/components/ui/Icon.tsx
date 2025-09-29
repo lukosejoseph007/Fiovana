@@ -17,6 +17,7 @@ export const Icon: React.FC<IconComponentProps> = ({
   size = 16,
   color = 'currentColor',
   className = '',
+  style,
   ...props
 }) => {
   const IconComponent = Icons[name] as React.FC<IconProps>
@@ -26,7 +27,7 @@ export const Icon: React.FC<IconComponentProps> = ({
     return null
   }
 
-  return <IconComponent size={size} color={color} className={className} {...props} />
+  return <IconComponent size={size} color={color} className={className} style={style} {...props} />
 }
 
 export default Icon

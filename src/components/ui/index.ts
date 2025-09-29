@@ -31,7 +31,7 @@ export type { TabsProps, TabListProps, TabProps, TabPanelsProps, TabPanelProps }
 export { default as Avatar, AvatarGroup } from './Avatar'
 export type { AvatarProps, AvatarGroupProps } from './Avatar'
 
-export { default as Icon } from './Icon'
+export { Icon } from './Icon'
 export type { IconComponentProps } from './Icon'
 
 // Re-export icon assets for convenience

@@ -55,7 +55,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onSettingsClick,
   onCommandPaletteOpen,
 }) => {
-  const { isMobile } = useLayout()
+  const { isMobile, toggleIntelligence, intelligenceCollapsed } = useLayout()
 
   // Keyboard shortcuts handler
   useEffect(() => {
@@ -216,10 +216,37 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           )}
         </div>
 
-        {/* Right Zone - Collaborators, AI Status, Settings */}
+        {/* Right Zone - Collaborators, AI Status, Panel Toggles, Settings */}
         <div style={rightZoneStyles}>
           <CollaboratorAvatars collaborators={collaborators} />
           <AIStatusIndicator aiStatus={aiStatus} />
+
+          {/* Intelligence Panel Toggle Button */}
+          {!isMobile && (
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                color: intelligenceCollapsed
+                  ? designTokens.colors.text.tertiary
+                  : designTokens.colors.text.secondary,
+                cursor: 'pointer',
+                padding: designTokens.spacing[2],
+                borderRadius: designTokens.borderRadius.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: `all ${designTokens.animation.duration.fast}`,
+              }}
+              className="proxemic-header-icon"
+              aria-label="Toggle Intelligence Panel"
+              title="Toggle Intelligence Panel"
+              onClick={toggleIntelligence}
+            >
+              <Icon name="Layout" size={18} />
+            </button>
+          )}
+
           <SettingsButton onSettingsClick={onSettingsClick} />
         </div>
       </div>

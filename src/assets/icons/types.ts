@@ -4,6 +4,7 @@ export interface IconProps {
   size?: number | string
   color?: string
   className?: string
+  style?: React.CSSProperties
   'aria-label'?: string
 }
 

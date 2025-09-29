@@ -22,9 +22,9 @@ async function initTauriInvoke() {
   try {
     // Check if we're in a Tauri environment at runtime
     if (typeof window !== 'undefined' && (window as unknown as { __TAURI__?: unknown }).__TAURI__) {
-      // Use dynamic import string to avoid TypeScript resolution
-      const tauriModule = await import(/* webpackIgnore: true */ '@tauri-apps' + '/api/tauri')
-      tauriInvoke = tauriModule.invoke
+      // Dynamic import with proper Vite handling
+      const { invoke } = await import('@tauri-apps/api/core')
+      tauriInvoke = invoke as (command: string, args?: unknown) => Promise<unknown>
     } else {
       tauriInvoke = mockTauri.invoke
     }

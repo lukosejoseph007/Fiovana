@@ -381,7 +381,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
       </div>
 
       {/* Analysis Content */}
-      <div style={scrollContainerStyles}>
+      <div className="scroll-container" style={scrollContainerStyles}>
         {/* Structure Analysis */}
         <AnalysisCard
           title="Structure Analysis"
@@ -685,7 +685,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
         </AnalysisCard>
       </div>
 
-      {/* Custom Animations */}
+      {/* Custom Animations and Scrollbars */}
       <style>
         {`
           .animate-spin {
@@ -695,6 +695,25 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+          }
+
+          /* Custom scrollbar for scroll container */
+          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
           }
         `}
       </style>

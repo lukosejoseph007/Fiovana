@@ -419,7 +419,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
       </div>
 
       {/* Content */}
-      <div style={scrollContainerStyles}>
+      <div className="scroll-container" style={scrollContainerStyles}>
         {/* Health Score Overview */}
         <Card variant="elevated" style={{ marginBottom: designTokens.spacing[4] }}>
           <div
@@ -717,7 +717,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
         </Card>
       </div>
 
-      {/* Custom Animations */}
+      {/* Custom Animations and Scrollbars */}
       <style>
         {`
           .animate-spin {
@@ -727,6 +727,25 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+          }
+
+          /* Custom scrollbar for scroll container */
+          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
           }
         `}
       </style>

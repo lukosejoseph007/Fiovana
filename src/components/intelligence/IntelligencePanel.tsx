@@ -128,7 +128,7 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
 
   const contentStyles = {
     flex: 1,
-    overflow: 'hidden' as const,
+    overflow: 'auto' as const,
     display: 'flex',
     flexDirection: 'column' as const,
     transition: `opacity ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
@@ -143,7 +143,8 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
   const panelContentStyles = {
     flex: 1,
     overflow: 'auto' as const,
-    padding: designTokens.spacing[4],
+    display: 'flex',
+    flexDirection: 'column' as const,
   }
 
   if (isCollapsed && collapsible) {
@@ -204,19 +205,19 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
 
             <Tabs.Panels>
               <Tabs.Panel value="conversation">
-                <div style={panelContentStyles}>
+                <div className="panel-content" style={panelContentStyles}>
                   <ConversationMode contextData={contextData} />
                 </div>
               </Tabs.Panel>
 
               <Tabs.Panel value="document">
-                <div style={panelContentStyles}>
+                <div className="panel-content" style={panelContentStyles}>
                   <DocumentIntelligence contextData={contextData} />
                 </div>
               </Tabs.Panel>
 
               <Tabs.Panel value="workspace">
-                <div style={panelContentStyles}>
+                <div className="panel-content" style={panelContentStyles}>
                   <WorkspaceInsights contextData={contextData} />
                 </div>
               </Tabs.Panel>
@@ -241,6 +242,25 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
           .proxemic-intelligence-panel.collapsed {
             min-width: 48px;
             max-width: 48px;
+          }
+
+          /* Custom scrollbar for panel content */
+          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
           }
         `}
       </style>

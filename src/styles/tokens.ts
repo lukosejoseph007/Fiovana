@@ -270,8 +270,8 @@ export const breakpoints = {
 
   // Proxemic-specific breakpoints
   mobile: '768px', // Below this is mobile
-  tablet: '1200px', // Below this is tablet
-  desktop: '1200px', // Above this is desktop
+  tablet: '1024px', // Below this is tablet
+  desktop: '1024px', // Above this is desktop
 } as const
 
 // Z-Index Scale

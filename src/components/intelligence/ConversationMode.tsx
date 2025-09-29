@@ -287,7 +287,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
   return (
     <div className={`proxemic-conversation-mode ${className}`} style={containerStyles}>
       {/* Messages Container */}
-      <div style={messagesContainerStyles}>
+      <div className="messages-container" style={messagesContainerStyles}>
         {conversationState.messages.map((message, index) => (
           <MessageDisplay
             key={`${message.role}-${index}`}
@@ -376,7 +376,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
         </form>
       </div>
 
-      {/* Custom styles for animations */}
+      {/* Custom styles for animations and scrollbars */}
       <style>
         {`
           @keyframes spin {
@@ -391,6 +391,25 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
           .proxemic-conversation-mode .suggestion-badge:hover {
             background-color: ${designTokens.colors.state.hover};
             transform: translateY(-1px);
+          }
+
+          /* Custom scrollbar for messages container */
+          .proxemic-conversation-mode .messages-container::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
           }
         `}
       </style>

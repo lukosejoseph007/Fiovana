@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { designTokens } from '../../styles/tokens'
 import { LayoutContext, useLayout } from './useLayoutContext'
+import { useResizablePanels } from '../../hooks/useResizablePanels'
+import DragHandle from '../ui/DragHandle'
 
 export interface AppShellProps {
   children: React.ReactNode
@@ -16,12 +18,31 @@ export interface LayoutContextType {
   isMobile: boolean
   isTablet: boolean
   isDesktop: boolean
+  navigationWidth: number
+  intelligenceWidth: number
+  isNavigationResizing: boolean
+  isIntelligenceResizing: boolean
+  startNavigationResize: (e: React.MouseEvent) => void
+  startIntelligenceResize: (e: React.MouseEvent) => void
 }
 
 const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) => {
-  const [navigationCollapsed, setNavigationCollapsed] = useState(false)
-  const [intelligenceCollapsed, setIntelligenceCollapsed] = useState(false)
-  const [viewport, setViewport] = useState({ width: 0, height: 0 })
+  const [navigationCollapsed, setNavigationCollapsed] = useState(false) // Always start expanded
+  const [intelligenceCollapsed, setIntelligenceCollapsed] = useState(false) // Always start expanded
+  const [viewport, setViewport] = useState({
+    width: window.innerWidth || 1024,
+    height: window.innerHeight || 768,
+  })
+
+  // Initialize resizable panels
+  const {
+    navigationWidth,
+    intelligenceWidth,
+    isNavigationResizing,
+    isIntelligenceResizing,
+    startNavigationResize,
+    startIntelligenceResize,
+  } = useResizablePanels()
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -40,15 +61,19 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
     viewport.width < parseInt(designTokens.breakpoints.desktop)
   const isDesktop = viewport.width >= parseInt(designTokens.breakpoints.desktop)
 
-  // Auto-collapse panels on smaller screens
+  // Auto-collapse panels on smaller screens (less aggressive)
   useEffect(() => {
-    if (isMobile) {
+    // Only auto-collapse if we have a valid viewport measurement and are actually on mobile
+    if (
+      isMobile &&
+      viewport.width > 0 &&
+      viewport.width < parseInt(designTokens.breakpoints.mobile)
+    ) {
       setNavigationCollapsed(true)
       setIntelligenceCollapsed(true)
-    } else if (isTablet) {
-      setIntelligenceCollapsed(true)
     }
-  }, [isMobile, isTablet])
+    // Don't auto-collapse intelligence panel on tablet - let user decide
+  }, [isMobile, viewport.width])
 
   const toggleNavigation = () => setNavigationCollapsed(!navigationCollapsed)
   const toggleIntelligence = () => setIntelligenceCollapsed(!intelligenceCollapsed)
@@ -61,6 +86,12 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
     isMobile,
     isTablet,
     isDesktop,
+    navigationWidth,
+    intelligenceWidth,
+    isNavigationResizing,
+    isIntelligenceResizing,
+    startNavigationResize,
+    startIntelligenceResize,
   }
 
   const containerStyles = {
@@ -203,13 +234,20 @@ export interface NavigationProps {
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ children, className = '', style }) => {
-  const { navigationCollapsed, isMobile, isDesktop } = useLayout()
+  const {
+    navigationCollapsed,
+    isMobile,
+    isDesktop,
+    navigationWidth,
+    isNavigationResizing,
+    startNavigationResize,
+  } = useLayout()
 
   const shouldShow = isDesktop || (!navigationCollapsed && !isDesktop)
   const width =
     navigationCollapsed && isDesktop
       ? designTokens.layout.navigation.collapsedWidth
-      : designTokens.layout.navigation.width
+      : `${navigationWidth}px`
 
   const navigationStyles = {
     width: shouldShow ? width : '0',
@@ -227,11 +265,14 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
     ...style,
   }
 
-  const contentStyles = {
-    width: designTokens.layout.navigation.width,
+  const navigationContentStyles = {
+    width:
+      navigationCollapsed && isDesktop
+        ? designTokens.layout.navigation.collapsedWidth
+        : `${navigationWidth}px`,
     height: '100%',
     overflow: 'auto' as const,
-    padding: designTokens.spacing[4],
+    padding: '0.2rem',
   }
 
   if (!shouldShow) return null
@@ -254,8 +295,41 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
       )}
 
       <nav className={`proxemic-navigation ${className}`} style={navigationStyles}>
-        <div style={contentStyles}>{children}</div>
+        <div className="navigation-content" style={navigationContentStyles}>
+          {children}
+        </div>
+        {/* Drag handle for resizing */}
+        {isDesktop && !navigationCollapsed && (
+          <DragHandle
+            position="right"
+            isActive={isNavigationResizing}
+            onMouseDown={startNavigationResize}
+          />
+        )}
       </nav>
+
+      {/* Custom scrollbar styles for navigation panel */}
+      <style>
+        {`
+          .proxemic-navigation .navigation-content::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-navigation .navigation-content::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-navigation .navigation-content::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-navigation .navigation-content::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
+          }
+        `}
+      </style>
     </>
   )
 }
@@ -274,7 +348,7 @@ export const Canvas: React.FC<CanvasProps> = ({ children, className = '', style 
     overflow: 'auto' as const,
     position: 'relative' as const,
     minWidth: designTokens.layout.canvas.minWidth,
-    padding: designTokens.layout.canvas.padding,
+    padding: 0,
     ...style,
   }
 
@@ -293,13 +367,20 @@ export interface IntelligenceProps {
 }
 
 export const Intelligence: React.FC<IntelligenceProps> = ({ children, className = '', style }) => {
-  const { intelligenceCollapsed, isMobile, isDesktop } = useLayout()
+  const {
+    intelligenceCollapsed,
+    isMobile,
+    isDesktop,
+    intelligenceWidth,
+    isIntelligenceResizing,
+    startIntelligenceResize,
+  } = useLayout()
 
   const shouldShow = isDesktop && !intelligenceCollapsed
 
   const intelligenceStyles = {
-    width: shouldShow ? designTokens.layout.intelligence.width : '0',
-    minWidth: shouldShow ? designTokens.layout.intelligence.minWidth : '0',
+    width: shouldShow ? `${intelligenceWidth}px` : '0',
+    minWidth: shouldShow ? `${intelligenceWidth}px` : '0',
     maxWidth: designTokens.layout.intelligence.maxWidth,
     backgroundColor: designTokens.colors.surface.secondary,
     borderLeft: shouldShow ? `1px solid ${designTokens.colors.border.subtle}` : 'none',
@@ -315,7 +396,7 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
   }
 
   const contentStyles = {
-    width: designTokens.layout.intelligence.width,
+    width: `${intelligenceWidth}px`,
     height: '100%',
     overflow: 'auto' as const,
     padding: designTokens.spacing[4],
@@ -341,8 +422,39 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
       )}
 
       <aside className={`proxemic-intelligence ${className}`} style={intelligenceStyles}>
-        <div style={contentStyles}>{children}</div>
+        {/* Drag handle for resizing */}
+        <DragHandle
+          position="left"
+          isActive={isIntelligenceResizing}
+          onMouseDown={startIntelligenceResize}
+        />
+        <div className="intelligence-content" style={contentStyles}>
+          {children}
+        </div>
       </aside>
+
+      {/* Custom scrollbar styles for intelligence panel */}
+      <style>
+        {`
+          .proxemic-intelligence .intelligence-content::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-track {
+            background: ${designTokens.colors.surface.tertiary};
+            border-radius: 3px;
+          }
+
+          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-thumb {
+            background: ${designTokens.colors.border.medium};
+            border-radius: 3px;
+          }
+
+          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-thumb:hover {
+            background: ${designTokens.colors.border.strong};
+          }
+        `}
+      </style>
     </>
   )
 }

@@ -10,6 +10,7 @@ import Badge from '../ui/Badge'
 import { Icon } from '../ui/Icon'
 import Progress from '../ui/Progress'
 import Tooltip from '../ui/Tooltip'
+import { useLayout } from '../layout/useLayoutContext'
 import {
   workspaceAnalyzerService,
   documentService,
@@ -63,13 +64,16 @@ interface NavigationPanelProps {
   workspaceId: string
   onItemSelect?: (item: NavigationItem) => void
   className?: string
+  collapsed?: boolean
 }
 
 export const NavigationPanel: React.FC<NavigationPanelProps> = ({
   workspaceId,
   onItemSelect,
   className = '',
+  collapsed = false,
 }) => {
+  const { toggleNavigation } = useLayout()
   const [sections, setSections] = useState<NavigationSection[]>([
     {
       id: 'workspace-intelligence',
@@ -371,6 +375,196 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
     [onItemSelect]
   )
 
+  // Render collapsed version with icons only
+  if (collapsed) {
+    return (
+      <div
+        className={`navigation-panel navigation-panel--collapsed ${className}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          backgroundColor: colors.surface.primary,
+          borderRight: `1px solid ${colors.border.subtle}`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: spacing[2],
+        }}
+      >
+        {/* Collapsed Header with Expand Button */}
+        <div
+          style={{
+            padding: spacing[3],
+            borderBottom: `1px solid ${colors.border.subtle}`,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: spacing[3],
+            marginBottom: spacing[4],
+          }}
+        >
+          <Tooltip content="Workspace Navigator">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: colors.surface.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.text.primary,
+              }}
+            >
+              <Icon name="Workspace" size={18} />
+            </div>
+          </Tooltip>
+
+          <Tooltip content="Expand navigation panel">
+            <button
+              onClick={toggleNavigation}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border.subtle}`,
+                color: colors.text.secondary,
+                cursor: 'pointer',
+                padding: spacing[1],
+                borderRadius: '4px',
+                transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+                e.currentTarget.style.borderColor = colors.accent.ai
+                e.currentTarget.style.color = colors.text.primary
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.borderColor = colors.border.subtle
+                e.currentTarget.style.color = colors.text.secondary
+              }}
+            >
+              <Icon name="ChevronDown" size={12} style={{ transform: 'rotate(90deg)' }} />
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* Collapsed Navigation Icons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], width: '100%' }}>
+          {/* Workspace Health Icon */}
+          <Tooltip content={`Health Score: ${workspaceHealth?.health?.score || 'N/A'}%`}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: colors.surface.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.accent.success,
+                cursor: 'pointer',
+                transition: `all ${animation.duration.fast}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = colors.surface.secondary
+              }}
+            >
+              <Icon name="Health" size={16} />
+            </div>
+          </Tooltip>
+
+          {/* Active Documents Icon */}
+          <Tooltip content="Active Documents">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: colors.surface.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.text.secondary,
+                cursor: 'pointer',
+                transition: `all ${animation.duration.fast}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = colors.surface.secondary
+              }}
+            >
+              <Icon name="Document" size={16} />
+            </div>
+          </Tooltip>
+
+          {/* Conversations Icon */}
+          <Tooltip content="Recent Conversations">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: colors.surface.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.accent.ai,
+                cursor: 'pointer',
+                transition: `all ${animation.duration.fast}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = colors.surface.secondary
+              }}
+            >
+              <Icon name="MessageCircle" size={16} />
+            </div>
+          </Tooltip>
+
+          {/* Smart Collections Icon */}
+          <Tooltip content="Smart Collections">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: colors.surface.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.text.secondary,
+                cursor: 'pointer',
+                transition: `all ${animation.duration.fast}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = colors.surface.secondary
+              }}
+            >
+              <Icon name="Layers" size={16} />
+            </div>
+          </Tooltip>
+        </div>
+      </div>
+    )
+  }
+
+  // Render expanded version
   return (
     <div
       className={`navigation-panel ${className}`}
@@ -393,44 +587,73 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
           justifyContent: 'space-between',
         }}
       >
-        <h2
-          style={{
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.text.primary,
-            margin: 0,
-          }}
-        >
-          Workspace Navigator
-        </h2>
-
-        <Tooltip content="Refresh workspace data">
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          <h2
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: colors.text.secondary,
-              cursor: refreshing ? 'wait' : 'pointer',
-              padding: spacing[1],
-              borderRadius: '4px',
-              transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
-            }}
-            onMouseEnter={e => {
-              if (!refreshing) {
-                e.currentTarget.style.backgroundColor = colors.state.hover
-                e.currentTarget.style.color = colors.text.primary
-              }
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.color = colors.text.secondary
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+              margin: 0,
             }}
           >
-            <Icon name="Settings" size={14} />
-          </button>
-        </Tooltip>
+            Workspace Navigator
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+          <Tooltip content="Refresh workspace data">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.text.secondary,
+                cursor: refreshing ? 'wait' : 'pointer',
+                padding: spacing[1],
+                borderRadius: '4px',
+                transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+              }}
+              onMouseEnter={e => {
+                if (!refreshing) {
+                  e.currentTarget.style.backgroundColor = colors.state.hover
+                  e.currentTarget.style.color = colors.text.primary
+                }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = colors.text.secondary
+              }}
+            >
+              <Icon name="Settings" size={14} />
+            </button>
+          </Tooltip>
+
+          <Tooltip content="Collapse navigation panel">
+            <button
+              onClick={toggleNavigation}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.text.secondary,
+                cursor: 'pointer',
+                padding: spacing[1],
+                borderRadius: '4px',
+                transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+                e.currentTarget.style.color = colors.text.primary
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = colors.text.secondary
+              }}
+            >
+              <Icon name="ChevronDown" size={14} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Workspace Health Summary */}
@@ -478,6 +701,7 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
 
       {/* Navigation Sections */}
       <div
+        className="navigation-content"
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -494,11 +718,30 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
         ))}
       </div>
 
-      {/* CSS for animations */}
+      {/* CSS for animations and scrollbars */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        /* Custom scrollbar for navigation content */
+        .navigation-panel .navigation-content::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .navigation-panel .navigation-content::-webkit-scrollbar-track {
+          background: ${colors.surface.tertiary};
+          border-radius: 3px;
+        }
+
+        .navigation-panel .navigation-content::-webkit-scrollbar-thumb {
+          background: ${colors.border.medium};
+          border-radius: 3px;
+        }
+
+        .navigation-panel .navigation-content::-webkit-scrollbar-thumb:hover {
+          background: ${colors.border.strong};
         }
       `}</style>
     </div>
