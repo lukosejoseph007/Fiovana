@@ -40,6 +40,7 @@ export interface HeaderBarProps {
   onSearch?: (query: string) => void
   onSettingsClick?: () => void
   onCommandPaletteOpen?: () => void
+  onLogoClick?: () => void
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -54,6 +55,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onSearch: _onSearch,
   onSettingsClick,
   onCommandPaletteOpen,
+  onLogoClick,
 }) => {
   const { isMobile, toggleIntelligence, intelligenceCollapsed } = useLayout()
 
@@ -74,6 +76,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const handleSearchFocus = useCallback(() => {
     onCommandPaletteOpen?.()
   }, [onCommandPaletteOpen])
+
+  const handleLogoClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      onLogoClick?.()
+    },
+    [onLogoClick]
+  )
 
   const headerContentStyles = {
     display: 'flex',
@@ -172,7 +182,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       >
         {/* Left Zone - Logo and Workspace Selector */}
         <div style={leftZoneStyles}>
-          <a href="/" style={logoStyles}>
+          <a
+            href="/"
+            style={{ ...logoStyles, cursor: 'pointer' }}
+            onClick={handleLogoClick}
+            aria-label="Go to home"
+          >
             Proxemic
           </a>
 

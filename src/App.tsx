@@ -74,11 +74,15 @@ const AppContent: React.FC = () => {
     []
   )
 
+  const handleLogoClick = useCallback(() => {
+    setViewMode('document')
+  }, [])
+
   return (
     <>
       {/* Header */}
       <AppShell.Header>
-        <HeaderBar />
+        <HeaderBar onLogoClick={handleLogoClick} />
       </AppShell.Header>
 
       {/* Main Content Area */}
