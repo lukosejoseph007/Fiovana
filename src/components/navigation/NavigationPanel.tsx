@@ -737,6 +737,47 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
             <Icon name="Workspace" size={16} />
             <span>View Full Dashboard</span>
           </button>
+
+          {/* Analytics Dashboard Button */}
+          <button
+            onClick={() => {
+              onItemSelect?.({
+                id: 'analytics-dashboard',
+                label: 'Analytics Dashboard',
+                icon: 'Analyze',
+              })
+            }}
+            style={{
+              width: '100%',
+              marginTop: spacing[2],
+              padding: `${spacing[2]} ${spacing[3]}`,
+              backgroundColor: colors.accent.semantic,
+              color: colors.text.inverse,
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing[2],
+              transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = '#ffa500'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 183, 0, 0.3)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = colors.accent.semantic
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <Icon name="Analyze" size={16} />
+            <span>Analytics Dashboard</span>
+          </button>
         </div>
       )}
 

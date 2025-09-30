@@ -116,7 +116,84 @@ const mockTauri = {
       ]
     }
 
-    return null
+    // Workspace analysis command
+    if (command === 'analyze_workspace') {
+      return {
+        workspaceId: 'default',
+        health: {
+          score: 75,
+          status: 'good',
+          recommendations: [
+            'Add more API documentation',
+            'Improve code coverage',
+            'Update outdated dependencies',
+          ],
+        },
+        insights: ['gap1', 'gap2', 'gap3'],
+        documents: {
+          total: 25,
+          active: 18,
+          archived: 7,
+        },
+        lastAnalyzed: new Date().toISOString(),
+      }
+    }
+
+    // List documents command
+    if (command === 'list_documents') {
+      return [
+        {
+          id: 'doc1',
+          title: 'API Documentation',
+          type: 'markdown',
+          metadata: { status: 'active', recentlyEdited: true, updatedAt: new Date().toISOString() },
+        },
+        {
+          id: 'doc2',
+          title: 'User Guide',
+          type: 'pdf',
+          metadata: {
+            status: 'active',
+            recentlyEdited: false,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+        {
+          id: 'doc3',
+          title: 'Technical Specification',
+          type: 'document',
+          metadata: { status: 'active', recentlyEdited: true, updatedAt: new Date().toISOString() },
+        },
+      ]
+    }
+
+    // Conversation analytics command
+    if (command === 'get_conversation_analytics') {
+      return {
+        totalConversations: 12,
+        recentActivity: true,
+      }
+    }
+
+    // Smart collections command
+    if (command === 'list_smart_collections' || command === 'get_smart_collections') {
+      return [
+        {
+          id: 'collection1',
+          name: 'Recent Updates',
+          documentCount: 5,
+        },
+        {
+          id: 'collection2',
+          name: 'High Priority',
+          documentCount: 3,
+        },
+      ]
+    }
+
+    // Default fallback - return empty object instead of null
+    console.warn(`[MOCK] No mock data for command: ${command}`)
+    return {}
   },
 }
 

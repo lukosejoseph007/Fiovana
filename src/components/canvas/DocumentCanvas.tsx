@@ -368,6 +368,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
         flexDirection: 'column',
         background: designTokens.colors.surface.primary,
         position: 'relative',
+        paddingBottom: '64px', // Space for Operations Toolbar
       }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

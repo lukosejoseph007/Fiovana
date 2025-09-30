@@ -273,7 +273,6 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
     height: '100%',
     overflow: 'auto' as const,
     padding: '0.2rem',
-    paddingBottom: '80px', // Extra space for Operations Toolbar at bottom (64px + 16px spacing)
   }
 
   if (!shouldShow) return null
@@ -350,7 +349,6 @@ export const Canvas: React.FC<CanvasProps> = ({ children, className = '', style 
     position: 'relative' as const,
     minWidth: designTokens.layout.canvas.minWidth,
     padding: 0,
-    paddingBottom: '64px', // Space for Operations Toolbar at bottom
     ...style,
   }
 
@@ -402,7 +400,6 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
     height: '100%',
     overflow: 'auto' as const,
     padding: designTokens.spacing[4],
-    paddingBottom: '80px', // Extra space for Operations Toolbar at bottom (64px + 16px spacing)
   }
 
   if (!shouldShow) return null

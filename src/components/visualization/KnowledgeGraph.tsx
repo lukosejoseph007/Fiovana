@@ -62,6 +62,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
   const [graphData, setGraphData] = useState<RelationshipGraph | null>(null)
   const [clusters, setClusters] = useState<RelationshipCluster[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,6 +70,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
   const [selectedNode, setSelectedNode] = useState<string | null>(selectedDocumentId || null)
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [transform, setTransform] = useState({ k: 1, x: 0, y: 0 })
+  const [renderKey, setRenderKey] = useState(0)
 
   // Load graph data
   const loadGraphData = useCallback(async () => {
@@ -97,12 +99,25 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       console.error('Graph loading error:', err)
     } finally {
       setLoading(false)
+      // Force re-render to ensure refs are available
+      setRenderKey(prev => prev + 1)
     }
   }, [workspaceId, enableClustering])
 
   useEffect(() => {
     loadGraphData()
   }, [loadGraphData])
+
+  // Force update after loading completes to ensure refs are attached
+  useEffect(() => {
+    if (!loading && graphData) {
+      // Use requestAnimationFrame to wait for DOM update
+      requestAnimationFrame(() => {
+        // Trigger re-render by updating renderKey again
+        setRenderKey(prev => prev + 1)
+      })
+    }
+  }, [loading, graphData])
 
   // Update selected node when prop changes
   useEffect(() => {
@@ -168,7 +183,23 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
 
   // Memoized simulation setup
   const simulationSetup = useMemo(() => {
-    if (!graphData || !svgRef.current || !containerRef.current) return null
+    console.log('[KnowledgeGraph] simulationSetup check:', {
+      hasGraphData: !!graphData,
+      hasSvgRef: !!svgRef.current,
+      hasContainerRef: !!containerRef.current,
+      loading,
+      renderKey,
+    })
+
+    if (!graphData) {
+      console.log('[KnowledgeGraph] No graphData')
+      return null
+    }
+
+    if (!svgRef.current || !containerRef.current) {
+      console.log('[KnowledgeGraph] Refs not ready yet')
+      return null
+    }
 
     const width = containerRef.current.clientWidth
     const nodes: D3Node[] = graphData.nodes.map(n => ({
@@ -185,12 +216,25 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         target: e.targetId,
       }))
 
+    console.log('[KnowledgeGraph] Simulation setup created with', nodes.length, 'nodes')
     return { nodes, links, width }
-  }, [graphData, strengthThreshold])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graphData, strengthThreshold, renderKey])
 
   // D3 visualization
   useEffect(() => {
-    if (!simulationSetup) return
+    if (!simulationSetup) {
+      console.log('[KnowledgeGraph] simulationSetup is null, skipping render')
+      return
+    }
+
+    console.log(
+      '[KnowledgeGraph] Rendering graph with',
+      simulationSetup.nodes.length,
+      'nodes and',
+      simulationSetup.links.length,
+      'links'
+    )
 
     const { nodes, links, width } = simulationSetup
     const vizHeight = height
@@ -298,7 +342,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       .join('circle')
       .attr('r', d => getNodeSize(d))
       .attr('fill', d => getNodeColor(d))
-      .attr('stroke', colors.border.strong)
+      .attr('stroke', colors.surface.primary)
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .call(
@@ -392,34 +436,48 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
         setTransform({ k: event.transform.k, x: event.transform.x, y: event.transform.y })
       })
 
+    // Store zoom behavior in ref for Reset button
+    zoomBehaviorRef.current = zoom
+
     svg.call(
       zoom as (selection: d3.Selection<SVGSVGElement | null, unknown, null, undefined>) => void
     )
 
-    // Initial zoom to fit
-    const bounds = g.node()?.getBBox()
-    if (bounds) {
-      const fullWidth = bounds.width
-      const fullHeight = bounds.height
-      const midX = bounds.x + fullWidth / 2
-      const midY = bounds.y + fullHeight / 2
+    // Initial zoom to fit - delay to allow simulation to position nodes
+    setTimeout(() => {
+      const bounds = g.node()?.getBBox()
+      if (bounds && bounds.width > 0 && bounds.height > 0) {
+        const fullWidth = bounds.width
+        const fullHeight = bounds.height
+        const midX = bounds.x + fullWidth / 2
+        const midY = bounds.y + fullHeight / 2
 
-      const scale = Math.min(width / fullWidth, vizHeight / fullHeight) * 0.9
-      const translate = [width / 2 - scale * midX, vizHeight / 2 - scale * midY]
+        const scale = Math.min(width / fullWidth, vizHeight / fullHeight) * 0.9
+        const translate = [width / 2 - scale * midX, vizHeight / 2 - scale * midY]
 
-      const initialTransform = d3.zoomIdentity
-        .translate(translate[0] || 0, translate[1] || 0)
-        .scale(scale)
-      svg
-        .transition()
-        .duration(750)
-        .call(transition => {
+        const initialTransform = d3.zoomIdentity
+          .translate(translate[0] || 0, translate[1] || 0)
+          .scale(scale)
+        svg
+          .transition()
+          .duration(750)
+          .call(transition => {
+            zoom.transform(
+              transition as unknown as d3.Selection<SVGSVGElement, unknown, null, undefined>,
+              initialTransform
+            )
+          })
+      } else {
+        // If bounds are invalid, apply default centering
+        const defaultTransform = d3.zoomIdentity.translate(width / 2, vizHeight / 2).scale(1)
+        svg.call(transition => {
           zoom.transform(
             transition as unknown as d3.Selection<SVGSVGElement, unknown, null, undefined>,
-            initialTransform
+            defaultTransform
           )
         })
-    }
+      }
+    }, 100)
 
     return () => {
       simulation.stop()
@@ -556,14 +614,13 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       >
         <button
           onClick={() => {
-            if (svgRef.current) {
+            if (svgRef.current && zoomBehaviorRef.current) {
               const svg = d3.select(svgRef.current)
-              const resetZoom = d3.zoom<SVGSVGElement, unknown>()
               svg
                 .transition()
                 .duration(750)
                 .call(transition => {
-                  resetZoom.transform(
+                  zoomBehaviorRef.current!.transform(
                     transition as unknown as d3.Selection<SVGSVGElement, unknown, null, undefined>,
                     d3.zoomIdentity
                   )
@@ -625,14 +682,14 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       </div>
 
       {/* SVG Container */}
-      <div ref={containerRef} style={{ width: '100%', height: `${height}px` }}>
+      <div key={renderKey} ref={containerRef} style={{ width: '100%', height: `${height}px` }}>
         <svg
           ref={svgRef}
           width="100%"
           height={height}
           style={{
             display: 'block',
-            background: colors.surface.primary,
+            background: colors.surface.secondary,
           }}
         />
       </div>

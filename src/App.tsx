@@ -5,9 +5,10 @@ import IntelligencePanel from './components/intelligence/IntelligencePanel'
 import NavigationPanel from './components/navigation/NavigationPanel'
 import DocumentCanvas from './components/canvas/DocumentCanvas'
 import WorkspaceIntelligence from './components/workspace/WorkspaceIntelligence'
+import { AnalyticsDashboard } from './components/analytics'
 import { useLayout } from './components/layout/useLayoutContext'
 
-type ViewMode = 'document' | 'dashboard'
+type ViewMode = 'document' | 'dashboard' | 'analytics'
 
 // Component that uses layout context
 const AppContent: React.FC = () => {
@@ -19,6 +20,8 @@ const AppContent: React.FC = () => {
     (item: { id: string; label: string; icon: string }) => {
       if (item.id === 'workspace-dashboard') {
         setViewMode('dashboard')
+      } else if (item.id === 'analytics-dashboard') {
+        setViewMode('analytics')
       } else {
         setViewMode('document')
       }
@@ -48,7 +51,7 @@ const AppContent: React.FC = () => {
         <AppShell.Canvas>
           {viewMode === 'document' ? (
             <DocumentCanvas workspaceId="default" />
-          ) : (
+          ) : viewMode === 'dashboard' ? (
             <WorkspaceIntelligence
               workspaceId="default"
               style={{
@@ -62,6 +65,13 @@ const AppContent: React.FC = () => {
                 if (action === 'close' || action === 'view-document') {
                   setViewMode('document')
                 }
+              }}
+            />
+          ) : (
+            <AnalyticsDashboard
+              workspaceId="default"
+              style={{
+                height: '100%',
               }}
             />
           )}
