@@ -8,9 +8,12 @@ import WorkspaceIntelligence from './components/workspace/WorkspaceIntelligence'
 import { AnalyticsDashboard } from './components/analytics'
 import SearchInterface from './components/search/SearchInterface'
 import { ContentDiscovery } from './components/discovery/ContentDiscovery'
+import SmartCollections from './components/collections/SmartCollections'
 import { useLayout } from './components/layout/useLayoutContext'
+import GenerationModal from './components/generation/GenerationModal'
+import StyleTransfer from './components/generation/StyleTransfer'
 
-type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery'
+type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
 
 // Simple Error Boundary
 class ErrorBoundary extends Component<
@@ -49,6 +52,14 @@ class ErrorBoundary extends Component<
 const AppContent: React.FC = () => {
   const { navigationCollapsed } = useLayout()
   const [viewMode, setViewMode] = useState<ViewMode>('document')
+  const [activeOperation, setActiveOperation] = useState<{
+    type: string
+    label: string
+    progress: number
+    status: 'running' | 'completed' | 'error'
+  } | null>(null)
+  const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
+  const [isStyleTransferModalOpen, setIsStyleTransferModalOpen] = useState(false)
 
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(
@@ -66,6 +77,9 @@ const AppContent: React.FC = () => {
       } else if (item.id === 'content-discovery') {
         console.log('Switching to discovery view')
         setViewMode('discovery')
+      } else if (item.id === 'smart-collections') {
+        console.log('Switching to collections view')
+        setViewMode('collections')
       } else {
         console.log('Switching to document view (default)')
         setViewMode('document')
@@ -78,11 +92,82 @@ const AppContent: React.FC = () => {
     setViewMode('document')
   }, [])
 
+  const handleOperationTrigger = useCallback(async (operationType: string) => {
+    console.log('Operation triggered from HeaderBar:', operationType)
+
+    // Handle different operation types
+    switch (operationType) {
+      case 'generate':
+        setIsGenerationModalOpen(true)
+        break
+
+      case 'styleTransfer':
+        setIsStyleTransferModalOpen(true)
+        break
+
+      case 'search':
+        // Trigger search - switch to search view
+        setViewMode('search')
+        break
+
+      case 'analyze':
+      case 'compare':
+      case 'update':
+      case 'organize':
+      case 'batch': {
+        // Show progress notification
+        const labels: Record<string, string> = {
+          analyze: 'Analyzing Document',
+          compare: 'Comparing Documents',
+          update: 'Updating Document',
+          organize: 'Organizing Content',
+          batch: 'Processing Batch Operations',
+        }
+
+        setActiveOperation({
+          type: operationType,
+          label: labels[operationType] || 'Processing',
+          progress: 0,
+          status: 'running',
+        })
+
+        // Simulate progress
+        const progressInterval = setInterval(() => {
+          setActiveOperation(prev =>
+            prev ? { ...prev, progress: Math.min(prev.progress + 10, 90) } : null
+          )
+        }, 300)
+
+        try {
+          // Execute operation
+          if (operationType === 'analyze') {
+            // Example: analyze current document
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+
+          clearInterval(progressInterval)
+
+          // Show completion
+          setActiveOperation(prev =>
+            prev ? { ...prev, progress: 100, status: 'completed' } : null
+          )
+
+          setTimeout(() => setActiveOperation(null), 2000)
+        } catch {
+          clearInterval(progressInterval)
+          setActiveOperation(prev => (prev ? { ...prev, status: 'error' } : null))
+          setTimeout(() => setActiveOperation(null), 3000)
+        }
+        break
+      }
+    }
+  }, [])
+
   return (
     <>
       {/* Header */}
       <AppShell.Header>
-        <HeaderBar onLogoClick={handleLogoClick} />
+        <HeaderBar onLogoClick={handleLogoClick} onOperationTrigger={handleOperationTrigger} />
       </AppShell.Header>
 
       {/* Main Content Area */}
@@ -139,6 +224,13 @@ const AppContent: React.FC = () => {
                   <ContentDiscovery workspaceId="default" />
                 </ErrorBoundary>
               )
+            } else if (viewMode === 'collections') {
+              console.log('Rendering SmartCollections component')
+              return (
+                <ErrorBoundary>
+                  <SmartCollections workspaceId="default" />
+                </ErrorBoundary>
+              )
             } else {
               return <DocumentCanvas workspaceId="default" />
             }
@@ -150,6 +242,141 @@ const AppContent: React.FC = () => {
           <IntelligencePanel />
         </AppShell.Intelligence>
       </AppShell.Main>
+
+      {/* Floating Operation Progress Indicator */}
+      {activeOperation && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            width: '320px',
+            backgroundColor: '#16161a',
+            border: '1px solid #3a3a3f',
+            borderRadius: '8px',
+            padding: '16px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+            zIndex: 10000,
+            animation: 'slideInUp 0.3s ease-out',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            {activeOperation.status === 'running' && (
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '2px solid #00d4ff',
+                  borderTopColor: 'transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }}
+              />
+            )}
+            {activeOperation.status === 'completed' && (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#00ff88"
+                strokeWidth="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+            {activeOperation.status === 'error' && (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#ff5555"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '14px' }}>
+                {activeOperation.label}
+              </div>
+              <div style={{ color: '#a8a8a8', fontSize: '12px', marginTop: '4px' }}>
+                {activeOperation.status === 'running' && `${activeOperation.progress}% complete`}
+                {activeOperation.status === 'completed' && 'Completed successfully'}
+                {activeOperation.status === 'error' && 'Operation failed'}
+              </div>
+            </div>
+          </div>
+          {activeOperation.status === 'running' && (
+            <div
+              style={{
+                width: '100%',
+                height: '4px',
+                backgroundColor: '#2a2a2f',
+                borderRadius: '2px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${activeOperation.progress}%`,
+                  height: '100%',
+                  backgroundColor: '#00d4ff',
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Generation Modal */}
+      {isGenerationModalOpen && (
+        <GenerationModal
+          isOpen={isGenerationModalOpen}
+          onClose={() => setIsGenerationModalOpen(false)}
+          onGenerationComplete={generation => {
+            console.log('Generate with params:', generation)
+            setIsGenerationModalOpen(false)
+          }}
+        />
+      )}
+
+      {/* Style Transfer Modal */}
+      {isStyleTransferModalOpen && (
+        <StyleTransfer
+          isOpen={isStyleTransferModalOpen}
+          onClose={() => setIsStyleTransferModalOpen(false)}
+          documentId="default-doc"
+          onTransferComplete={result => {
+            console.log('Apply style:', result)
+            setIsStyleTransferModalOpen(false)
+          }}
+        />
+      )}
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes slideInUp {
+            from {
+              transform: translateY(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </>
   )
 }

@@ -191,6 +191,85 @@ const mockTauri = {
       ]
     }
 
+    // Organization suggestions command
+    if (command === 'generate_organization_suggestions') {
+      return [
+        {
+          id: 'org-sugg-1',
+          type: 'restructure',
+          description:
+            'Group related documentation: API and User guides could be organized together',
+          rationale: 'These documents share similar topics and would benefit from being co-located',
+          confidence: 0.85,
+          impact: 'medium',
+          effort: 'low',
+          target: ['doc1', 'doc2'],
+        },
+        {
+          id: 'org-sugg-2',
+          type: 'tagging',
+          description: 'Add tags for better discoverability: Consider tagging by feature area',
+          rationale: 'Consistent tagging would improve search and organization',
+          confidence: 0.75,
+          impact: 'high',
+          effort: 'medium',
+          target: ['doc1', 'doc2', 'doc3'],
+        },
+        {
+          id: 'org-sugg-3',
+          type: 'restructure',
+          description: 'Archive inactive content: Move older documents to archive',
+          rationale: 'Documents not accessed in 90+ days could be archived',
+          confidence: 0.9,
+          impact: 'low',
+          effort: 'low',
+          target: ['doc4', 'doc5'],
+        },
+      ]
+    }
+
+    // Smart organization command
+    if (command === 'get_smart_organization') {
+      return {
+        workspaceId: 'default',
+        categories: [
+          {
+            id: 'cat-1',
+            name: 'Documentation',
+            documentCount: 15,
+            tags: ['docs', 'reference'],
+          },
+          {
+            id: 'cat-2',
+            name: 'Technical',
+            documentCount: 8,
+            tags: ['technical', 'specs'],
+          },
+        ],
+        suggestions: [
+          {
+            id: 'sugg-1',
+            type: 'categorization',
+            description: 'Recent documents needing review',
+            confidence: 0.8,
+            impact: 'high',
+            effort: 'medium',
+            target: ['doc1', 'doc2', 'doc3'],
+          },
+          {
+            id: 'sugg-2',
+            type: 'categorization',
+            description: 'Related concepts that should be linked',
+            confidence: 0.75,
+            impact: 'medium',
+            effort: 'low',
+            target: ['doc4', 'doc5'],
+          },
+        ],
+        lastUpdated: new Date().toISOString(),
+      }
+    }
+
     // Default fallback - return empty object instead of null
     console.warn(`[MOCK] No mock data for command: ${command}`)
     return {}

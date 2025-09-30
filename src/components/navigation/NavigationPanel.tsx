@@ -305,6 +305,12 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
       if (response.success && response.data) {
         const collectionItems: NavigationItem[] = [
           {
+            id: 'smart-collections',
+            label: 'View All Collections',
+            icon: 'Workspace',
+            status: 'info',
+          },
+          {
             id: 'needs-review',
             label: 'Needs Review',
             icon: 'Analyze',

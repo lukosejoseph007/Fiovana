@@ -102,7 +102,7 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
     backgroundColor: designTokens.colors.surface.secondary,
     position: 'sticky' as const,
     top: 0,
-    zIndex: designTokens.zIndex.sticky,
+    zIndex: 1,
   }
 
   const titleStyles = {

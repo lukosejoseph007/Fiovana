@@ -48,6 +48,11 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
   MinusIcon,
+  GitCompareIcon,
+  FilePlusIcon,
+  EditIcon,
+  PaletteIcon,
+  InfoIcon,
 } from './index'
 
 // Utility function to get document type icon component
@@ -120,6 +125,11 @@ export const Icons = {
   TrendingUp: TrendingUpIcon,
   TrendingDown: TrendingDownIcon,
   Minus: MinusIcon,
+  GitCompare: GitCompareIcon,
+  FilePlus: FilePlusIcon,
+  Edit: EditIcon,
+  Palette: PaletteIcon,
+  Info: InfoIcon,
 
   // Utility
   getDocumentTypeIcon,

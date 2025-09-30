@@ -505,26 +505,26 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[2] }}>
           <Tooltip content="Analyze Document">
             <Button variant="ghost" size="sm">
-              <Icon name="Search" size="sm" />
+              <Icon name="Search" size={14} />
             </Button>
           </Tooltip>
 
           <Tooltip content="Generate Content">
             <Button variant="ghost" size="sm">
-              <Icon name="Generate" size="sm" />
+              <Icon name="Generate" size={14} />
             </Button>
           </Tooltip>
 
           <Tooltip content="Compare">
             <Button variant="ghost" size="sm">
-              <Icon name="Compare" size="sm" />
+              <Icon name="Compare" size={14} />
             </Button>
           </Tooltip>
 
           {onClose && (
             <Tooltip content="Close">
               <Button variant="ghost" size="sm" onClick={onClose}>
-                <Icon name="ChevronDown" size="sm" />
+                <Icon name="ChevronDown" size={14} />
               </Button>
             </Tooltip>
           )}

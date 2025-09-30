@@ -139,7 +139,9 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
       // 2. Get AI-powered recommendations
       const aiRecommendations = await workspaceAiService.recommendContent(workspaceId)
       if (aiRecommendations.success && aiRecommendations.data) {
-        const recommendations = aiRecommendations.data as Array<{
+        const recommendations = (
+          Array.isArray(aiRecommendations.data) ? aiRecommendations.data : []
+        ) as Array<{
           type?: string
           title?: string
           description?: string

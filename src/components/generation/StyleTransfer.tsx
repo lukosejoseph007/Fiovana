@@ -69,13 +69,18 @@ const StyleTransfer: React.FC<StyleTransferProps> = ({
     try {
       const response = await styleAnalysisService.listStyleProfiles()
       if (response.success && response.data) {
-        setStyleProfiles(response.data)
-        if (response.data.length > 0 && !selectedProfile) {
-          setSelectedProfile(response.data[0] || null)
+        const profiles = Array.isArray(response.data) ? response.data : []
+        setStyleProfiles(profiles)
+        if (profiles.length > 0 && !selectedProfile) {
+          setSelectedProfile(profiles[0] || null)
         }
+      } else {
+        // No profiles available, set empty array
+        setStyleProfiles([])
       }
     } catch (err) {
       console.error('Failed to load style profiles:', err)
+      setStyleProfiles([])
       setError('Failed to load style profiles')
     }
   }, [selectedProfile])
@@ -458,7 +463,7 @@ const StyleTransfer: React.FC<StyleTransferProps> = ({
             <div style={sectionStyles}>
               <label style={labelStyles}>Style Profile</label>
               <Dropdown
-                options={styleProfiles.map(p => ({
+                options={(Array.isArray(styleProfiles) ? styleProfiles : []).map(p => ({
                   value: p.id,
                   label: p.name,
                 }))}

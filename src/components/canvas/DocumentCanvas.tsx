@@ -5,8 +5,6 @@ import { designTokens } from '../../styles/tokens'
 import { Message, WorkspaceHealth } from '../../types'
 import type { IconComponentProps } from '../ui/Icon'
 import DocumentViewer from './DocumentViewer'
-import OperationsToolbar from '../operations/OperationsToolbar'
-import type { OperationInfo } from '../operations/OperationsToolbar'
 import SuggestionEngine from '../operations/SuggestionEngine'
 import type { Suggestion } from '../operations/SuggestionEngine'
 
@@ -368,7 +366,6 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
         flexDirection: 'column',
         background: designTokens.colors.surface.primary,
         position: 'relative',
-        paddingBottom: '64px', // Space for Operations Toolbar
       }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -538,7 +535,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                         >
                           <Icon
                             name={action.icon}
-                            size="md"
+                            size={16}
                             color={designTokens.colors.accent.ai}
                           />
                           <div style={{ flex: 1 }}>
@@ -664,7 +661,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                             </div>
                             <Icon
                               name="ChevronDown"
-                              size="sm"
+                              size={14}
                               color={designTokens.colors.text.tertiary}
                             />
                           </div>
@@ -807,7 +804,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                   minWidth: '60px',
                 }}
               >
-                <Icon name="Generate" size="sm" />
+                <Icon name="Generate" size={14} />
               </Button>
             </div>
           </div>
@@ -854,28 +851,6 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
           </Button>
         </div>
       )}
-
-      {/* Operations Toolbar - Always visible at bottom */}
-      <OperationsToolbar
-        documentId={documentId || undefined}
-        workspaceContext={{
-          workspaceId,
-          documentCount: recentSessions.length,
-          health: workspaceHealth,
-        }}
-        onOperationStart={(operation: OperationInfo) => {
-          console.log('Operation started:', operation)
-          // Handle operation start (e.g., show modal for confirmation)
-        }}
-        onOperationComplete={(operation: OperationInfo, result: unknown) => {
-          console.log('Operation completed:', operation, result)
-          // Handle operation completion (e.g., refresh data, show success)
-        }}
-        onOperationError={(operation: OperationInfo, error: Error) => {
-          console.error('Operation error:', operation, error)
-          // Handle operation error (e.g., show error message)
-        }}
-      />
     </div>
   )
 }

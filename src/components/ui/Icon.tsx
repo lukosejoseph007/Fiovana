@@ -27,7 +27,18 @@ export const Icon: React.FC<IconComponentProps> = ({
     return null
   }
 
-  return <IconComponent size={size} color={color} className={className} style={style} {...props} />
+  // Convert string sizes to numbers
+  const numericSize = typeof size === 'string' ? parseInt(size, 10) || 16 : size
+
+  return (
+    <IconComponent
+      size={numericSize}
+      color={color}
+      className={className}
+      style={style}
+      {...props}
+    />
+  )
 }
 
 export default Icon

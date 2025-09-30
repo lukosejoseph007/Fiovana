@@ -2,6 +2,8 @@ import React, { useCallback, useEffect } from 'react'
 import { designTokens } from '../../styles/tokens'
 import { useLayout } from './useLayoutContext'
 import { Dropdown, Icon } from '../ui'
+import ActionsDropdown from '../ui/ActionsDropdown'
+import type { ActionCategory } from '../ui/ActionsDropdown'
 
 export interface HeaderBarProps {
   className?: string
@@ -41,6 +43,7 @@ export interface HeaderBarProps {
   onSettingsClick?: () => void
   onCommandPaletteOpen?: () => void
   onLogoClick?: () => void
+  onOperationTrigger?: (operationType: string) => void
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -56,6 +59,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onSettingsClick,
   onCommandPaletteOpen,
   onLogoClick,
+  onOperationTrigger,
 }) => {
   const { isMobile, toggleIntelligence, intelligenceCollapsed } = useLayout()
 
@@ -84,6 +88,90 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     },
     [onLogoClick]
   )
+
+  // Define action categories for the dropdown
+  const actionCategories: ActionCategory[] = [
+    {
+      id: 'document-ops',
+      label: 'Document Operations',
+      actions: [
+        {
+          id: 'analyze',
+          label: 'Analyze',
+          icon: 'Search',
+          description: 'Analyze document structure and content',
+          shortcut: 'A',
+          onClick: () => onOperationTrigger?.('analyze'),
+        },
+        {
+          id: 'compare',
+          label: 'Compare',
+          icon: 'GitCompare',
+          description: 'Compare with another document',
+          shortcut: 'C',
+          onClick: () => onOperationTrigger?.('compare'),
+        },
+        {
+          id: 'generate',
+          label: 'Generate',
+          icon: 'FilePlus',
+          description: 'Generate new content or documents',
+          shortcut: 'G',
+          onClick: () => onOperationTrigger?.('generate'),
+        },
+        {
+          id: 'update',
+          label: 'Update',
+          icon: 'Edit',
+          description: 'Update document based on changes',
+          shortcut: 'U',
+          onClick: () => onOperationTrigger?.('update'),
+        },
+      ],
+    },
+    {
+      id: 'workspace-ops',
+      label: 'Workspace Operations',
+      actions: [
+        {
+          id: 'search',
+          label: 'Search',
+          icon: 'Search',
+          description: 'Search across documents',
+          shortcut: '/',
+          onClick: () => onCommandPaletteOpen?.(),
+        },
+        {
+          id: 'organize',
+          label: 'Organize',
+          icon: 'Folder',
+          description: 'Organize and categorize content',
+          shortcut: 'O',
+          onClick: () => onOperationTrigger?.('organize'),
+        },
+      ],
+    },
+    {
+      id: 'advanced-ops',
+      label: 'Advanced',
+      actions: [
+        {
+          id: 'style-transfer',
+          label: 'Style Transfer',
+          icon: 'Palette',
+          description: 'Apply or learn document styles',
+          onClick: () => onOperationTrigger?.('styleTransfer'),
+        },
+        {
+          id: 'batch',
+          label: 'Batch Operations',
+          icon: 'Layers',
+          description: 'Manage multiple operations',
+          onClick: () => onOperationTrigger?.('batch'),
+        },
+      ],
+    },
+  ]
 
   const headerContentStyles = {
     display: 'flex',
@@ -235,6 +323,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <div style={rightZoneStyles}>
           <CollaboratorAvatars collaborators={collaborators} />
           <AIStatusIndicator aiStatus={aiStatus} />
+
+          {/* Actions Dropdown */}
+          {!isMobile && <ActionsDropdown categories={actionCategories} buttonIcon="Zap" />}
 
           {/* Intelligence Panel Toggle Button */}
           {!isMobile && (
