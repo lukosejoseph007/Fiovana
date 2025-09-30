@@ -696,6 +696,47 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
             </Badge>
           </div>
           <Progress value={workspaceHealth.health?.score || 0} variant="confidence" size="sm" />
+
+          {/* Dashboard Button */}
+          <button
+            onClick={() => {
+              onItemSelect?.({
+                id: 'workspace-dashboard',
+                label: 'Workspace Dashboard',
+                icon: 'Workspace',
+              })
+            }}
+            style={{
+              width: '100%',
+              marginTop: spacing[3],
+              padding: `${spacing[2]} ${spacing[3]}`,
+              backgroundColor: colors.accent.ai,
+              color: colors.text.inverse,
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing[2],
+              transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = '#00bfea'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 212, 255, 0.3)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = colors.accent.ai
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <Icon name="Workspace" size={16} />
+            <span>View Full Dashboard</span>
+          </button>
         </div>
       )}
 

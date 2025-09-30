@@ -1,14 +1,30 @@
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import AppShell from './components/layout/AppShell'
 import HeaderBar from './components/layout/HeaderBar'
 import IntelligencePanel from './components/intelligence/IntelligencePanel'
 import NavigationPanel from './components/navigation/NavigationPanel'
 import DocumentCanvas from './components/canvas/DocumentCanvas'
+import WorkspaceIntelligence from './components/workspace/WorkspaceIntelligence'
 import { useLayout } from './components/layout/useLayoutContext'
+
+type ViewMode = 'document' | 'dashboard'
 
 // Component that uses layout context
 const AppContent: React.FC = () => {
   const { navigationCollapsed } = useLayout()
+  const [viewMode, setViewMode] = useState<ViewMode>('document')
+
+  // Handle navigation item selection
+  const handleNavigationSelect = useCallback(
+    (item: { id: string; label: string; icon: string }) => {
+      if (item.id === 'workspace-dashboard') {
+        setViewMode('dashboard')
+      } else {
+        setViewMode('document')
+      }
+    },
+    []
+  )
 
   return (
     <>
@@ -21,12 +37,34 @@ const AppContent: React.FC = () => {
       <AppShell.Main>
         {/* Navigation Panel */}
         <AppShell.Navigation>
-          <NavigationPanel workspaceId="default" collapsed={navigationCollapsed} />
+          <NavigationPanel
+            workspaceId="default"
+            collapsed={navigationCollapsed}
+            onItemSelect={handleNavigationSelect}
+          />
         </AppShell.Navigation>
 
-        {/* Document Canvas */}
+        {/* Center Content - Document Canvas or Dashboard */}
         <AppShell.Canvas>
-          <DocumentCanvas workspaceId="default" />
+          {viewMode === 'document' ? (
+            <DocumentCanvas workspaceId="default" />
+          ) : (
+            <WorkspaceIntelligence
+              workspaceId="default"
+              style={{
+                height: '100%',
+                padding: '24px',
+                overflowY: 'auto',
+              }}
+              onActionClick={(action, data) => {
+                console.log('Dashboard action:', action, data)
+                // Handle dashboard actions (e.g., navigate to specific document)
+                if (action === 'close' || action === 'view-document') {
+                  setViewMode('document')
+                }
+              }}
+            />
+          )}
         </AppShell.Canvas>
 
         {/* Intelligence Panel */}
