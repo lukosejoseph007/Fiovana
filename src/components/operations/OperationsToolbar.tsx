@@ -6,6 +6,7 @@ import Icon from '../ui/Icon'
 import Tooltip from '../ui/Tooltip'
 import GenerationModal from '../generation/GenerationModal'
 import StyleTransfer from '../generation/StyleTransfer'
+import BatchManager from './BatchManager'
 import { documentService } from '../../services/documentService'
 import type { DocumentGeneration } from '../../types'
 
@@ -124,6 +125,7 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
   const [contextualHints, setContextualHints] = useState<string[]>([])
   const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
   const [isStyleTransferModalOpen, setIsStyleTransferModalOpen] = useState(false)
+  const [isBatchManagerOpen, setIsBatchManagerOpen] = useState(false)
 
   // Get context-aware operation suggestions
   const getOperationSuggestions = useCallback(async () => {
@@ -393,128 +395,151 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
   )
 
   return (
-    <div className={`proxemic-operations-toolbar ${className}`} style={containerStyles}>
-      {/* Left Section - Quick Actions */}
-      <div style={operationsGroupStyles}>
-        {(Object.keys(OPERATIONS) as OperationType[]).map(operationType => {
-          const operation = OPERATIONS[operationType]
-          const isSuggested = suggestedOperations.includes(operationType)
+    <>
+      <div className={`proxemic-operations-toolbar ${className}`} style={containerStyles}>
+        {/* Left Section - Quick Actions */}
+        <div style={operationsGroupStyles}>
+          {(Object.keys(OPERATIONS) as OperationType[]).map(operationType => {
+            const operation = OPERATIONS[operationType]
+            const isSuggested = suggestedOperations.includes(operationType)
 
-          return (
-            <Tooltip key={operation.id} content={operation.description} placement="top">
-              <div style={{ position: 'relative' }}>
-                <Button
-                  variant={getOperationVariant(operationType)}
-                  size="sm"
-                  onClick={() => handleOperationClick(operationType)}
-                  disabled={!!activeOperation}
-                  leftIcon={<Icon name={operation.icon as never} size={16} />}
-                  style={{
-                    position: 'relative',
-                  }}
-                >
-                  {operation.label}
-                </Button>
-                {isSuggested && (
-                  <div
+            return (
+              <Tooltip key={operation.id} content={operation.description} placement="top">
+                <div style={{ position: 'relative' }}>
+                  <Button
+                    variant={getOperationVariant(operationType)}
+                    size="sm"
+                    onClick={() => handleOperationClick(operationType)}
+                    disabled={!!activeOperation}
+                    leftIcon={<Icon name={operation.icon as never} size={16} />}
                     style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      right: '-4px',
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: designTokens.colors.accent.ai,
-                      borderRadius: '50%',
-                      border: `2px solid ${designTokens.colors.surface.primary}`,
+                      position: 'relative',
                     }}
-                  />
-                )}
-              </div>
-            </Tooltip>
-          )
-        })}
-      </div>
+                  >
+                    {operation.label}
+                  </Button>
+                  {isSuggested && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: designTokens.colors.accent.ai,
+                        borderRadius: '50%',
+                        border: `2px solid ${designTokens.colors.surface.primary}`,
+                      }}
+                    />
+                  )}
+                </div>
+              </Tooltip>
+            )
+          })}
 
-      {/* Center Section - Active Operation Progress */}
-      {activeOperation && (
-        <div style={progressContainerStyles}>
-          <Icon
-            name={
-              activeOperation.status === 'error'
-                ? 'AlertCircle'
-                : activeOperation.status === 'completed'
-                  ? 'Health'
-                  : (activeOperation.icon as never)
-            }
-            size={16}
-            color={
-              activeOperation.status === 'error'
-                ? designTokens.colors.accent.alert
-                : activeOperation.status === 'completed'
-                  ? designTokens.colors.confidence.high
-                  : designTokens.colors.text.secondary
-            }
-          />
-          <div>
-            <div
-              style={{
-                fontSize: designTokens.typography.fontSize.sm,
-                fontWeight: designTokens.typography.fontWeight.medium,
-                color: designTokens.colors.text.primary,
-              }}
-            >
-              {activeOperation.status === 'running'
-                ? `${activeOperation.label}ing...`
-                : activeOperation.status === 'error'
-                  ? 'Operation failed'
-                  : 'Operation completed'}
-            </div>
-            {activeOperation.status === 'running' && activeOperation.estimatedTime && (
+          {/* Batch Operations Button - Separated for emphasis */}
+          <div
+            style={{
+              marginLeft: designTokens.spacing[2],
+              paddingLeft: designTokens.spacing[2],
+              borderLeft: `1px solid ${designTokens.colors.border.medium}`,
+            }}
+          >
+            <Tooltip content="Manage multiple operations in a queue" placement="top">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsBatchManagerOpen(true)}
+                disabled={!!activeOperation}
+                leftIcon={<Icon name="Layers" size={16} />}
+              >
+                Batch
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Center Section - Active Operation Progress */}
+        {activeOperation && (
+          <div style={progressContainerStyles}>
+            <Icon
+              name={
+                activeOperation.status === 'error'
+                  ? 'AlertCircle'
+                  : activeOperation.status === 'completed'
+                    ? 'Health'
+                    : (activeOperation.icon as never)
+              }
+              size={16}
+              color={
+                activeOperation.status === 'error'
+                  ? designTokens.colors.accent.alert
+                  : activeOperation.status === 'completed'
+                    ? designTokens.colors.confidence.high
+                    : designTokens.colors.text.secondary
+              }
+            />
+            <div>
               <div
                 style={{
-                  fontSize: designTokens.typography.fontSize.xs,
-                  color: designTokens.colors.text.tertiary,
+                  fontSize: designTokens.typography.fontSize.sm,
+                  fontWeight: designTokens.typography.fontWeight.medium,
+                  color: designTokens.colors.text.primary,
                 }}
               >
-                Est. {activeOperation.estimatedTime}
+                {activeOperation.status === 'running'
+                  ? `${activeOperation.label}ing...`
+                  : activeOperation.status === 'error'
+                    ? 'Operation failed'
+                    : 'Operation completed'}
               </div>
+              {activeOperation.status === 'running' && activeOperation.estimatedTime && (
+                <div
+                  style={{
+                    fontSize: designTokens.typography.fontSize.xs,
+                    color: designTokens.colors.text.tertiary,
+                  }}
+                >
+                  Est. {activeOperation.estimatedTime}
+                </div>
+              )}
+            </div>
+            <div style={progressBarContainerStyles}>
+              <div style={progressBarStyles} />
+            </div>
+            {activeOperation.status === 'running' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelOperation}
+                style={{ minWidth: 'auto', padding: designTokens.spacing[1] }}
+              >
+                <Icon name="X" size={14} />
+              </Button>
             )}
           </div>
-          <div style={progressBarContainerStyles}>
-            <div style={progressBarStyles} />
+        )}
+
+        {/* Right Section - Contextual Hints */}
+        {!activeOperation && contextualHints.length > 0 && (
+          <div style={hintStyles}>
+            <Icon name="LightBulb" size={14} />
+            <span>{contextualHints[0]}</span>
           </div>
-          {activeOperation.status === 'running' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelOperation}
-              style={{ minWidth: 'auto', padding: designTokens.spacing[1] }}
-            >
-              <Icon name="X" size={14} />
-            </Button>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* Right Section - Contextual Hints */}
-      {!activeOperation && contextualHints.length > 0 && (
-        <div style={hintStyles}>
-          <Icon name="LightBulb" size={14} />
-          <span>{contextualHints[0]}</span>
-        </div>
-      )}
-
-      {/* Context indicator when text is selected */}
-      {selectedText && !activeOperation && (
-        <Badge variant="default" size="sm">
-          <Icon
-            name="FileText"
-            size={12}
-            style={{ marginRight: designTokens.spacing[1], display: 'inline-block' }}
-          />
-          {selectedText.length > 30 ? `${selectedText.substring(0, 30)}...` : selectedText}
-        </Badge>
-      )}
+        {/* Context indicator when text is selected */}
+        {selectedText && !activeOperation && (
+          <Badge variant="default" size="sm">
+            <Icon
+              name="FileText"
+              size={12}
+              style={{ marginRight: designTokens.spacing[1], display: 'inline-block' }}
+            />
+            {selectedText.length > 30 ? `${selectedText.substring(0, 30)}...` : selectedText}
+          </Badge>
+        )}
+      </div>
 
       {/* Generation Modal */}
       <GenerationModal
@@ -533,7 +558,50 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
           onTransferComplete={handleStyleTransferComplete}
         />
       )}
-    </div>
+
+      {/* Batch Manager Modal */}
+      {isBatchManagerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: designTokens.colors.background.overlay,
+            backdropFilter: 'blur(10px)',
+            zIndex: designTokens.zIndex.modal,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: designTokens.spacing[4],
+          }}
+          onClick={() => setIsBatchManagerOpen(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              backgroundColor: designTokens.colors.surface.primary,
+              borderRadius: designTokens.borderRadius.lg,
+              border: `1px solid ${designTokens.colors.border.medium}`,
+              boxShadow: designTokens.shadows['2xl'],
+            }}
+          >
+            <BatchManager
+              onClose={() => setIsBatchManagerOpen(false)}
+              onBatchComplete={results => {
+                console.log('Batch operations completed:', results)
+                onOperationComplete?.(OPERATIONS.generate, results)
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
