@@ -76,6 +76,32 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
   const { toggleNavigation } = useLayout()
   const [sections, setSections] = useState<NavigationSection[]>([
     {
+      id: 'quick-actions',
+      title: 'Quick Actions',
+      collapsed: false,
+      items: [
+        {
+          id: 'search',
+          label: 'Search Documents',
+          icon: 'Search',
+          status: 'info',
+        },
+        {
+          id: 'workspace-dashboard',
+          label: 'Workspace Dashboard',
+          icon: 'Workspace',
+          status: 'info',
+        },
+        {
+          id: 'analytics-dashboard',
+          label: 'Analytics Dashboard',
+          icon: 'Analyze',
+          status: 'info',
+        },
+      ],
+      loading: false,
+    },
+    {
       id: 'workspace-intelligence',
       title: 'Workspace Intelligence',
       collapsed: false,
