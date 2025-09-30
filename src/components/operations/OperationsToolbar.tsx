@@ -5,6 +5,7 @@ import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
 import Tooltip from '../ui/Tooltip'
 import GenerationModal from '../generation/GenerationModal'
+import StyleTransfer from '../generation/StyleTransfer'
 import { documentService } from '../../services/documentService'
 import type { DocumentGeneration } from '../../types'
 
@@ -31,7 +32,14 @@ export interface OperationInfo {
   progress?: number
 }
 
-export type OperationType = 'analyze' | 'compare' | 'generate' | 'update' | 'search' | 'organize'
+export type OperationType =
+  | 'analyze'
+  | 'compare'
+  | 'generate'
+  | 'update'
+  | 'search'
+  | 'organize'
+  | 'styleTransfer'
 
 // Define available operations
 const OPERATIONS: Record<OperationType, OperationInfo> = {
@@ -89,6 +97,15 @@ const OPERATIONS: Record<OperationType, OperationInfo> = {
     requiresConfirmation: false,
     estimatedTime: '5-10s',
   },
+  styleTransfer: {
+    id: 'styleTransfer',
+    type: 'styleTransfer',
+    label: 'Style Transfer',
+    description: 'Apply or learn document styles',
+    icon: 'palette',
+    requiresConfirmation: true,
+    estimatedTime: '15-25s',
+  },
 }
 
 const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
@@ -106,6 +123,7 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
   const [suggestedOperations, setSuggestedOperations] = useState<OperationType[]>([])
   const [contextualHints, setContextualHints] = useState<string[]>([])
   const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
+  const [isStyleTransferModalOpen, setIsStyleTransferModalOpen] = useState(false)
 
   // Get context-aware operation suggestions
   const getOperationSuggestions = useCallback(async () => {
@@ -186,6 +204,12 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
           case 'generate':
             // Open generation modal instead of emitting event
             setIsGenerationModalOpen(true)
+            result = { modalOpened: true }
+            break
+
+          case 'styleTransfer':
+            // Open style transfer modal
+            setIsStyleTransferModalOpen(true)
             result = { modalOpened: true }
             break
 
@@ -271,6 +295,22 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
       setIsGenerationModalOpen(false)
       // Notify parent component
       onOperationComplete?.(OPERATIONS.generate, generation)
+    },
+    [onOperationComplete]
+  )
+
+  // Handle style transfer modal close
+  const handleStyleTransferModalClose = useCallback(() => {
+    setIsStyleTransferModalOpen(false)
+  }, [])
+
+  // Handle style transfer complete
+  const handleStyleTransferComplete = useCallback(
+    (result: unknown) => {
+      console.log('Style transfer complete:', result)
+      setIsStyleTransferModalOpen(false)
+      // Notify parent component
+      onOperationComplete?.(OPERATIONS.styleTransfer, result)
     },
     [onOperationComplete]
   )
@@ -483,6 +523,16 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
         sourceDocumentId={documentId}
         onGenerationComplete={handleGenerationComplete}
       />
+
+      {/* Style Transfer Modal */}
+      {documentId && (
+        <StyleTransfer
+          isOpen={isStyleTransferModalOpen}
+          onClose={handleStyleTransferModalClose}
+          documentId={documentId}
+          onTransferComplete={handleStyleTransferComplete}
+        />
+      )}
     </div>
   )
 }
