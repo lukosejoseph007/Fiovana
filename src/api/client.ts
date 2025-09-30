@@ -11,7 +11,112 @@ interface CacheEntry {
 const mockTauri = {
   invoke: async (command: string, args: unknown = {}) => {
     console.log(`[MOCK] Tauri command: ${command}`, args)
-    return { success: true, data: null }
+
+    // Return mock data for relationship graph commands
+    if (command === 'build_relationship_graph') {
+      return {
+        id: 'mock-graph-1',
+        name: 'Mock Knowledge Graph',
+        nodes: [
+          {
+            id: 'node1',
+            documentId: 'doc1',
+            label: 'Document 1',
+            type: 'document',
+            properties: { importance: 2 },
+          },
+          {
+            id: 'node2',
+            documentId: 'doc2',
+            label: 'Document 2',
+            type: 'concept',
+            properties: { importance: 1 },
+          },
+          {
+            id: 'node3',
+            documentId: 'doc3',
+            label: 'Document 3',
+            type: 'procedure',
+            properties: { importance: 3 },
+          },
+          {
+            id: 'node4',
+            documentId: 'doc4',
+            label: 'Reference Doc',
+            type: 'reference',
+            properties: { importance: 1 },
+          },
+        ],
+        edges: [
+          {
+            id: 'edge1',
+            sourceId: 'node1',
+            targetId: 'node2',
+            relationshipId: 'rel1',
+            weight: 0.8,
+            properties: {},
+          },
+          {
+            id: 'edge2',
+            sourceId: 'node2',
+            targetId: 'node3',
+            relationshipId: 'rel2',
+            weight: 0.6,
+            properties: {},
+          },
+          {
+            id: 'edge3',
+            sourceId: 'node1',
+            targetId: 'node3',
+            relationshipId: 'rel3',
+            weight: 0.9,
+            properties: {},
+          },
+        ],
+        metadata: {
+          nodeCount: 4,
+          edgeCount: 3,
+          density: 0.5,
+          avgDegree: 1.5,
+          clustering: 0.3,
+          algorithms: ['force-directed'],
+          lastAnalysis: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    }
+
+    if (command === 'identify_document_clusters') {
+      return [
+        {
+          id: 'cluster1',
+          documents: ['doc1', 'doc2'],
+          centerDocument: 'doc1',
+          coherence: 0.85,
+          size: 2,
+          topics: [
+            {
+              name: 'Topic A',
+              keywords: ['keyword1', 'keyword2'],
+              confidence: 0.9,
+              prevalence: 0.7,
+            },
+          ],
+          relationships: ['rel1'],
+        },
+        {
+          id: 'cluster2',
+          documents: ['doc3'],
+          coherence: 0.75,
+          size: 1,
+          topics: [{ name: 'Topic B', keywords: ['keyword3'], confidence: 0.8, prevalence: 0.6 }],
+          relationships: ['rel2'],
+        },
+      ]
+    }
+
+    return null
   },
 }
 

@@ -5,6 +5,7 @@ import Progress from '../ui/Progress'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
+import { KnowledgeGraph } from '../visualization/KnowledgeGraph'
 // import { workspaceAnalyzerService } from '../../services/workspaceAnalyzerService'
 // import { knowledgeAnalyzerService } from '../../services/knowledgeAnalyzerService'
 // import { smartOrganizerService } from '../../services/smartOrganizerService'
@@ -669,6 +670,44 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
               />
             </div>
           ))}
+        </Card>
+
+        {/* Knowledge Graph Visualization */}
+        <Card variant="elevated" style={{ marginBottom: designTokens.spacing[4] }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: designTokens.spacing[2],
+              marginBottom: designTokens.spacing[3],
+            }}
+          >
+            <Icon name="Share2" size={18} />
+            <span
+              style={{
+                fontSize: designTokens.typography.fontSize.base,
+                fontWeight: designTokens.typography.fontWeight.semibold,
+                color: designTokens.colors.text.primary,
+              }}
+            >
+              Knowledge Graph
+            </span>
+          </div>
+          <KnowledgeGraph
+            workspaceId={selectedWorkspace}
+            height={400}
+            enableClustering={true}
+            showLabels={true}
+            strengthThreshold={0.3}
+            onNodeClick={nodeId => {
+              console.log('Node clicked:', nodeId)
+              // This could navigate to the document or open a detail view
+            }}
+            onClusterClick={cluster => {
+              console.log('Cluster clicked:', cluster)
+              // This could show cluster details or filter view
+            }}
+          />
         </Card>
 
         {/* Quick Recommendations */}
