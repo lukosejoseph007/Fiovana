@@ -4,7 +4,9 @@ import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
 import Tooltip from '../ui/Tooltip'
+import GenerationModal from '../generation/GenerationModal'
 import { documentService } from '../../services/documentService'
+import type { DocumentGeneration } from '../../types'
 
 export interface OperationsToolbarProps {
   className?: string
@@ -103,6 +105,7 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
   const [operationProgress, setOperationProgress] = useState(0)
   const [suggestedOperations, setSuggestedOperations] = useState<OperationType[]>([])
   const [contextualHints, setContextualHints] = useState<string[]>([])
+  const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
 
   // Get context-aware operation suggestions
   const getOperationSuggestions = useCallback(async () => {
@@ -181,8 +184,9 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
             break
 
           case 'generate':
-            // Generation operation requires template selection - emit event for UI handling
-            result = { requiresTemplateSelection: true }
+            // Open generation modal instead of emitting event
+            setIsGenerationModalOpen(true)
+            result = { modalOpened: true }
             break
 
           case 'update':
@@ -254,6 +258,22 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
     setActiveOperation(null)
     setOperationProgress(0)
   }, [])
+
+  // Handle generation modal close
+  const handleGenerationModalClose = useCallback(() => {
+    setIsGenerationModalOpen(false)
+  }, [])
+
+  // Handle generation complete
+  const handleGenerationComplete = useCallback(
+    (generation: DocumentGeneration) => {
+      console.log('Generation complete:', generation)
+      setIsGenerationModalOpen(false)
+      // Notify parent component
+      onOperationComplete?.(OPERATIONS.generate, generation)
+    },
+    [onOperationComplete]
+  )
 
   // Memoized styles
   const containerStyles = useMemo(
@@ -455,6 +475,14 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
           {selectedText.length > 30 ? `${selectedText.substring(0, 30)}...` : selectedText}
         </Badge>
       )}
+
+      {/* Generation Modal */}
+      <GenerationModal
+        isOpen={isGenerationModalOpen}
+        onClose={handleGenerationModalClose}
+        sourceDocumentId={documentId}
+        onGenerationComplete={handleGenerationComplete}
+      />
     </div>
   )
 }
