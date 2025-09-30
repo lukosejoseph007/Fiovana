@@ -54,7 +54,9 @@ export const SearchInterface: React.FC = React.memo(() => {
 
   const [results, setResults] = useState<SearchResult | null>(null)
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const [savedSearches, setSavedSearches] = useState<Array<{ name: string; query: SearchQuery }>>([])
+  const [savedSearches, setSavedSearches] = useState<Array<{ name: string; query: SearchQuery }>>(
+    []
+  )
   const [searchHistory, setSearchHistory] = useState<SearchQuery[]>([])
 
   const [isSearching, setIsSearching] = useState(false)
@@ -219,7 +221,7 @@ export const SearchInterface: React.FC = React.memo(() => {
 
       const response = await searchService.saveSearchQuery(query, name)
       if (response.success) {
-        setSavedSearches((prev) => [...prev, { name, query }])
+        setSavedSearches(prev => [...prev, { name, query }])
       }
     } catch (err) {
       console.error('Failed to save search:', err)
@@ -231,7 +233,7 @@ export const SearchInterface: React.FC = React.memo(() => {
     setSearchText(search.query.text)
     setSearchType(search.query.type)
     if (search.query.filters) {
-      search.query.filters.forEach((filter) => {
+      search.query.filters.forEach(filter => {
         if (filter.field === 'type') setSelectedDocType(String(filter.value))
         if (filter.field === 'category') setSelectedCategory(String(filter.value))
       })
@@ -242,7 +244,10 @@ export const SearchInterface: React.FC = React.memo(() => {
   const handleOpenDocument = useCallback(async (item: SearchResultItem) => {
     try {
       setSelectedResultId(item.id)
-      await documentService.openDocument(item.documentId)
+      // Get the document to view it
+      await documentService.getDocument(item.documentId)
+      // In a real implementation, this would navigate to the document viewer
+      console.log('Opening document:', item.documentId)
     } catch (err) {
       console.error('Failed to open document:', err)
     }
@@ -264,9 +269,7 @@ export const SearchInterface: React.FC = React.memo(() => {
       {/* Search Header */}
       <div style={styles.header}>
         <h2 style={styles.title}>Advanced Search</h2>
-        <p style={styles.subtitle}>
-          Hybrid semantic + keyword search across all documents
-        </p>
+        <p style={styles.subtitle}>Hybrid semantic + keyword search across all documents</p>
       </div>
 
       {/* Search Bar and Controls */}
@@ -276,7 +279,7 @@ export const SearchInterface: React.FC = React.memo(() => {
           <Input
             type="text"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={e => setSearchText(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Search documents, concepts, procedures..."
             style={styles.searchInput}
@@ -335,7 +338,7 @@ export const SearchInterface: React.FC = React.memo(() => {
         <div style={styles.filterGroup}>
           <label style={styles.filterLabel}>Search Type:</label>
           <div style={styles.searchTypeButtons}>
-            {(['hybrid', 'semantic', 'keyword'] as const).map((type) => (
+            {(['hybrid', 'semantic', 'keyword'] as const).map(type => (
               <button
                 key={type}
                 style={{
@@ -354,9 +357,8 @@ export const SearchInterface: React.FC = React.memo(() => {
           <label style={styles.filterLabel}>Document Type:</label>
           <Dropdown
             value={selectedDocType}
-            onChange={(value) => setSelectedDocType(value)}
+            onChange={value => setSelectedDocType(value)}
             options={DOCUMENT_TYPES}
-            style={styles.filterDropdown}
           />
         </div>
 
@@ -364,20 +366,14 @@ export const SearchInterface: React.FC = React.memo(() => {
           <label style={styles.filterLabel}>Category:</label>
           <Dropdown
             value={selectedCategory}
-            onChange={(value) => setSelectedCategory(value)}
+            onChange={value => setSelectedCategory(value)}
             options={CONTENT_CATEGORIES}
-            style={styles.filterDropdown}
           />
         </div>
 
         <div style={styles.filterGroup}>
           <label style={styles.filterLabel}>Sort By:</label>
-          <Dropdown
-            value={sortBy}
-            onChange={(value) => setSortBy(value)}
-            options={SORT_OPTIONS}
-            style={styles.filterDropdown}
-          />
+          <Dropdown value={sortBy} onChange={value => setSortBy(value)} options={SORT_OPTIONS} />
         </div>
       </div>
 
@@ -439,12 +435,10 @@ export const SearchInterface: React.FC = React.memo(() => {
                 {resultCount} {resultCount === 1 ? 'result' : 'results'}
               </span>
               {results.executionTime && (
-                <span style={styles.executionTime}>
-                  in {results.executionTime.toFixed(2)}ms
-                </span>
+                <span style={styles.executionTime}>in {results.executionTime.toFixed(2)}ms</span>
               )}
               {results.metadata && results.metadata.algorithm && (
-                <Badge variant="info" style={styles.algorithmBadge}>
+                <Badge variant="status" style={styles.algorithmBadge}>
                   {results.metadata.algorithm}
                 </Badge>
               )}
@@ -457,12 +451,10 @@ export const SearchInterface: React.FC = React.memo(() => {
               <div style={styles.noResults}>
                 <Icon name="Search" style={styles.noResultsIcon} />
                 <p style={styles.noResultsText}>No results found</p>
-                <p style={styles.noResultsHint}>
-                  Try adjusting your search query or filters
-                </p>
+                <p style={styles.noResultsHint}>Try adjusting your search query or filters</p>
               </div>
             ) : (
-              results.results.map((item) => (
+              results.results.map(item => (
                 <Card
                   key={item.id}
                   style={{

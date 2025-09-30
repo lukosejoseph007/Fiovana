@@ -7,9 +7,10 @@ import DocumentCanvas from './components/canvas/DocumentCanvas'
 import WorkspaceIntelligence from './components/workspace/WorkspaceIntelligence'
 import { AnalyticsDashboard } from './components/analytics'
 import SearchInterface from './components/search/SearchInterface'
+import { ContentDiscovery } from './components/discovery/ContentDiscovery'
 import { useLayout } from './components/layout/useLayoutContext'
 
-type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search'
+type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery'
 
 // Simple Error Boundary
 class ErrorBoundary extends Component<
@@ -35,9 +36,7 @@ class ErrorBoundary extends Component<
         <div style={{ padding: '24px', color: '#ff5555' }}>
           <h2>Something went wrong</h2>
           <p>{this.state.error?.message}</p>
-          <button onClick={() => this.setState({ hasError: false, error: null })}>
-            Try again
-          </button>
+          <button onClick={() => this.setState({ hasError: false, error: null })}>Try again</button>
         </div>
       )
     }
@@ -54,15 +53,21 @@ const AppContent: React.FC = () => {
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(
     (item: { id: string; label: string; icon: string }) => {
-      console.log('Navigation item selected:', item.id)
+      console.log('Navigation item selected:', item.id, 'Full item:', item)
       if (item.id === 'search') {
         console.log('Switching to search view')
         setViewMode('search')
       } else if (item.id === 'workspace-dashboard') {
+        console.log('Switching to dashboard view')
         setViewMode('dashboard')
       } else if (item.id === 'analytics-dashboard') {
+        console.log('Switching to analytics view')
         setViewMode('analytics')
+      } else if (item.id === 'content-discovery') {
+        console.log('Switching to discovery view')
+        setViewMode('discovery')
       } else {
+        console.log('Switching to document view (default)')
         setViewMode('document')
       }
     },
@@ -87,38 +92,53 @@ const AppContent: React.FC = () => {
           />
         </AppShell.Navigation>
 
-        {/* Center Content - Document Canvas, Dashboard, Analytics, or Search */}
+        {/* Center Content - Document Canvas, Dashboard, Analytics, Search, or Discovery */}
         <AppShell.Canvas>
-          {viewMode === 'search' ? (
-            <ErrorBoundary>
-              <SearchInterface />
-            </ErrorBoundary>
-          ) : viewMode === 'dashboard' ? (
-            <WorkspaceIntelligence
-              workspaceId="default"
-              style={{
-                height: '100%',
-                padding: '24px',
-                overflowY: 'auto',
-              }}
-              onActionClick={(action, data) => {
-                console.log('Dashboard action:', action, data)
-                // Handle dashboard actions (e.g., navigate to specific document)
-                if (action === 'close' || action === 'view-document') {
-                  setViewMode('document')
-                }
-              }}
-            />
-          ) : viewMode === 'analytics' ? (
-            <AnalyticsDashboard
-              workspaceId="default"
-              style={{
-                height: '100%',
-              }}
-            />
-          ) : (
-            <DocumentCanvas workspaceId="default" />
-          )}
+          {(() => {
+            console.log('Current viewMode:', viewMode)
+            if (viewMode === 'search') {
+              return (
+                <ErrorBoundary>
+                  <SearchInterface />
+                </ErrorBoundary>
+              )
+            } else if (viewMode === 'dashboard') {
+              return (
+                <WorkspaceIntelligence
+                  workspaceId="default"
+                  style={{
+                    height: '100%',
+                    padding: '24px',
+                    overflowY: 'auto',
+                  }}
+                  onActionClick={(action, data) => {
+                    console.log('Dashboard action:', action, data)
+                    if (action === 'close' || action === 'view-document') {
+                      setViewMode('document')
+                    }
+                  }}
+                />
+              )
+            } else if (viewMode === 'analytics') {
+              return (
+                <AnalyticsDashboard
+                  workspaceId="default"
+                  style={{
+                    height: '100%',
+                  }}
+                />
+              )
+            } else if (viewMode === 'discovery') {
+              console.log('Rendering ContentDiscovery component')
+              return (
+                <ErrorBoundary>
+                  <ContentDiscovery workspaceId="default" />
+                </ErrorBoundary>
+              )
+            } else {
+              return <DocumentCanvas workspaceId="default" />
+            }
+          })()}
         </AppShell.Canvas>
 
         {/* Intelligence Panel */}

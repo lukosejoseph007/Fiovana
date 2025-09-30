@@ -87,6 +87,12 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
           status: 'info',
         },
         {
+          id: 'content-discovery',
+          label: 'Content Discovery',
+          icon: 'Analyze',
+          status: 'info',
+        },
+        {
           id: 'workspace-dashboard',
           label: 'Workspace Dashboard',
           icon: 'Workspace',
