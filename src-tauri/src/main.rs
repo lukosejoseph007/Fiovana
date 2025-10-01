@@ -134,6 +134,12 @@ async fn main() {
         }
     };
 
+    // Create a mutex-wrapped workspace manager for commands that need it
+    let workspace_manager_for_commands = Arc::new(Mutex::new(
+        WorkspaceManager::new(Arc::clone(&config_manager))
+            .expect("Failed to create workspace manager for commands")
+    ));
+
     // Initialize deduplication state
     let deduplication_state = commands::deduplication_commands::DeduplicationState::new();
 
@@ -163,6 +169,17 @@ async fn main() {
     // Initialize document indexer state
     let document_indexer_state: commands::document_indexing_commands::DocumentIndexerState =
         std::sync::Arc::new(tokio::sync::Mutex::new(None));
+
+    // Create a default document indexer for workspace intelligence commands
+    // This uses the current directory as the default workspace
+    let default_workspace_path = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let document_indexer_for_workspace = Arc::new(Mutex::new(
+        document::indexer::DocumentIndexer::new(default_workspace_path)
+            .expect("Failed to create document indexer for workspace commands")
+    ));
+
+    // AI orchestrator is optional for workspace intelligence commands
+    let ai_orchestrator_for_workspace: Option<Arc<Mutex<ai::AIOrchestrator>>> = None;
 
     // Initialize embedding engine state
     let embedding_engine_state: std::sync::Arc<
@@ -220,16 +237,19 @@ async fn main() {
         .manage(document_generator_state)
         .manage(document_comparison_state)
         .manage(document_indexer_state)
+        .manage(document_indexer_for_workspace)
         .manage(embedding_engine_state)
         .manage(relationship_state)
         .manage(conversational_intelligence_state)
         .manage(conversation_context_state)
         .manage(template_manager_state)
         .manage(content_adapter_state)
+        .manage(workspace_manager_for_commands)
+        .manage(ai_orchestrator_for_workspace)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
-        .manage(Arc::new(tokio::sync::RwLock::new(
+        .manage(tokio::sync::RwLock::new(
             commands::structure_commands::StructureService::new().expect("Failed to create StructureService")
-        )))
+        ))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())

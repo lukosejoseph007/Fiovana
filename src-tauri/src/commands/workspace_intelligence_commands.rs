@@ -113,20 +113,29 @@ pub async fn analyze_workspace(
         request.workspace_path.display()
     );
 
-    // Load workspace information
+    // Load workspace information, or create a temporary one if it doesn't exist
     let workspace_info = {
         let manager = workspace_manager.lock().await;
         match manager.load_workspace(&request.workspace_path).await {
             Ok(info) => info,
-            Err(e) => {
-                let error_msg = format!("Failed to load workspace: {}", e);
-                println!("❌ {}", error_msg);
-                return Ok(AnalyzeWorkspaceResponse {
-                    success: false,
-                    analysis: None,
-                    error: Some(error_msg),
-                    processing_time_ms: start_time.elapsed().as_millis() as u64,
-                });
+            Err(_) => {
+                // Create a temporary workspace info for analysis
+                crate::workspace::WorkspaceInfo {
+                    path: request.workspace_path.clone(),
+                    name: request.workspace_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("workspace")
+                        .to_string(),
+                    version: "1.0.0".to_string(),
+                    created: chrono::Utc::now(),
+                    last_modified: chrono::Utc::now(),
+                    last_accessed: chrono::Utc::now(),
+                    import_settings: Default::default(),
+                    ai_settings: Default::default(),
+                    is_favorite: false,
+                    access_count: 1,
+                }
             }
         }
     };
@@ -177,18 +186,29 @@ pub async fn get_workspace_recommendations(
         request.workspace_path.display()
     );
 
-    // Load workspace information
+    // Load workspace information, or create a temporary one if it doesn't exist
     let workspace_info = {
         let manager = workspace_manager.lock().await;
         match manager.load_workspace(&request.workspace_path).await {
             Ok(info) => info,
-            Err(e) => {
-                let error_msg = format!("Failed to load workspace: {}", e);
-                return Ok(GetWorkspaceRecommendationsResponse {
-                    success: false,
-                    recommendations: Vec::new(),
-                    error: Some(error_msg),
-                });
+            Err(_) => {
+                // Create a temporary workspace info for analysis
+                crate::workspace::WorkspaceInfo {
+                    path: request.workspace_path.clone(),
+                    name: request.workspace_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("workspace")
+                        .to_string(),
+                    version: "1.0.0".to_string(),
+                    created: chrono::Utc::now(),
+                    last_modified: chrono::Utc::now(),
+                    last_accessed: chrono::Utc::now(),
+                    import_settings: Default::default(),
+                    ai_settings: Default::default(),
+                    is_favorite: false,
+                    access_count: 1,
+                }
             }
         }
     };
@@ -284,18 +304,29 @@ pub async fn get_workspace_insights(
         request.workspace_path.display()
     );
 
-    // Load workspace information
+    // Load workspace information, or create a temporary one if it doesn't exist
     let workspace_info = {
         let manager = workspace_manager.lock().await;
         match manager.load_workspace(&request.workspace_path).await {
             Ok(info) => info,
-            Err(e) => {
-                let error_msg = format!("Failed to load workspace: {}", e);
-                return Ok(GetWorkspaceInsightsResponse {
-                    success: false,
-                    insights: None,
-                    error: Some(error_msg),
-                });
+            Err(_) => {
+                // Create a temporary workspace info for analysis
+                crate::workspace::WorkspaceInfo {
+                    path: request.workspace_path.clone(),
+                    name: request.workspace_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("workspace")
+                        .to_string(),
+                    version: "1.0.0".to_string(),
+                    created: chrono::Utc::now(),
+                    last_modified: chrono::Utc::now(),
+                    last_accessed: chrono::Utc::now(),
+                    import_settings: Default::default(),
+                    ai_settings: Default::default(),
+                    is_favorite: false,
+                    access_count: 1,
+                }
             }
         }
     };
@@ -374,13 +405,29 @@ pub async fn get_workspace_health_score(
         workspace_path.display()
     );
 
-    // Load workspace information
+    // Load workspace information, or create a temporary one if it doesn't exist
     let workspace_info = {
         let manager = workspace_manager.lock().await;
         match manager.load_workspace(&workspace_path).await {
             Ok(info) => info,
-            Err(e) => {
-                return Err(format!("Failed to load workspace: {}", e));
+            Err(_) => {
+                // Create a temporary workspace info for analysis
+                crate::workspace::WorkspaceInfo {
+                    path: workspace_path.clone(),
+                    name: workspace_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("workspace")
+                        .to_string(),
+                    version: "1.0.0".to_string(),
+                    created: chrono::Utc::now(),
+                    last_modified: chrono::Utc::now(),
+                    last_accessed: chrono::Utc::now(),
+                    import_settings: Default::default(),
+                    ai_settings: Default::default(),
+                    is_favorite: false,
+                    access_count: 1,
+                }
             }
         }
     };
@@ -426,12 +473,46 @@ pub async fn compare_workspaces(
 
     let manager = workspace_manager.lock().await;
 
-    // Load both workspaces
-    let (workspace_a, workspace_b) = tokio::try_join!(
-        manager.load_workspace(&workspace_a_path),
-        manager.load_workspace(&workspace_b_path)
-    )
-    .map_err(|e| format!("Failed to load workspaces: {}", e))?;
+    // Load both workspaces, creating temporary ones if they don't exist
+    let workspace_a = match manager.load_workspace(&workspace_a_path).await {
+        Ok(info) => info,
+        Err(_) => crate::workspace::WorkspaceInfo {
+            path: workspace_a_path.clone(),
+            name: workspace_a_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("workspace_a")
+                .to_string(),
+            version: "1.0.0".to_string(),
+            created: chrono::Utc::now(),
+            last_modified: chrono::Utc::now(),
+            last_accessed: chrono::Utc::now(),
+            import_settings: Default::default(),
+            ai_settings: Default::default(),
+            is_favorite: false,
+            access_count: 1,
+        },
+    };
+
+    let workspace_b = match manager.load_workspace(&workspace_b_path).await {
+        Ok(info) => info,
+        Err(_) => crate::workspace::WorkspaceInfo {
+            path: workspace_b_path.clone(),
+            name: workspace_b_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("workspace_b")
+                .to_string(),
+            version: "1.0.0".to_string(),
+            created: chrono::Utc::now(),
+            last_modified: chrono::Utc::now(),
+            last_accessed: chrono::Utc::now(),
+            import_settings: Default::default(),
+            ai_settings: Default::default(),
+            is_favorite: false,
+            access_count: 1,
+        },
+    };
 
     drop(manager); // Release the lock
 

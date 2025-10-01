@@ -1,4 +1,5 @@
 // Smart Organizer Service
+import { getWorkspacePath } from './workspacePathHelper'
 import { apiClient } from '../api'
 import {
   SmartOrganization,
@@ -13,7 +14,11 @@ export class SmartOrganizerService {
    * Get smart organization analysis for workspace
    */
   async getSmartOrganization(workspaceId: string): Promise<ApiResponse<SmartOrganization>> {
-    return apiClient.invoke('get_smart_organization', { workspace_id: workspaceId })
+    return apiClient.invoke('analyze_organization_comprehensive', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 
   /**
@@ -23,9 +28,10 @@ export class SmartOrganizerService {
     workspaceId: string,
     options?: unknown
   ): Promise<ApiResponse<OrganizationSuggestion[]>> {
-    return apiClient.invoke('generate_organization_suggestions', {
-      workspace_id: workspaceId,
-      options: options || {},
+    return apiClient.invoke('get_organization_actions', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
     })
   }
 
@@ -44,8 +50,10 @@ export class SmartOrganizerService {
     ruleData: unknown
   ): Promise<ApiResponse<AutomationRule>> {
     return apiClient.invoke('create_automation_rule', {
-      workspace_id: workspaceId,
-      rule_data: ruleData,
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
+      ruleData: ruleData,
     })
   }
 
@@ -73,7 +81,11 @@ export class SmartOrganizerService {
    * List automation rules
    */
   async listAutomationRules(workspaceId: string): Promise<ApiResponse<AutomationRule[]>> {
-    return apiClient.invoke('list_automation_rules', { workspace_id: workspaceId })
+    return apiClient.invoke('list_automation_rules', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 
   /**
@@ -111,7 +123,11 @@ export class SmartOrganizerService {
    * Analyze file organization patterns
    */
   async analyzeOrganizationPatterns(workspaceId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.invoke('analyze_organization_patterns', { workspace_id: workspaceId })
+    return apiClient.invoke('analyze_organization_patterns', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 
   /**
@@ -129,8 +145,9 @@ export class SmartOrganizerService {
     options?: unknown
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('auto_organize_workspace', {
-      workspace_id: workspaceId,
-      options: options || {},
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
     })
   }
 
@@ -142,8 +159,10 @@ export class SmartOrganizerService {
     suggestionIds: string[]
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('preview_organization_changes', {
-      workspace_id: workspaceId,
-      suggestion_ids: suggestionIds,
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
+      suggestionIds: suggestionIds,
     })
   }
 
@@ -160,14 +179,22 @@ export class SmartOrganizerService {
   async getOrganizationPerformance(
     workspaceId: string
   ): Promise<ApiResponse<OrganizationPerformance>> {
-    return apiClient.invoke('get_organization_performance', { workspace_id: workspaceId })
+    return apiClient.invoke('get_organization_performance', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 
   /**
    * Analyze duplicate files
    */
   async analyzeDuplicateFiles(workspaceId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.invoke('analyze_duplicate_files', { workspace_id: workspaceId })
+    return apiClient.invoke('analyze_duplicate_files', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 
   /**
@@ -187,8 +214,10 @@ export class SmartOrganizerService {
     templateName: string
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('create_organization_template', {
-      workspace_id: workspaceId,
-      template_name: templateName,
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
+      templateName: templateName,
     })
   }
 
@@ -200,8 +229,10 @@ export class SmartOrganizerService {
     templateId: string
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('apply_organization_template', {
-      workspace_id: workspaceId,
-      template_id: templateId,
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
+      templateId: templateId,
     })
   }
 
@@ -209,7 +240,11 @@ export class SmartOrganizerService {
    * Generate organization report
    */
   async generateOrganizationReport(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('generate_organization_report', { workspace_id: workspaceId })
+    return apiClient.invoke('generate_organization_report', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId)
+      }
+    })
   }
 }
 

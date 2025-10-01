@@ -154,7 +154,7 @@ export class ConversationIntelligenceService {
     workspaceId?: string,
     timeframe?: string
   ): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_conversation_analytics', {
+    return apiClient.invoke('get_conversational_intelligence_status', {
       workspace_id: workspaceId,
       timeframe: timeframe || 'last_30_days',
     })

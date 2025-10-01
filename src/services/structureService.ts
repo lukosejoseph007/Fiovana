@@ -6,9 +6,11 @@ export class StructureService {
   /**
    * Analyze document structure
    */
-  async analyzeDocumentStructure(documentId: string): Promise<ApiResponse<DocumentStructure>> {
+  async analyzeDocumentStructure(filePath: string): Promise<ApiResponse<DocumentStructure>> {
     return apiClient.invoke('analyze_document_structure', {
-      document_id: documentId,
+      request: {
+        file_path: filePath,
+      },
     })
   }
 

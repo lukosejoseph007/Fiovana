@@ -17,8 +17,8 @@ export const colors = {
 
   // Background System
   background: {
-    canvas: '#fafaf9', // Off-white for document viewing comfort
-    paper: '#ffffff', // Pure white for document content
+    canvas: '#0a0a0b', // Dark canvas matching primary surface
+    paper: '#16161a', // Dark paper matching secondary surface
     overlay: 'rgba(10, 10, 11, 0.95)', // Modal overlay with transparency
   },
 

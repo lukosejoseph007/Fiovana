@@ -145,22 +145,32 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsLoading(true)
     try {
       // Load document content
+      console.log('Loading document with ID:', documentId)
       const docResponse = await documentService.getDocument(documentId)
+      console.log('Document response:', docResponse)
+
       if (docResponse.success && docResponse.data) {
+        console.log('Document loaded successfully:', docResponse.data)
         setDocument(docResponse.data)
+      } else {
+        console.error('Failed to load document:', docResponse.error)
       }
 
-      // Load document structure
-      const structureResponse = await structureService.analyzeDocumentStructure(documentId)
-      if (structureResponse.success && structureResponse.data) {
-        setStructure(structureResponse.data)
-      }
+      // Load document structure - use the file path from the loaded document
+      if (docResponse.data?.path) {
+        const structureResponse = await structureService.analyzeDocumentStructure(
+          docResponse.data.path
+        )
+        if (structureResponse.success && structureResponse.data) {
+          setStructure(structureResponse.data)
+        }
 
-      // Load content classification
-      const classificationResponse =
-        await contentClassificationService.classifyContentType(documentId)
-      if (classificationResponse.success && classificationResponse.data) {
-        setClassification(classificationResponse.data)
+        // Load content classification - use the file path
+        const classificationResponse =
+          await contentClassificationService.classifyContentType(docResponse.data.path)
+        if (classificationResponse.success && classificationResponse.data) {
+          setClassification(classificationResponse.data)
+        }
       }
 
       // Generate AI suggestions (mock for now)
@@ -597,6 +607,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           fontSize: designTokens.typography.fontSize.base,
           lineHeight: designTokens.typography.lineHeight.relaxed,
           color: designTokens.colors.text.primary,
+          backgroundColor: designTokens.colors.background.canvas,
           fontFamily: designTokens.typography.fonts.sans.join(', '),
           maxWidth: '75ch', // Optimal reading line length
           margin: '0 auto',

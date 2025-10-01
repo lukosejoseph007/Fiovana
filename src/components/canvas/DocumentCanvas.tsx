@@ -47,6 +47,14 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
   const [isDragOver, setIsDragOver] = useState(false)
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null)
 
+  // Switch to document mode when documentId is provided
+  useEffect(() => {
+    if (documentId) {
+      console.log('DocumentCanvas: Switching to document mode for:', documentId)
+      setMode('document')
+    }
+  }, [documentId])
+
   // Handle sending messages
   const handleSendMessage = useCallback(
     async (message: string) => {
@@ -85,17 +93,20 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
         const response = await aiService.chat(chatRequest)
 
         if (response.success && response.data) {
+          // Backend returns ChatResponse with 'response' field containing AIResponse
+          const aiResponse = (response.data as any).response || response.data
+          const content = aiResponse?.content || aiResponse?.message?.content || 'No response'
+
           const assistantMessage: Message = {
             id: `msg-${Date.now()}-assistant`,
             conversationId: 'current',
             senderId: 'assistant',
-            content: response.data.message.content,
+            content: content,
             type: 'text',
             timestamp: new Date(),
             metadata: {
-              model: response.data.model,
-              tokens: response.data.usage.totalTokens,
-              confidence: 0.9, // Mock confidence score
+              confidence: aiResponse?.confidence || 0.9,
+              intent: aiResponse?.intent,
             },
           }
 

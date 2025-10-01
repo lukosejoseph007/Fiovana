@@ -4,11 +4,26 @@ import { WorkspaceAnalysis, ApiResponse } from '../types'
 
 export class WorkspaceAnalyzerService {
   /**
+   * Helper to convert workspace ID to path
+   * For now, we use "." for current directory as the default workspace
+   */
+  private getWorkspacePath(workspaceId?: string): string {
+    // If a path-like workspaceId is provided, use it
+    if (workspaceId && (workspaceId.startsWith('/') || workspaceId.startsWith('.'))) {
+      return workspaceId
+    }
+    // Default to current directory
+    return '.'
+  }
+
+  /**
    * Perform comprehensive workspace analysis
    */
   async analyzeWorkspace(workspaceId: string): Promise<ApiResponse<WorkspaceAnalysis>> {
-    return apiClient.invoke('analyze_workspace_comprehensive', {
-      workspace_id: workspaceId,
+    return apiClient.invoke('analyze_workspace', {
+      request: {
+        workspace_path: this.getWorkspacePath(workspaceId),
+      },
     })
   }
 
@@ -16,8 +31,8 @@ export class WorkspaceAnalyzerService {
    * Analyze workspace productivity patterns
    */
   async analyzeProductivityPatterns(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('analyze_productivity_patterns', {
-      workspace_id: workspaceId,
+    return apiClient.invoke('get_workspace_health_score', {
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -26,7 +41,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeDocumentUsage(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_document_usage_patterns', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -35,7 +50,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeCollaborationPatterns(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_collaboration_patterns', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -44,7 +59,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeContentQuality(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_content_quality_distribution', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -53,7 +68,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeKnowledgeGaps(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('analyze_workspace_knowledge_gaps', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -62,7 +77,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeWorkflowEfficiency(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_workflow_efficiency', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -71,7 +86,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeContentLifecycle(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_content_lifecycle_patterns', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -80,7 +95,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeGrowthTrends(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_workspace_growth_trends', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -89,7 +104,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeContentDuplication(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_content_duplication', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -98,7 +113,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeStructureOptimization(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_structure_optimization', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -107,7 +122,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeUserBehavior(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_user_behavior_patterns', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -116,7 +131,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeSearchPatterns(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_search_patterns', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -125,7 +140,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeContentAccessibility(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_content_accessibility', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -134,7 +149,7 @@ export class WorkspaceAnalyzerService {
    */
   async generateInsightsReport(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_workspace_insights_report', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -146,7 +161,7 @@ export class WorkspaceAnalyzerService {
     timeRanges: string[]
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('compare_workspace_metrics_over_time', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
       time_ranges: timeRanges,
     })
   }
@@ -156,7 +171,7 @@ export class WorkspaceAnalyzerService {
    */
   async predictWorkspaceTrends(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('predict_workspace_trends', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -168,7 +183,7 @@ export class WorkspaceAnalyzerService {
     benchmarkType?: string
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('benchmark_workspace_performance', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
       benchmark_type: benchmarkType || 'standard',
     })
   }
@@ -178,7 +193,7 @@ export class WorkspaceAnalyzerService {
    */
   async analyzeComplexity(workspaceId: string): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('analyze_workspace_complexity', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 
@@ -187,7 +202,7 @@ export class WorkspaceAnalyzerService {
    */
   async generateOptimizationRecommendations(workspaceId: string): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('generate_optimization_recommendations', {
-      workspace_id: workspaceId,
+      workspacePath: this.getWorkspacePath(workspaceId),
     })
   }
 }

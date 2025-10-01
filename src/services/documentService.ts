@@ -13,6 +13,65 @@ import {
 
 export class DocumentService {
   /**
+   * Initialize the document indexer (should be called on app startup)
+   */
+  async initializeIndexer(indexDir?: string): Promise<ApiResponse<boolean>> {
+    return apiClient.invoke('init_document_indexer', {
+      index_dir: indexDir,
+    })
+  }
+
+  /**
+   * Get all indexed documents
+   */
+  async getAllDocuments(): Promise<ApiResponse<Document[]>> {
+    return apiClient.invoke('get_all_documents', {})
+  }
+
+  /**
+   * Index a document (add it to the system)
+   */
+  async indexDocumentFile(filePath: string): Promise<ApiResponse<Document>> {
+    return apiClient.invoke('index_document', {
+      request: {
+        file_path: filePath,
+      },
+    })
+  }
+
+  /**
+   * Get document details by file path
+   */
+  async getDocumentDetails(filePath: string): Promise<ApiResponse<Document>> {
+    return apiClient.invoke('get_document_details', {
+      filePath: filePath,
+    })
+  }
+
+  /**
+   * Remove document from index
+   */
+  async removeDocument(documentId: string): Promise<ApiResponse<void>> {
+    return apiClient.invoke('remove_document_from_indexer', {
+      document_id: documentId,
+    })
+  }
+
+  /**
+   * Get index statistics
+   */
+  async getIndexStats(): Promise<
+    ApiResponse<{
+      total_documents: number
+      total_keywords: number
+      total_content_size: number
+      index_version: number
+    }>
+  > {
+    return apiClient.invoke('get_index_stats', {})
+  }
+
+  /**
    * Process a document - extract content, metadata, and create chunks
    */
   async processDocument(
@@ -26,10 +85,33 @@ export class DocumentService {
   }
 
   /**
-   * Get document by ID
+   * Get document by ID (file path)
    */
   async getDocument(documentId: string): Promise<ApiResponse<Document>> {
-    return apiClient.invoke('get_document', { document_id: documentId })
+    // First, try to get all documents to find the path by ID
+    const allDocsResponse = await this.getAllDocuments()
+
+    if (allDocsResponse.success && allDocsResponse.data) {
+      // Find the document by ID to get its path
+      const doc = allDocsResponse.data.find((d: Document) => d.id === documentId)
+
+      if (doc && doc.path) {
+        // Use the actual file path
+        return apiClient.invoke('get_document_details', { filePath: doc.path })
+      }
+    }
+
+    // Fallback: if documentId looks like a path, use it directly
+    if (documentId.includes('/') || documentId.includes('\\')) {
+      return apiClient.invoke('get_document_details', { filePath: documentId })
+    }
+
+    // If we can't find the document, return an error
+    return {
+      success: false,
+      error: `Document with ID ${documentId} not found`,
+      metadata: { executionTime: 0 }
+    }
   }
 
   /**
@@ -54,15 +136,14 @@ export class DocumentService {
 
   /**
    * List documents in workspace
+   * @deprecated Use getAllDocuments() instead - connects to real backend indexer
    */
   async listDocuments(
-    workspaceId?: string,
-    filters?: Record<string, unknown>
+    _workspaceId?: string,
+    _filters?: Record<string, unknown>
   ): Promise<ApiResponse<Document[]>> {
-    return apiClient.invoke('list_documents', {
-      workspace_id: workspaceId,
-      filters: filters || {},
-    })
+    // Redirect to the real backend implementation
+    return this.getAllDocuments()
   }
 
   /**
@@ -103,7 +184,11 @@ export class DocumentService {
    * Index document for search
    */
   async indexDocument(documentId: string): Promise<ApiResponse<DocumentIndex>> {
-    return apiClient.invoke('index_document', { document_id: documentId })
+    return apiClient.invoke('index_document', {
+      request: {
+        file_path: documentId,
+      },
+    })
   }
 
   /**

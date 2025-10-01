@@ -6,9 +6,10 @@ export class ContentClassificationService {
   /**
    * Classify document content type
    */
-  async classifyContentType(documentId: string): Promise<ApiResponse<ContentClassification>> {
-    return apiClient.invoke('classify_content_type', {
-      document_id: documentId,
+  async classifyContentType(filePath: string): Promise<ApiResponse<ContentClassification>> {
+    return apiClient.invoke('classify_file_content', {
+      filePath: filePath,
+      withAi: false,
     })
   }
 

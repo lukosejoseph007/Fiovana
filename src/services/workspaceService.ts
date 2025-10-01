@@ -1,4 +1,5 @@
 // Workspace Intelligence Service
+import { getWorkspacePath } from './workspacePathHelper'
 import { apiClient } from '../api'
 import {
   WorkspaceConfig,
@@ -28,7 +29,7 @@ export class WorkspaceService {
    * Get workspace configuration
    */
   async getWorkspace(workspaceId: string): Promise<ApiResponse<WorkspaceConfig>> {
-    return apiClient.invoke('get_workspace', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -39,7 +40,7 @@ export class WorkspaceService {
     updates: Partial<WorkspaceConfig>
   ): Promise<ApiResponse<WorkspaceConfig>> {
     return apiClient.invoke('update_workspace', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       ...updates,
     })
   }
@@ -48,7 +49,7 @@ export class WorkspaceService {
    * Delete a workspace
    */
   async deleteWorkspace(workspaceId: string): Promise<ApiResponse<void>> {
-    return apiClient.invoke('delete_workspace', { workspace_id: workspaceId })
+    return apiClient.invoke('delete_workspace', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -62,21 +63,27 @@ export class WorkspaceService {
    * Analyze workspace structure and provide comprehensive insights
    */
   async analyzeWorkspace(workspaceId: string): Promise<ApiResponse<WorkspaceAnalysis>> {
-    return apiClient.invoke('analyze_workspace', { workspace_id: workspaceId })
+    return apiClient.invoke('analyze_workspace', {
+      request: {
+        workspace_path: getWorkspacePath(workspaceId),
+      },
+    })
   }
 
   /**
    * Get workspace health metrics
    */
   async getWorkspaceHealth(workspaceId: string): Promise<ApiResponse<WorkspaceHealth>> {
-    return apiClient.invoke('get_workspace_health', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_health_score', {
+      workspacePath: getWorkspacePath(workspaceId),
+    })
   }
 
   /**
    * Get workspace metrics overview
    */
   async getWorkspaceMetrics(workspaceId: string): Promise<ApiResponse<WorkspaceMetrics>> {
-    return apiClient.invoke('get_workspace_metrics', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_metrics', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -96,7 +103,7 @@ export class WorkspaceService {
    * Get workspace insights and recommendations
    */
   async getWorkspaceInsights(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_insights', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_insights', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -104,7 +111,7 @@ export class WorkspaceService {
    */
   async optimizeWorkspace(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('optimize_workspace', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       options: options || {},
     })
   }
@@ -117,7 +124,7 @@ export class WorkspaceService {
     options?: unknown
   ): Promise<ApiResponse<WorkspaceBackup>> {
     return apiClient.invoke('backup_workspace', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       options: options || {},
     })
   }
@@ -133,21 +140,21 @@ export class WorkspaceService {
    * Get workspace backup history
    */
   async getBackupHistory(workspaceId: string): Promise<ApiResponse<WorkspaceBackup[]>> {
-    return apiClient.invoke('get_workspace_backup_history', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_backup_history', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
    * Scan workspace for issues
    */
   async scanWorkspace(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('scan_workspace', { workspace_id: workspaceId })
+    return apiClient.invoke('scan_workspace', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
    * Get workspace performance metrics
    */
   async getPerformanceMetrics(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_performance', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_performance', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -155,7 +162,7 @@ export class WorkspaceService {
    */
   async configureWorkspaceAI(workspaceId: string, config: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('configure_workspace_ai', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       config,
     })
   }
@@ -164,7 +171,7 @@ export class WorkspaceService {
    * Get workspace AI status
    */
   async getWorkspaceAIStatus(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_ai_status', { workspace_id: workspaceId })
+    return apiClient.invoke('get_workspace_ai_status', { workspace_path: getWorkspacePath(workspaceId) })
   }
 
   /**
@@ -175,7 +182,7 @@ export class WorkspaceService {
     reportType: string
   ): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('generate_workspace_report', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       report_type: reportType,
     })
   }
@@ -185,7 +192,7 @@ export class WorkspaceService {
    */
   async getActivityFeed(workspaceId: string, options?: unknown): Promise<ApiResponse<unknown>> {
     return apiClient.invoke('get_workspace_activity', {
-      workspace_id: workspaceId,
+      workspace_path: getWorkspacePath(workspaceId),
       options: options || {},
     })
   }

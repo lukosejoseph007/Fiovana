@@ -84,12 +84,15 @@ export class AIService {
    * Send chat completion request
    */
   async chat(request: ChatRequest): Promise<ApiResponse<ChatResponse>> {
-    return apiClient.invoke('ai_chat', {
-      messages: request.messages,
-      model: request.model,
-      max_tokens: request.maxTokens,
-      temperature: request.temperature,
-      options: request.options || {},
+    // Extract the latest message
+    const lastMessage = request.messages[request.messages.length - 1]
+
+    return apiClient.invoke('chat_with_ai', {
+      request: {
+        message: lastMessage?.content || '',
+        session_id: request.options?.sessionId,
+        context: request.options?.context,
+      },
     })
   }
 

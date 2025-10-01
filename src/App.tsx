@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Component, ErrorInfo } from 'react'
+import React, { useState, useCallback, useEffect, Component, ErrorInfo } from 'react'
 import AppShell from './components/layout/AppShell'
 import HeaderBar from './components/layout/HeaderBar'
 import IntelligencePanel from './components/intelligence/IntelligencePanel'
@@ -15,6 +15,7 @@ import StyleTransfer from './components/generation/StyleTransfer'
 import { AIProvidersModal } from './components/settings/AIProvidersModal'
 import { WorkspaceSettingsModal } from './components/settings/WorkspaceSettingsModal'
 import { UserPreferencesModal } from './components/settings/UserPreferencesModal'
+import { documentService } from './services'
 
 type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
 
@@ -67,6 +68,32 @@ const AppContent: React.FC = () => {
   const [isAISettingsModalOpen, setIsAISettingsModalOpen] = useState(false)
   const [isWorkspaceSettingsModalOpen, setIsWorkspaceSettingsModalOpen] = useState(false)
   const [isUserPreferencesModalOpen, setIsUserPreferencesModalOpen] = useState(false)
+
+  // Initialize document indexer on app startup
+  useEffect(() => {
+    const initializeDocumentSystem = async () => {
+      try {
+        console.log('Initializing document indexer...')
+        const result = await documentService.initializeIndexer()
+        if (result.success) {
+          console.log('Document indexer initialized successfully')
+          // Get initial stats
+          const stats = await documentService.getIndexStats()
+          if (stats.success && stats.data) {
+            console.log(
+              `Document index ready: ${stats.data.total_documents} documents, ${stats.data.total_keywords} keywords`
+            )
+          }
+        } else {
+          console.warn('Document indexer initialization returned false:', result.error)
+        }
+      } catch (error) {
+        console.error('Failed to initialize document indexer:', error)
+      }
+    }
+
+    initializeDocumentSystem()
+  }, [])
 
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(

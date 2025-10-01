@@ -1,4 +1,5 @@
 // System Health Service
+import { getWorkspacePath } from './workspacePathHelper'
 import { apiClient } from '../api'
 import { SystemHealth, HealthMetrics, ApiResponse } from '../types'
 
@@ -14,8 +15,8 @@ export class HealthService {
    * Get workspace health metrics
    */
   async getWorkspaceHealth(workspaceId: string): Promise<ApiResponse<HealthMetrics>> {
-    return apiClient.invoke('get_workspace_health', {
-      workspace_id: workspaceId,
+    return apiClient.invoke('get_workspace_health_score', {
+      workspacePath: getWorkspacePath(workspaceId),
     })
   }
 

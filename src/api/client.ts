@@ -434,30 +434,43 @@ const mockTauri = {
   },
 }
 
-// Safely import Tauri invoke
+// Safely import Tauri invoke with initialization promise
 let tauriInvoke: (command: string, args?: unknown) => Promise<unknown>
 
 async function initTauriInvoke() {
   try {
-    // Check if we're in a Tauri environment at runtime
-    if (typeof window !== 'undefined' && (window as unknown as { __TAURI__?: unknown }).__TAURI__) {
+    // Check if we're in a Tauri environment at runtime (Tauri v2 uses __TAURI_INTERNALS__)
+    if (
+      typeof window !== 'undefined' &&
+      (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
+    ) {
+      console.log('[API] Running in Tauri environment, using real backend')
       // Dynamic import with proper Vite handling
       const { invoke } = await import('@tauri-apps/api/core')
       tauriInvoke = invoke as (command: string, args?: unknown) => Promise<unknown>
+      console.log('[API] Real Tauri backend initialized successfully')
     } else {
+      console.warn('[API] Not in Tauri environment, using mock backend')
       tauriInvoke = mockTauri.invoke
     }
-  } catch {
+  } catch (error) {
+    console.error('[API] Failed to initialize Tauri, using mock backend:', error)
     // Fallback to mock if Tauri is not available
     tauriInvoke = mockTauri.invoke
   }
 }
 
-// Initialize immediately
+// Initialize immediately with mock, then switch to real Tauri if available
 tauriInvoke = mockTauri.invoke
-initTauriInvoke().catch(() => {
+const initPromise = initTauriInvoke().catch(error => {
+  console.error('[API] initTauriInvoke failed:', error)
   tauriInvoke = mockTauri.invoke
 })
+
+// Helper to ensure initialization is complete before invoking
+async function ensureInitialized() {
+  await initPromise
+}
 
 export class TauriApiClient {
   private static instance: TauriApiClient
@@ -486,6 +499,9 @@ export class TauriApiClient {
     const startTime = performance.now()
 
     try {
+      // Ensure Tauri is initialized before invoking
+      await ensureInitialized()
+
       // Validate command exists
       if (!this.isValidCommand(command)) {
         throw new Error(`Unknown command: ${command}`)
@@ -525,14 +541,37 @@ export class TauriApiClient {
       const endTime = performance.now()
       this.recordPerformance(command, endTime - startTime, false)
 
-      return this.createErrorResponse(
-        error instanceof Error ? error.message : 'Unknown error occurred',
-        {
-          command,
-          args,
-          executionTime: endTime - startTime,
-        }
-      )
+      // Extract detailed error information
+      let errorMessage = 'Unknown error occurred'
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message)
+      }
+
+      // Log detailed error information
+      console.error(`[API] Command ${command} failed:`, errorMessage)
+      console.error('[API] Error details:', {
+        error: errorMessage,
+        command,
+        args,
+        executionTime: endTime - startTime,
+        rawError: error,
+      })
+
+      // Try to extract more info from the error
+      if (error && typeof error === 'object') {
+        console.error('[API] Raw error object:', JSON.stringify(error, null, 2))
+      }
+
+      return this.createErrorResponse(errorMessage, {
+        command,
+        args,
+        executionTime: endTime - startTime,
+        originalError: error,
+      })
     }
   }
 

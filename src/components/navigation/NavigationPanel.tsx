@@ -184,12 +184,15 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
     }
   }, [workspaceId])
 
-  // Load active documents
+  // Load active documents from the backend indexer
   const loadActiveDocuments = useCallback(async () => {
     try {
-      const response: ApiResponse<Document[]> = await documentService.listDocuments(workspaceId)
+      // Use getAllDocuments which connects to the real backend document indexer
+      const response: ApiResponse<Document[]> = await documentService.getAllDocuments()
 
-      if (response.success && response.data) {
+      if (response.success && response.data && Array.isArray(response.data)) {
+        console.log(`Loaded ${response.data.length} documents from backend indexer`)
+
         const documentItems: NavigationItem[] = response.data
           .sort((a, b) => {
             // Sort by last modified, most recent first
@@ -222,6 +225,13 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
               : section
           )
         )
+      } else {
+        console.warn('Failed to load documents:', response.error)
+        setSections(prev =>
+          prev.map(section =>
+            section.id === 'active-documents' ? { ...section, loading: false, items: [] } : section
+          )
+        )
       }
     } catch (error) {
       console.error('Failed to load active documents:', error)
@@ -233,7 +243,7 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
         )
       )
     }
-  }, [workspaceId])
+  }, [])
 
   // Load recent conversations
   const loadRecentConversations = useCallback(async () => {
@@ -632,29 +642,62 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
           <Tooltip content="Upload documents">
             <button
-              onClick={() => {
-                const input = document.createElement('input')
-                input.type = 'file'
-                input.multiple = true
-                input.accept = '.pdf,.doc,.docx,.txt,.md,.html,.json,.xml'
-                input.onchange = async e => {
-                  const files = (e.target as HTMLInputElement).files
-                  if (files && files.length > 0) {
-                    console.log(
-                      'Files selected for upload:',
-                      Array.from(files).map(f => f.name)
-                    )
-                    // TODO: Implement file upload to backend
-                    alert(
-                      `File upload functionality needs backend implementation.\nSelected files: ${Array.from(
-                        files
-                      )
-                        .map(f => f.name)
-                        .join(', ')}`
-                    )
+              onClick={async () => {
+                try {
+                  // Use Tauri's file dialog to select files
+                  const { open } = await import('@tauri-apps/plugin-dialog')
+                  const filePaths = await open({
+                    multiple: true,
+                    filters: [
+                      {
+                        name: 'Documents',
+                        extensions: ['pdf', 'doc', 'docx', 'txt', 'md', 'html', 'json', 'xml'],
+                      },
+                    ],
+                  })
+
+                  if (filePaths) {
+                    const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
+                    console.log('Files selected for indexing:', paths)
+
+                    // Index each file in the backend
+                    let successCount = 0
+                    let failCount = 0
+
+                    for (const filePath of paths) {
+                      try {
+                        console.log(`Indexing document: ${filePath}`)
+                        const result = await documentService.indexDocumentFile(filePath)
+                        if (result.success) {
+                          console.log(`Successfully indexed: ${filePath}`)
+                          console.log('Document data:', result.data)
+                          successCount++
+                        } else {
+                          console.error(
+                            `Failed to index ${filePath}:`,
+                            result.error || 'Unknown error'
+                          )
+                          console.error('Full result:', result)
+                          failCount++
+                        }
+                      } catch (error) {
+                        console.error(`Error indexing ${filePath}:`, error)
+                        console.error('Error details:', {
+                          message: error instanceof Error ? error.message : 'Unknown',
+                          stack: error instanceof Error ? error.stack : undefined,
+                        })
+                        failCount++
+                      }
+                    }
+
+                    console.log(`Indexing complete: ${successCount} succeeded, ${failCount} failed`)
+
+                    // Refresh the document list
+                    loadActiveDocuments()
                   }
+                } catch (error) {
+                  console.error('Error opening file dialog or indexing documents:', error)
                 }
-                input.click()
               }}
               style={{
                 background: colors.accent.ai,
