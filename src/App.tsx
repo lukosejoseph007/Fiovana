@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, Component, ErrorInfo } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import AppShell from './components/layout/AppShell'
 import HeaderBar from './components/layout/HeaderBar'
 import IntelligencePanel from './components/intelligence/IntelligencePanel'
@@ -15,43 +15,11 @@ import StyleTransfer from './components/generation/StyleTransfer'
 import { AIProvidersModal } from './components/settings/AIProvidersModal'
 import { WorkspaceSettingsModal } from './components/settings/WorkspaceSettingsModal'
 import { UserPreferencesModal } from './components/settings/UserPreferencesModal'
+import { ErrorBoundary } from './components/error/ErrorBoundary'
 import { documentService } from './services'
 import { apiClient } from './api/client'
 
 type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
-
-// Simple Error Boundary
-class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props)
-    this.state = { hasError: false, error: null }
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ padding: '24px', color: '#ff5555' }}>
-          <h2>Something went wrong</h2>
-          <p>{this.state.error?.message}</p>
-          <button onClick={() => this.setState({ hasError: false, error: null })}>Try again</button>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
 
 // Component that uses layout context
 const AppContent: React.FC = () => {
@@ -278,11 +246,13 @@ const AppContent: React.FC = () => {
       <AppShell.Main>
         {/* Navigation Panel */}
         <AppShell.Navigation>
-          <NavigationPanel
-            workspaceId="default"
-            collapsed={navigationCollapsed}
-            onItemSelect={handleNavigationSelect}
-          />
+          <ErrorBoundary>
+            <NavigationPanel
+              workspaceId="default"
+              collapsed={navigationCollapsed}
+              onItemSelect={handleNavigationSelect}
+            />
+          </ErrorBoundary>
         </AppShell.Navigation>
 
         {/* Center Content - Document Canvas, Dashboard, Analytics, Search, or Discovery */}
@@ -297,29 +267,33 @@ const AppContent: React.FC = () => {
               )
             } else if (viewMode === 'dashboard') {
               return (
-                <WorkspaceIntelligence
-                  workspaceId="default"
-                  style={{
-                    height: '100%',
-                    padding: '24px',
-                    overflowY: 'auto',
-                  }}
-                  onActionClick={(action, data) => {
-                    console.log('Dashboard action:', action, data)
-                    if (action === 'close' || action === 'view-document') {
-                      setViewMode('document')
-                    }
-                  }}
-                />
+                <ErrorBoundary>
+                  <WorkspaceIntelligence
+                    workspaceId="default"
+                    style={{
+                      height: '100%',
+                      padding: '24px',
+                      overflowY: 'auto',
+                    }}
+                    onActionClick={(action, data) => {
+                      console.log('Dashboard action:', action, data)
+                      if (action === 'close' || action === 'view-document') {
+                        setViewMode('document')
+                      }
+                    }}
+                  />
+                </ErrorBoundary>
               )
             } else if (viewMode === 'analytics') {
               return (
-                <AnalyticsDashboard
-                  workspaceId="default"
-                  style={{
-                    height: '100%',
-                  }}
-                />
+                <ErrorBoundary>
+                  <AnalyticsDashboard
+                    workspaceId="default"
+                    style={{
+                      height: '100%',
+                    }}
+                  />
+                </ErrorBoundary>
               )
             } else if (viewMode === 'discovery') {
               console.log('Rendering ContentDiscovery component')
@@ -337,15 +311,17 @@ const AppContent: React.FC = () => {
               )
             } else {
               return (
-                <DocumentCanvas
-                  workspaceId="default"
-                  documentId={currentDocumentId}
-                  onModeChange={mode => {
-                    if (mode === 'chat') {
-                      setCurrentDocumentId(null)
-                    }
-                  }}
-                />
+                <ErrorBoundary>
+                  <DocumentCanvas
+                    workspaceId="default"
+                    documentId={currentDocumentId}
+                    onModeChange={mode => {
+                      if (mode === 'chat') {
+                        setCurrentDocumentId(null)
+                      }
+                    }}
+                  />
+                </ErrorBoundary>
               )
             }
           })()}
@@ -353,7 +329,9 @@ const AppContent: React.FC = () => {
 
         {/* Intelligence Panel */}
         <AppShell.Intelligence>
-          <IntelligencePanel />
+          <ErrorBoundary>
+            <IntelligencePanel />
+          </ErrorBoundary>
         </AppShell.Intelligence>
       </AppShell.Main>
 
@@ -522,9 +500,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AppShell>
-      <AppContent />
-    </AppShell>
+    <ErrorBoundary>
+      <AppShell>
+        <AppContent />
+      </AppShell>
+    </ErrorBoundary>
   )
 }
 
