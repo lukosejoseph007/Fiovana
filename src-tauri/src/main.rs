@@ -392,6 +392,9 @@ async fn main() {
             commands::get_document_details,
             commands::remove_document_from_indexer,
             commands::clear_document_index,
+            commands::get_saved_queries,
+            commands::get_search_history,
+            commands::get_search_suggestions,
             commands::save_ai_settings,
             // Document chunking commands
             commands::chunk_document,

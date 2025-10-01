@@ -554,7 +554,7 @@ const NLProcessor: React.FC<NLProcessorProps> = ({
               size="sm"
               style={{
                 color: getConfidenceColor(parsedCommand.confidence),
-                borderColor: getConfidenceColor(parsedCommand.confidence),
+                border: `1px solid ${getConfidenceColor(parsedCommand.confidence)}`,
               }}
             >
               {Math.round(parsedCommand.confidence * 100)}% confident

@@ -462,7 +462,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
                 size="sm"
                 style={{
                   color: designTokens.colors.confidence.high,
-                  borderColor: designTokens.colors.confidence.high,
+                  border: `1px solid ${designTokens.colors.confidence.high}`,
                 }}
               >
                 {analysis.health.status}
@@ -603,12 +603,13 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
                       : gap.severity === 'moderate'
                         ? designTokens.colors.confidence.medium
                         : designTokens.colors.confidence.high,
-                  borderColor:
+                  border: `1px solid ${
                     gap.severity === 'critical'
                       ? designTokens.colors.confidence.critical
                       : gap.severity === 'moderate'
                         ? designTokens.colors.confidence.medium
-                        : designTokens.colors.confidence.high,
+                        : designTokens.colors.confidence.high
+                  }`,
                 }}
               >
                 {gap.severity}

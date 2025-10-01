@@ -787,7 +787,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: `1px solid ${colors.border.subtle}`,
   },
   resultCardSelected: {
-    borderColor: colors.accent.ai,
+    border: `1px solid ${colors.accent.ai}`,
     boxShadow: shadows.glassSubtle,
   },
   resultHeader: {

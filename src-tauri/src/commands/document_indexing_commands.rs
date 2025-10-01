@@ -350,3 +350,27 @@ pub async fn get_relevant_documents_for_context(
         Err("Document indexer not initialized".to_string())
     }
 }
+
+/// Get saved search queries (stub implementation)
+#[tauri::command]
+pub async fn get_saved_queries() -> Result<Vec<serde_json::Value>, String> {
+    // TODO: Implement saved queries persistence
+    Ok(vec![])
+}
+
+/// Get search history (stub implementation)
+#[tauri::command]
+pub async fn get_search_history(limit: Option<usize>) -> Result<Vec<serde_json::Value>, String> {
+    // TODO: Implement search history tracking
+    let _ = limit;
+    Ok(vec![])
+}
+
+/// Get search suggestions (stub implementation)
+#[tauri::command]
+pub async fn get_search_suggestions(partial_query: String) -> Result<Vec<String>, String> {
+    // TODO: Implement search suggestions based on indexed content
+    // For now, return empty array
+    let _ = partial_query;
+    Ok(vec![])
+}

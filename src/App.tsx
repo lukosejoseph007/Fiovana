@@ -16,6 +16,7 @@ import { AIProvidersModal } from './components/settings/AIProvidersModal'
 import { WorkspaceSettingsModal } from './components/settings/WorkspaceSettingsModal'
 import { UserPreferencesModal } from './components/settings/UserPreferencesModal'
 import { documentService } from './services'
+import { apiClient } from './api/client'
 
 type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
 
@@ -69,7 +70,7 @@ const AppContent: React.FC = () => {
   const [isWorkspaceSettingsModalOpen, setIsWorkspaceSettingsModalOpen] = useState(false)
   const [isUserPreferencesModalOpen, setIsUserPreferencesModalOpen] = useState(false)
 
-  // Initialize document indexer on app startup
+  // Initialize document indexer and AI system on app startup
   useEffect(() => {
     const initializeDocumentSystem = async () => {
       try {
@@ -92,7 +93,40 @@ const AppContent: React.FC = () => {
       }
     }
 
+    const initializeAISystem = async () => {
+      try {
+        console.log('Initializing AI system...')
+        // Load existing AI settings
+        const settingsResponse = await apiClient.invoke('get_ai_settings')
+        if (settingsResponse.success && settingsResponse.data) {
+          const settings = settingsResponse.data as {
+            provider?: string
+            anthropicApiKey?: string
+            openrouterApiKey?: string
+            selectedModel?: string
+          }
+
+          // Only initialize if we have a provider and API key configured
+          const hasValidConfig =
+            (settings.provider === 'anthropic' && settings.anthropicApiKey) ||
+            (settings.provider === 'openrouter' && settings.openrouterApiKey) ||
+            settings.provider === 'local'
+
+          if (hasValidConfig) {
+            console.log('Valid AI configuration found, initializing AI system...')
+            await apiClient.invoke('init_ai_system', { config: settings })
+            console.log('AI system initialized successfully')
+          } else {
+            console.log('No valid AI configuration found, skipping AI initialization')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize AI system:', error)
+      }
+    }
+
     initializeDocumentSystem()
+    initializeAISystem()
   }, [])
 
   // Handle navigation item selection

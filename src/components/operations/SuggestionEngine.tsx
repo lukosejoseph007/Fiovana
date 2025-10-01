@@ -594,7 +594,7 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
                     style={{
                       backgroundColor: `${getCategoryColor(suggestion.category)}20`,
                       color: getCategoryColor(suggestion.category),
-                      borderColor: getCategoryColor(suggestion.category),
+                      border: `1px solid ${getCategoryColor(suggestion.category)}`,
                     }}
                   >
                     {suggestion.category}

@@ -128,7 +128,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ title, icon, score, status,
                 size="sm"
                 style={{
                   color: getStatusColor(status),
-                  borderColor: getStatusColor(status),
+                  border: `1px solid ${getStatusColor(status)}`,
                 }}
               >
                 {status}
@@ -582,7 +582,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
                   style={{
                     backgroundColor: `${designTokens.colors.accent.semantic}15`,
                     color: designTokens.colors.accent.semantic,
-                    borderColor: `${designTokens.colors.accent.semantic}40`,
+                    border: `1px solid ${designTokens.colors.accent.semantic}40`,
                   }}
                 >
                   {term.term} ({term.frequency})

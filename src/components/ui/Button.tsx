@@ -100,13 +100,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           !disabled && !isLoading
             ? {
                 backgroundColor: designTokens.variants.button.secondary.hover,
-                borderColor: designTokens.colors.border.medium,
+                border: `1px solid ${designTokens.colors.border.medium}`,
                 transform: `translateY(-1px)`,
                 boxShadow: designTokens.shadows.sm,
               }
             : {},
         '&:focus': {
-          borderColor: designTokens.colors.state.focus,
+          border: `1px solid ${designTokens.colors.state.focus}`,
           boxShadow: `0 0 0 3px ${designTokens.colors.state.focus}40`,
         },
       },

@@ -225,21 +225,76 @@ jobs:
 
       - name: Build Tauri app (macOS)
         if: matrix.platform == 'macos-latest'
-        uses: nick-fields/retry-action@v3
-        with:
-          timeout_minutes: 45
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: npm run tauri build -- --target aarch64-apple-darwin
+        run: |
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Build attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            if timeout 45m npm run tauri build -- --target aarch64-apple-darwin; then
+              echo "Build succeeded on attempt $ATTEMPT"
+              exit 0
+            else
+              if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                echo "Build failed on attempt $ATTEMPT, waiting 30 seconds before retry..."
+                sleep 30
+              else
+                echo "Build failed after $MAX_ATTEMPTS attempts"
+                exit 1
+              fi
+            fi
+            ATTEMPT=$((ATTEMPT + 1))
+          done
 
-      - name: Build Tauri app (Linux/Windows)
-        if: matrix.platform != 'macos-latest'
-        uses: nick-fields/retry-action@v3
-        with:
-          timeout_minutes: 45
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: npm run tauri build
+      - name: Build Tauri app (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Build attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            if timeout 45m npm run tauri build; then
+              echo "Build succeeded on attempt $ATTEMPT"
+              exit 0
+            else
+              if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                echo "Build failed on attempt $ATTEMPT, waiting 30 seconds before retry..."
+                sleep 30
+              else
+                echo "Build failed after $MAX_ATTEMPTS attempts"
+                exit 1
+              fi
+            fi
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+      - name: Build Tauri app (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          $MAX_ATTEMPTS = 3
+          $ATTEMPT = 1
+          while ($ATTEMPT -le $MAX_ATTEMPTS) {
+            Write-Host "Build attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            $job = Start-Job -ScriptBlock { npm run tauri build }
+            $job | Wait-Job -Timeout 2700 # 45 minutes in seconds
+
+            if ($job.State -eq 'Completed') {
+              Receive-Job -Job $job
+              Write-Host "Build succeeded on attempt $ATTEMPT"
+              exit 0
+            } else {
+              Stop-Job -Job $job
+              Remove-Job -Job $job
+              if ($ATTEMPT -lt $MAX_ATTEMPTS) {
+                Write-Host "Build failed on attempt $ATTEMPT, waiting 30 seconds before retry..."
+                Start-Sleep -Seconds 30
+              } else {
+                Write-Host "Build failed after $MAX_ATTEMPTS attempts"
+                exit 1
+              }
+            }
+            $ATTEMPT++
+          }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
