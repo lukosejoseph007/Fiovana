@@ -13,6 +13,8 @@ import { useLayout } from './components/layout/useLayoutContext'
 import GenerationModal from './components/generation/GenerationModal'
 import StyleTransfer from './components/generation/StyleTransfer'
 import { AIProvidersModal } from './components/settings/AIProvidersModal'
+import { WorkspaceSettingsModal } from './components/settings/WorkspaceSettingsModal'
+import { UserPreferencesModal } from './components/settings/UserPreferencesModal'
 
 type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
 
@@ -61,7 +63,9 @@ const AppContent: React.FC = () => {
   } | null>(null)
   const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
   const [isStyleTransferModalOpen, setIsStyleTransferModalOpen] = useState(false)
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const [isAISettingsModalOpen, setIsAISettingsModalOpen] = useState(false)
+  const [isWorkspaceSettingsModalOpen, setIsWorkspaceSettingsModalOpen] = useState(false)
+  const [isUserPreferencesModalOpen, setIsUserPreferencesModalOpen] = useState(false)
 
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(
@@ -94,9 +98,19 @@ const AppContent: React.FC = () => {
     setViewMode('document')
   }, [])
 
-  const handleSettingsClick = useCallback(() => {
-    console.log('Settings button clicked')
-    setIsSettingsModalOpen(true)
+  const handleAISettingsClick = useCallback(() => {
+    console.log('AI Settings clicked')
+    setIsAISettingsModalOpen(true)
+  }, [])
+
+  const handleWorkspaceSettingsClick = useCallback(() => {
+    console.log('Workspace Settings clicked')
+    setIsWorkspaceSettingsModalOpen(true)
+  }, [])
+
+  const handleUserPreferencesClick = useCallback(() => {
+    console.log('User Preferences clicked')
+    setIsUserPreferencesModalOpen(true)
   }, [])
 
   const handleOperationTrigger = useCallback(async (operationType: string) => {
@@ -177,7 +191,9 @@ const AppContent: React.FC = () => {
         <HeaderBar
           onLogoClick={handleLogoClick}
           onOperationTrigger={handleOperationTrigger}
-          onSettingsClick={handleSettingsClick}
+          onAISettingsClick={handleAISettingsClick}
+          onWorkspaceSettingsClick={handleWorkspaceSettingsClick}
+          onUserPreferencesClick={handleUserPreferencesClick}
         />
       </AppShell.Header>
 
@@ -370,10 +386,27 @@ const AppContent: React.FC = () => {
       )}
 
       {/* AI Settings Modal */}
-      {isSettingsModalOpen && (
+      {isAISettingsModalOpen && (
         <AIProvidersModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
+          isOpen={isAISettingsModalOpen}
+          onClose={() => setIsAISettingsModalOpen(false)}
+        />
+      )}
+
+      {/* Workspace Settings Modal */}
+      {isWorkspaceSettingsModalOpen && (
+        <WorkspaceSettingsModal
+          isOpen={isWorkspaceSettingsModalOpen}
+          onClose={() => setIsWorkspaceSettingsModalOpen(false)}
+          workspacePath="default"
+        />
+      )}
+
+      {/* User Preferences Modal */}
+      {isUserPreferencesModalOpen && (
+        <UserPreferencesModal
+          isOpen={isUserPreferencesModalOpen}
+          onClose={() => setIsUserPreferencesModalOpen(false)}
         />
       )}
 

@@ -19,6 +19,7 @@ import {
 } from '../../services'
 import { WorkspaceAnalysis, Document, SmartOrganization, ApiResponse } from '../../types'
 import { colors, spacing, typography, animation } from '../../styles/tokens'
+import { WorkspaceSettingsModal } from '../settings/WorkspaceSettingsModal'
 
 type IconName =
   | 'Document'
@@ -139,6 +140,7 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
 
   const [workspaceHealth, setWorkspaceHealth] = useState<WorkspaceAnalysis | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
   // Load workspace intelligence data
   const loadWorkspaceIntelligence = useCallback(async () => {
@@ -639,6 +641,31 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+          <Tooltip content="Workspace settings">
+            <button
+              onClick={() => setIsSettingsModalOpen(true)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.text.secondary,
+                cursor: 'pointer',
+                padding: spacing[1],
+                borderRadius: '4px',
+                transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = colors.state.hover
+                e.currentTarget.style.color = colors.text.primary
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = colors.text.secondary
+              }}
+            >
+              <Icon name="Settings" size={14} />
+            </button>
+          </Tooltip>
+
           <Tooltip content="Refresh workspace data">
             <button
               onClick={handleRefresh}
@@ -663,7 +690,7 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
                 e.currentTarget.style.color = colors.text.secondary
               }}
             >
-              <Icon name="Settings" size={14} />
+              <Icon name="RefreshCcw" size={14} />
             </button>
           </Tooltip>
 
@@ -782,6 +809,13 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
           background: ${colors.border.strong};
         }
       `}</style>
+
+      {/* Workspace Settings Modal */}
+      <WorkspaceSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        workspacePath={workspaceId}
+      />
     </div>
   )
 }

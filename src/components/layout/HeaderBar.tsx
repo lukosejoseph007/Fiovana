@@ -3,6 +3,7 @@ import { designTokens } from '../../styles/tokens'
 import { useLayout } from './useLayoutContext'
 import { Dropdown, Icon } from '../ui'
 import ActionsDropdown from '../ui/ActionsDropdown'
+import SettingsDropdown from '../ui/SettingsDropdown'
 import type { ActionCategory } from '../ui/ActionsDropdown'
 
 export interface HeaderBarProps {
@@ -40,7 +41,9 @@ export interface HeaderBarProps {
   }
   onWorkspaceChange?: (workspaceId: string) => void
   onSearch?: (query: string) => void
-  onSettingsClick?: () => void
+  onAISettingsClick?: () => void
+  onWorkspaceSettingsClick?: () => void
+  onUserPreferencesClick?: () => void
   onCommandPaletteOpen?: () => void
   onLogoClick?: () => void
   onOperationTrigger?: (operationType: string) => void
@@ -56,7 +59,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   documentContext,
   onWorkspaceChange,
   onSearch: _onSearch,
-  onSettingsClick,
+  onAISettingsClick,
+  onWorkspaceSettingsClick,
+  onUserPreferencesClick,
   onCommandPaletteOpen,
   onLogoClick,
   onOperationTrigger,
@@ -353,7 +358,28 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
           )}
 
-          <SettingsButton onSettingsClick={onSettingsClick} />
+          <SettingsDropdown
+            menuItems={[
+              {
+                id: 'ai-settings',
+                label: 'AI Settings',
+                icon: 'Cpu',
+                onClick: () => onAISettingsClick?.(),
+              },
+              {
+                id: 'workspace-settings',
+                label: 'Workspace Settings',
+                icon: 'Folder',
+                onClick: () => onWorkspaceSettingsClick?.(),
+              },
+              {
+                id: 'user-preferences',
+                label: 'User Preferences',
+                icon: 'User',
+                onClick: () => onUserPreferencesClick?.(),
+              },
+            ]}
+          />
         </div>
       </div>
     </>
@@ -593,37 +619,6 @@ const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({
 
       <div style={indicatorStyles} title={getStatusText()} aria-label={getStatusText()} />
     </>
-  )
-}
-
-// Settings Button Component
-interface SettingsButtonProps {
-  onSettingsClick?: () => void
-}
-
-const SettingsButton: React.FC<SettingsButtonProps> = ({ onSettingsClick }) => {
-  const buttonStyles = {
-    background: 'none',
-    border: 'none',
-    color: designTokens.colors.text.secondary,
-    cursor: 'pointer',
-    padding: designTokens.spacing[2],
-    borderRadius: designTokens.borderRadius.md,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: `all ${designTokens.animation.duration.fast}`,
-  }
-
-  return (
-    <button
-      style={buttonStyles}
-      className="proxemic-header-icon"
-      aria-label="Settings"
-      onClick={onSettingsClick}
-    >
-      <Icon name="Settings" size={18} />
-    </button>
   )
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, Button, Icon } from '../ui'
 import { aiService, workspaceService } from '../../services'
 import { designTokens } from '../../styles/tokens'
@@ -347,16 +347,6 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
     loadRecentSessions()
   }, [loadWorkspaceRecommendations, loadRecentSessions])
 
-  // Welcome message for empty state
-  const welcomeMessage = useMemo(() => {
-    if (workspaceHealth) {
-      return `Welcome back! Your workspace has a health score of ${Math.round(
-        workspaceHealth.score * 100
-      )}%. How can I help you today?`
-    }
-    return 'Welcome to Proxemic! I can help you analyze documents, generate content, and manage your knowledge base. What would you like to work on?'
-  }, [workspaceHealth])
-
   return (
     <div
       className="document-canvas"
@@ -471,25 +461,109 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
+                  paddingTop: designTokens.spacing[16],
                 }}
               >
                 {/* Welcome Message */}
                 <div
                   style={{
                     textAlign: 'center',
-                    marginBottom: designTokens.spacing[8],
+                    marginBottom: designTokens.spacing[16],
+                    maxWidth: '700px',
+                    margin: '0 auto',
+                    paddingBottom: designTokens.spacing[20],
                   }}
                 >
+                  {/* Welcome Icon */}
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      margin: '0 auto',
+                      marginBottom: designTokens.spacing[6],
+                      background: `linear-gradient(135deg, ${designTokens.colors.accent.ai}20, ${designTokens.colors.accent.semantic}20)`,
+                      borderRadius: designTokens.borderRadius.full,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `2px solid ${designTokens.colors.accent.ai}40`,
+                    }}
+                  >
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={designTokens.colors.accent.ai}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
+                  </div>
+
+                  {/* Greeting */}
                   <div
                     style={{
                       fontSize: designTokens.typography.fontSize['2xl'],
-                      fontWeight: designTokens.typography.fontWeight.medium,
+                      fontWeight: designTokens.typography.fontWeight.normal,
                       color: designTokens.colors.text.primary,
-                      marginBottom: designTokens.spacing[4],
+                      lineHeight: '1.5',
+                      marginBottom: designTokens.spacing[3],
+                      letterSpacing: '-0.02em',
                     }}
                   >
-                    {welcomeMessage}
+                    {workspaceHealth ? 'Welcome back!' : 'Welcome to Proxemic!'}
+                  </div>
+
+                  {/* Health Score & Message */}
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.base,
+                      fontWeight: designTokens.typography.fontWeight.normal,
+                      color: designTokens.colors.text.secondary,
+                      lineHeight: '1.6',
+                      maxWidth: '600px',
+                      margin: '0 auto',
+                    }}
+                  >
+                    {workspaceHealth ? (
+                      <>
+                        Your workspace has a health score of{' '}
+                        <span
+                          style={{
+                            color: designTokens.colors.confidence.high,
+                            fontWeight: designTokens.typography.fontWeight.medium,
+                          }}
+                        >
+                          {Math.round(workspaceHealth.score * 100)}%
+                        </span>
+                        .
+                      </>
+                    ) : (
+                      <>
+                        I can help you analyze documents, generate content, and manage your
+                        knowledge base.
+                      </>
+                    )}
+                  </div>
+
+                  {/* Call to Action */}
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.base,
+                      color: designTokens.colors.text.tertiary,
+                      lineHeight: '1.6',
+                      marginTop: designTokens.spacing[2],
+                    }}
+                  >
+                    {workspaceHealth
+                      ? 'How can I help you today?'
+                      : 'What would you like to work on?'}
                   </div>
                 </div>
 
