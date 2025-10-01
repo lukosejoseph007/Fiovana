@@ -94,19 +94,37 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
 
         if (response.success && response.data) {
           // Backend returns ChatResponse with 'response' field containing AIResponse
-          const aiResponse = (response.data as any).response || response.data
-          const content = aiResponse?.content || aiResponse?.message?.content || 'No response'
+          const chatResponse = response.data as {
+            response?: { content?: string; confidence?: number; intent?: string }
+          }
+          const aiResponse = chatResponse.response
+
+          if (!aiResponse || !aiResponse.content) {
+            console.error('Invalid AI response structure:', response.data)
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `msg-${Date.now()}-error`,
+                conversationId: 'current',
+                senderId: 'system',
+                content: 'Error: Invalid response from AI service',
+                type: 'text',
+                timestamp: new Date(),
+                metadata: {},
+              },
+            ])
+            return
+          }
 
           const assistantMessage: Message = {
             id: `msg-${Date.now()}-assistant`,
             conversationId: 'current',
             senderId: 'assistant',
-            content: content,
+            content: aiResponse.content,
             type: 'text',
             timestamp: new Date(),
             metadata: {
-              confidence: aiResponse?.confidence || 0.9,
-              intent: aiResponse?.intent,
+              confidence: aiResponse.confidence || 0.9,
             },
           }
 

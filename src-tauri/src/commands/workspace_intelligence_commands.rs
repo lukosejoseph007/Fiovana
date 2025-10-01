@@ -122,7 +122,8 @@ pub async fn analyze_workspace(
                 // Create a temporary workspace info for analysis
                 crate::workspace::WorkspaceInfo {
                     path: request.workspace_path.clone(),
-                    name: request.workspace_path
+                    name: request
+                        .workspace_path
                         .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or("workspace")
@@ -195,7 +196,8 @@ pub async fn get_workspace_recommendations(
                 // Create a temporary workspace info for analysis
                 crate::workspace::WorkspaceInfo {
                     path: request.workspace_path.clone(),
-                    name: request.workspace_path
+                    name: request
+                        .workspace_path
                         .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or("workspace")
@@ -313,7 +315,8 @@ pub async fn get_workspace_insights(
                 // Create a temporary workspace info for analysis
                 crate::workspace::WorkspaceInfo {
                     path: request.workspace_path.clone(),
-                    name: request.workspace_path
+                    name: request
+                        .workspace_path
                         .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or("workspace")

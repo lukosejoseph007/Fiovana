@@ -137,7 +137,7 @@ async fn main() {
     // Create a mutex-wrapped workspace manager for commands that need it
     let workspace_manager_for_commands = Arc::new(Mutex::new(
         WorkspaceManager::new(Arc::clone(&config_manager))
-            .expect("Failed to create workspace manager for commands")
+            .expect("Failed to create workspace manager for commands"),
     ));
 
     // Initialize deduplication state
@@ -172,10 +172,11 @@ async fn main() {
 
     // Create a default document indexer for workspace intelligence commands
     // This uses the current directory as the default workspace
-    let default_workspace_path = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let default_workspace_path =
+        std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
     let document_indexer_for_workspace = Arc::new(Mutex::new(
         document::indexer::DocumentIndexer::new(default_workspace_path)
-            .expect("Failed to create document indexer for workspace commands")
+            .expect("Failed to create document indexer for workspace commands"),
     ));
 
     // AI orchestrator is optional for workspace intelligence commands

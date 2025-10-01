@@ -166,8 +166,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         }
 
         // Load content classification - use the file path
-        const classificationResponse =
-          await contentClassificationService.classifyContentType(docResponse.data.path)
+        const classificationResponse = await contentClassificationService.classifyContentType(
+          docResponse.data.path
+        )
         if (classificationResponse.success && classificationResponse.data) {
           setClassification(classificationResponse.data)
         }

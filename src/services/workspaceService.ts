@@ -83,7 +83,9 @@ export class WorkspaceService {
    * Get workspace metrics overview
    */
   async getWorkspaceMetrics(workspaceId: string): Promise<ApiResponse<WorkspaceMetrics>> {
-    return apiClient.invoke('get_workspace_metrics', { workspace_path: getWorkspacePath(workspaceId) })
+    return apiClient.invoke('get_workspace_metrics', {
+      workspace_path: getWorkspacePath(workspaceId),
+    })
   }
 
   /**
@@ -103,7 +105,9 @@ export class WorkspaceService {
    * Get workspace insights and recommendations
    */
   async getWorkspaceInsights(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_insights', { workspace_path: getWorkspacePath(workspaceId) })
+    return apiClient.invoke('get_workspace_insights', {
+      workspace_path: getWorkspacePath(workspaceId),
+    })
   }
 
   /**
@@ -140,7 +144,9 @@ export class WorkspaceService {
    * Get workspace backup history
    */
   async getBackupHistory(workspaceId: string): Promise<ApiResponse<WorkspaceBackup[]>> {
-    return apiClient.invoke('get_workspace_backup_history', { workspace_path: getWorkspacePath(workspaceId) })
+    return apiClient.invoke('get_workspace_backup_history', {
+      workspace_path: getWorkspacePath(workspaceId),
+    })
   }
 
   /**
@@ -154,7 +160,9 @@ export class WorkspaceService {
    * Get workspace performance metrics
    */
   async getPerformanceMetrics(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_performance', { workspace_path: getWorkspacePath(workspaceId) })
+    return apiClient.invoke('get_workspace_performance', {
+      workspace_path: getWorkspacePath(workspaceId),
+    })
   }
 
   /**
@@ -171,7 +179,9 @@ export class WorkspaceService {
    * Get workspace AI status
    */
   async getWorkspaceAIStatus(workspaceId: string): Promise<ApiResponse<unknown>> {
-    return apiClient.invoke('get_workspace_ai_status', { workspace_path: getWorkspacePath(workspaceId) })
+    return apiClient.invoke('get_workspace_ai_status', {
+      workspace_path: getWorkspacePath(workspaceId),
+    })
   }
 
   /**

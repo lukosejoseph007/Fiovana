@@ -18,7 +18,7 @@ export class WorkspaceAiService {
    */
   async recommendContent(
     workspaceId: string,
-    userPreferences?: unknown
+    _userPreferences?: unknown
   ): Promise<ApiResponse<unknown[]>> {
     return apiClient.invoke('get_workspace_recommendations', {
       request: {

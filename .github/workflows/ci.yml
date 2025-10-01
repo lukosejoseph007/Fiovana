@@ -177,10 +177,12 @@ jobs:
     name: Build Tauri App
     needs: [test-rust, test-frontend, security-checks]
     strategy:
+      fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -223,11 +225,21 @@ jobs:
 
       - name: Build Tauri app (macOS)
         if: matrix.platform == 'macos-latest'
-        run: npm run tauri build -- --target aarch64-apple-darwin
+        uses: nick-fields/retry-action@v3
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run tauri build -- --target aarch64-apple-darwin
 
       - name: Build Tauri app (Linux/Windows)
         if: matrix.platform != 'macos-latest'
-        run: npm run tauri build
+        uses: nick-fields/retry-action@v3
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npm run tauri build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

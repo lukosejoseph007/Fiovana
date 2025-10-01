@@ -110,7 +110,7 @@ export class DocumentService {
     return {
       success: false,
       error: `Document with ID ${documentId} not found`,
-      metadata: { executionTime: 0 }
+      metadata: { executionTime: 0 },
     }
   }
 
