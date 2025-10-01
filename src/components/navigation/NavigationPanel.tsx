@@ -207,11 +207,16 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
 
       if (response.success && response.data) {
         const documentItems: NavigationItem[] = response.data
-          .filter(
-            doc =>
-              (doc.metadata as unknown as Record<string, unknown>)?.status === 'active' ||
-              (doc.metadata as unknown as Record<string, unknown>)?.recentlyEdited
-          )
+          .sort((a, b) => {
+            // Sort by last modified, most recent first
+            const aTime = (a.metadata as unknown as { updatedAt?: string })?.updatedAt
+              ? new Date((a.metadata as unknown as { updatedAt: string }).updatedAt).getTime()
+              : 0
+            const bTime = (b.metadata as unknown as { updatedAt?: string })?.updatedAt
+              ? new Date((b.metadata as unknown as { updatedAt: string }).updatedAt).getTime()
+              : 0
+            return bTime - aTime
+          })
           .slice(0, 10) // Show most recent 10
           .map(doc => ({
             id: doc.id,

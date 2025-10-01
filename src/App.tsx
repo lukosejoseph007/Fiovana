@@ -55,6 +55,7 @@ class ErrorBoundary extends Component<
 const AppContent: React.FC = () => {
   const { navigationCollapsed } = useLayout()
   const [viewMode, setViewMode] = useState<ViewMode>('document')
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null)
   const [activeOperation, setActiveOperation] = useState<{
     type: string
     label: string
@@ -87,7 +88,9 @@ const AppContent: React.FC = () => {
         console.log('Switching to collections view')
         setViewMode('collections')
       } else {
-        console.log('Switching to document view (default)')
+        // For document items from "Active Documents" section, open the document
+        console.log('Opening document with ID:', item.id)
+        setCurrentDocumentId(item.id)
         setViewMode('document')
       }
     },
@@ -259,7 +262,17 @@ const AppContent: React.FC = () => {
                 </ErrorBoundary>
               )
             } else {
-              return <DocumentCanvas workspaceId="default" />
+              return (
+                <DocumentCanvas
+                  workspaceId="default"
+                  documentId={currentDocumentId}
+                  onModeChange={mode => {
+                    if (mode === 'chat') {
+                      setCurrentDocumentId(null)
+                    }
+                  }}
+                />
+              )
             }
           })()}
         </AppShell.Canvas>
