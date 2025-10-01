@@ -47,10 +47,13 @@ export function initializeMockTauri() {
 
         switch (command) {
           case 'get_ai_settings':
+            console.log('🔧 Mock: Loading AI settings', mockAISettings)
             return { ...mockAISettings }
 
           case 'save_ai_settings':
-            mockAISettings = { ...mockAISettings, ...(args as MockTauriArgs).settings }
+            if ((args as MockTauriArgs).settings) {
+              mockAISettings = { ...mockAISettings, ...(args as MockTauriArgs).settings }
+            }
             console.log('🔧 Mock: Saved AI settings', mockAISettings)
             return true
 

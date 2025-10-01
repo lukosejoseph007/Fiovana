@@ -403,7 +403,9 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
       display: 'flex',
       flexDirection: 'column' as const,
       height: '100%',
-      minHeight: '400px',
+      width: '100%',
+      overflow: 'hidden' as const,
+      position: 'relative' as const,
       ...style,
     }),
     [style]
@@ -413,15 +415,14 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
     flex: 1,
     overflowY: 'auto' as const,
     padding: designTokens.spacing[2],
-    marginBottom: designTokens.spacing[4],
+    minHeight: 0,
   }
 
   const inputContainerStyles = {
     padding: designTokens.spacing[3],
     borderTop: `1px solid ${designTokens.colors.border.subtle}`,
     backgroundColor: designTokens.colors.surface.secondary,
-    position: 'sticky' as const,
-    bottom: 0,
+    flexShrink: 0,
   }
 
   const suggestionsStyles = {
@@ -454,6 +455,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
           padding: `${designTokens.spacing[2]} ${designTokens.spacing[3]}`,
           borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
           backgroundColor: designTokens.colors.surface.tertiary,
+          flexShrink: 0,
         }}
       >
         <div

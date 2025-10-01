@@ -7,6 +7,42 @@ interface CacheEntry {
   ttl: number
 }
 
+// Mock AI settings storage for development with localStorage persistence
+const SETTINGS_STORAGE_KEY = 'proxemic_ai_settings'
+
+const loadMockSettings = (): Record<string, unknown> => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY)
+    if (stored) {
+      console.log('[MOCK] Loading AI settings from localStorage')
+      return JSON.parse(stored)
+    }
+  } catch (error) {
+    console.warn('[MOCK] Failed to load settings from localStorage:', error)
+  }
+
+  // Return defaults if nothing stored
+  return {
+    provider: 'local',
+    openrouterApiKey: '',
+    anthropicApiKey: '',
+    selectedModel: 'llama3.2-3b',
+    preferLocalModels: true,
+    recentModels: [],
+  }
+}
+
+const saveMockSettings = (settings: Record<string, unknown>) => {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+    console.log('[MOCK] Saved AI settings to localStorage')
+  } catch (error) {
+    console.warn('[MOCK] Failed to save settings to localStorage:', error)
+  }
+}
+
+let mockAISettings: Record<string, unknown> = loadMockSettings()
+
 // Mock implementation for development
 const mockTauri = {
   invoke: async (command: string, args: unknown = {}) => {
@@ -267,6 +303,128 @@ const mockTauri = {
           },
         ],
         lastUpdated: new Date().toISOString(),
+      }
+    }
+
+    // AI Settings commands
+    if (command === 'get_ai_settings') {
+      // Reload from localStorage to get latest settings
+      mockAISettings = loadMockSettings()
+      console.log('[MOCK] Loading AI settings:', mockAISettings)
+      return { ...mockAISettings }
+    }
+
+    if (command === 'save_ai_settings') {
+      const argsObj = args as Record<string, unknown>
+      if (argsObj.settings && typeof argsObj.settings === 'object') {
+        mockAISettings = { ...mockAISettings, ...(argsObj.settings as Record<string, unknown>) }
+        saveMockSettings(mockAISettings) // Persist to localStorage
+      }
+      console.log('[MOCK] Saved AI settings:', mockAISettings)
+      return true
+    }
+
+    if (command === 'init_ai_system') {
+      const argsObj = args as Record<string, unknown>
+      if (argsObj.config && typeof argsObj.config === 'object') {
+        mockAISettings = { ...mockAISettings, ...(argsObj.config as Record<string, unknown>) }
+        saveMockSettings(mockAISettings) // Persist to localStorage
+      }
+      console.log('[MOCK] AI system initialized with config')
+      return true
+    }
+
+    if (command === 'test_ollama_connection') {
+      console.log('[MOCK] Testing Ollama connection')
+      return { available: mockAISettings.provider === 'local', message: 'Mock connection test' }
+    }
+
+    // AI Chat command
+    if (command === 'ai_chat') {
+      const argsObj = args as Record<string, unknown>
+      const messages = (argsObj.messages || []) as Array<{ role: string; content: string }>
+      const lastUserMessage = messages.filter(m => m.role === 'user').pop()
+      const userContent = lastUserMessage?.content || 'Hello'
+
+      console.log('[MOCK] AI Chat - responding to:', userContent)
+
+      return {
+        message: {
+          role: 'assistant',
+          content: `This is a mock AI response to: "${userContent}". In production, this would be a real AI response from ${mockAISettings.selectedModel || 'the configured AI model'}.`,
+          metadata: {},
+        },
+        usage: {
+          promptTokens: 50,
+          completionTokens: 100,
+          totalTokens: 150,
+          cost: 0.001,
+        },
+        model: mockAISettings.selectedModel || 'mock-model',
+        finishReason: 'stop',
+        metadata: {
+          provider: mockAISettings.provider || 'local',
+        },
+      }
+    }
+
+    // Get workspace health
+    if (command === 'get_workspace_health') {
+      return {
+        score: 85,
+        status: 'good',
+        issues: [],
+        recommendations: ['Keep up the good work!'],
+      }
+    }
+
+    // Get conversation suggestions
+    if (command === 'get_conversation_suggestions') {
+      console.log('[MOCK] Getting conversation suggestions')
+      return [
+        'Can you elaborate on that?',
+        'What would you like to know more about?',
+        'How can I help you with this?',
+      ]
+    }
+
+    // Analyze workspace comprehensive
+    if (command === 'analyze_workspace_comprehensive') {
+      return {
+        summary: 'Mock workspace analysis',
+        totalDocuments: 10,
+        totalSize: 1024000,
+        documentTypes: { markdown: 5, pdf: 3, text: 2 },
+        tags: ['work', 'personal', 'project'],
+      }
+    }
+
+    // AI recommend workspace content
+    if (command === 'ai_recommend_workspace_content') {
+      return {
+        recommendations: [
+          {
+            id: 'rec-1',
+            type: 'document',
+            title: 'Recommended Document',
+            reason: 'Based on your recent activity',
+            confidence: 0.85,
+          },
+        ],
+      }
+    }
+
+    // Analyze productivity patterns
+    if (command === 'analyze_productivity_patterns') {
+      return {
+        patterns: [
+          {
+            type: 'peak_hours',
+            description: 'Most productive between 9 AM - 12 PM',
+            confidence: 0.8,
+          },
+        ],
+        insights: ['You work best in the morning'],
       }
     }
 

@@ -128,23 +128,26 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
 
   const contentStyles = {
     flex: 1,
-    overflow: 'auto' as const,
     display: 'flex',
     flexDirection: 'column' as const,
     transition: `opacity ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
     opacity: isCollapsed ? 0 : 1,
+    overflow: 'hidden' as const,
   }
 
   const tabsContainerStyles = {
-    padding: `0 ${designTokens.spacing[4]}`,
-    marginBottom: designTokens.spacing[2],
+    padding: `${designTokens.spacing[2]} ${designTokens.spacing[4]}`,
+    backgroundColor: designTokens.colors.surface.secondary,
+    borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
+    flexShrink: 0,
   }
 
   const panelContentStyles = {
     flex: 1,
-    overflow: 'auto' as const,
     display: 'flex',
     flexDirection: 'column' as const,
+    overflow: 'hidden' as const,
+    minHeight: 0,
   }
 
   if (isCollapsed && collapsible) {
@@ -181,49 +184,40 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
         )}
       </div>
 
-      {/* Panel Content */}
+      {/* Tabs - Fixed at top */}
+      <div style={tabsContainerStyles}>
+        <Tabs value={activeMode} onChange={handleModeChange} variant="minimal" size="sm" fullWidth>
+          <Tabs.List>
+            {modes.map(mode => (
+              <Tabs.Tab
+                key={mode.id}
+                value={mode.id}
+                icon={<Icon name={mode.icon as never} size={16} />}
+              >
+                {mode.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
+      </div>
+
+      {/* Panel Content - Scrollable */}
       <div style={contentStyles}>
-        <div style={tabsContainerStyles}>
-          <Tabs
-            value={activeMode}
-            onChange={handleModeChange}
-            variant="minimal"
-            size="sm"
-            fullWidth
-          >
-            <Tabs.List>
-              {modes.map(mode => (
-                <Tabs.Tab
-                  key={mode.id}
-                  value={mode.id}
-                  icon={<Icon name={mode.icon as never} size={16} />}
-                >
-                  {mode.label}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-
-            <Tabs.Panels>
-              <Tabs.Panel value="conversation">
-                <div className="panel-content" style={panelContentStyles}>
-                  <ConversationMode contextData={contextData} />
-                </div>
-              </Tabs.Panel>
-
-              <Tabs.Panel value="document">
-                <div className="panel-content" style={panelContentStyles}>
-                  <DocumentIntelligence contextData={contextData} />
-                </div>
-              </Tabs.Panel>
-
-              <Tabs.Panel value="workspace">
-                <div className="panel-content" style={panelContentStyles}>
-                  <WorkspaceInsights contextData={contextData} />
-                </div>
-              </Tabs.Panel>
-            </Tabs.Panels>
-          </Tabs>
-        </div>
+        {activeMode === 'conversation' && (
+          <div className="panel-content" style={panelContentStyles}>
+            <ConversationMode contextData={contextData} />
+          </div>
+        )}
+        {activeMode === 'document' && (
+          <div className="panel-content" style={panelContentStyles}>
+            <DocumentIntelligence contextData={contextData} />
+          </div>
+        )}
+        {activeMode === 'workspace' && (
+          <div className="panel-content" style={panelContentStyles}>
+            <WorkspaceInsights contextData={contextData} />
+          </div>
+        )}
       </div>
 
       {/* Inline Styles for Hover Effects */}

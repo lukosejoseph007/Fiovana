@@ -310,7 +310,8 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
       display: 'flex',
       flexDirection: 'column' as const,
       height: '100%',
-      minHeight: '400px',
+      width: '100%',
+      overflow: 'hidden' as const,
       ...style,
     }),
     [style]
@@ -320,17 +321,20 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: designTokens.spacing[4],
     padding: designTokens.spacing[3],
     backgroundColor: designTokens.colors.surface.tertiary,
     borderRadius: designTokens.borderRadius.md,
     border: `1px solid ${designTokens.colors.border.subtle}`,
+    flexShrink: 0,
+    marginBottom: designTokens.spacing[3],
   }
 
   const scrollContainerStyles = {
     flex: 1,
     overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
     padding: `0 ${designTokens.spacing[1]}`,
+    minHeight: 0,
   }
 
   const metricsGridStyles = {

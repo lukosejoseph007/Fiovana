@@ -12,6 +12,7 @@ import SmartCollections from './components/collections/SmartCollections'
 import { useLayout } from './components/layout/useLayoutContext'
 import GenerationModal from './components/generation/GenerationModal'
 import StyleTransfer from './components/generation/StyleTransfer'
+import { AIProvidersModal } from './components/settings/AIProvidersModal'
 
 type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
 
@@ -60,6 +61,7 @@ const AppContent: React.FC = () => {
   } | null>(null)
   const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false)
   const [isStyleTransferModalOpen, setIsStyleTransferModalOpen] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(
@@ -90,6 +92,11 @@ const AppContent: React.FC = () => {
 
   const handleLogoClick = useCallback(() => {
     setViewMode('document')
+  }, [])
+
+  const handleSettingsClick = useCallback(() => {
+    console.log('Settings button clicked')
+    setIsSettingsModalOpen(true)
   }, [])
 
   const handleOperationTrigger = useCallback(async (operationType: string) => {
@@ -167,7 +174,11 @@ const AppContent: React.FC = () => {
     <>
       {/* Header */}
       <AppShell.Header>
-        <HeaderBar onLogoClick={handleLogoClick} onOperationTrigger={handleOperationTrigger} />
+        <HeaderBar
+          onLogoClick={handleLogoClick}
+          onOperationTrigger={handleOperationTrigger}
+          onSettingsClick={handleSettingsClick}
+        />
       </AppShell.Header>
 
       {/* Main Content Area */}
@@ -355,6 +366,14 @@ const AppContent: React.FC = () => {
             console.log('Apply style:', result)
             setIsStyleTransferModalOpen(false)
           }}
+        />
+      )}
+
+      {/* AI Settings Modal */}
+      {isSettingsModalOpen && (
+        <AIProvidersModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
 
