@@ -45,6 +45,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
   const [recentSessions, setRecentSessions] = useState<ConversationSession[]>([])
   const [workspaceHealth, setWorkspaceHealth] = useState<WorkspaceHealth | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null)
 
   // Handle sending messages
   const handleSendMessage = useCallback(
@@ -217,18 +218,39 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
     }
   }, [workspaceId])
 
-  // Handle file drop
-  const handleFileDrop = useCallback(
-    async (files: FileList) => {
-      setIsDragOver(false)
+  // Handle file drop - show options
+  const handleFileDrop = useCallback(async (files: FileList) => {
+    setIsDragOver(false)
 
-      if (files.length === 0) return
+    if (files.length === 0) return
 
-      // Handle document import - this would typically upload and process files
-      const fileNames = Array.from(files).map(file => file.name)
-      const message = `I've uploaded ${fileNames.length} file(s): ${fileNames.join(', ')}. Please analyze ${
-        fileNames.length === 1 ? 'it' : 'them'
-      } and let me know what you find.`
+    // Show options for user to choose
+    setPendingFiles(Array.from(files))
+  }, [])
+
+  // Execute upload action based on user choice
+  const executeUploadAction = useCallback(
+    async (action: 'analyze' | 'upload' | 'compare', files: File[]) => {
+      setPendingFiles(null)
+
+      const fileNames = files.map(file => file.name)
+      let message = ''
+
+      switch (action) {
+        case 'analyze':
+          message = `I've uploaded ${fileNames.length} file(s): ${fileNames.join(', ')}. Please analyze ${
+            fileNames.length === 1 ? 'it' : 'them'
+          } and let me know what you find.`
+          break
+        case 'upload':
+          message = `I've uploaded ${fileNames.length} file(s): ${fileNames.join(', ')}. They're ready for use.`
+          break
+        case 'compare':
+          message = `I've uploaded ${fileNames.length} file(s): ${fileNames.join(', ')}. Please compare ${
+            fileNames.length === 1 ? 'it' : 'them'
+          } with existing documents.`
+          break
+      }
 
       await handleSendMessage(message)
     },
@@ -279,6 +301,58 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
     },
     [onModeChange]
   )
+
+  // Detect document operations in AI messages
+  const detectDocumentOperation = useCallback((message: Message) => {
+    if (message.senderId !== 'assistant') return null
+
+    const content = message.content.toLowerCase()
+    const operations = [
+      {
+        keywords: ['uploaded', 'upload', 'imported', 'import'],
+        type: 'upload' as const,
+        icon: 'Document' as const,
+        title: 'Document Uploaded',
+        color: designTokens.colors.accent.success,
+      },
+      {
+        keywords: ['analyzed', 'analyze', 'analysis'],
+        type: 'analyze' as const,
+        icon: 'Search' as const,
+        title: 'Analysis Complete',
+        color: designTokens.colors.accent.ai,
+      },
+      {
+        keywords: ['compared', 'comparison', 'compare'],
+        type: 'compare' as const,
+        icon: 'Compare' as const,
+        title: 'Comparison Complete',
+        color: designTokens.colors.accent.semantic,
+      },
+      {
+        keywords: ['generated', 'generate', 'created'],
+        type: 'generate' as const,
+        icon: 'Generate' as const,
+        title: 'Content Generated',
+        color: designTokens.colors.accent.success,
+      },
+      {
+        keywords: ['deleted', 'removed', 'remove'],
+        type: 'delete' as const,
+        icon: 'X' as const,
+        title: 'Document Removed',
+        color: designTokens.colors.accent.alert,
+      },
+    ]
+
+    for (const op of operations) {
+      if (op.keywords.some(keyword => content.includes(keyword))) {
+        return op
+      }
+    }
+
+    return null
+  }, [])
 
   // Handle suggestion acceptance
   const handleSuggestionAccept = useCallback(
@@ -390,6 +464,138 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
             <Icon name="Document" size="xl" />
             <div style={{ marginTop: designTokens.spacing[2] }}>Drop documents here to analyze</div>
           </div>
+        </div>
+      )}
+
+      {/* Upload Options Dialog */}
+      {pendingFiles && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `${designTokens.colors.surface.primary}E6`,
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: designTokens.zIndex.modal,
+          }}
+          onClick={() => setPendingFiles(null)}
+        >
+          <Card
+            variant="glass"
+            style={{
+              maxWidth: '500px',
+              padding: designTokens.spacing[6],
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: designTokens.spacing[4] }}>
+              <h3
+                style={{
+                  fontSize: designTokens.typography.fontSize.xl,
+                  fontWeight: designTokens.typography.fontWeight.semibold,
+                  color: designTokens.colors.text.primary,
+                  marginBottom: designTokens.spacing[2],
+                }}
+              >
+                Upload {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''}
+              </h3>
+              <p
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  color: designTokens.colors.text.secondary,
+                }}
+              >
+                {pendingFiles.map(f => f.name).join(', ')}
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: designTokens.spacing[3],
+              }}
+            >
+              <Button
+                variant="primary"
+                onClick={() => executeUploadAction('analyze', pendingFiles)}
+                style={{ justifyContent: 'flex-start', gap: designTokens.spacing[3] }}
+              >
+                <Icon name="Search" size={18} />
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: designTokens.typography.fontWeight.semibold }}>
+                    Upload and analyze
+                  </div>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.xs,
+                      opacity: 0.8,
+                      marginTop: designTokens.spacing[0.5],
+                    }}
+                  >
+                    Process and extract insights
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={() => executeUploadAction('upload', pendingFiles)}
+                style={{ justifyContent: 'flex-start', gap: designTokens.spacing[3] }}
+              >
+                <Icon name="Document" size={18} />
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: designTokens.typography.fontWeight.semibold }}>
+                    Upload only
+                  </div>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.xs,
+                      opacity: 0.8,
+                      marginTop: designTokens.spacing[0.5],
+                    }}
+                  >
+                    Add to workspace without analysis
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={() => executeUploadAction('compare', pendingFiles)}
+                style={{ justifyContent: 'flex-start', gap: designTokens.spacing[3] }}
+              >
+                <Icon name="Compare" size={18} />
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: designTokens.typography.fontWeight.semibold }}>
+                    Compare with existing
+                  </div>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.xs,
+                      opacity: 0.8,
+                      marginTop: designTokens.spacing[0.5],
+                    }}
+                  >
+                    Find similar documents and differences
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() => setPendingFiles(null)}
+                style={{ marginTop: designTokens.spacing[2] }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Card>
         </div>
       )}
 
@@ -564,6 +770,74 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                     {workspaceHealth
                       ? 'How can I help you today?'
                       : 'What would you like to work on?'}
+                  </div>
+                </div>
+
+                {/* Example Prompts */}
+                <div
+                  style={{
+                    marginBottom: designTokens.spacing[12],
+                    maxWidth: '700px',
+                    margin: '0 auto',
+                    paddingBottom: designTokens.spacing[8],
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: designTokens.typography.fontSize.sm,
+                      fontWeight: designTokens.typography.fontWeight.medium,
+                      color: designTokens.colors.text.secondary,
+                      marginBottom: designTokens.spacing[3],
+                      textAlign: 'center',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Try asking me to...
+                  </h3>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: designTokens.spacing[2],
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {[
+                      '📄 Upload my latest documentation',
+                      '🔍 Find documents about authentication',
+                      '📝 Compare the old and new user guides',
+                      '🗑️ Remove outdated training materials',
+                      '📊 Show me workspace health and gaps',
+                    ].map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentInput(prompt.replace(/^[^\s]+\s/, ''))}
+                        style={{
+                          padding: `${designTokens.spacing[2]} ${designTokens.spacing[3]}`,
+                          backgroundColor: designTokens.colors.surface.secondary,
+                          border: `1px solid ${designTokens.colors.border.subtle}`,
+                          borderRadius: designTokens.borderRadius.full,
+                          color: designTokens.colors.text.secondary,
+                          fontSize: designTokens.typography.fontSize.sm,
+                          cursor: 'pointer',
+                          transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.backgroundColor = designTokens.colors.state.hover
+                          e.currentTarget.style.borderColor = designTokens.colors.accent.ai
+                          e.currentTarget.style.color = designTokens.colors.text.primary
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.backgroundColor =
+                            designTokens.colors.surface.secondary
+                          e.currentTarget.style.borderColor = designTokens.colors.border.subtle
+                          e.currentTarget.style.color = designTokens.colors.text.secondary
+                        }}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -748,65 +1022,147 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
             )}
 
             {/* Messages */}
-            {messages.map(message => (
-              <div
-                key={message.id}
-                style={{
-                  display: 'flex',
-                  marginBottom: designTokens.spacing[4],
-                  alignItems: 'flex-start',
-                  justifyContent: message.senderId === 'user' ? 'flex-end' : 'flex-start',
-                }}
-              >
+            {messages.map(message => {
+              const operation = detectDocumentOperation(message)
+
+              return (
                 <div
+                  key={message.id}
                   style={{
-                    maxWidth: '70%',
-                    padding: designTokens.spacing[3],
-                    borderRadius: designTokens.borderRadius.lg,
-                    background:
-                      message.senderId === 'user'
-                        ? designTokens.colors.accent.ai
-                        : message.senderId === 'system'
-                          ? designTokens.colors.accent.alert
-                          : designTokens.colors.surface.secondary,
-                    color:
-                      message.senderId === 'user'
-                        ? designTokens.colors.surface.primary
-                        : designTokens.colors.text.primary,
+                    display: 'flex',
+                    marginBottom: designTokens.spacing[4],
+                    alignItems: 'flex-start',
+                    justifyContent: message.senderId === 'user' ? 'flex-end' : 'flex-start',
+                    flexDirection: 'column',
+                    width: '100%',
                   }}
                 >
                   <div
                     style={{
-                      fontSize: designTokens.typography.fontSize.base,
-                      lineHeight: designTokens.typography.lineHeight.normal,
-                      marginBottom:
-                        message.metadata && Object.keys(message.metadata).length > 0
-                          ? designTokens.spacing[2]
-                          : 0,
+                      maxWidth: '70%',
+                      padding: designTokens.spacing[3],
+                      borderRadius: designTokens.borderRadius.lg,
+                      background:
+                        message.senderId === 'user'
+                          ? designTokens.colors.accent.ai
+                          : message.senderId === 'system'
+                            ? designTokens.colors.accent.alert
+                            : designTokens.colors.surface.secondary,
+                      color:
+                        message.senderId === 'user'
+                          ? designTokens.colors.surface.primary
+                          : designTokens.colors.text.primary,
+                      alignSelf: message.senderId === 'user' ? 'flex-end' : 'flex-start',
                     }}
                   >
-                    {message.content}
-                  </div>
-                  {message.metadata?.model && (
                     <div
                       style={{
-                        fontSize: designTokens.typography.fontSize.xs,
-                        opacity: 0.7,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: designTokens.spacing[2],
+                        fontSize: designTokens.typography.fontSize.base,
+                        lineHeight: designTokens.typography.lineHeight.normal,
+                        marginBottom:
+                          message.metadata && Object.keys(message.metadata).length > 0
+                            ? designTokens.spacing[2]
+                            : 0,
                       }}
                     >
-                      <span>{message.metadata.model}</span>
-                      {message.metadata.tokens && <span>• {message.metadata.tokens} tokens</span>}
-                      {message.metadata.confidence && (
-                        <span>• {Math.round(message.metadata.confidence * 100)}% confident</span>
-                      )}
+                      {message.content}
                     </div>
+                    {message.metadata?.model && (
+                      <div
+                        style={{
+                          fontSize: designTokens.typography.fontSize.xs,
+                          opacity: 0.7,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: designTokens.spacing[2],
+                        }}
+                      >
+                        <span>{message.metadata.model}</span>
+                        {message.metadata.tokens && <span>• {message.metadata.tokens} tokens</span>}
+                        {message.metadata.confidence && (
+                          <span>• {Math.round(message.metadata.confidence * 100)}% confident</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Operation Feedback Card */}
+                  {operation && (
+                    <Card
+                      variant="glass"
+                      style={{
+                        marginTop: designTokens.spacing[2],
+                        maxWidth: '70%',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: designTokens.spacing[3],
+                          padding: designTokens.spacing[1],
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: designTokens.borderRadius.md,
+                            backgroundColor: `${operation.color}20`,
+                          }}
+                        >
+                          <Icon name={operation.icon} size={16} color={operation.color} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              fontWeight: designTokens.typography.fontWeight.semibold,
+                              fontSize: designTokens.typography.fontSize.sm,
+                              color: designTokens.colors.text.primary,
+                            }}
+                          >
+                            {operation.title}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: designTokens.typography.fontSize.xs,
+                              color: designTokens.colors.text.secondary,
+                              marginTop: designTokens.spacing[0.5],
+                            }}
+                          >
+                            {operation.type === 'upload' && 'Ready for analysis'}
+                            {operation.type === 'analyze' && 'View results and insights'}
+                            {operation.type === 'compare' && 'View comparison details'}
+                            {operation.type === 'generate' && 'Content is ready to use'}
+                            {operation.type === 'delete' && 'Successfully removed'}
+                          </div>
+                        </div>
+                        {(operation.type === 'upload' ||
+                          operation.type === 'analyze' ||
+                          operation.type === 'compare' ||
+                          operation.type === 'generate') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (operation.type === 'upload' || operation.type === 'analyze') {
+                                handleModeChange('document')
+                              }
+                            }}
+                          >
+                            View
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {/* Loading Indicator */}
             {isLoading && (

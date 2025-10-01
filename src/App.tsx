@@ -197,6 +197,19 @@ const AppContent: React.FC = () => {
           onAISettingsClick={handleAISettingsClick}
           onWorkspaceSettingsClick={handleWorkspaceSettingsClick}
           onUserPreferencesClick={handleUserPreferencesClick}
+          activeOperations={
+            activeOperation
+              ? [
+                  {
+                    id: activeOperation.type,
+                    type: activeOperation.type,
+                    label: activeOperation.label,
+                    progress: activeOperation.progress,
+                    status: activeOperation.status,
+                  },
+                ]
+              : []
+          }
         />
       </AppShell.Header>
 

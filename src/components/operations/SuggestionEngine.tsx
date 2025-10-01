@@ -244,6 +244,72 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
               metadata: { documentId },
             })
           }
+
+          // Suggest version comparison if edited multiple times
+          const editCount = (doc.metadata?.customFields?.editCount as number | undefined) || 0
+          if (editCount > 2) {
+            allSuggestions.push({
+              id: `doc-version-compare-${documentId}`,
+              type: 'compare',
+              priority: 'medium',
+              title: 'Compare with Previous Version',
+              description: `You've edited this document ${editCount} times. Compare with earlier versions to track changes.`,
+              actionLabel: 'View Changes',
+              icon: 'Compare',
+              dismissible: true,
+              confidence: 0.85,
+              estimatedTime: '1 min',
+              benefitScore: 75,
+              category: 'productivity',
+              metadata: { documentId, editCount },
+            })
+          }
+
+          // Suggest finding related documents if concepts are available
+          const concepts = (doc.metadata?.customFields?.concepts as Array<string> | undefined) || []
+          if (concepts.length > 0 && allDocsResult.success && allDocsResult.data) {
+            const docCount = allDocsResult.data.length
+            if (docCount > 3) {
+              allSuggestions.push({
+                id: `doc-find-related-${documentId}`,
+                type: 'analyze',
+                priority: 'low',
+                title: 'Find Related Documents',
+                description: `${docCount - 1} other documents in your workspace may share similar concepts. Discover connections.`,
+                actionLabel: 'Find Related',
+                icon: 'Link',
+                dismissible: true,
+                confidence: 0.75,
+                estimatedTime: '2-3 min',
+                benefitScore: 65,
+                category: 'learning',
+                metadata: { documentId, conceptCount: concepts.length },
+              })
+            }
+          }
+
+          // Time-based suggestion: Recent heavy editing
+          const updatedAt = doc.updatedAt ? new Date(doc.updatedAt) : null
+          if (updatedAt && editCount > 1) {
+            const hoursSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60)
+            if (hoursSinceUpdate < 24) {
+              allSuggestions.push({
+                id: `doc-review-changes-${documentId}`,
+                type: 'review',
+                priority: 'medium',
+                title: 'Review Recent Changes',
+                description: `You've made ${editCount} edits today. Review and consolidate your changes.`,
+                actionLabel: 'Review Changes',
+                icon: 'Eye',
+                dismissible: true,
+                confidence: 0.8,
+                estimatedTime: '2-3 min',
+                benefitScore: 70,
+                category: 'quality',
+                metadata: { documentId, editCount, hoursSinceUpdate },
+              })
+            }
+          }
         }
       }
 

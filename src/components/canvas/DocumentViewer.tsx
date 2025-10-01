@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Card, Button, Icon, Badge, Tooltip } from '../ui'
+import { Card, Button, Icon, Badge, Tooltip, Dropdown } from '../ui'
 import { documentService, structureService, contentClassificationService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
@@ -520,6 +520,62 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               <Icon name="Compare" size={14} />
             </Button>
           </Tooltip>
+
+          {/* Document Actions Menu */}
+          <Dropdown
+            options={[
+              {
+                value: 'rename',
+                label: 'Rename Document',
+              },
+              {
+                value: 'download',
+                label: 'Download',
+              },
+              {
+                value: 'compare',
+                label: 'Compare with...',
+              },
+              {
+                value: 'analyze',
+                label: 'Deep Analysis',
+              },
+              {
+                value: 'divider',
+                label: '---',
+                disabled: true,
+              },
+              {
+                value: 'delete',
+                label: 'Delete',
+              },
+            ]}
+            onChange={(value: string | undefined) => {
+              if (!value || value === 'divider') return
+
+              console.log('Document action:', value)
+              // Handle actions through conversational interface
+              switch (value) {
+                case 'rename':
+                  console.log('Rename document:', documentId)
+                  break
+                case 'download':
+                  console.log('Download document:', documentId)
+                  break
+                case 'compare':
+                  console.log('Compare document:', documentId)
+                  break
+                case 'analyze':
+                  console.log('Analyze document:', documentId)
+                  break
+                case 'delete':
+                  console.log('Delete document:', documentId)
+                  break
+              }
+            }}
+            placeholder="More Actions"
+            size="sm"
+          />
 
           {onClose && (
             <Tooltip content="Close">

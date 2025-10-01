@@ -6,6 +6,14 @@ import ActionsDropdown from '../ui/ActionsDropdown'
 import SettingsDropdown from '../ui/SettingsDropdown'
 import type { ActionCategory } from '../ui/ActionsDropdown'
 
+export interface ActiveOperation {
+  id: string
+  type: string
+  label: string
+  progress?: number
+  status: 'running' | 'completed' | 'error'
+}
+
 export interface HeaderBarProps {
   className?: string
   style?: React.CSSProperties
@@ -39,6 +47,7 @@ export interface HeaderBarProps {
       path: string
     }>
   }
+  activeOperations?: ActiveOperation[]
   onWorkspaceChange?: (workspaceId: string) => void
   onSearch?: (query: string) => void
   onAISettingsClick?: () => void
@@ -57,6 +66,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   collaborators = [],
   aiStatus = { isConnected: false, isProcessing: false },
   documentContext,
+  activeOperations = [],
   onWorkspaceChange,
   onSearch: _onSearch,
   onAISettingsClick,
@@ -328,6 +338,41 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <div style={rightZoneStyles}>
           <CollaboratorAvatars collaborators={collaborators} />
           <AIStatusIndicator aiStatus={aiStatus} />
+
+          {/* Active Operations Badge */}
+          {activeOperations.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: designTokens.spacing[2],
+                padding: `${designTokens.spacing[1.5]} ${designTokens.spacing[3]}`,
+                backgroundColor: designTokens.colors.surface.secondary,
+                border: `1px solid ${designTokens.colors.border.subtle}`,
+                borderRadius: designTokens.borderRadius.full,
+              }}
+              title={`${activeOperations.length} operation${activeOperations.length !== 1 ? 's' : ''} running`}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: designTokens.colors.accent.ai,
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  color: designTokens.colors.text.primary,
+                  fontWeight: designTokens.typography.fontWeight.medium,
+                }}
+              >
+                {activeOperations.length} operation{activeOperations.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
 
           {/* Actions Dropdown */}
           {!isMobile && <ActionsDropdown categories={actionCategories} buttonIcon="Zap" />}

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import Badge from '../ui/Badge'
-import { Icon } from '../ui/Icon'
+import { Icon, type IconComponentProps } from '../ui/Icon'
 import Progress from '../ui/Progress'
 import Tooltip from '../ui/Tooltip'
 import { useLayout } from '../layout/useLayoutContext'
@@ -18,28 +18,12 @@ import {
   smartOrganizerService,
 } from '../../services'
 import { WorkspaceAnalysis, Document, SmartOrganization, ApiResponse } from '../../types'
-import { colors, spacing, typography, animation } from '../../styles/tokens'
+import { designTokens } from '../../styles/tokens'
 import { WorkspaceSettingsModal } from '../settings/WorkspaceSettingsModal'
 
-type IconName =
-  | 'Document'
-  | 'PDF'
-  | 'Word'
-  | 'PowerPoint'
-  | 'AIStatus'
-  | 'Health'
-  | 'Confidence'
-  | 'Compare'
-  | 'Generate'
-  | 'Analyze'
-  | 'Search'
-  | 'Settings'
-  | 'Workspace'
-  | 'Spinner'
-  | 'Pulse'
-  | 'User'
-  | 'Collaboration'
-  | 'ChevronDown'
+const { colors, spacing, typography, animation } = designTokens
+
+type IconName = IconComponentProps['name']
 
 interface NavigationItem {
   id: string
@@ -646,6 +630,58 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+          <Tooltip content="Upload documents">
+            <button
+              onClick={() => {
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.multiple = true
+                input.accept = '.pdf,.doc,.docx,.txt,.md,.html,.json,.xml'
+                input.onchange = async e => {
+                  const files = (e.target as HTMLInputElement).files
+                  if (files && files.length > 0) {
+                    console.log(
+                      'Files selected for upload:',
+                      Array.from(files).map(f => f.name)
+                    )
+                    // TODO: Implement file upload to backend
+                    alert(
+                      `File upload functionality needs backend implementation.\nSelected files: ${Array.from(
+                        files
+                      )
+                        .map(f => f.name)
+                        .join(', ')}`
+                    )
+                  }
+                }
+                input.click()
+              }}
+              style={{
+                background: colors.accent.ai,
+                border: 'none',
+                color: colors.surface.primary,
+                cursor: 'pointer',
+                padding: `${spacing[1]} ${spacing[2]}`,
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[1],
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.medium,
+                transition: `all ${animation.duration.fast} ${animation.easing.easeOut}`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.opacity = '0.9'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.opacity = '1'
+              }}
+            >
+              <Icon name="FilePlus" size={14} />
+              Upload
+            </button>
+          </Tooltip>
+
           <Tooltip content="Workspace settings">
             <button
               onClick={() => setIsSettingsModalOpen(true)}
@@ -917,8 +953,33 @@ const NavigationSection: React.FC<NavigationSectionProps> = ({
             </div>
           )}
 
+          {!section.loading && !section.error && section.items.length === 0 && (
+            <div
+              style={{
+                padding: spacing[4],
+                textAlign: 'center',
+                color: colors.text.tertiary,
+                fontSize: typography.fontSize.sm,
+              }}
+            >
+              <Icon
+                name="FileText"
+                size={32}
+                color={colors.text.tertiary}
+                style={{ marginBottom: spacing[2], opacity: 0.5 }}
+              />
+              <div style={{ marginBottom: spacing[1], color: colors.text.secondary }}>
+                No documents yet
+              </div>
+              <div style={{ fontSize: typography.fontSize.xs }}>
+                Click Upload above to add documents
+              </div>
+            </div>
+          )}
+
           {!section.loading &&
             !section.error &&
+            section.items.length > 0 &&
             section.items.map(item => (
               <NavigationItem key={item.id} item={item} onSelect={() => onItemSelect(item)} />
             ))}

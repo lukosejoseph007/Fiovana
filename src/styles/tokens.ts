@@ -236,6 +236,14 @@ export const animation = {
       from: { opacity: 0 },
       to: { opacity: 1 },
     },
+    fadeInUp: {
+      from: { opacity: 0, transform: 'translateY(20px)' },
+      to: { opacity: 1, transform: 'translateY(0)' },
+    },
+    fadeOutDown: {
+      from: { opacity: 1, transform: 'translateY(0)' },
+      to: { opacity: 0, transform: 'translateY(20px)' },
+    },
     slideUp: {
       from: { transform: 'translateY(10px)', opacity: 0 },
       to: { transform: 'translateY(0)', opacity: 1 },
@@ -243,6 +251,14 @@ export const animation = {
     slideDown: {
       from: { transform: 'translateY(-10px)', opacity: 0 },
       to: { transform: 'translateY(0)', opacity: 1 },
+    },
+    slideInRight: {
+      from: { transform: 'translateX(100%)', opacity: 0 },
+      to: { transform: 'translateX(0)', opacity: 1 },
+    },
+    slideInLeft: {
+      from: { transform: 'translateX(-100%)', opacity: 0 },
+      to: { transform: 'translateX(0)', opacity: 1 },
     },
     scaleIn: {
       from: { transform: 'scale(0.95)', opacity: 0 },
@@ -256,6 +272,24 @@ export const animation = {
       '0%, 100%': { boxShadow: '0 0 5px rgba(0, 212, 255, 0.5)' },
       '50%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.8)' },
     },
+    spin: {
+      from: { transform: 'rotate(0deg)' },
+      to: { transform: 'rotate(360deg)' },
+    },
+    bounce: {
+      '0%, 100%': { transform: 'translateY(0)' },
+      '50%': { transform: 'translateY(-10px)' },
+    },
+  },
+
+  // Pre-defined animation strings
+  animations: {
+    documentEnter: 'fadeInUp 0.3s ease-out',
+    documentExit: 'fadeOutDown 0.2s ease-in',
+    operationProgress: 'slideInRight 0.4s ease-out',
+    aiThinking: 'pulse 2s ease-in-out infinite',
+    messageSlideIn: 'slideInLeft 0.3s ease-out',
+    cardHover: 'scaleIn 0.2s ease-out',
   },
 } as const
 
