@@ -1,5 +1,622 @@
 [
   {
+    "id": "doc_667abad9276d93b9",
+    "path": "/home/lukosejoseph007/Desktop/proxemic/Proxemic/docs/INCIDENT_RESPONSE.md",
+    "title": "Incident Response Procedures",
+    "summary": "## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.",
+    "content": "# Incident Response Procedures\n\n## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.\n\n## Incident Classification\n\n### Severity Levels\n\n| Level | Description | Response Time | Escalation |\n|-------|-------------|---------------|------------|\n| **Critical** | System compromise, data breach, complete outage | Immediate | Executive team + Security team |\n| **High** | Major security violation, partial outage | 1 hour | Security team + Engineering |\n| **Medium** | Security policy violation, performance issues | 4 hours | Engineering team |\n| **Low** | Minor issues, configuration problems | 24 hours | On-call engineer |\n\n## Incident Response Workflow\n\n### 1. Detection and Reporting\n- **Automated Detection**: Security audit logs, system monitoring\n- **Manual Reporting**: Users report via support channels\n- **External Reports**: Security researchers, vulnerability disclosures\n\n### 2. Initial Assessment\n```rust\n// Incident assessment checklist\nfn assess_incident(event: &SecurityEvent) -> IncidentSeverity {\n    match event.event_type {\n        SecurityEventType::DataBreach => IncidentSeverity::Critical,\n        SecurityEventType::UnauthorizedAccess => IncidentSeverity::High,\n        SecurityEventType::PolicyViolation => IncidentSeverity::Medium,\n        _ => IncidentSeverity::Low,\n    }\n}\n```\n\n### 3. Containment Procedures\n#### Immediate Actions:\n- Activate safe mode (`SafeModeLevel::Emergency`)\n- Enable circuit breakers for affected operations\n- Quarantine suspicious files\n- Preserve audit logs and evidence\n\n#### Emergency Commands:\n```bash\n# Activate emergency safe mode\ncurl -X POST http://localhost:8080/api/emergency/safe-mode/emergency\n\n# Enable kill switch\ncurl -X POST http://localhost:8080/api/emergency/kill-switch/enable\n\n# Quarantine suspicious files\ncurl -X POST http://localhost:8080/api/security/quarantine --data '{\"path\":\"/suspicious/file.exe\"}'\n```\n\n### 4. Eradication and Recovery\n- Identify root cause\n- Apply security patches\n- Restore from clean backups\n- Verify system integrity\n\n### 5. Post-Incident Activities\n- Conduct root cause analysis\n- Update security controls\n- Document lessons learned\n- Update this runbook\n\n## Emergency Procedures\n\n### Kill Switch Activation\nThe system includes an emergency kill switch that can completely disable file operations:\n\n```rust\n// Emergency kill switch\npub fn activate_kill_switch() -> Result<()> {\n    let mut kill_switch = KILL_SWITCH.lock().unwrap();\n    *kill_switch = true;\n    log::error!(\"EMERGENCY: Kill switch activated\");\n    Ok(())\n}\n```\n\n### Safe Mode Escalation\nThe safe mode system supports multiple levels of restriction:\n\n```rust\npub enum SafeModeLevel {\n    Disabled,     // Normal operation\n    Restricted,   // Limited file types\n    Paranoid,     // Only text files\n    Emergency,    // No file operations\n    Lockdown,     // Complete lockdown\n}\n```\n\n## Communication Plan\n\n### Internal Communications\n- **Critical**: Immediate notification to all team members\n- **High**: Notification within 1 hour to relevant teams\n- **Medium**: Daily status updates\n- **Low**: Weekly summary reports\n\n### External Communications\n- **Data Breach**: Legal and PR team involvement\n- **Security Vulnerability**: Coordinated disclosure process\n- **Service Outage**: Customer notifications via status page\n\n## Evidence Preservation\n\n### Data to Preserve:\n- Security audit logs\n- System logs\n- Configuration backups\n- Memory dumps (if applicable)\n- Network traffic captures\n\n### Preservation Commands:\n```bash\n# Create evidence snapshot\ntar -czf evidence-$(date +%Y%m%d-%H%M%S).tar.gz \\\n    ./logs/ \\\n    ./backups/ \\\n    ./config/\n```\n\n## Recovery Procedures\n\n### Configuration Recovery\n```bash\n# Restore from last known good backup\ncurl -X POST http://localhost:8080/api/recovery/restore --data '{\"backup_id\":\"latest\"}'\n\n# Validate system integrity\ncurl http://localhost:8080/api/integrity/validate\n```\n\n### System Verification\nAfter recovery, verify:\n- All security controls are functioning\n- Audit logging is operational\n- Backup system is working\n- No residual compromise exists\n\n## Training and Drills\n\n### Quarterly Drills:\n- Tabletop exercises for various scenarios\n- Technical recovery drills\n- Communication protocol testing\n\n### Training Requirements:\n- All engineers: Basic incident response\n- Security team: Advanced incident handling\n- Management: Communication and decision-making\n\n## Contact Information\n\n### Internal Contacts:\n- **Security Lead**: security@company.com\n- **Engineering Manager**: eng@company.com\n- **On-call Engineer**: oncall@company.com\n\n### External Contacts:\n- **Legal Counsel**: legal@company.com\n- **PR Team**: pr@company.com\n- **Law Enforcement**: Local cyber crime unit\n\n## Appendix: Common Scenarios\n\n### Scenario 1: Malicious File Upload\n1. Detect via magic number validation failure\n2. Quarantine file immediately\n3. Scan system for similar files\n4. Update validation rules\n5. Notify affected users\n\n### Scenario 2: Unauthorized Access\n1. Detect via audit log anomalies\n2. Revoke compromised credentials\n3. Reset all user sessions\n4. Enhance access controls\n5. Conduct security review\n\n### Scenario 3: System Compromise\n1. Activate kill switch\n2. Isolate affected systems\n3. Preserve evidence\n4. Engage external forensics\n5. Complete rebuild from scratch\n",
+    "metadata": {
+      "basic": {
+        "file_name": "INCIDENT_RESPONSE.md",
+        "file_extension": "md",
+        "file_size": 5364,
+        "created": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 583240653
+        },
+        "modified": {
+          "secs_since_epoch": 1758010374,
+          "nanos_since_epoch": 583240653
+        },
+        "accessed": {
+          "secs_since_epoch": 1759261305,
+          "nanos_since_epoch": 856395752
+        },
+        "is_file": true,
+        "is_dir": false,
+        "is_symlink": false
+      },
+      "content": {
+        "detected_mime_type": "text/plain",
+        "encoding": "UTF-8",
+        "line_endings": "LF",
+        "preview": "# Incident Response Procedures\n\n## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.\n",
+        "language": "English",
+        "stats": {
+          "char_count": 5364,
+          "word_count": 684,
+          "line_count": 190,
+          "paragraph_count": 39,
+          "binary_ratio": 0.0
+        }
+      },
+      "security": {
+        "permissions": 33204,
+        "is_executable": false,
+        "is_hidden": false,
+        "has_extended_attributes": false,
+        "security_flags": []
+      },
+      "technical": {
+        "entropy": 5.006341863624352,
+        "compression_ratio": 1.0267993874425727,
+        "checksums": {
+          "sha256": "beeddf62f9b6229a90aa11b31ef3a01424449d8dd70a56a412460cff395409b7"
+        },
+        "structure": {
+          "has_structure": false,
+          "format_version": null,
+          "embedded_resources": 0,
+          "sections": []
+        }
+      },
+      "document": {
+        "title": "# Incident Response Procedures",
+        "author": null,
+        "subject": null,
+        "keywords": [],
+        "creator": "Text Editor",
+        "producer": null,
+        "creation_date": null,
+        "modification_date": null,
+        "page_count": 190,
+        "document_language": null,
+        "format_properties": {}
+      }
+    },
+    "structure": {
+      "document_type": "Procedure",
+      "sections": [
+        {
+          "id": "section_0",
+          "title": "Incident Response Procedures",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 0,
+          "length": 32
+        },
+        {
+          "id": "section_1",
+          "title": "Overview",
+          "level": 1,
+          "content": "This document outlines the incident response procedures for security events and system failures in the Proxemic application.\n",
+          "keywords": [],
+          "position": 32,
+          "length": 138
+        },
+        {
+          "id": "section_2",
+          "title": "Incident Classification",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 170,
+          "length": 28
+        },
+        {
+          "id": "section_3",
+          "title": "Severity Levels",
+          "level": 2,
+          "content": "| Level | Description | Response Time | Escalation |\n|-------|-------------|---------------|------------|\n| **Critical** | System compromise, data breach, complete outage | Immediate | Executive team + Security team |\n| **High** | Major security violation, partial outage | 1 hour | Security team + Engineering |\n| **Medium** | Security policy violation, performance issues | 4 hours | Engineering team |\n| **Low** | Minor issues, configuration problems | 24 hours | On-call engineer |\n",
+          "keywords": [],
+          "position": 198,
+          "length": 508
+        },
+        {
+          "id": "section_4",
+          "title": "Incident Response Workflow",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 706,
+          "length": 31
+        },
+        {
+          "id": "section_5",
+          "title": "1. Detection and Reporting",
+          "level": 2,
+          "content": "- **Automated Detection**: Security audit logs, system monitoring\n- **Manual Reporting**: Users report via support channels\n- **External Reports**: Security researchers, vulnerability disclosures\n",
+          "keywords": [],
+          "position": 737,
+          "length": 228
+        },
+        {
+          "id": "section_6",
+          "title": "2. Initial Assessment",
+          "level": 2,
+          "content": "```rust\n// Incident assessment checklist\nfn assess_incident(event: &SecurityEvent) -> IncidentSeverity {\n    match event.event_type {",
+          "keywords": [],
+          "position": 965,
+          "length": 160
+        },
+        {
+          "id": "section_7",
+          "title": "SecurityEventType::DataBreach => IncidentSeverity::Critical,",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1125,
+          "length": 69
+        },
+        {
+          "id": "section_8",
+          "title": "SecurityEventType::UnauthorizedAccess => IncidentSeverity::High,",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1194,
+          "length": 73
+        },
+        {
+          "id": "section_9",
+          "title": "SecurityEventType::PolicyViolation => IncidentSeverity::Medium,",
+          "level": 0,
+          "content": "        _ => IncidentSeverity::Low,\n    }\n}\n```\n",
+          "keywords": [],
+          "position": 1267,
+          "length": 121
+        },
+        {
+          "id": "section_10",
+          "title": "3. Containment Procedures",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 1388,
+          "length": 30
+        },
+        {
+          "id": "section_11",
+          "title": "Immediate Actions:",
+          "level": 3,
+          "content": "- Activate safe mode (`SafeModeLevel::Emergency`)\n- Enable circuit breakers for affected operations\n- Quarantine suspicious files\n- Preserve audit logs and evidence\n",
+          "keywords": [],
+          "position": 1418,
+          "length": 190
+        },
+        {
+          "id": "section_12",
+          "title": "Emergency Commands:",
+          "level": 3,
+          "content": "```bash",
+          "keywords": [],
+          "position": 1608,
+          "length": 33
+        },
+        {
+          "id": "section_13",
+          "title": "Activate emergency safe mode",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/safe-mode/emergency\n",
+          "keywords": [],
+          "position": 1641,
+          "length": 101
+        },
+        {
+          "id": "section_14",
+          "title": "Enable kill switch",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/emergency/kill-switch/enable\n",
+          "keywords": [],
+          "position": 1742,
+          "length": 90
+        },
+        {
+          "id": "section_15",
+          "title": "Quarantine suspicious files",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/security/quarantine --data '{\"path\":\"/suspicious/file.exe\"}'\n```\n",
+          "keywords": [],
+          "position": 1832,
+          "length": 135
+        },
+        {
+          "id": "section_16",
+          "title": "4. Eradication and Recovery",
+          "level": 2,
+          "content": "- Identify root cause\n- Apply security patches\n- Restore from clean backups\n- Verify system integrity\n",
+          "keywords": [],
+          "position": 1967,
+          "length": 135
+        },
+        {
+          "id": "section_17",
+          "title": "5. Post-Incident Activities",
+          "level": 2,
+          "content": "- Conduct root cause analysis\n- Update security controls\n- Document lessons learned\n- Update this runbook\n",
+          "keywords": [],
+          "position": 2102,
+          "length": 139
+        },
+        {
+          "id": "section_18",
+          "title": "Emergency Procedures",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 2241,
+          "length": 25
+        },
+        {
+          "id": "section_19",
+          "title": "Kill Switch Activation",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 2266,
+          "length": 27
+        },
+        {
+          "id": "section_20",
+          "title": "The system includes an emergency kill switch that can completely disable file operations:",
+          "level": 0,
+          "content": "```rust\n// Emergency kill switch\npub fn activate_kill_switch() -> Result<()> {\n    let mut kill_switch = KILL_SWITCH.lock().unwrap();\n    *kill_switch = true;\n    log::error!(\"EMERGENCY: Kill switch activated\");",
+          "keywords": [],
+          "position": 2293,
+          "length": 303
+        },
+        {
+          "id": "section_21",
+          "title": "Ok(())",
+          "level": 0,
+          "content": "}\n```\n",
+          "keywords": [],
+          "position": 2596,
+          "length": 18
+        },
+        {
+          "id": "section_22",
+          "title": "Safe Mode Escalation",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 2614,
+          "length": 25
+        },
+        {
+          "id": "section_23",
+          "title": "The safe mode system supports multiple levels of restriction:",
+          "level": 0,
+          "content": "```rust\npub enum SafeModeLevel {",
+          "keywords": [],
+          "position": 2639,
+          "length": 96
+        },
+        {
+          "id": "section_24",
+          "title": "Disabled,     // Normal operation",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2735,
+          "length": 38
+        },
+        {
+          "id": "section_25",
+          "title": "Restricted,   // Limited file types",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2773,
+          "length": 40
+        },
+        {
+          "id": "section_26",
+          "title": "Paranoid,     // Only text files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2813,
+          "length": 37
+        },
+        {
+          "id": "section_27",
+          "title": "Emergency,    // No file operations",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2850,
+          "length": 40
+        },
+        {
+          "id": "section_28",
+          "title": "Lockdown,     // Complete lockdown",
+          "level": 0,
+          "content": "}\n```\n",
+          "keywords": [],
+          "position": 2890,
+          "length": 46
+        },
+        {
+          "id": "section_29",
+          "title": "Communication Plan",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 2936,
+          "length": 23
+        },
+        {
+          "id": "section_30",
+          "title": "Internal Communications",
+          "level": 2,
+          "content": "- **Critical**: Immediate notification to all team members\n- **High**: Notification within 1 hour to relevant teams\n- **Medium**: Daily status updates\n- **Low**: Weekly summary reports\n",
+          "keywords": [],
+          "position": 2959,
+          "length": 214
+        },
+        {
+          "id": "section_31",
+          "title": "External Communications",
+          "level": 2,
+          "content": "- **Data Breach**: Legal and PR team involvement\n- **Security Vulnerability**: Coordinated disclosure process\n- **Service Outage**: Customer notifications via status page\n",
+          "keywords": [],
+          "position": 3173,
+          "length": 200
+        },
+        {
+          "id": "section_32",
+          "title": "Evidence Preservation",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 3373,
+          "length": 26
+        },
+        {
+          "id": "section_33",
+          "title": "Data to Preserve:",
+          "level": 2,
+          "content": "- Security audit logs\n- System logs\n- Configuration backups\n- Memory dumps (if applicable)\n- Network traffic captures\n",
+          "keywords": [],
+          "position": 3399,
+          "length": 141
+        },
+        {
+          "id": "section_34",
+          "title": "Preservation Commands:",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 3540,
+          "length": 35
+        },
+        {
+          "id": "section_35",
+          "title": "Create evidence snapshot",
+          "level": 0,
+          "content": "tar -czf evidence-$(date +%Y%m%d-%H%M%S).tar.gz \\\n    ./logs/ \\\n    ./backups/ \\\n    ./config/\n```\n",
+          "keywords": [],
+          "position": 3575,
+          "length": 127
+        },
+        {
+          "id": "section_36",
+          "title": "Recovery Procedures",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 3702,
+          "length": 24
+        },
+        {
+          "id": "section_37",
+          "title": "Configuration Recovery",
+          "level": 2,
+          "content": "```bash",
+          "keywords": [],
+          "position": 3726,
+          "length": 35
+        },
+        {
+          "id": "section_38",
+          "title": "Restore from last known good backup",
+          "level": 0,
+          "content": "curl -X POST http://localhost:8080/api/recovery/restore --data '{\"backup_id\":\"latest\"}'\n",
+          "keywords": [],
+          "position": 3761,
+          "length": 127
+        },
+        {
+          "id": "section_39",
+          "title": "Validate system integrity",
+          "level": 0,
+          "content": "curl http://localhost:8080/api/integrity/validate\n```\n",
+          "keywords": [],
+          "position": 3888,
+          "length": 83
+        },
+        {
+          "id": "section_40",
+          "title": "System Verification",
+          "level": 2,
+          "content": "",
+          "keywords": [],
+          "position": 3971,
+          "length": 24
+        },
+        {
+          "id": "section_41",
+          "title": "After recovery, verify:",
+          "level": 0,
+          "content": "- All security controls are functioning\n- Audit logging is operational\n- Backup system is working\n- No residual compromise exists\n",
+          "keywords": [],
+          "position": 3995,
+          "length": 155
+        },
+        {
+          "id": "section_42",
+          "title": "Training and Drills",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 4150,
+          "length": 24
+        },
+        {
+          "id": "section_43",
+          "title": "Quarterly Drills:",
+          "level": 2,
+          "content": "- Tabletop exercises for various scenarios\n- Technical recovery drills\n- Communication protocol testing\n",
+          "keywords": [],
+          "position": 4174,
+          "length": 127
+        },
+        {
+          "id": "section_44",
+          "title": "Training Requirements:",
+          "level": 2,
+          "content": "- All engineers: Basic incident response\n- Security team: Advanced incident handling\n- Management: Communication and decision-making\n",
+          "keywords": [],
+          "position": 4301,
+          "length": 161
+        },
+        {
+          "id": "section_45",
+          "title": "Contact Information",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 4462,
+          "length": 24
+        },
+        {
+          "id": "section_46",
+          "title": "Internal Contacts:",
+          "level": 2,
+          "content": "- **Security Lead**: security@company.com\n- **Engineering Manager**: eng@company.com\n- **On-call Engineer**: oncall@company.com\n",
+          "keywords": [],
+          "position": 4486,
+          "length": 152
+        },
+        {
+          "id": "section_47",
+          "title": "External Contacts:",
+          "level": 2,
+          "content": "- **Legal Counsel**: legal@company.com\n- **PR Team**: pr@company.com\n- **Law Enforcement**: Local cyber crime unit\n",
+          "keywords": [],
+          "position": 4638,
+          "length": 139
+        },
+        {
+          "id": "section_48",
+          "title": "Appendix: Common Scenarios",
+          "level": 1,
+          "content": "",
+          "keywords": [],
+          "position": 4777,
+          "length": 31
+        },
+        {
+          "id": "section_49",
+          "title": "Scenario 1: Malicious File Upload",
+          "level": 2,
+          "content": "1. Detect via magic number validation failure\n2. Quarantine file immediately\n3. Scan system for similar files\n4. Update validation rules\n5. Notify affected users\n",
+          "keywords": [],
+          "position": 4808,
+          "length": 201
+        },
+        {
+          "id": "section_50",
+          "title": "Scenario 2: Unauthorized Access",
+          "level": 2,
+          "content": "1. Detect via audit log anomalies\n2. Revoke compromised credentials\n3. Reset all user sessions\n4. Enhance access controls\n5. Conduct security review\n",
+          "keywords": [],
+          "position": 5009,
+          "length": 186
+        },
+        {
+          "id": "section_51",
+          "title": "Scenario 3: System Compromise",
+          "level": 2,
+          "content": "1. Activate kill switch\n2. Isolate affected systems\n3. Preserve evidence\n4. Engage external forensics\n5. Complete rebuild from scratch",
+          "keywords": [
+            "affected",
+            "switch",
+            "complete",
+            "scratch",
+            "external",
+            "kill",
+            "systems",
+            "forensics",
+            "isolate",
+            "preserve",
+            "engage",
+            "rebuild",
+            "evidence",
+            "from",
+            "activate"
+          ],
+          "position": 5195,
+          "length": 169
+        }
+      ],
+      "toc": [
+        {
+          "title": "**Automated Detection**: Security audit logs, system monitoring",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**Manual Reporting**: Users report via support channels",
+          "level": 0,
+          "page": null,
+          "position": null
+        },
+        {
+          "title": "**External Reports**: Security researchers, vulnerability disclosures",
+          "level": 0,
+          "page": null,
+          "position": null
+        }
+      ],
+      "page_count": null,
+      "has_images": false,
+      "has_tables": true,
+      "has_code": true
+    },
+    "keywords": [
+      "affected",
+      "file",
+      "switch",
+      "mode",
+      "safe",
+      "incident",
+      "post",
+      "recovery",
+      "external",
+      "audit",
+      "files",
+      "team",
+      "evidence",
+      "procedures",
+      "curl",
+      "response",
+      "security",
+      "kill",
+      "system",
+      "emergency"
+    ],
+    "content_hash": "5420a5b579a0cf0b",
+    "indexed_at": {
+      "secs_since_epoch": 1759353156,
+      "nanos_since_epoch": 871139993
+    },
+    "index_version": 1
+  },
+  {
     "id": "doc_831a38754656ff15",
     "path": "/home/lukosejoseph007/Downloads/Edge SWG R2 Techical Specialist Exam Study Guide.docx",
     "title": "Exam Study Guide",
@@ -19,8 +636,8 @@
           "nanos_since_epoch": 292379789
         },
         "accessed": {
-          "secs_since_epoch": 1758803622,
-          "nanos_since_epoch": 873302057
+          "secs_since_epoch": 1759354360,
+          "nanos_since_epoch": 557337030
         },
         "is_file": true,
         "is_dir": false,
@@ -2448,31 +3065,31 @@
       "has_code": false
     },
     "keywords": [
-      "authentication",
-      "policy",
-      "topics",
       "symantec",
+      "policy",
+      "traffic",
+      "topics",
+      "administration",
       "edge",
-      "module",
-      "course",
+      "troubleshooting",
+      "issues",
+      "authentication",
+      "applicable",
       "security",
       "exam",
-      "troubleshooting",
-      "traffic",
+      "using",
+      "module",
+      "management",
+      "course",
+      "content",
       "related",
       "with",
-      "content",
-      "issues",
-      "management",
-      "diagnostics",
-      "using",
-      "applicable",
-      "administration"
+      "introduction"
     ],
     "content_hash": "b8f7613770bbf5ab",
     "indexed_at": {
-      "secs_since_epoch": 1758824659,
-      "nanos_since_epoch": 871328445
+      "secs_since_epoch": 1759395820,
+      "nanos_since_epoch": 332286509
     },
     "index_version": 1
   },
@@ -5117,623 +5734,6 @@
     "indexed_at": {
       "secs_since_epoch": 1759354663,
       "nanos_since_epoch": 618166833
-    },
-    "index_version": 1
-  },
-  {
-    "id": "doc_667abad9276d93b9",
-    "path": "/home/lukosejoseph007/Desktop/proxemic/Proxemic/docs/INCIDENT_RESPONSE.md",
-    "title": "Incident Response Procedures",
-    "summary": "## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.",
-    "content": "# Incident Response Procedures\n\n## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.\n\n## Incident Classification\n\n### Severity Levels\n\n| Level | Description | Response Time | Escalation |\n|-------|-------------|---------------|------------|\n| **Critical** | System compromise, data breach, complete outage | Immediate | Executive team + Security team |\n| **High** | Major security violation, partial outage | 1 hour | Security team + Engineering |\n| **Medium** | Security policy violation, performance issues | 4 hours | Engineering team |\n| **Low** | Minor issues, configuration problems | 24 hours | On-call engineer |\n\n## Incident Response Workflow\n\n### 1. Detection and Reporting\n- **Automated Detection**: Security audit logs, system monitoring\n- **Manual Reporting**: Users report via support channels\n- **External Reports**: Security researchers, vulnerability disclosures\n\n### 2. Initial Assessment\n```rust\n// Incident assessment checklist\nfn assess_incident(event: &SecurityEvent) -> IncidentSeverity {\n    match event.event_type {\n        SecurityEventType::DataBreach => IncidentSeverity::Critical,\n        SecurityEventType::UnauthorizedAccess => IncidentSeverity::High,\n        SecurityEventType::PolicyViolation => IncidentSeverity::Medium,\n        _ => IncidentSeverity::Low,\n    }\n}\n```\n\n### 3. Containment Procedures\n#### Immediate Actions:\n- Activate safe mode (`SafeModeLevel::Emergency`)\n- Enable circuit breakers for affected operations\n- Quarantine suspicious files\n- Preserve audit logs and evidence\n\n#### Emergency Commands:\n```bash\n# Activate emergency safe mode\ncurl -X POST http://localhost:8080/api/emergency/safe-mode/emergency\n\n# Enable kill switch\ncurl -X POST http://localhost:8080/api/emergency/kill-switch/enable\n\n# Quarantine suspicious files\ncurl -X POST http://localhost:8080/api/security/quarantine --data '{\"path\":\"/suspicious/file.exe\"}'\n```\n\n### 4. Eradication and Recovery\n- Identify root cause\n- Apply security patches\n- Restore from clean backups\n- Verify system integrity\n\n### 5. Post-Incident Activities\n- Conduct root cause analysis\n- Update security controls\n- Document lessons learned\n- Update this runbook\n\n## Emergency Procedures\n\n### Kill Switch Activation\nThe system includes an emergency kill switch that can completely disable file operations:\n\n```rust\n// Emergency kill switch\npub fn activate_kill_switch() -> Result<()> {\n    let mut kill_switch = KILL_SWITCH.lock().unwrap();\n    *kill_switch = true;\n    log::error!(\"EMERGENCY: Kill switch activated\");\n    Ok(())\n}\n```\n\n### Safe Mode Escalation\nThe safe mode system supports multiple levels of restriction:\n\n```rust\npub enum SafeModeLevel {\n    Disabled,     // Normal operation\n    Restricted,   // Limited file types\n    Paranoid,     // Only text files\n    Emergency,    // No file operations\n    Lockdown,     // Complete lockdown\n}\n```\n\n## Communication Plan\n\n### Internal Communications\n- **Critical**: Immediate notification to all team members\n- **High**: Notification within 1 hour to relevant teams\n- **Medium**: Daily status updates\n- **Low**: Weekly summary reports\n\n### External Communications\n- **Data Breach**: Legal and PR team involvement\n- **Security Vulnerability**: Coordinated disclosure process\n- **Service Outage**: Customer notifications via status page\n\n## Evidence Preservation\n\n### Data to Preserve:\n- Security audit logs\n- System logs\n- Configuration backups\n- Memory dumps (if applicable)\n- Network traffic captures\n\n### Preservation Commands:\n```bash\n# Create evidence snapshot\ntar -czf evidence-$(date +%Y%m%d-%H%M%S).tar.gz \\\n    ./logs/ \\\n    ./backups/ \\\n    ./config/\n```\n\n## Recovery Procedures\n\n### Configuration Recovery\n```bash\n# Restore from last known good backup\ncurl -X POST http://localhost:8080/api/recovery/restore --data '{\"backup_id\":\"latest\"}'\n\n# Validate system integrity\ncurl http://localhost:8080/api/integrity/validate\n```\n\n### System Verification\nAfter recovery, verify:\n- All security controls are functioning\n- Audit logging is operational\n- Backup system is working\n- No residual compromise exists\n\n## Training and Drills\n\n### Quarterly Drills:\n- Tabletop exercises for various scenarios\n- Technical recovery drills\n- Communication protocol testing\n\n### Training Requirements:\n- All engineers: Basic incident response\n- Security team: Advanced incident handling\n- Management: Communication and decision-making\n\n## Contact Information\n\n### Internal Contacts:\n- **Security Lead**: security@company.com\n- **Engineering Manager**: eng@company.com\n- **On-call Engineer**: oncall@company.com\n\n### External Contacts:\n- **Legal Counsel**: legal@company.com\n- **PR Team**: pr@company.com\n- **Law Enforcement**: Local cyber crime unit\n\n## Appendix: Common Scenarios\n\n### Scenario 1: Malicious File Upload\n1. Detect via magic number validation failure\n2. Quarantine file immediately\n3. Scan system for similar files\n4. Update validation rules\n5. Notify affected users\n\n### Scenario 2: Unauthorized Access\n1. Detect via audit log anomalies\n2. Revoke compromised credentials\n3. Reset all user sessions\n4. Enhance access controls\n5. Conduct security review\n\n### Scenario 3: System Compromise\n1. Activate kill switch\n2. Isolate affected systems\n3. Preserve evidence\n4. Engage external forensics\n5. Complete rebuild from scratch\n",
-    "metadata": {
-      "basic": {
-        "file_name": "INCIDENT_RESPONSE.md",
-        "file_extension": "md",
-        "file_size": 5364,
-        "created": {
-          "secs_since_epoch": 1758010374,
-          "nanos_since_epoch": 583240653
-        },
-        "modified": {
-          "secs_since_epoch": 1758010374,
-          "nanos_since_epoch": 583240653
-        },
-        "accessed": {
-          "secs_since_epoch": 1759261305,
-          "nanos_since_epoch": 856395752
-        },
-        "is_file": true,
-        "is_dir": false,
-        "is_symlink": false
-      },
-      "content": {
-        "detected_mime_type": "text/plain",
-        "encoding": "UTF-8",
-        "line_endings": "LF",
-        "preview": "# Incident Response Procedures\n\n## Overview\nThis document outlines the incident response procedures for security events and system failures in the Proxemic application.\n",
-        "language": "English",
-        "stats": {
-          "char_count": 5364,
-          "word_count": 684,
-          "line_count": 190,
-          "paragraph_count": 39,
-          "binary_ratio": 0.0
-        }
-      },
-      "security": {
-        "permissions": 33204,
-        "is_executable": false,
-        "is_hidden": false,
-        "has_extended_attributes": false,
-        "security_flags": []
-      },
-      "technical": {
-        "entropy": 5.006341863624352,
-        "compression_ratio": 1.0267993874425727,
-        "checksums": {
-          "sha256": "beeddf62f9b6229a90aa11b31ef3a01424449d8dd70a56a412460cff395409b7"
-        },
-        "structure": {
-          "has_structure": false,
-          "format_version": null,
-          "embedded_resources": 0,
-          "sections": []
-        }
-      },
-      "document": {
-        "title": "# Incident Response Procedures",
-        "author": null,
-        "subject": null,
-        "keywords": [],
-        "creator": "Text Editor",
-        "producer": null,
-        "creation_date": null,
-        "modification_date": null,
-        "page_count": 190,
-        "document_language": null,
-        "format_properties": {}
-      }
-    },
-    "structure": {
-      "document_type": "Procedure",
-      "sections": [
-        {
-          "id": "section_0",
-          "title": "Incident Response Procedures",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 0,
-          "length": 32
-        },
-        {
-          "id": "section_1",
-          "title": "Overview",
-          "level": 1,
-          "content": "This document outlines the incident response procedures for security events and system failures in the Proxemic application.\n",
-          "keywords": [],
-          "position": 32,
-          "length": 138
-        },
-        {
-          "id": "section_2",
-          "title": "Incident Classification",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 170,
-          "length": 28
-        },
-        {
-          "id": "section_3",
-          "title": "Severity Levels",
-          "level": 2,
-          "content": "| Level | Description | Response Time | Escalation |\n|-------|-------------|---------------|------------|\n| **Critical** | System compromise, data breach, complete outage | Immediate | Executive team + Security team |\n| **High** | Major security violation, partial outage | 1 hour | Security team + Engineering |\n| **Medium** | Security policy violation, performance issues | 4 hours | Engineering team |\n| **Low** | Minor issues, configuration problems | 24 hours | On-call engineer |\n",
-          "keywords": [],
-          "position": 198,
-          "length": 508
-        },
-        {
-          "id": "section_4",
-          "title": "Incident Response Workflow",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 706,
-          "length": 31
-        },
-        {
-          "id": "section_5",
-          "title": "1. Detection and Reporting",
-          "level": 2,
-          "content": "- **Automated Detection**: Security audit logs, system monitoring\n- **Manual Reporting**: Users report via support channels\n- **External Reports**: Security researchers, vulnerability disclosures\n",
-          "keywords": [],
-          "position": 737,
-          "length": 228
-        },
-        {
-          "id": "section_6",
-          "title": "2. Initial Assessment",
-          "level": 2,
-          "content": "```rust\n// Incident assessment checklist\nfn assess_incident(event: &SecurityEvent) -> IncidentSeverity {\n    match event.event_type {",
-          "keywords": [],
-          "position": 965,
-          "length": 160
-        },
-        {
-          "id": "section_7",
-          "title": "SecurityEventType::DataBreach => IncidentSeverity::Critical,",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1125,
-          "length": 69
-        },
-        {
-          "id": "section_8",
-          "title": "SecurityEventType::UnauthorizedAccess => IncidentSeverity::High,",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1194,
-          "length": 73
-        },
-        {
-          "id": "section_9",
-          "title": "SecurityEventType::PolicyViolation => IncidentSeverity::Medium,",
-          "level": 0,
-          "content": "        _ => IncidentSeverity::Low,\n    }\n}\n```\n",
-          "keywords": [],
-          "position": 1267,
-          "length": 121
-        },
-        {
-          "id": "section_10",
-          "title": "3. Containment Procedures",
-          "level": 2,
-          "content": "",
-          "keywords": [],
-          "position": 1388,
-          "length": 30
-        },
-        {
-          "id": "section_11",
-          "title": "Immediate Actions:",
-          "level": 3,
-          "content": "- Activate safe mode (`SafeModeLevel::Emergency`)\n- Enable circuit breakers for affected operations\n- Quarantine suspicious files\n- Preserve audit logs and evidence\n",
-          "keywords": [],
-          "position": 1418,
-          "length": 190
-        },
-        {
-          "id": "section_12",
-          "title": "Emergency Commands:",
-          "level": 3,
-          "content": "```bash",
-          "keywords": [],
-          "position": 1608,
-          "length": 33
-        },
-        {
-          "id": "section_13",
-          "title": "Activate emergency safe mode",
-          "level": 0,
-          "content": "curl -X POST http://localhost:8080/api/emergency/safe-mode/emergency\n",
-          "keywords": [],
-          "position": 1641,
-          "length": 101
-        },
-        {
-          "id": "section_14",
-          "title": "Enable kill switch",
-          "level": 0,
-          "content": "curl -X POST http://localhost:8080/api/emergency/kill-switch/enable\n",
-          "keywords": [],
-          "position": 1742,
-          "length": 90
-        },
-        {
-          "id": "section_15",
-          "title": "Quarantine suspicious files",
-          "level": 0,
-          "content": "curl -X POST http://localhost:8080/api/security/quarantine --data '{\"path\":\"/suspicious/file.exe\"}'\n```\n",
-          "keywords": [],
-          "position": 1832,
-          "length": 135
-        },
-        {
-          "id": "section_16",
-          "title": "4. Eradication and Recovery",
-          "level": 2,
-          "content": "- Identify root cause\n- Apply security patches\n- Restore from clean backups\n- Verify system integrity\n",
-          "keywords": [],
-          "position": 1967,
-          "length": 135
-        },
-        {
-          "id": "section_17",
-          "title": "5. Post-Incident Activities",
-          "level": 2,
-          "content": "- Conduct root cause analysis\n- Update security controls\n- Document lessons learned\n- Update this runbook\n",
-          "keywords": [],
-          "position": 2102,
-          "length": 139
-        },
-        {
-          "id": "section_18",
-          "title": "Emergency Procedures",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 2241,
-          "length": 25
-        },
-        {
-          "id": "section_19",
-          "title": "Kill Switch Activation",
-          "level": 2,
-          "content": "",
-          "keywords": [],
-          "position": 2266,
-          "length": 27
-        },
-        {
-          "id": "section_20",
-          "title": "The system includes an emergency kill switch that can completely disable file operations:",
-          "level": 0,
-          "content": "```rust\n// Emergency kill switch\npub fn activate_kill_switch() -> Result<()> {\n    let mut kill_switch = KILL_SWITCH.lock().unwrap();\n    *kill_switch = true;\n    log::error!(\"EMERGENCY: Kill switch activated\");",
-          "keywords": [],
-          "position": 2293,
-          "length": 303
-        },
-        {
-          "id": "section_21",
-          "title": "Ok(())",
-          "level": 0,
-          "content": "}\n```\n",
-          "keywords": [],
-          "position": 2596,
-          "length": 18
-        },
-        {
-          "id": "section_22",
-          "title": "Safe Mode Escalation",
-          "level": 2,
-          "content": "",
-          "keywords": [],
-          "position": 2614,
-          "length": 25
-        },
-        {
-          "id": "section_23",
-          "title": "The safe mode system supports multiple levels of restriction:",
-          "level": 0,
-          "content": "```rust\npub enum SafeModeLevel {",
-          "keywords": [],
-          "position": 2639,
-          "length": 96
-        },
-        {
-          "id": "section_24",
-          "title": "Disabled,     // Normal operation",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2735,
-          "length": 38
-        },
-        {
-          "id": "section_25",
-          "title": "Restricted,   // Limited file types",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2773,
-          "length": 40
-        },
-        {
-          "id": "section_26",
-          "title": "Paranoid,     // Only text files",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2813,
-          "length": 37
-        },
-        {
-          "id": "section_27",
-          "title": "Emergency,    // No file operations",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2850,
-          "length": 40
-        },
-        {
-          "id": "section_28",
-          "title": "Lockdown,     // Complete lockdown",
-          "level": 0,
-          "content": "}\n```\n",
-          "keywords": [],
-          "position": 2890,
-          "length": 46
-        },
-        {
-          "id": "section_29",
-          "title": "Communication Plan",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 2936,
-          "length": 23
-        },
-        {
-          "id": "section_30",
-          "title": "Internal Communications",
-          "level": 2,
-          "content": "- **Critical**: Immediate notification to all team members\n- **High**: Notification within 1 hour to relevant teams\n- **Medium**: Daily status updates\n- **Low**: Weekly summary reports\n",
-          "keywords": [],
-          "position": 2959,
-          "length": 214
-        },
-        {
-          "id": "section_31",
-          "title": "External Communications",
-          "level": 2,
-          "content": "- **Data Breach**: Legal and PR team involvement\n- **Security Vulnerability**: Coordinated disclosure process\n- **Service Outage**: Customer notifications via status page\n",
-          "keywords": [],
-          "position": 3173,
-          "length": 200
-        },
-        {
-          "id": "section_32",
-          "title": "Evidence Preservation",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 3373,
-          "length": 26
-        },
-        {
-          "id": "section_33",
-          "title": "Data to Preserve:",
-          "level": 2,
-          "content": "- Security audit logs\n- System logs\n- Configuration backups\n- Memory dumps (if applicable)\n- Network traffic captures\n",
-          "keywords": [],
-          "position": 3399,
-          "length": 141
-        },
-        {
-          "id": "section_34",
-          "title": "Preservation Commands:",
-          "level": 2,
-          "content": "```bash",
-          "keywords": [],
-          "position": 3540,
-          "length": 35
-        },
-        {
-          "id": "section_35",
-          "title": "Create evidence snapshot",
-          "level": 0,
-          "content": "tar -czf evidence-$(date +%Y%m%d-%H%M%S).tar.gz \\\n    ./logs/ \\\n    ./backups/ \\\n    ./config/\n```\n",
-          "keywords": [],
-          "position": 3575,
-          "length": 127
-        },
-        {
-          "id": "section_36",
-          "title": "Recovery Procedures",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 3702,
-          "length": 24
-        },
-        {
-          "id": "section_37",
-          "title": "Configuration Recovery",
-          "level": 2,
-          "content": "```bash",
-          "keywords": [],
-          "position": 3726,
-          "length": 35
-        },
-        {
-          "id": "section_38",
-          "title": "Restore from last known good backup",
-          "level": 0,
-          "content": "curl -X POST http://localhost:8080/api/recovery/restore --data '{\"backup_id\":\"latest\"}'\n",
-          "keywords": [],
-          "position": 3761,
-          "length": 127
-        },
-        {
-          "id": "section_39",
-          "title": "Validate system integrity",
-          "level": 0,
-          "content": "curl http://localhost:8080/api/integrity/validate\n```\n",
-          "keywords": [],
-          "position": 3888,
-          "length": 83
-        },
-        {
-          "id": "section_40",
-          "title": "System Verification",
-          "level": 2,
-          "content": "",
-          "keywords": [],
-          "position": 3971,
-          "length": 24
-        },
-        {
-          "id": "section_41",
-          "title": "After recovery, verify:",
-          "level": 0,
-          "content": "- All security controls are functioning\n- Audit logging is operational\n- Backup system is working\n- No residual compromise exists\n",
-          "keywords": [],
-          "position": 3995,
-          "length": 155
-        },
-        {
-          "id": "section_42",
-          "title": "Training and Drills",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 4150,
-          "length": 24
-        },
-        {
-          "id": "section_43",
-          "title": "Quarterly Drills:",
-          "level": 2,
-          "content": "- Tabletop exercises for various scenarios\n- Technical recovery drills\n- Communication protocol testing\n",
-          "keywords": [],
-          "position": 4174,
-          "length": 127
-        },
-        {
-          "id": "section_44",
-          "title": "Training Requirements:",
-          "level": 2,
-          "content": "- All engineers: Basic incident response\n- Security team: Advanced incident handling\n- Management: Communication and decision-making\n",
-          "keywords": [],
-          "position": 4301,
-          "length": 161
-        },
-        {
-          "id": "section_45",
-          "title": "Contact Information",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 4462,
-          "length": 24
-        },
-        {
-          "id": "section_46",
-          "title": "Internal Contacts:",
-          "level": 2,
-          "content": "- **Security Lead**: security@company.com\n- **Engineering Manager**: eng@company.com\n- **On-call Engineer**: oncall@company.com\n",
-          "keywords": [],
-          "position": 4486,
-          "length": 152
-        },
-        {
-          "id": "section_47",
-          "title": "External Contacts:",
-          "level": 2,
-          "content": "- **Legal Counsel**: legal@company.com\n- **PR Team**: pr@company.com\n- **Law Enforcement**: Local cyber crime unit\n",
-          "keywords": [],
-          "position": 4638,
-          "length": 139
-        },
-        {
-          "id": "section_48",
-          "title": "Appendix: Common Scenarios",
-          "level": 1,
-          "content": "",
-          "keywords": [],
-          "position": 4777,
-          "length": 31
-        },
-        {
-          "id": "section_49",
-          "title": "Scenario 1: Malicious File Upload",
-          "level": 2,
-          "content": "1. Detect via magic number validation failure\n2. Quarantine file immediately\n3. Scan system for similar files\n4. Update validation rules\n5. Notify affected users\n",
-          "keywords": [],
-          "position": 4808,
-          "length": 201
-        },
-        {
-          "id": "section_50",
-          "title": "Scenario 2: Unauthorized Access",
-          "level": 2,
-          "content": "1. Detect via audit log anomalies\n2. Revoke compromised credentials\n3. Reset all user sessions\n4. Enhance access controls\n5. Conduct security review\n",
-          "keywords": [],
-          "position": 5009,
-          "length": 186
-        },
-        {
-          "id": "section_51",
-          "title": "Scenario 3: System Compromise",
-          "level": 2,
-          "content": "1. Activate kill switch\n2. Isolate affected systems\n3. Preserve evidence\n4. Engage external forensics\n5. Complete rebuild from scratch",
-          "keywords": [
-            "affected",
-            "switch",
-            "complete",
-            "scratch",
-            "external",
-            "kill",
-            "systems",
-            "forensics",
-            "isolate",
-            "preserve",
-            "engage",
-            "rebuild",
-            "evidence",
-            "from",
-            "activate"
-          ],
-          "position": 5195,
-          "length": 169
-        }
-      ],
-      "toc": [
-        {
-          "title": "**Automated Detection**: Security audit logs, system monitoring",
-          "level": 0,
-          "page": null,
-          "position": null
-        },
-        {
-          "title": "**Manual Reporting**: Users report via support channels",
-          "level": 0,
-          "page": null,
-          "position": null
-        },
-        {
-          "title": "**External Reports**: Security researchers, vulnerability disclosures",
-          "level": 0,
-          "page": null,
-          "position": null
-        }
-      ],
-      "page_count": null,
-      "has_images": false,
-      "has_tables": true,
-      "has_code": true
-    },
-    "keywords": [
-      "affected",
-      "file",
-      "switch",
-      "mode",
-      "safe",
-      "incident",
-      "post",
-      "recovery",
-      "external",
-      "audit",
-      "files",
-      "team",
-      "evidence",
-      "procedures",
-      "curl",
-      "response",
-      "security",
-      "kill",
-      "system",
-      "emergency"
-    ],
-    "content_hash": "5420a5b579a0cf0b",
-    "indexed_at": {
-      "secs_since_epoch": 1759353156,
-      "nanos_since_epoch": 871139993
     },
     "index_version": 1
   },

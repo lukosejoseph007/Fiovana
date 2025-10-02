@@ -9,6 +9,7 @@ import {
 import { documentService, structureService, contentClassificationService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
+import MarkdownRenderer from './MarkdownRenderer'
 
 interface DocumentViewerProps {
   documentId: string
@@ -36,6 +37,8 @@ interface AISuggestion {
 //   type: 'heading' | 'paragraph' | 'list' | 'table' | 'image'
 // }
 
+// Note: SemanticHighlight temporarily unused - will be re-enabled with React-based overlays
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface SemanticHighlight {
   id: string
   start: number
@@ -55,12 +58,14 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [structure, setStructure] = useState<DocumentStructure | null>(null)
   const [classification, setClassification] = useState<ContentClassification | null>(null)
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([])
-  const [semanticHighlights, setSemanticHighlights] = useState<SemanticHighlight[]>([])
+  // Note: semanticHighlights temporarily disabled - will be re-implemented with React-based overlays
+  // const [semanticHighlights, setSemanticHighlights] = useState<SemanticHighlight[]>([])
   const [selectedText, setSelectedText] = useState<string>('')
   const [selectionPosition, setSelectionPosition] = useState<{ x: number; y: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadingOperations, setLoadingOperations] = useState<OperationProgress[]>([])
-  const [hoveredHighlight, setHoveredHighlight] = useState<string | null>(null)
+  // Note: hoveredHighlight temporarily disabled - will be re-implemented with React-based overlays
+  // const [hoveredHighlight, setHoveredHighlight] = useState<string | null>(null)
   const [showIntelligenceBar, setShowIntelligenceBar] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const intelligenceBarRef = useRef<HTMLDivElement>(null)
@@ -106,44 +111,25 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     }
   }, [documentId])
 
-  // Generate semantic highlights
-  const generateSemanticHighlights = useCallback(async () => {
-    if (!documentId) return
-
-    try {
-      // Mock semantic highlights - in reality, this would use content classification
-      const highlights: SemanticHighlight[] = [
-        {
-          id: 'highlight-1',
-          start: 50,
-          end: 120,
-          type: 'concept',
-          confidence: 0.9,
-          metadata: { conceptType: 'definition', importance: 'high' },
-        },
-        {
-          id: 'highlight-2',
-          start: 200,
-          end: 280,
-          type: 'procedure',
-          confidence: 0.85,
-          metadata: { stepNumber: 1, complexity: 'medium' },
-        },
-        {
-          id: 'highlight-3',
-          start: 450,
-          end: 520,
-          type: 'reference',
-          confidence: 0.75,
-          metadata: { referenceType: 'external', source: 'document' },
-        },
-      ]
-
-      setSemanticHighlights(highlights)
-    } catch (error) {
-      console.error('Failed to generate semantic highlights:', error)
-    }
-  }, [documentId])
+  // Note: Semantic highlights temporarily disabled - will be re-implemented with React-based overlays
+  // const generateSemanticHighlights = useCallback(async () => {
+  //   if (!documentId) return
+  //   try {
+  //     const highlights: SemanticHighlight[] = [
+  //       {
+  //         id: 'highlight-1',
+  //         start: 50,
+  //         end: 120,
+  //         type: 'concept',
+  //         confidence: 0.9,
+  //         metadata: { conceptType: 'definition', importance: 'high' },
+  //       },
+  //     ]
+  //     setSemanticHighlights(highlights)
+  //   } catch (error) {
+  //     console.error('Failed to generate semantic highlights:', error)
+  //   }
+  // }, [documentId])
 
   // Helper to update operation status
   const updateOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
@@ -244,9 +230,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       await generateAISuggestions()
       updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
 
-      // Generate semantic highlights (mock for now)
-      updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
-      await generateSemanticHighlights()
+      // Note: Semantic highlights temporarily disabled
+      // updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
+      // await generateSemanticHighlights()
       updateOperation('generate-highlights', { status: 'completed', progress: 100 })
     } catch (error) {
       console.error('Failed to load document:', error)
@@ -261,7 +247,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     } finally {
       setIsLoading(false)
     }
-  }, [documentId, generateAISuggestions, generateSemanticHighlights, updateOperation])
+  }, [documentId, generateAISuggestions, updateOperation])
 
   // Handle text selection
   const handleTextSelection = useCallback(() => {
@@ -301,87 +287,31 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     [onAISuggestionSelect]
   )
 
-  // Handle semantic highlight hover
-  const handleHighlightHover = useCallback((highlightId: string | null) => {
-    setHoveredHighlight(highlightId)
-  }, [])
+  // Note: Highlight hover functionality temporarily disabled
+  // Will be re-implemented with React-based overlay system
+  // const handleHighlightHover = useCallback((highlightId: string | null) => {
+  //   setHoveredHighlight(highlightId)
+  // }, [])
 
-  // Get highlight color based on type and hover state
-  const getHighlightColor = useCallback((type: string, isHovered: boolean) => {
-    const opacity = isHovered ? '40' : '20'
-    switch (type) {
-      case 'concept':
-        return `${designTokens.colors.accent.ai}${opacity}`
-      case 'procedure':
-        return `${designTokens.colors.accent.success}${opacity}`
-      case 'definition':
-        return `${designTokens.colors.accent.warning}${opacity}`
-      case 'reference':
-        return `${designTokens.colors.accent.info}${opacity}`
-      default:
-        return `${designTokens.colors.text.secondary}${opacity}`
-    }
-  }, [])
+  // const getHighlightColor = useCallback((type: string, isHovered: boolean) => {
+  //   const opacity = isHovered ? '40' : '20'
+  //   switch (type) {
+  //     case 'concept':
+  //       return `${designTokens.colors.accent.ai}${opacity}`
+  //     case 'procedure':
+  //       return `${designTokens.colors.accent.success}${opacity}`
+  //     case 'definition':
+  //       return `${designTokens.colors.accent.warning}${opacity}`
+  //     case 'reference':
+  //       return `${designTokens.colors.accent.info}${opacity}`
+  //     default:
+  //       return `${designTokens.colors.text.secondary}${opacity}`
+  //   }
+  // }, [])
 
-  // Render document content with highlights and suggestions
-  const renderDocumentContent = useMemo(() => {
-    if (!document?.content) return null
-
-    const content = document.content
-    let renderedContent = content
-
-    // Apply semantic highlights
-    semanticHighlights.forEach(highlight => {
-      const beforeText = content.substring(0, highlight.start)
-      const highlightText = content.substring(highlight.start, highlight.end)
-      const afterText = content.substring(highlight.end)
-
-      const highlightClass = `semantic-highlight semantic-highlight-${highlight.type}`
-      const isHovered = hoveredHighlight === highlight.id
-
-      renderedContent =
-        beforeText +
-        `<span
-          class="${highlightClass}"
-          data-highlight-id="${highlight.id}"
-          style="
-            background: ${getHighlightColor(highlight.type, isHovered)};
-            border-radius: ${designTokens.borderRadius.sm};
-            padding: 0 2px;
-            transition: all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut};
-            cursor: pointer;
-          "
-        >${highlightText}</span>` +
-        afterText
-    })
-
-    // Apply AI suggestion indicators
-    aiSuggestions.forEach(suggestion => {
-      const indicatorHtml = `<span
-        class="ai-suggestion-indicator"
-        data-suggestion-id="${suggestion.id}"
-        style="
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          background: ${designTokens.colors.accent.ai};
-          border-radius: 50%;
-          margin-left: 4px;
-          vertical-align: middle;
-          cursor: pointer;
-          opacity: 0.7;
-          transition: opacity ${designTokens.animation.duration.fast} ease;
-        "
-        title="${suggestion.content}"
-      ></span>`
-
-      const beforeText = renderedContent.substring(0, suggestion.position.end)
-      const afterText = renderedContent.substring(suggestion.position.end)
-      renderedContent = beforeText + indicatorHtml + afterText
-    })
-
-    return renderedContent
-  }, [document?.content, semanticHighlights, aiSuggestions, hoveredHighlight, getHighlightColor])
+  // Note: Semantic highlights and AI suggestions are temporarily disabled
+  // in favor of clean markdown rendering. They will be re-implemented
+  // using React-based overlays in a future update.
 
   // Calculate confidence score
   const confidenceScore = useMemo(() => {
@@ -414,21 +344,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     }
   }, [handleTextSelection])
 
-  // Handle clicks on semantic highlights and AI suggestions
+  // Note: Highlight and suggestion click handlers temporarily disabled
+  // Will be re-implemented with React-based overlay system
   useEffect(() => {
     const handleContentClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
 
-      // Handle semantic highlight click
-      const highlightId = target.getAttribute('data-highlight-id')
-      if (highlightId) {
-        const highlight = semanticHighlights.find(h => h.id === highlightId)
-        if (highlight) {
-          console.log('Semantic highlight clicked:', highlight)
-        }
-      }
-
-      // Handle AI suggestion click
+      // Handle AI suggestion click (when re-enabled)
       const suggestionId = target.getAttribute('data-suggestion-id')
       if (suggestionId) {
         const suggestion = aiSuggestions.find(s => s.id === suggestionId)
@@ -438,27 +360,17 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       }
     }
 
-    const handleContentHover = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const highlightId = target.getAttribute('data-highlight-id')
-      handleHighlightHover(highlightId)
-    }
-
     const contentElement = contentRef.current
     if (contentElement) {
       contentElement.addEventListener('click', handleContentClick)
-      contentElement.addEventListener('mouseover', handleContentHover)
-      contentElement.addEventListener('mouseout', () => handleHighlightHover(null))
 
       return () => {
         contentElement.removeEventListener('click', handleContentClick)
-        contentElement.removeEventListener('mouseover', handleContentHover)
-        contentElement.removeEventListener('mouseout', () => handleHighlightHover(null))
       }
     }
 
     return undefined
-  }, [semanticHighlights, aiSuggestions, handleAISuggestionClick, handleHighlightHover])
+  }, [aiSuggestions, handleAISuggestionClick])
 
   if (isLoading) {
     return (
@@ -681,17 +593,23 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           flex: 1,
           padding: designTokens.spacing[8],
           overflowY: 'auto',
-          fontSize: designTokens.typography.fontSize.base,
-          lineHeight: designTokens.typography.lineHeight.relaxed,
-          color: designTokens.colors.text.primary,
           backgroundColor: designTokens.colors.background.canvas,
-          fontFamily: designTokens.typography.fonts.sans.join(', '),
           maxWidth: '75ch', // Optimal reading line length
           margin: '0 auto',
           width: '100%',
         }}
-        dangerouslySetInnerHTML={{ __html: renderDocumentContent || '' }}
-      />
+      >
+        {document?.content && (
+          <MarkdownRenderer
+            content={document.content}
+            style={{
+              fontSize: designTokens.typography.fontSize.base,
+              lineHeight: designTokens.typography.lineHeight.relaxed,
+              color: designTokens.colors.text.primary,
+            }}
+          />
+        )}
+      </div>
 
       {/* Floating Intelligence Bar */}
       {showIntelligenceBar && selectedText && selectionPosition && (
