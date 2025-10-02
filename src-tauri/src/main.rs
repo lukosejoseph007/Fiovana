@@ -396,6 +396,11 @@ async fn main() {
             commands::get_search_history,
             commands::get_search_suggestions,
             commands::save_ai_settings,
+            // Document editing commands
+            commands::save_document,
+            commands::create_document_version,
+            commands::get_document_versions,
+            commands::restore_document_version,
             // Document chunking commands
             commands::chunk_document,
             commands::get_document_semantic_chunks,

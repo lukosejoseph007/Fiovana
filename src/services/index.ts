@@ -1,6 +1,7 @@
 // Service Layer Exports - Core Services
 export { workspaceService, WorkspaceService } from './workspaceService'
 export { documentService, DocumentService } from './documentService'
+export { documentEditingService, DocumentEditingService } from './documentEditingService'
 export { aiService, AIService } from './aiService'
 export { searchService, SearchService } from './searchService'
 

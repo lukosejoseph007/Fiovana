@@ -6,11 +6,17 @@ import {
   OperationProgressTracker,
   type OperationProgress,
 } from '../ui/LoadingStates'
-import { documentService, structureService, contentClassificationService } from '../../services'
+import {
+  documentService,
+  documentEditingService,
+  structureService,
+  contentClassificationService,
+} from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
 import DocumentRenderer from './DocumentRenderer'
 import DocumentEditor from '../editor/DocumentEditor'
+import VersionHistory from '../editor/VersionHistory'
 import { useDocumentState } from '../../hooks/useDocumentState'
 import { useAutoSave } from '../../hooks/useAutoSave'
 import '../../styles/editor.css'
@@ -73,6 +79,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showIntelligenceBar, setShowIntelligenceBar] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const intelligenceBarRef = useRef<HTMLDivElement>(null)
 
@@ -88,10 +95,42 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     initialize: initializeDocumentState,
   } = useDocumentState(document?.content || '', {
     onSave: async (content: string) => {
-      // TODO: Implement actual backend save with Tauri command
       console.log('Saving document:', documentId, 'Content length:', content.length)
-      // Simulate save operation
-      await new Promise(resolve => setTimeout(resolve, 800))
+
+      try {
+        // Determine document format from file extension or type
+        const fileExtension = document?.path?.split('.').pop()?.toLowerCase()
+        let format: 'markdown' | 'plainText' | 'html' = 'markdown'
+
+        if (fileExtension === 'md' || fileExtension === 'markdown') {
+          format = 'markdown'
+        } else if (fileExtension === 'html' || fileExtension === 'htm') {
+          format = 'html'
+        } else {
+          format = 'plainText'
+        }
+
+        // Save document using backend service
+        const response = await documentEditingService.saveDocument(documentId, content, format)
+
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to save document')
+        }
+
+        console.log('Document saved successfully:', response.data)
+
+        // Create a version snapshot after successful save
+        try {
+          await documentEditingService.createDocumentVersion(documentId, content)
+          console.log('Version snapshot created')
+        } catch (versionError) {
+          // Don't fail the save if version creation fails
+          console.warn('Failed to create version snapshot:', versionError)
+        }
+      } catch (error) {
+        console.error('Save failed:', error)
+        throw error
+      }
     },
     onDirtyChange: (dirty: boolean) => {
       setShowUnsavedWarning(dirty)
@@ -680,6 +719,22 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </Button>
           </Tooltip>
 
+          <Tooltip content="Version History">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowVersionHistory(true)}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+              }}
+            >
+              <Icon name="Document" size={16} />
+              Versions
+            </Button>
+          </Tooltip>
+
           <div
             style={{
               width: '1px',
@@ -908,6 +963,22 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           }}
         />
       </div>
+
+      {/* Version History Modal */}
+      {showVersionHistory && (
+        <VersionHistory
+          documentId={documentId}
+          currentContent={document?.content || ''}
+          onClose={() => setShowVersionHistory(false)}
+          onRestore={content => {
+            // Restore the document content
+            initializeDocumentState(content)
+            setShowVersionHistory(false)
+            // Reload the document to update metadata
+            loadDocument()
+          }}
+        />
+      )}
     </div>
   )
 }
