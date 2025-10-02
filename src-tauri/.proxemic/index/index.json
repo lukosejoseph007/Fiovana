@@ -617,2483 +617,6 @@
     "index_version": 1
   },
   {
-    "id": "doc_831a38754656ff15",
-    "path": "/home/lukosejoseph007/Downloads/Edge SWG R2 Techical Specialist Exam Study Guide.docx",
-    "title": "Exam Study Guide",
-    "summary": "250-589: Symantec Web Protection—Edge SWG R2 Technical Specialist\nExam Study Guide",
-    "content": "250-589: Symantec Web Protection—Edge SWG R2 Technical Specialist\nExam Study Guide\n\n\n\n\nExam Description\nCandidates can validate technical knowledge and competency by becoming a Symantec Certified Specialist (SCS) based on your specific area of Symantec technology expertise. To achieve this level of certification, candidates must pass this proctored SCS exam that is based on a combination of Symantec training material, commonly referenced product documentation, and real-world job scenarios.\n\nThis exam targets IT Professionals using Edge SWG products in a Security Operations role. This certification exam tests the candidate’s knowledge on how to administer Edge SWG features including Edge SWG, Content Analysis, Management Center, Reporter, and High Risk Isolation; as well as diagnose and troubleshoot common issues related to Edge SWG deployments.\nRecommended Experience\nIt is recommended that the candidate has at least 3-6 months experience working with Edge SWG products in a production or lab environment.\nStudy References \nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\n\nSymantec Web Protection—Edge SWG Administration R2 (3-Day Instructor-led)\nIntroduction to Symantec Edge SWG\nIntercepting traffic and applying policy\nApplying security and web usage policy to encrypted traffic\nCentrally managing devices with Management Center\nProviding security and web usage policies based on role or group\nEnforcing corporate guidelines for acceptable Internet browsing behavior\nProtecting the endpoint from malicious activity\nProviding security for risky and unknown websites with High Risk Isolation\nEnhancing security with virus scanning\nUsing malware analysis to analyze potentially malicious files\nMonitoring Edge SWG features\nReporting for Edge SWG features\nUnderstanding SGOS architecture and caching on Edge SWG\nUsing built-in diagnostic tools on Edge SWG\nExpanding security with cloud integrations\n\n\n\n\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\n\nSymantec Web Protection—Edge SWG Diagnostics & Troubleshooting R2 (1-Day Instructor-led)\nEdge SWG diagnostics and troubleshooting overview\nDiagnosing common issue on Edge SWG\nTroubleshooting authentication issues on Edge SWG\nTroubleshooting encrypted traffic management issues on Edge SWG\nTroubleshooting DNS issues on Edge SWG\nTroubleshooting Policy issues on Edge SWG\n\n\n\n\nDocumentation\nhttps://techdocs.broadcom.com/\n\nDocumentation\nhttps://techdocs.broadcom.com/\n\n\nEdge SWG    \nSGOS Administration Guide\nSGOS Upgrade/Downgrade Guide\nEdge SWG 7.3.x Security Best Practices\nSymantec Websites\n\nSymantec Websites\n\n\nNetwork Security Landing Page\nExam Topics   \nThe following tables list some areas to be familiar with, organized by course module, in preparation for taking the Symantec Certification exam.  \n\nCandidates are encouraged to complete applicable lab exercises as part of their preparation for the exam.\n\nFor more information on the Symantec Certification Program, visit http://go.symantec.com/certification.\n\n    Introduction to Symantec Edge SWG\nExam Topics\nApplicable Course Content\nSymantec Web Protection overview\nIntroduction to Edge SWG\nKey Edge SWG use cases\nEdge SWG Administration R2\nModule 1: Introduction to Symantec Edge SWG\n    Intercepting traffic and applying policy\nExam Topics\nApplicable Course Content\nHow Edge SWG intercepts traffic\nWriting Edge SWG policy in the Visual Policy Manager\nInforming users when web access is denied or restricted due to policy\nEdge SWG Administration R2\nModule 2: Intercepting traffic and applying policy\n    Applying security and web usage policy to encrypted traffic  \nExam Topics\nApplicable Course Content\nIntroduction to TLS encryption\nManaging HTTPS traffic on Edge SWG\nOffloading HTTPS traffic to the SSL Visibility Appliance to boost performance\nEdge SWG Administration R2\nModule 3: Applying security and web usage policy to encrypted traffic\n        Centrally managing devices with Management Center\nExam Topics\nApplicable Course Content\nHow Management Center centralizes and simplifies Edge SWG management\nConfiguring Edge SWG with the SG Admin Console\nCreating and distributing VPM policies\nCreating and managing jobs\nEdge SWG Administration R2\nModule 4: Centrally managing devices with Management Center\n    Providing security and web usage policies based on role or group   \nExam Topics\nApplicable Course Content\nAuthentication basics on Edge SWG\nUsing IWA authentication on Edge SWG\nAuthentication modes in explicit and transparent proxy deployments\nConnecting to the Windows domain directly using IWA direct\nConnecting to the Windows domain using IWA BCAAA\nIntroduction to role-based access control\nUsing roles and groups in policy\nEdge SWG Administration R2\nModule 5: Providing security and web usage policies based on role or group\n   Enforcing corporate guidelines for acceptable Internet browsing behavior \nExam Topics\nApplicable Course Content\nCreating strong corporate guidelines for acceptable Internet use\nUsing website categorization to enforce acceptable use guidelines\nProviding Edge SWG with categorization databases to be referenced in policy\nSetting the Request URL Category object in policy to enforce acceptable use guidelines\nApplying policy in order to enforce acceptable use guidelines\n\nEdge SWG Administration R2\nModule 6: Enforcing corporate guidelines for acceptable Internet browsing behavior\n   Protecting the endpoint from malicious activity  \nExam Topics\nApplicable Course Content\nRequirements for a pre-emptive, layered web defense\nWebPulse technical details\nIntroduction to Intelligence Services\nUsing Intelligence Services data feeds in policy\nEnsuring safe downloads\nCombined policy example\nEdge SWG Administration R2\nModule 7: Protecting the endpoint from malicious activity  \n        Providing security for risky and unknown for risky and unknown websites with HRI\nExam Topics\nApplicable Course Content\nInstroduction to High Risk Isolation?\nConfiguring HRI\nOverview of Full Isolation\nEdge SWG Administration R2\nModule 8: Providing security for risky and unknown for risky and unknown websites with High Risk Isolation\n    Enhancing security with virus scanning\nExam Topics\nApplicable Course Content\nIntroduction to Content Analysis\nConfiguring communication with Edge SWG over ICAP\nConfigure malware scanning options on Edge SWG\nEdge SWG Administration R2\nModule 9: Enhancing security and virus scanning\n    Using Malware Analysis to analyze potentially malicious files \nExam Topics\nApplicable Course Content\nIntroduction to Malware Analysis \nPreparing to use Malware Analysis\nPerforming Malware Analysis\nEdge SWG Administration R2\nModule 10: Using malware analysis to analyze potentially malicious files\n    Monitoring Edge SWG features \nExam Topics\nApplicable Course Content\nMonitoring devices from within Management Center\nConfiguring device alerts in Management Center\nUsing Active Sessions and the Event Log on Edge SWG\nUsing health checks on Edge SWG\nMonitoring Content Analysis\nMonitoring Reporter\nEdge SWG Administration R2\nModule 11: Monitoring Edge SWG features\n    Reporting for Edge SWG features\nExam Topics\nApplicable Course Content\nHow Reporter delivers centralizeed web reporting and visibility\nConfiguring access logging on Edge SWG to integrate with Reporter \nUsing the RPAC to configure log processing on Reporter\nRunning reports\n\nEdge SWG Administration R2\nModule 12: Reporting for Edge SWG features\nUnderstanding SGOS architecture and caching on Edge SWG \nExam Topics\nApplicable Course Content\nSGOS architecture\nCaching on Edge SWG\nUsing HTTP compression\nEdge SWG Administration R2\nModule 13: Understanding SGOS architecture and caching on Edge SWG\n    Using built-in diagnostic tools on Edge SWG\nExam Topics\nApplicable Course Content\nExploring sysinfo files\nUsing policy tracing and policy coverage tools to analyze policy decisions\nUsing packet captures to analyze network traffic\nSending service information to Symantec support\nEdge SWG Administration R2\nModule 14: Using built-in diagnostic tools on Edge SWG\n   Expanding security with cloud integrations\nExam Topics\nApplicable Course Content\nIntroduction to Cloud SWG\nUsing Universal Policy Enforcement \nIntegrating CloudSOC with Symantec Network Protection\nEdge SWG Administration R2\nModule 15: Expanding security with cloud integrations\n\nEdge SWG diagnostics and troubleshooting overview\nExam Topics\nApplicable Course Content\nSymantec troubleshooting methodology \nSymantec Edge SWG component review \nKey diagnostic tools review\nEdge SWG Diagnostics and Troubleshooting R2\nModule 1: Edge SWG diagnostics and troulbeshooting overview\n    Diagnosing common issues on Edge SWG\nExam Topics\nApplicable Course Content\nDiagnosing CPU usage issues\nDiagnosing memory usage issues \nDiagnosing issues with external dependencies\nEdge SWG Diagnostics and Troubleshooting R2\nModule 2: Diagnosing common issues on Edge SWG\n    Troubleshooting authentication issues on Edge SWG\nExam Topics\nApplicable Course Content\nOverview of authentication on Edge SWG\nDefining issues related to authentication\nDiagnosing issues related to authentication\nSolving issues related to authentication\nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 3: Troubleshooting authentication issues on Edge SWG\n    Troubleshooting encrypted traffic management issues on Edge SWG\nExam Topics\nApplicable Course Content\nReview of SSL interception on Edge SWG \nDefining issues related to SSL interception \nDiagnosing issues related to SSL interception\nSolving issues related to SSL interception\nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 4: Troubleshooting encrypted traffic management issues on Edge SWG\n   Troubleshooting DNS issues on Edge SWG\nExam Topics\nApplicable Course Content\nOverview of DNS service on Edge SWG \nDefining issues related to DNS lookups \nDiagnosing issues related to DNS lookups \nSolving issues related to DNS lookups \nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 5: Troubleshooting DNS issues on Edge SWG\n   Troubleshooting policy issues on Edge SWG\nExam Topics\nApplicable Course Content\nReview of policy operation on Edge SWG \nDefining policy issues on Edge SWG \nDiagnosing policy issues on Edge SWG \nSolving policy issues on Edge SWG \nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 6: Troubleshooting policy issues on Edge SWG\n\nSample Exam Questions \nReview the following sample questions prior to taking an exam to gain a better understanding of the types of questions asked.\n\nWhich is the primary advantage of an inline Edge SWG deployment?\nEase of deployment\nMore easily implemented redundancy \nDecreases the amount of traffic to Edge SWG \nEliminates single point of failure\nWhich two (2) categories of HTTPS traffic are typically not decrypted? (Select two)\nFinancial services\nHealth\nSocial media\nNews media\nGambling\nWhich threat risk level would likely be assigned to an unproven URL without an established history of normal behavior?\nLow\nMedium-Low\nMedium\nHigh\n\n              4.    Which protocol does Edge SWG use to communicate with Symantec DLP?\nSecure Socket Layer\nFile Transfer Protocol\nHypertext Transport Protocol\nInternet Content Adaption Protocol\n5.     How would an administrator restrict the ability of financial personnel to access HR records in Reporter?\nConfigure separate databases for financial and HR records\nRestrict access by financial personnel to HR-related fields in the database\nEnsure that HR log sources are not uploaded to financial databases\nAssign dedicated Edge SWGs for each assigned role in the company\n\nSample Exam Answers: \n \nA\nA, B\nC\nD\nB",
-    "metadata": {
-      "basic": {
-        "file_name": "Edge SWG R2 Techical Specialist Exam Study Guide.docx",
-        "file_extension": "docx",
-        "file_size": 263900,
-        "created": {
-          "secs_since_epoch": 1758803609,
-          "nanos_since_epoch": 750383153
-        },
-        "modified": {
-          "secs_since_epoch": 1758803610,
-          "nanos_since_epoch": 292379789
-        },
-        "accessed": {
-          "secs_since_epoch": 1759354360,
-          "nanos_since_epoch": 557337030
-        },
-        "is_file": true,
-        "is_dir": false,
-        "is_symlink": false
-      },
-      "content": {
-        "detected_mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "encoding": null,
-        "line_endings": null,
-        "preview": null,
-        "language": null,
-        "stats": {
-          "char_count": null,
-          "word_count": null,
-          "line_count": null,
-          "paragraph_count": null,
-          "binary_ratio": 0.2701416015625
-        }
-      },
-      "security": {
-        "permissions": 33204,
-        "is_executable": false,
-        "is_hidden": false,
-        "has_extended_attributes": false,
-        "security_flags": []
-      },
-      "technical": {
-        "entropy": 7.712096613410837,
-        "compression_ratio": 1.0251808342850928,
-        "checksums": {
-          "sha256": "7c16e75e0f323dfdc449472f1690d64623c1aaafa5fb88dd80d201aa911075f5"
-        },
-        "structure": {
-          "has_structure": true,
-          "format_version": "2.0",
-          "embedded_resources": 1,
-          "sections": [
-            {
-              "name": "Local File Header",
-              "offset": 0,
-              "size": 30,
-              "section_type": "header"
-            }
-          ]
-        }
-      },
-      "document": {
-        "title": null,
-        "author": null,
-        "subject": null,
-        "keywords": [],
-        "creator": "Microsoft Office",
-        "producer": null,
-        "creation_date": null,
-        "modification_date": null,
-        "page_count": null,
-        "document_language": null,
-        "format_properties": {}
-      }
-    },
-    "structure": {
-      "document_type": "Guide",
-      "sections": [
-        {
-          "id": "section_0",
-          "title": "Exam Study Guide",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 68,
-          "length": 21
-        },
-        {
-          "id": "section_1",
-          "title": "Exam Description",
-          "level": 0,
-          "content": "Candidates can validate technical knowledge and competency by becoming a Symantec Certified Specialist (SCS) based on your specific area of Symantec technology expertise. To achieve this level of certification, candidates must pass this proctored SCS exam that is based on a combination of Symantec training material, commonly referenced product documentation, and real-world job scenarios.\n\nThis exam targets IT Professionals using Edge SWG products in a Security Operations role. This certification exam tests the candidate’s knowledge on how to administer Edge SWG features including Edge SWG, Content Analysis, Management Center, Reporter, and High Risk Isolation; as well as diagnose and troubleshoot common issues related to Edge SWG deployments.",
-          "keywords": [],
-          "position": 89,
-          "length": 772
-        },
-        {
-          "id": "section_2",
-          "title": "Recommended Experience",
-          "level": 0,
-          "content": "It is recommended that the candidate has at least 3-6 months experience working with Edge SWG products in a production or lab environment.",
-          "keywords": [],
-          "position": 861,
-          "length": 162
-        },
-        {
-          "id": "section_3",
-          "title": "Study References",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1023,
-          "length": 18
-        },
-        {
-          "id": "section_4",
-          "title": "Instructor Led",
-          "level": 0,
-          "content": "https://www.broadcom.com/support/symantec/services/education",
-          "keywords": [],
-          "position": 1041,
-          "length": 76
-        },
-        {
-          "id": "section_5",
-          "title": "Instructor Led",
-          "level": 0,
-          "content": "https://www.broadcom.com/support/symantec/services/education\n",
-          "keywords": [],
-          "position": 1117,
-          "length": 77
-        },
-        {
-          "id": "section_6",
-          "title": "Symantec Web Protection—Edge SWG Administration R2 (3-Day Instructor-led)",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1194,
-          "length": 76
-        },
-        {
-          "id": "section_7",
-          "title": "Introduction to Symantec Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1270,
-          "length": 34
-        },
-        {
-          "id": "section_8",
-          "title": "Intercepting traffic and applying policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1304,
-          "length": 41
-        },
-        {
-          "id": "section_9",
-          "title": "Applying security and web usage policy to encrypted traffic",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1345,
-          "length": 60
-        },
-        {
-          "id": "section_10",
-          "title": "Centrally managing devices with Management Center",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1405,
-          "length": 50
-        },
-        {
-          "id": "section_11",
-          "title": "Providing security and web usage policies based on role or group",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1455,
-          "length": 65
-        },
-        {
-          "id": "section_12",
-          "title": "Enforcing corporate guidelines for acceptable Internet browsing behavior",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1520,
-          "length": 73
-        },
-        {
-          "id": "section_13",
-          "title": "Protecting the endpoint from malicious activity",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1593,
-          "length": 48
-        },
-        {
-          "id": "section_14",
-          "title": "Providing security for risky and unknown websites with High Risk Isolation",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1641,
-          "length": 75
-        },
-        {
-          "id": "section_15",
-          "title": "Enhancing security with virus scanning",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1716,
-          "length": 39
-        },
-        {
-          "id": "section_16",
-          "title": "Using malware analysis to analyze potentially malicious files",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1755,
-          "length": 62
-        },
-        {
-          "id": "section_17",
-          "title": "Monitoring Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1817,
-          "length": 29
-        },
-        {
-          "id": "section_18",
-          "title": "Reporting for Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1846,
-          "length": 32
-        },
-        {
-          "id": "section_19",
-          "title": "Understanding SGOS architecture and caching on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1878,
-          "length": 56
-        },
-        {
-          "id": "section_20",
-          "title": "Using built-in diagnostic tools on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1934,
-          "length": 44
-        },
-        {
-          "id": "section_21",
-          "title": "Expanding security with cloud integrations",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 1978,
-          "length": 47
-        },
-        {
-          "id": "section_22",
-          "title": "Instructor Led",
-          "level": 0,
-          "content": "https://www.broadcom.com/support/symantec/services/education",
-          "keywords": [],
-          "position": 2025,
-          "length": 76
-        },
-        {
-          "id": "section_23",
-          "title": "Instructor Led",
-          "level": 0,
-          "content": "https://www.broadcom.com/support/symantec/services/education\n",
-          "keywords": [],
-          "position": 2101,
-          "length": 77
-        },
-        {
-          "id": "section_24",
-          "title": "Symantec Web Protection—Edge SWG Diagnostics & Troubleshooting R2 (1-Day Instructor-led)",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2178,
-          "length": 91
-        },
-        {
-          "id": "section_25",
-          "title": "Edge SWG diagnostics and troubleshooting overview",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2269,
-          "length": 50
-        },
-        {
-          "id": "section_26",
-          "title": "Diagnosing common issue on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2319,
-          "length": 36
-        },
-        {
-          "id": "section_27",
-          "title": "Troubleshooting authentication issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2355,
-          "length": 50
-        },
-        {
-          "id": "section_28",
-          "title": "Troubleshooting encrypted traffic management issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2405,
-          "length": 64
-        },
-        {
-          "id": "section_29",
-          "title": "Troubleshooting DNS issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2469,
-          "length": 39
-        },
-        {
-          "id": "section_30",
-          "title": "Troubleshooting Policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2508,
-          "length": 46
-        },
-        {
-          "id": "section_31",
-          "title": "Documentation",
-          "level": 0,
-          "content": "https://techdocs.broadcom.com/\n",
-          "keywords": [],
-          "position": 2554,
-          "length": 46
-        },
-        {
-          "id": "section_32",
-          "title": "Documentation",
-          "level": 0,
-          "content": "https://techdocs.broadcom.com/\n\n",
-          "keywords": [],
-          "position": 2600,
-          "length": 47
-        },
-        {
-          "id": "section_33",
-          "title": "Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2647,
-          "length": 13
-        },
-        {
-          "id": "section_34",
-          "title": "SGOS Administration Guide",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2660,
-          "length": 26
-        },
-        {
-          "id": "section_35",
-          "title": "SGOS Upgrade/Downgrade Guide",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2686,
-          "length": 29
-        },
-        {
-          "id": "section_36",
-          "title": "Edge SWG 7.3.x Security Best Practices",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2715,
-          "length": 39
-        },
-        {
-          "id": "section_37",
-          "title": "Symantec Websites",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2754,
-          "length": 19
-        },
-        {
-          "id": "section_38",
-          "title": "Symantec Websites",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2773,
-          "length": 20
-        },
-        {
-          "id": "section_39",
-          "title": "Network Security Landing Page",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 2793,
-          "length": 30
-        },
-        {
-          "id": "section_40",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "The following tables list some areas to be familiar with, organized by course module, in preparation for taking the Symantec Certification exam.  \n\nCandidates are encouraged to complete applicable lab exercises as part of their preparation for the exam.\n\nFor more information on the Symantec Certification Program, visit http://go.symantec.com/certification.\n",
-          "keywords": [],
-          "position": 2823,
-          "length": 375
-        },
-        {
-          "id": "section_41",
-          "title": "Introduction to Symantec Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3198,
-          "length": 38
-        },
-        {
-          "id": "section_42",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3236,
-          "length": 12
-        },
-        {
-          "id": "section_43",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3248,
-          "length": 26
-        },
-        {
-          "id": "section_44",
-          "title": "Symantec Web Protection overview",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3274,
-          "length": 33
-        },
-        {
-          "id": "section_45",
-          "title": "Introduction to Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3307,
-          "length": 25
-        },
-        {
-          "id": "section_46",
-          "title": "Key Edge SWG use cases",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3332,
-          "length": 23
-        },
-        {
-          "id": "section_47",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3355,
-          "length": 27
-        },
-        {
-          "id": "section_48",
-          "title": "Module 1: Introduction to Symantec Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3382,
-          "length": 44
-        },
-        {
-          "id": "section_49",
-          "title": "Intercepting traffic and applying policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3426,
-          "length": 45
-        },
-        {
-          "id": "section_50",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3471,
-          "length": 12
-        },
-        {
-          "id": "section_51",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3483,
-          "length": 26
-        },
-        {
-          "id": "section_52",
-          "title": "How Edge SWG intercepts traffic",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3509,
-          "length": 32
-        },
-        {
-          "id": "section_53",
-          "title": "Writing Edge SWG policy in the Visual Policy Manager",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3541,
-          "length": 53
-        },
-        {
-          "id": "section_54",
-          "title": "Informing users when web access is denied or restricted due to policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3594,
-          "length": 70
-        },
-        {
-          "id": "section_55",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3664,
-          "length": 27
-        },
-        {
-          "id": "section_56",
-          "title": "Module 2: Intercepting traffic and applying policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3691,
-          "length": 51
-        },
-        {
-          "id": "section_57",
-          "title": "Applying security and web usage policy to encrypted traffic",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3742,
-          "length": 66
-        },
-        {
-          "id": "section_58",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3808,
-          "length": 12
-        },
-        {
-          "id": "section_59",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3820,
-          "length": 26
-        },
-        {
-          "id": "section_60",
-          "title": "Introduction to TLS encryption",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3846,
-          "length": 31
-        },
-        {
-          "id": "section_61",
-          "title": "Managing HTTPS traffic on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3877,
-          "length": 35
-        },
-        {
-          "id": "section_62",
-          "title": "Offloading HTTPS traffic to the SSL Visibility Appliance to boost performance",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3912,
-          "length": 78
-        },
-        {
-          "id": "section_63",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 3990,
-          "length": 27
-        },
-        {
-          "id": "section_64",
-          "title": "Module 3: Applying security and web usage policy to encrypted traffic",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4017,
-          "length": 70
-        },
-        {
-          "id": "section_65",
-          "title": "Centrally managing devices with Management Center",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4087,
-          "length": 58
-        },
-        {
-          "id": "section_66",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4145,
-          "length": 12
-        },
-        {
-          "id": "section_67",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4157,
-          "length": 26
-        },
-        {
-          "id": "section_68",
-          "title": "How Management Center centralizes and simplifies Edge SWG management",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4183,
-          "length": 69
-        },
-        {
-          "id": "section_69",
-          "title": "Configuring Edge SWG with the SG Admin Console",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4252,
-          "length": 47
-        },
-        {
-          "id": "section_70",
-          "title": "Creating and distributing VPM policies",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4299,
-          "length": 39
-        },
-        {
-          "id": "section_71",
-          "title": "Creating and managing jobs",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4338,
-          "length": 27
-        },
-        {
-          "id": "section_72",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4365,
-          "length": 27
-        },
-        {
-          "id": "section_73",
-          "title": "Module 4: Centrally managing devices with Management Center",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4392,
-          "length": 60
-        },
-        {
-          "id": "section_74",
-          "title": "Providing security and web usage policies based on role or group",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4452,
-          "length": 72
-        },
-        {
-          "id": "section_75",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4524,
-          "length": 12
-        },
-        {
-          "id": "section_76",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4536,
-          "length": 26
-        },
-        {
-          "id": "section_77",
-          "title": "Authentication basics on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4562,
-          "length": 34
-        },
-        {
-          "id": "section_78",
-          "title": "Using IWA authentication on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4596,
-          "length": 37
-        },
-        {
-          "id": "section_79",
-          "title": "Authentication modes in explicit and transparent proxy deployments",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4633,
-          "length": 67
-        },
-        {
-          "id": "section_80",
-          "title": "Connecting to the Windows domain directly using IWA direct",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4700,
-          "length": 59
-        },
-        {
-          "id": "section_81",
-          "title": "Connecting to the Windows domain using IWA BCAAA",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4759,
-          "length": 49
-        },
-        {
-          "id": "section_82",
-          "title": "Introduction to role-based access control",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4808,
-          "length": 42
-        },
-        {
-          "id": "section_83",
-          "title": "Using roles and groups in policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4850,
-          "length": 33
-        },
-        {
-          "id": "section_84",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4883,
-          "length": 27
-        },
-        {
-          "id": "section_85",
-          "title": "Module 5: Providing security and web usage policies based on role or group",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4910,
-          "length": 75
-        },
-        {
-          "id": "section_86",
-          "title": "Enforcing corporate guidelines for acceptable Internet browsing behavior",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 4985,
-          "length": 77
-        },
-        {
-          "id": "section_87",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5062,
-          "length": 12
-        },
-        {
-          "id": "section_88",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5074,
-          "length": 26
-        },
-        {
-          "id": "section_89",
-          "title": "Creating strong corporate guidelines for acceptable Internet use",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5100,
-          "length": 65
-        },
-        {
-          "id": "section_90",
-          "title": "Using website categorization to enforce acceptable use guidelines",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5165,
-          "length": 66
-        },
-        {
-          "id": "section_91",
-          "title": "Providing Edge SWG with categorization databases to be referenced in policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5231,
-          "length": 76
-        },
-        {
-          "id": "section_92",
-          "title": "Setting the Request URL Category object in policy to enforce acceptable use guidelines",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5307,
-          "length": 87
-        },
-        {
-          "id": "section_93",
-          "title": "Applying policy in order to enforce acceptable use guidelines",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5394,
-          "length": 63
-        },
-        {
-          "id": "section_94",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5457,
-          "length": 27
-        },
-        {
-          "id": "section_95",
-          "title": "Module 6: Enforcing corporate guidelines for acceptable Internet browsing behavior",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5484,
-          "length": 83
-        },
-        {
-          "id": "section_96",
-          "title": "Protecting the endpoint from malicious activity",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5567,
-          "length": 53
-        },
-        {
-          "id": "section_97",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5620,
-          "length": 12
-        },
-        {
-          "id": "section_98",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5632,
-          "length": 26
-        },
-        {
-          "id": "section_99",
-          "title": "Requirements for a pre-emptive, layered web defense",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5658,
-          "length": 52
-        },
-        {
-          "id": "section_100",
-          "title": "WebPulse technical details",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5710,
-          "length": 27
-        },
-        {
-          "id": "section_101",
-          "title": "Introduction to Intelligence Services",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5737,
-          "length": 38
-        },
-        {
-          "id": "section_102",
-          "title": "Using Intelligence Services data feeds in policy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5775,
-          "length": 49
-        },
-        {
-          "id": "section_103",
-          "title": "Ensuring safe downloads",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5824,
-          "length": 24
-        },
-        {
-          "id": "section_104",
-          "title": "Combined policy example",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5848,
-          "length": 24
-        },
-        {
-          "id": "section_105",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5872,
-          "length": 27
-        },
-        {
-          "id": "section_106",
-          "title": "Module 7: Protecting the endpoint from malicious activity",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5899,
-          "length": 60
-        },
-        {
-          "id": "section_107",
-          "title": "Providing security for risky and unknown for risky and unknown websites with HRI",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 5959,
-          "length": 89
-        },
-        {
-          "id": "section_108",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6048,
-          "length": 12
-        },
-        {
-          "id": "section_109",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6060,
-          "length": 26
-        },
-        {
-          "id": "section_110",
-          "title": "Instroduction to High Risk Isolation?",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6086,
-          "length": 38
-        },
-        {
-          "id": "section_111",
-          "title": "Configuring HRI",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6124,
-          "length": 16
-        },
-        {
-          "id": "section_112",
-          "title": "Overview of Full Isolation",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6140,
-          "length": 27
-        },
-        {
-          "id": "section_113",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "Module 8: Providing security for risky and unknown for risky and unknown websites with High Risk Isolation",
-          "keywords": [],
-          "position": 6167,
-          "length": 134
-        },
-        {
-          "id": "section_114",
-          "title": "Enhancing security with virus scanning",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6301,
-          "length": 43
-        },
-        {
-          "id": "section_115",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6344,
-          "length": 12
-        },
-        {
-          "id": "section_116",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6356,
-          "length": 26
-        },
-        {
-          "id": "section_117",
-          "title": "Introduction to Content Analysis",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6382,
-          "length": 33
-        },
-        {
-          "id": "section_118",
-          "title": "Configuring communication with Edge SWG over ICAP",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6415,
-          "length": 50
-        },
-        {
-          "id": "section_119",
-          "title": "Configure malware scanning options on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6465,
-          "length": 47
-        },
-        {
-          "id": "section_120",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6512,
-          "length": 27
-        },
-        {
-          "id": "section_121",
-          "title": "Module 9: Enhancing security and virus scanning",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6539,
-          "length": 48
-        },
-        {
-          "id": "section_122",
-          "title": "Using Malware Analysis to analyze potentially malicious files",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6587,
-          "length": 67
-        },
-        {
-          "id": "section_123",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6654,
-          "length": 12
-        },
-        {
-          "id": "section_124",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6666,
-          "length": 26
-        },
-        {
-          "id": "section_125",
-          "title": "Introduction to Malware Analysis",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6692,
-          "length": 34
-        },
-        {
-          "id": "section_126",
-          "title": "Preparing to use Malware Analysis",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6726,
-          "length": 34
-        },
-        {
-          "id": "section_127",
-          "title": "Performing Malware Analysis",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6760,
-          "length": 28
-        },
-        {
-          "id": "section_128",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6788,
-          "length": 27
-        },
-        {
-          "id": "section_129",
-          "title": "Module 10: Using malware analysis to analyze potentially malicious files",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6815,
-          "length": 73
-        },
-        {
-          "id": "section_130",
-          "title": "Monitoring Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6888,
-          "length": 34
-        },
-        {
-          "id": "section_131",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6922,
-          "length": 12
-        },
-        {
-          "id": "section_132",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6934,
-          "length": 26
-        },
-        {
-          "id": "section_133",
-          "title": "Monitoring devices from within Management Center",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 6960,
-          "length": 49
-        },
-        {
-          "id": "section_134",
-          "title": "Configuring device alerts in Management Center",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7009,
-          "length": 47
-        },
-        {
-          "id": "section_135",
-          "title": "Using Active Sessions and the Event Log on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7056,
-          "length": 52
-        },
-        {
-          "id": "section_136",
-          "title": "Using health checks on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7108,
-          "length": 32
-        },
-        {
-          "id": "section_137",
-          "title": "Monitoring Content Analysis",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7140,
-          "length": 28
-        },
-        {
-          "id": "section_138",
-          "title": "Monitoring Reporter",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7168,
-          "length": 20
-        },
-        {
-          "id": "section_139",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7188,
-          "length": 27
-        },
-        {
-          "id": "section_140",
-          "title": "Module 11: Monitoring Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7215,
-          "length": 40
-        },
-        {
-          "id": "section_141",
-          "title": "Reporting for Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7255,
-          "length": 36
-        },
-        {
-          "id": "section_142",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7291,
-          "length": 12
-        },
-        {
-          "id": "section_143",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7303,
-          "length": 26
-        },
-        {
-          "id": "section_144",
-          "title": "How Reporter delivers centralizeed web reporting and visibility",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7329,
-          "length": 64
-        },
-        {
-          "id": "section_145",
-          "title": "Configuring access logging on Edge SWG to integrate with Reporter",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7393,
-          "length": 67
-        },
-        {
-          "id": "section_146",
-          "title": "Using the RPAC to configure log processing on Reporter",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7460,
-          "length": 55
-        },
-        {
-          "id": "section_147",
-          "title": "Running reports",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7515,
-          "length": 17
-        },
-        {
-          "id": "section_148",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7532,
-          "length": 27
-        },
-        {
-          "id": "section_149",
-          "title": "Module 12: Reporting for Edge SWG features",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7559,
-          "length": 43
-        },
-        {
-          "id": "section_150",
-          "title": "Understanding SGOS architecture and caching on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7602,
-          "length": 57
-        },
-        {
-          "id": "section_151",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7659,
-          "length": 12
-        },
-        {
-          "id": "section_152",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7671,
-          "length": 26
-        },
-        {
-          "id": "section_153",
-          "title": "SGOS architecture",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7697,
-          "length": 18
-        },
-        {
-          "id": "section_154",
-          "title": "Caching on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7715,
-          "length": 20
-        },
-        {
-          "id": "section_155",
-          "title": "Using HTTP compression",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7735,
-          "length": 23
-        },
-        {
-          "id": "section_156",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7758,
-          "length": 27
-        },
-        {
-          "id": "section_157",
-          "title": "Module 13: Understanding SGOS architecture and caching on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7785,
-          "length": 67
-        },
-        {
-          "id": "section_158",
-          "title": "Using built-in diagnostic tools on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7852,
-          "length": 48
-        },
-        {
-          "id": "section_159",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7900,
-          "length": 12
-        },
-        {
-          "id": "section_160",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7912,
-          "length": 26
-        },
-        {
-          "id": "section_161",
-          "title": "Exploring sysinfo files",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7938,
-          "length": 24
-        },
-        {
-          "id": "section_162",
-          "title": "Using policy tracing and policy coverage tools to analyze policy decisions",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 7962,
-          "length": 75
-        },
-        {
-          "id": "section_163",
-          "title": "Using packet captures to analyze network traffic",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8037,
-          "length": 49
-        },
-        {
-          "id": "section_164",
-          "title": "Sending service information to Symantec support",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8086,
-          "length": 48
-        },
-        {
-          "id": "section_165",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8134,
-          "length": 27
-        },
-        {
-          "id": "section_166",
-          "title": "Module 14: Using built-in diagnostic tools on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8161,
-          "length": 55
-        },
-        {
-          "id": "section_167",
-          "title": "Expanding security with cloud integrations",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8216,
-          "length": 46
-        },
-        {
-          "id": "section_168",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8262,
-          "length": 12
-        },
-        {
-          "id": "section_169",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8274,
-          "length": 26
-        },
-        {
-          "id": "section_170",
-          "title": "Introduction to Cloud SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8300,
-          "length": 26
-        },
-        {
-          "id": "section_171",
-          "title": "Using Universal Policy Enforcement",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8326,
-          "length": 36
-        },
-        {
-          "id": "section_172",
-          "title": "Integrating CloudSOC with Symantec Network Protection",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8362,
-          "length": 54
-        },
-        {
-          "id": "section_173",
-          "title": "Edge SWG Administration R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8416,
-          "length": 27
-        },
-        {
-          "id": "section_174",
-          "title": "Module 15: Expanding security with cloud integrations",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8443,
-          "length": 55
-        },
-        {
-          "id": "section_175",
-          "title": "Edge SWG diagnostics and troubleshooting overview",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8498,
-          "length": 50
-        },
-        {
-          "id": "section_176",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8548,
-          "length": 12
-        },
-        {
-          "id": "section_177",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8560,
-          "length": 26
-        },
-        {
-          "id": "section_178",
-          "title": "Symantec troubleshooting methodology",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8586,
-          "length": 38
-        },
-        {
-          "id": "section_179",
-          "title": "Symantec Edge SWG component review",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8624,
-          "length": 36
-        },
-        {
-          "id": "section_180",
-          "title": "Key diagnostic tools review",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8660,
-          "length": 28
-        },
-        {
-          "id": "section_181",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8688,
-          "length": 44
-        },
-        {
-          "id": "section_182",
-          "title": "Module 1: Edge SWG diagnostics and troulbeshooting overview",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8732,
-          "length": 60
-        },
-        {
-          "id": "section_183",
-          "title": "Diagnosing common issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8792,
-          "length": 41
-        },
-        {
-          "id": "section_184",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8833,
-          "length": 12
-        },
-        {
-          "id": "section_185",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8845,
-          "length": 26
-        },
-        {
-          "id": "section_186",
-          "title": "Diagnosing CPU usage issues",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8871,
-          "length": 28
-        },
-        {
-          "id": "section_187",
-          "title": "Diagnosing memory usage issues",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8899,
-          "length": 32
-        },
-        {
-          "id": "section_188",
-          "title": "Diagnosing issues with external dependencies",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8931,
-          "length": 45
-        },
-        {
-          "id": "section_189",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 8976,
-          "length": 44
-        },
-        {
-          "id": "section_190",
-          "title": "Module 2: Diagnosing common issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9020,
-          "length": 47
-        },
-        {
-          "id": "section_191",
-          "title": "Troubleshooting authentication issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9067,
-          "length": 54
-        },
-        {
-          "id": "section_192",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9121,
-          "length": 12
-        },
-        {
-          "id": "section_193",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9133,
-          "length": 26
-        },
-        {
-          "id": "section_194",
-          "title": "Overview of authentication on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9159,
-          "length": 39
-        },
-        {
-          "id": "section_195",
-          "title": "Defining issues related to authentication",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9198,
-          "length": 42
-        },
-        {
-          "id": "section_196",
-          "title": "Diagnosing issues related to authentication",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9240,
-          "length": 44
-        },
-        {
-          "id": "section_197",
-          "title": "Solving issues related to authentication",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9284,
-          "length": 41
-        },
-        {
-          "id": "section_198",
-          "title": "Result—Communicating result or contacting Symantec support",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9325,
-          "length": 61
-        },
-        {
-          "id": "section_199",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9386,
-          "length": 44
-        },
-        {
-          "id": "section_200",
-          "title": "Module 3: Troubleshooting authentication issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9430,
-          "length": 60
-        },
-        {
-          "id": "section_201",
-          "title": "Troubleshooting encrypted traffic management issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9490,
-          "length": 68
-        },
-        {
-          "id": "section_202",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9558,
-          "length": 12
-        },
-        {
-          "id": "section_203",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9570,
-          "length": 26
-        },
-        {
-          "id": "section_204",
-          "title": "Review of SSL interception on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9596,
-          "length": 40
-        },
-        {
-          "id": "section_205",
-          "title": "Defining issues related to SSL interception",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9636,
-          "length": 45
-        },
-        {
-          "id": "section_206",
-          "title": "Diagnosing issues related to SSL interception",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9681,
-          "length": 46
-        },
-        {
-          "id": "section_207",
-          "title": "Solving issues related to SSL interception",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9727,
-          "length": 43
-        },
-        {
-          "id": "section_208",
-          "title": "Result—Communicating result or contacting Symantec support",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9770,
-          "length": 61
-        },
-        {
-          "id": "section_209",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9831,
-          "length": 44
-        },
-        {
-          "id": "section_210",
-          "title": "Module 4: Troubleshooting encrypted traffic management issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9875,
-          "length": 74
-        },
-        {
-          "id": "section_211",
-          "title": "Troubleshooting DNS issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9949,
-          "length": 42
-        },
-        {
-          "id": "section_212",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 9991,
-          "length": 12
-        },
-        {
-          "id": "section_213",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10003,
-          "length": 26
-        },
-        {
-          "id": "section_214",
-          "title": "Overview of DNS service on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10029,
-          "length": 37
-        },
-        {
-          "id": "section_215",
-          "title": "Defining issues related to DNS lookups",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10066,
-          "length": 40
-        },
-        {
-          "id": "section_216",
-          "title": "Diagnosing issues related to DNS lookups",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10106,
-          "length": 42
-        },
-        {
-          "id": "section_217",
-          "title": "Solving issues related to DNS lookups",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10148,
-          "length": 39
-        },
-        {
-          "id": "section_218",
-          "title": "Result—Communicating result or contacting Symantec support",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10187,
-          "length": 61
-        },
-        {
-          "id": "section_219",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10248,
-          "length": 44
-        },
-        {
-          "id": "section_220",
-          "title": "Module 5: Troubleshooting DNS issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10292,
-          "length": 49
-        },
-        {
-          "id": "section_221",
-          "title": "Troubleshooting policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10341,
-          "length": 45
-        },
-        {
-          "id": "section_222",
-          "title": "Exam Topics",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10386,
-          "length": 12
-        },
-        {
-          "id": "section_223",
-          "title": "Applicable Course Content",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10398,
-          "length": 26
-        },
-        {
-          "id": "section_224",
-          "title": "Review of policy operation on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10424,
-          "length": 40
-        },
-        {
-          "id": "section_225",
-          "title": "Defining policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10464,
-          "length": 36
-        },
-        {
-          "id": "section_226",
-          "title": "Diagnosing policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10500,
-          "length": 38
-        },
-        {
-          "id": "section_227",
-          "title": "Solving policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10538,
-          "length": 35
-        },
-        {
-          "id": "section_228",
-          "title": "Result—Communicating result or contacting Symantec support",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10573,
-          "length": 61
-        },
-        {
-          "id": "section_229",
-          "title": "Edge SWG Diagnostics and Troubleshooting R2",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10634,
-          "length": 44
-        },
-        {
-          "id": "section_230",
-          "title": "Module 6: Troubleshooting policy issues on Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10678,
-          "length": 53
-        },
-        {
-          "id": "section_231",
-          "title": "Sample Exam Questions",
-          "level": 0,
-          "content": "Review the following sample questions prior to taking an exam to gain a better understanding of the types of questions asked.\n",
-          "keywords": [],
-          "position": 10731,
-          "length": 150
-        },
-        {
-          "id": "section_232",
-          "title": "Which is the primary advantage of an inline Edge SWG deployment?",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10881,
-          "length": 65
-        },
-        {
-          "id": "section_233",
-          "title": "Ease of deployment",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10946,
-          "length": 19
-        },
-        {
-          "id": "section_234",
-          "title": "More easily implemented redundancy",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 10965,
-          "length": 36
-        },
-        {
-          "id": "section_235",
-          "title": "Decreases the amount of traffic to Edge SWG",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11001,
-          "length": 45
-        },
-        {
-          "id": "section_236",
-          "title": "Eliminates single point of failure",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11046,
-          "length": 35
-        },
-        {
-          "id": "section_237",
-          "title": "Which two (2) categories of HTTPS traffic are typically not decrypted? (Select two)",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11081,
-          "length": 84
-        },
-        {
-          "id": "section_238",
-          "title": "Financial services",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11165,
-          "length": 19
-        },
-        {
-          "id": "section_239",
-          "title": "Health",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11184,
-          "length": 7
-        },
-        {
-          "id": "section_240",
-          "title": "Social media",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11191,
-          "length": 13
-        },
-        {
-          "id": "section_241",
-          "title": "News media",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11204,
-          "length": 11
-        },
-        {
-          "id": "section_242",
-          "title": "Gambling",
-          "level": 0,
-          "content": "Which threat risk level would likely be assigned to an unproven URL without an established history of normal behavior?",
-          "keywords": [],
-          "position": 11215,
-          "length": 128
-        },
-        {
-          "id": "section_243",
-          "title": "Low",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11343,
-          "length": 4
-        },
-        {
-          "id": "section_244",
-          "title": "Medium-Low",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11347,
-          "length": 11
-        },
-        {
-          "id": "section_245",
-          "title": "Medium",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11358,
-          "length": 7
-        },
-        {
-          "id": "section_246",
-          "title": "High",
-          "level": 0,
-          "content": "              4.    Which protocol does Edge SWG use to communicate with Symantec DLP?",
-          "keywords": [],
-          "position": 11365,
-          "length": 93
-        },
-        {
-          "id": "section_247",
-          "title": "Secure Socket Layer",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11458,
-          "length": 20
-        },
-        {
-          "id": "section_248",
-          "title": "File Transfer Protocol",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11478,
-          "length": 23
-        },
-        {
-          "id": "section_249",
-          "title": "Hypertext Transport Protocol",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11501,
-          "length": 29
-        },
-        {
-          "id": "section_250",
-          "title": "Internet Content Adaption Protocol",
-          "level": 0,
-          "content": "5.     How would an administrator restrict the ability of financial personnel to access HR records in Reporter?",
-          "keywords": [],
-          "position": 11530,
-          "length": 147
-        },
-        {
-          "id": "section_251",
-          "title": "Configure separate databases for financial and HR records",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11677,
-          "length": 58
-        },
-        {
-          "id": "section_252",
-          "title": "Restrict access by financial personnel to HR-related fields in the database",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11735,
-          "length": 76
-        },
-        {
-          "id": "section_253",
-          "title": "Ensure that HR log sources are not uploaded to financial databases",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11811,
-          "length": 67
-        },
-        {
-          "id": "section_254",
-          "title": "Assign dedicated Edge SWGs for each assigned role in the company",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11878,
-          "length": 66
-        },
-        {
-          "id": "section_255",
-          "title": "Sample Exam Answers:",
-          "level": 0,
-          "content": " ",
-          "keywords": [],
-          "position": 11944,
-          "length": 24
-        },
-        {
-          "id": "section_256",
-          "title": "A",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11968,
-          "length": 2
-        },
-        {
-          "id": "section_257",
-          "title": "A, B",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11970,
-          "length": 5
-        },
-        {
-          "id": "section_258",
-          "title": "C",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11975,
-          "length": 2
-        },
-        {
-          "id": "section_259",
-          "title": "D",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11977,
-          "length": 2
-        },
-        {
-          "id": "section_260",
-          "title": "B",
-          "level": 0,
-          "content": "",
-          "keywords": [],
-          "position": 11979,
-          "length": 1
-        }
-      ],
-      "toc": [
-        {
-          "title": ": Symantec Web Protection—Edge SWG R2 Technical Specialist",
-          "level": 0,
-          "page": null,
-          "position": null
-        }
-      ],
-      "page_count": null,
-      "has_images": false,
-      "has_tables": false,
-      "has_code": false
-    },
-    "keywords": [
-      "symantec",
-      "policy",
-      "traffic",
-      "topics",
-      "administration",
-      "edge",
-      "troubleshooting",
-      "issues",
-      "authentication",
-      "applicable",
-      "security",
-      "exam",
-      "using",
-      "module",
-      "management",
-      "course",
-      "content",
-      "related",
-      "with",
-      "introduction"
-    ],
-    "content_hash": "b8f7613770bbf5ab",
-    "indexed_at": {
-      "secs_since_epoch": 1759395820,
-      "nanos_since_epoch": 332286509
-    },
-    "index_version": 1
-  },
-  {
     "id": "doc_fc31d3925b937247",
     "path": "/home/lukosejoseph007/Desktop/proxemic/Proxemic/docs/DEPLOYMENT.md",
     "title": "Proxemic Deployment Guide",
@@ -6512,6 +4035,2595 @@
     "indexed_at": {
       "secs_since_epoch": 1758857332,
       "nanos_since_epoch": 669074337
+    },
+    "index_version": 1
+  },
+  {
+    "id": "doc_45041c38cb8aac6f",
+    "path": "/home/lukosejoseph007/Desktop/test_document.txt",
+    "title": "test_document",
+    "summary": "test content for validation",
+    "content": "test content for validation",
+    "metadata": {
+      "basic": {
+        "file_name": "test_document.txt",
+        "file_extension": "txt",
+        "file_size": 27,
+        "created": {
+          "secs_since_epoch": 1759355567,
+          "nanos_since_epoch": 50216855
+        },
+        "modified": {
+          "secs_since_epoch": 1759355567,
+          "nanos_since_epoch": 50216855
+        },
+        "accessed": {
+          "secs_since_epoch": 1759355567,
+          "nanos_since_epoch": 50216855
+        },
+        "is_file": true,
+        "is_dir": false,
+        "is_symlink": false
+      },
+      "content": {
+        "detected_mime_type": "text/plain",
+        "encoding": "UTF-8",
+        "line_endings": null,
+        "preview": "test content for validation",
+        "language": "Unknown",
+        "stats": {
+          "char_count": 27,
+          "word_count": 4,
+          "line_count": 1,
+          "paragraph_count": 1,
+          "binary_ratio": 0.0
+        }
+      },
+      "security": {
+        "permissions": 33204,
+        "is_executable": false,
+        "is_hidden": false,
+        "has_extended_attributes": false,
+        "security_flags": []
+      },
+      "technical": {
+        "entropy": 3.5743577621291274,
+        "compression_ratio": 1.0,
+        "checksums": {
+          "sha256": "0c5b750f2f172d0e7c5d2918e854bfcd20ccfe8991c0bd99aecd293aede799de"
+        },
+        "structure": {
+          "has_structure": false,
+          "format_version": null,
+          "embedded_resources": 0,
+          "sections": []
+        }
+      },
+      "document": {
+        "title": "test content for validation",
+        "author": null,
+        "subject": null,
+        "keywords": [],
+        "creator": "Text Editor",
+        "producer": null,
+        "creation_date": null,
+        "modification_date": null,
+        "page_count": 1,
+        "document_language": null,
+        "format_properties": {}
+      }
+    },
+    "structure": {
+      "document_type": {
+        "Other": "test_document.txt"
+      },
+      "sections": [
+        {
+          "id": "main",
+          "title": "Main Content",
+          "level": 0,
+          "content": "test content for validation",
+          "keywords": [
+            "test",
+            "content",
+            "validation"
+          ],
+          "position": 0,
+          "length": 27
+        }
+      ],
+      "toc": null,
+      "page_count": null,
+      "has_images": false,
+      "has_tables": false,
+      "has_code": false
+    },
+    "keywords": [
+      "validation",
+      "content",
+      "test"
+    ],
+    "content_hash": "61396602048639db",
+    "indexed_at": {
+      "secs_since_epoch": 1759415855,
+      "nanos_since_epoch": 18975120
+    },
+    "index_version": 1
+  },
+  {
+    "id": "doc_831a38754656ff15",
+    "path": "/home/lukosejoseph007/Downloads/Edge SWG R2 Techical Specialist Exam Study Guide.docx",
+    "title": "Exam Study Guide",
+    "summary": "250-589: Symantec Web Protection—Edge SWG R2 Technical Specialist\nExam Study Guide",
+    "content": "250-589: Symantec Web Protection—Edge SWG R2 Technical Specialist\nExam Study Guide\n\n\n\n\nExam Description\nCandidates can validate technical knowledge and competency by becoming a Symantec Certified Specialist (SCS) based on your specific area of Symantec technology expertise. To achieve this level of certification, candidates must pass this proctored SCS exam that is based on a combination of Symantec training material, commonly referenced product documentation, and real-world job scenarios.\n\nThis exam targets IT Professionals using Edge SWG products in a Security Operations role. This certification exam tests the candidate’s knowledge on how to administer Edge SWG features including Edge SWG, Content Analysis, Management Center, Reporter, and High Risk Isolation; as well as diagnose and troubleshoot common issues related to Edge SWG deployments.\nRecommended Experience\nIt is recommended that the candidate has at least 3-6 months experience working with Edge SWG products in a production or lab environment.\nStudy References \nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\n\nSymantec Web Protection—Edge SWG Administration R2 (3-Day Instructor-led)\nIntroduction to Symantec Edge SWG\nIntercepting traffic and applying policy\nApplying security and web usage policy to encrypted traffic\nCentrally managing devices with Management Center\nProviding security and web usage policies based on role or group\nEnforcing corporate guidelines for acceptable Internet browsing behavior\nProtecting the endpoint from malicious activity\nProviding security for risky and unknown websites with High Risk Isolation\nEnhancing security with virus scanning\nUsing malware analysis to analyze potentially malicious files\nMonitoring Edge SWG features\nReporting for Edge SWG features\nUnderstanding SGOS architecture and caching on Edge SWG\nUsing built-in diagnostic tools on Edge SWG\nExpanding security with cloud integrations\n\n\n\n\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\nInstructor Led\nhttps://www.broadcom.com/support/symantec/services/education\n\nSymantec Web Protection—Edge SWG Diagnostics & Troubleshooting R2 (1-Day Instructor-led)\nEdge SWG diagnostics and troubleshooting overview\nDiagnosing common issue on Edge SWG\nTroubleshooting authentication issues on Edge SWG\nTroubleshooting encrypted traffic management issues on Edge SWG\nTroubleshooting DNS issues on Edge SWG\nTroubleshooting Policy issues on Edge SWG\n\n\n\n\nDocumentation\nhttps://techdocs.broadcom.com/\n\nDocumentation\nhttps://techdocs.broadcom.com/\n\n\nEdge SWG    \nSGOS Administration Guide\nSGOS Upgrade/Downgrade Guide\nEdge SWG 7.3.x Security Best Practices\nSymantec Websites\n\nSymantec Websites\n\n\nNetwork Security Landing Page\nExam Topics   \nThe following tables list some areas to be familiar with, organized by course module, in preparation for taking the Symantec Certification exam.  \n\nCandidates are encouraged to complete applicable lab exercises as part of their preparation for the exam.\n\nFor more information on the Symantec Certification Program, visit http://go.symantec.com/certification.\n\n    Introduction to Symantec Edge SWG\nExam Topics\nApplicable Course Content\nSymantec Web Protection overview\nIntroduction to Edge SWG\nKey Edge SWG use cases\nEdge SWG Administration R2\nModule 1: Introduction to Symantec Edge SWG\n    Intercepting traffic and applying policy\nExam Topics\nApplicable Course Content\nHow Edge SWG intercepts traffic\nWriting Edge SWG policy in the Visual Policy Manager\nInforming users when web access is denied or restricted due to policy\nEdge SWG Administration R2\nModule 2: Intercepting traffic and applying policy\n    Applying security and web usage policy to encrypted traffic  \nExam Topics\nApplicable Course Content\nIntroduction to TLS encryption\nManaging HTTPS traffic on Edge SWG\nOffloading HTTPS traffic to the SSL Visibility Appliance to boost performance\nEdge SWG Administration R2\nModule 3: Applying security and web usage policy to encrypted traffic\n        Centrally managing devices with Management Center\nExam Topics\nApplicable Course Content\nHow Management Center centralizes and simplifies Edge SWG management\nConfiguring Edge SWG with the SG Admin Console\nCreating and distributing VPM policies\nCreating and managing jobs\nEdge SWG Administration R2\nModule 4: Centrally managing devices with Management Center\n    Providing security and web usage policies based on role or group   \nExam Topics\nApplicable Course Content\nAuthentication basics on Edge SWG\nUsing IWA authentication on Edge SWG\nAuthentication modes in explicit and transparent proxy deployments\nConnecting to the Windows domain directly using IWA direct\nConnecting to the Windows domain using IWA BCAAA\nIntroduction to role-based access control\nUsing roles and groups in policy\nEdge SWG Administration R2\nModule 5: Providing security and web usage policies based on role or group\n   Enforcing corporate guidelines for acceptable Internet browsing behavior \nExam Topics\nApplicable Course Content\nCreating strong corporate guidelines for acceptable Internet use\nUsing website categorization to enforce acceptable use guidelines\nProviding Edge SWG with categorization databases to be referenced in policy\nSetting the Request URL Category object in policy to enforce acceptable use guidelines\nApplying policy in order to enforce acceptable use guidelines\n\nEdge SWG Administration R2\nModule 6: Enforcing corporate guidelines for acceptable Internet browsing behavior\n   Protecting the endpoint from malicious activity  \nExam Topics\nApplicable Course Content\nRequirements for a pre-emptive, layered web defense\nWebPulse technical details\nIntroduction to Intelligence Services\nUsing Intelligence Services data feeds in policy\nEnsuring safe downloads\nCombined policy example\nEdge SWG Administration R2\nModule 7: Protecting the endpoint from malicious activity  \n        Providing security for risky and unknown for risky and unknown websites with HRI\nExam Topics\nApplicable Course Content\nInstroduction to High Risk Isolation?\nConfiguring HRI\nOverview of Full Isolation\nEdge SWG Administration R2\nModule 8: Providing security for risky and unknown for risky and unknown websites with High Risk Isolation\n    Enhancing security with virus scanning\nExam Topics\nApplicable Course Content\nIntroduction to Content Analysis\nConfiguring communication with Edge SWG over ICAP\nConfigure malware scanning options on Edge SWG\nEdge SWG Administration R2\nModule 9: Enhancing security and virus scanning\n    Using Malware Analysis to analyze potentially malicious files \nExam Topics\nApplicable Course Content\nIntroduction to Malware Analysis \nPreparing to use Malware Analysis\nPerforming Malware Analysis\nEdge SWG Administration R2\nModule 10: Using malware analysis to analyze potentially malicious files\n    Monitoring Edge SWG features \nExam Topics\nApplicable Course Content\nMonitoring devices from within Management Center\nConfiguring device alerts in Management Center\nUsing Active Sessions and the Event Log on Edge SWG\nUsing health checks on Edge SWG\nMonitoring Content Analysis\nMonitoring Reporter\nEdge SWG Administration R2\nModule 11: Monitoring Edge SWG features\n    Reporting for Edge SWG features\nExam Topics\nApplicable Course Content\nHow Reporter delivers centralizeed web reporting and visibility\nConfiguring access logging on Edge SWG to integrate with Reporter \nUsing the RPAC to configure log processing on Reporter\nRunning reports\n\nEdge SWG Administration R2\nModule 12: Reporting for Edge SWG features\nUnderstanding SGOS architecture and caching on Edge SWG \nExam Topics\nApplicable Course Content\nSGOS architecture\nCaching on Edge SWG\nUsing HTTP compression\nEdge SWG Administration R2\nModule 13: Understanding SGOS architecture and caching on Edge SWG\n    Using built-in diagnostic tools on Edge SWG\nExam Topics\nApplicable Course Content\nExploring sysinfo files\nUsing policy tracing and policy coverage tools to analyze policy decisions\nUsing packet captures to analyze network traffic\nSending service information to Symantec support\nEdge SWG Administration R2\nModule 14: Using built-in diagnostic tools on Edge SWG\n   Expanding security with cloud integrations\nExam Topics\nApplicable Course Content\nIntroduction to Cloud SWG\nUsing Universal Policy Enforcement \nIntegrating CloudSOC with Symantec Network Protection\nEdge SWG Administration R2\nModule 15: Expanding security with cloud integrations\n\nEdge SWG diagnostics and troubleshooting overview\nExam Topics\nApplicable Course Content\nSymantec troubleshooting methodology \nSymantec Edge SWG component review \nKey diagnostic tools review\nEdge SWG Diagnostics and Troubleshooting R2\nModule 1: Edge SWG diagnostics and troulbeshooting overview\n    Diagnosing common issues on Edge SWG\nExam Topics\nApplicable Course Content\nDiagnosing CPU usage issues\nDiagnosing memory usage issues \nDiagnosing issues with external dependencies\nEdge SWG Diagnostics and Troubleshooting R2\nModule 2: Diagnosing common issues on Edge SWG\n    Troubleshooting authentication issues on Edge SWG\nExam Topics\nApplicable Course Content\nOverview of authentication on Edge SWG\nDefining issues related to authentication\nDiagnosing issues related to authentication\nSolving issues related to authentication\nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 3: Troubleshooting authentication issues on Edge SWG\n    Troubleshooting encrypted traffic management issues on Edge SWG\nExam Topics\nApplicable Course Content\nReview of SSL interception on Edge SWG \nDefining issues related to SSL interception \nDiagnosing issues related to SSL interception\nSolving issues related to SSL interception\nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 4: Troubleshooting encrypted traffic management issues on Edge SWG\n   Troubleshooting DNS issues on Edge SWG\nExam Topics\nApplicable Course Content\nOverview of DNS service on Edge SWG \nDefining issues related to DNS lookups \nDiagnosing issues related to DNS lookups \nSolving issues related to DNS lookups \nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 5: Troubleshooting DNS issues on Edge SWG\n   Troubleshooting policy issues on Edge SWG\nExam Topics\nApplicable Course Content\nReview of policy operation on Edge SWG \nDefining policy issues on Edge SWG \nDiagnosing policy issues on Edge SWG \nSolving policy issues on Edge SWG \nResult—Communicating result or contacting Symantec support\nEdge SWG Diagnostics and Troubleshooting R2\nModule 6: Troubleshooting policy issues on Edge SWG\n\nSample Exam Questions \nReview the following sample questions prior to taking an exam to gain a better understanding of the types of questions asked.\n\nWhich is the primary advantage of an inline Edge SWG deployment?\nEase of deployment\nMore easily implemented redundancy \nDecreases the amount of traffic to Edge SWG \nEliminates single point of failure\nWhich two (2) categories of HTTPS traffic are typically not decrypted? (Select two)\nFinancial services\nHealth\nSocial media\nNews media\nGambling\nWhich threat risk level would likely be assigned to an unproven URL without an established history of normal behavior?\nLow\nMedium-Low\nMedium\nHigh\n\n              4.    Which protocol does Edge SWG use to communicate with Symantec DLP?\nSecure Socket Layer\nFile Transfer Protocol\nHypertext Transport Protocol\nInternet Content Adaption Protocol\n5.     How would an administrator restrict the ability of financial personnel to access HR records in Reporter?\nConfigure separate databases for financial and HR records\nRestrict access by financial personnel to HR-related fields in the database\nEnsure that HR log sources are not uploaded to financial databases\nAssign dedicated Edge SWGs for each assigned role in the company\n\nSample Exam Answers: \n \nA\nA, B\nC\nD\nB",
+    "metadata": {
+      "basic": {
+        "file_name": "Edge SWG R2 Techical Specialist Exam Study Guide.docx",
+        "file_extension": "docx",
+        "file_size": 263900,
+        "created": {
+          "secs_since_epoch": 1758803609,
+          "nanos_since_epoch": 750383153
+        },
+        "modified": {
+          "secs_since_epoch": 1758803610,
+          "nanos_since_epoch": 292379789
+        },
+        "accessed": {
+          "secs_since_epoch": 1759354360,
+          "nanos_since_epoch": 557337030
+        },
+        "is_file": true,
+        "is_dir": false,
+        "is_symlink": false
+      },
+      "content": {
+        "detected_mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "encoding": null,
+        "line_endings": null,
+        "preview": null,
+        "language": null,
+        "stats": {
+          "char_count": null,
+          "word_count": null,
+          "line_count": null,
+          "paragraph_count": null,
+          "binary_ratio": 0.2701416015625
+        }
+      },
+      "security": {
+        "permissions": 33204,
+        "is_executable": false,
+        "is_hidden": false,
+        "has_extended_attributes": false,
+        "security_flags": []
+      },
+      "technical": {
+        "entropy": 7.712096613410837,
+        "compression_ratio": 1.0251808342850928,
+        "checksums": {
+          "sha256": "7c16e75e0f323dfdc449472f1690d64623c1aaafa5fb88dd80d201aa911075f5"
+        },
+        "structure": {
+          "has_structure": true,
+          "format_version": "2.0",
+          "embedded_resources": 1,
+          "sections": [
+            {
+              "name": "Local File Header",
+              "offset": 0,
+              "size": 30,
+              "section_type": "header"
+            }
+          ]
+        }
+      },
+      "document": {
+        "title": null,
+        "author": null,
+        "subject": null,
+        "keywords": [],
+        "creator": "Microsoft Office",
+        "producer": null,
+        "creation_date": null,
+        "modification_date": null,
+        "page_count": null,
+        "document_language": null,
+        "format_properties": {}
+      }
+    },
+    "structure": {
+      "document_type": "Guide",
+      "sections": [
+        {
+          "id": "section_0",
+          "title": "Exam Study Guide",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 68,
+          "length": 21
+        },
+        {
+          "id": "section_1",
+          "title": "Exam Description",
+          "level": 0,
+          "content": "Candidates can validate technical knowledge and competency by becoming a Symantec Certified Specialist (SCS) based on your specific area of Symantec technology expertise. To achieve this level of certification, candidates must pass this proctored SCS exam that is based on a combination of Symantec training material, commonly referenced product documentation, and real-world job scenarios.\n\nThis exam targets IT Professionals using Edge SWG products in a Security Operations role. This certification exam tests the candidate’s knowledge on how to administer Edge SWG features including Edge SWG, Content Analysis, Management Center, Reporter, and High Risk Isolation; as well as diagnose and troubleshoot common issues related to Edge SWG deployments.",
+          "keywords": [],
+          "position": 89,
+          "length": 772
+        },
+        {
+          "id": "section_2",
+          "title": "Recommended Experience",
+          "level": 0,
+          "content": "It is recommended that the candidate has at least 3-6 months experience working with Edge SWG products in a production or lab environment.",
+          "keywords": [],
+          "position": 861,
+          "length": 162
+        },
+        {
+          "id": "section_3",
+          "title": "Study References",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1023,
+          "length": 18
+        },
+        {
+          "id": "section_4",
+          "title": "Instructor Led",
+          "level": 0,
+          "content": "https://www.broadcom.com/support/symantec/services/education",
+          "keywords": [],
+          "position": 1041,
+          "length": 76
+        },
+        {
+          "id": "section_5",
+          "title": "Instructor Led",
+          "level": 0,
+          "content": "https://www.broadcom.com/support/symantec/services/education\n",
+          "keywords": [],
+          "position": 1117,
+          "length": 77
+        },
+        {
+          "id": "section_6",
+          "title": "Symantec Web Protection—Edge SWG Administration R2 (3-Day Instructor-led)",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1194,
+          "length": 76
+        },
+        {
+          "id": "section_7",
+          "title": "Introduction to Symantec Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1270,
+          "length": 34
+        },
+        {
+          "id": "section_8",
+          "title": "Intercepting traffic and applying policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1304,
+          "length": 41
+        },
+        {
+          "id": "section_9",
+          "title": "Applying security and web usage policy to encrypted traffic",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1345,
+          "length": 60
+        },
+        {
+          "id": "section_10",
+          "title": "Centrally managing devices with Management Center",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1405,
+          "length": 50
+        },
+        {
+          "id": "section_11",
+          "title": "Providing security and web usage policies based on role or group",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1455,
+          "length": 65
+        },
+        {
+          "id": "section_12",
+          "title": "Enforcing corporate guidelines for acceptable Internet browsing behavior",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1520,
+          "length": 73
+        },
+        {
+          "id": "section_13",
+          "title": "Protecting the endpoint from malicious activity",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1593,
+          "length": 48
+        },
+        {
+          "id": "section_14",
+          "title": "Providing security for risky and unknown websites with High Risk Isolation",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1641,
+          "length": 75
+        },
+        {
+          "id": "section_15",
+          "title": "Enhancing security with virus scanning",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1716,
+          "length": 39
+        },
+        {
+          "id": "section_16",
+          "title": "Using malware analysis to analyze potentially malicious files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1755,
+          "length": 62
+        },
+        {
+          "id": "section_17",
+          "title": "Monitoring Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1817,
+          "length": 29
+        },
+        {
+          "id": "section_18",
+          "title": "Reporting for Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1846,
+          "length": 32
+        },
+        {
+          "id": "section_19",
+          "title": "Understanding SGOS architecture and caching on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1878,
+          "length": 56
+        },
+        {
+          "id": "section_20",
+          "title": "Using built-in diagnostic tools on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1934,
+          "length": 44
+        },
+        {
+          "id": "section_21",
+          "title": "Expanding security with cloud integrations",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 1978,
+          "length": 47
+        },
+        {
+          "id": "section_22",
+          "title": "Instructor Led",
+          "level": 0,
+          "content": "https://www.broadcom.com/support/symantec/services/education",
+          "keywords": [],
+          "position": 2025,
+          "length": 76
+        },
+        {
+          "id": "section_23",
+          "title": "Instructor Led",
+          "level": 0,
+          "content": "https://www.broadcom.com/support/symantec/services/education\n",
+          "keywords": [],
+          "position": 2101,
+          "length": 77
+        },
+        {
+          "id": "section_24",
+          "title": "Symantec Web Protection—Edge SWG Diagnostics & Troubleshooting R2 (1-Day Instructor-led)",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2178,
+          "length": 91
+        },
+        {
+          "id": "section_25",
+          "title": "Edge SWG diagnostics and troubleshooting overview",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2269,
+          "length": 50
+        },
+        {
+          "id": "section_26",
+          "title": "Diagnosing common issue on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2319,
+          "length": 36
+        },
+        {
+          "id": "section_27",
+          "title": "Troubleshooting authentication issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2355,
+          "length": 50
+        },
+        {
+          "id": "section_28",
+          "title": "Troubleshooting encrypted traffic management issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2405,
+          "length": 64
+        },
+        {
+          "id": "section_29",
+          "title": "Troubleshooting DNS issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2469,
+          "length": 39
+        },
+        {
+          "id": "section_30",
+          "title": "Troubleshooting Policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2508,
+          "length": 46
+        },
+        {
+          "id": "section_31",
+          "title": "Documentation",
+          "level": 0,
+          "content": "https://techdocs.broadcom.com/\n",
+          "keywords": [],
+          "position": 2554,
+          "length": 46
+        },
+        {
+          "id": "section_32",
+          "title": "Documentation",
+          "level": 0,
+          "content": "https://techdocs.broadcom.com/\n\n",
+          "keywords": [],
+          "position": 2600,
+          "length": 47
+        },
+        {
+          "id": "section_33",
+          "title": "Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2647,
+          "length": 13
+        },
+        {
+          "id": "section_34",
+          "title": "SGOS Administration Guide",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2660,
+          "length": 26
+        },
+        {
+          "id": "section_35",
+          "title": "SGOS Upgrade/Downgrade Guide",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2686,
+          "length": 29
+        },
+        {
+          "id": "section_36",
+          "title": "Edge SWG 7.3.x Security Best Practices",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2715,
+          "length": 39
+        },
+        {
+          "id": "section_37",
+          "title": "Symantec Websites",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2754,
+          "length": 19
+        },
+        {
+          "id": "section_38",
+          "title": "Symantec Websites",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2773,
+          "length": 20
+        },
+        {
+          "id": "section_39",
+          "title": "Network Security Landing Page",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 2793,
+          "length": 30
+        },
+        {
+          "id": "section_40",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "The following tables list some areas to be familiar with, organized by course module, in preparation for taking the Symantec Certification exam.  \n\nCandidates are encouraged to complete applicable lab exercises as part of their preparation for the exam.\n\nFor more information on the Symantec Certification Program, visit http://go.symantec.com/certification.\n",
+          "keywords": [],
+          "position": 2823,
+          "length": 375
+        },
+        {
+          "id": "section_41",
+          "title": "Introduction to Symantec Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3198,
+          "length": 38
+        },
+        {
+          "id": "section_42",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3236,
+          "length": 12
+        },
+        {
+          "id": "section_43",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3248,
+          "length": 26
+        },
+        {
+          "id": "section_44",
+          "title": "Symantec Web Protection overview",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3274,
+          "length": 33
+        },
+        {
+          "id": "section_45",
+          "title": "Introduction to Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3307,
+          "length": 25
+        },
+        {
+          "id": "section_46",
+          "title": "Key Edge SWG use cases",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3332,
+          "length": 23
+        },
+        {
+          "id": "section_47",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3355,
+          "length": 27
+        },
+        {
+          "id": "section_48",
+          "title": "Module 1: Introduction to Symantec Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3382,
+          "length": 44
+        },
+        {
+          "id": "section_49",
+          "title": "Intercepting traffic and applying policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3426,
+          "length": 45
+        },
+        {
+          "id": "section_50",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3471,
+          "length": 12
+        },
+        {
+          "id": "section_51",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3483,
+          "length": 26
+        },
+        {
+          "id": "section_52",
+          "title": "How Edge SWG intercepts traffic",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3509,
+          "length": 32
+        },
+        {
+          "id": "section_53",
+          "title": "Writing Edge SWG policy in the Visual Policy Manager",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3541,
+          "length": 53
+        },
+        {
+          "id": "section_54",
+          "title": "Informing users when web access is denied or restricted due to policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3594,
+          "length": 70
+        },
+        {
+          "id": "section_55",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3664,
+          "length": 27
+        },
+        {
+          "id": "section_56",
+          "title": "Module 2: Intercepting traffic and applying policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3691,
+          "length": 51
+        },
+        {
+          "id": "section_57",
+          "title": "Applying security and web usage policy to encrypted traffic",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3742,
+          "length": 66
+        },
+        {
+          "id": "section_58",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3808,
+          "length": 12
+        },
+        {
+          "id": "section_59",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3820,
+          "length": 26
+        },
+        {
+          "id": "section_60",
+          "title": "Introduction to TLS encryption",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3846,
+          "length": 31
+        },
+        {
+          "id": "section_61",
+          "title": "Managing HTTPS traffic on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3877,
+          "length": 35
+        },
+        {
+          "id": "section_62",
+          "title": "Offloading HTTPS traffic to the SSL Visibility Appliance to boost performance",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3912,
+          "length": 78
+        },
+        {
+          "id": "section_63",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 3990,
+          "length": 27
+        },
+        {
+          "id": "section_64",
+          "title": "Module 3: Applying security and web usage policy to encrypted traffic",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4017,
+          "length": 70
+        },
+        {
+          "id": "section_65",
+          "title": "Centrally managing devices with Management Center",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4087,
+          "length": 58
+        },
+        {
+          "id": "section_66",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4145,
+          "length": 12
+        },
+        {
+          "id": "section_67",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4157,
+          "length": 26
+        },
+        {
+          "id": "section_68",
+          "title": "How Management Center centralizes and simplifies Edge SWG management",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4183,
+          "length": 69
+        },
+        {
+          "id": "section_69",
+          "title": "Configuring Edge SWG with the SG Admin Console",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4252,
+          "length": 47
+        },
+        {
+          "id": "section_70",
+          "title": "Creating and distributing VPM policies",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4299,
+          "length": 39
+        },
+        {
+          "id": "section_71",
+          "title": "Creating and managing jobs",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4338,
+          "length": 27
+        },
+        {
+          "id": "section_72",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4365,
+          "length": 27
+        },
+        {
+          "id": "section_73",
+          "title": "Module 4: Centrally managing devices with Management Center",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4392,
+          "length": 60
+        },
+        {
+          "id": "section_74",
+          "title": "Providing security and web usage policies based on role or group",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4452,
+          "length": 72
+        },
+        {
+          "id": "section_75",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4524,
+          "length": 12
+        },
+        {
+          "id": "section_76",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4536,
+          "length": 26
+        },
+        {
+          "id": "section_77",
+          "title": "Authentication basics on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4562,
+          "length": 34
+        },
+        {
+          "id": "section_78",
+          "title": "Using IWA authentication on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4596,
+          "length": 37
+        },
+        {
+          "id": "section_79",
+          "title": "Authentication modes in explicit and transparent proxy deployments",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4633,
+          "length": 67
+        },
+        {
+          "id": "section_80",
+          "title": "Connecting to the Windows domain directly using IWA direct",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4700,
+          "length": 59
+        },
+        {
+          "id": "section_81",
+          "title": "Connecting to the Windows domain using IWA BCAAA",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4759,
+          "length": 49
+        },
+        {
+          "id": "section_82",
+          "title": "Introduction to role-based access control",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4808,
+          "length": 42
+        },
+        {
+          "id": "section_83",
+          "title": "Using roles and groups in policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4850,
+          "length": 33
+        },
+        {
+          "id": "section_84",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4883,
+          "length": 27
+        },
+        {
+          "id": "section_85",
+          "title": "Module 5: Providing security and web usage policies based on role or group",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4910,
+          "length": 75
+        },
+        {
+          "id": "section_86",
+          "title": "Enforcing corporate guidelines for acceptable Internet browsing behavior",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 4985,
+          "length": 77
+        },
+        {
+          "id": "section_87",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5062,
+          "length": 12
+        },
+        {
+          "id": "section_88",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5074,
+          "length": 26
+        },
+        {
+          "id": "section_89",
+          "title": "Creating strong corporate guidelines for acceptable Internet use",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5100,
+          "length": 65
+        },
+        {
+          "id": "section_90",
+          "title": "Using website categorization to enforce acceptable use guidelines",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5165,
+          "length": 66
+        },
+        {
+          "id": "section_91",
+          "title": "Providing Edge SWG with categorization databases to be referenced in policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5231,
+          "length": 76
+        },
+        {
+          "id": "section_92",
+          "title": "Setting the Request URL Category object in policy to enforce acceptable use guidelines",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5307,
+          "length": 87
+        },
+        {
+          "id": "section_93",
+          "title": "Applying policy in order to enforce acceptable use guidelines",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5394,
+          "length": 63
+        },
+        {
+          "id": "section_94",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5457,
+          "length": 27
+        },
+        {
+          "id": "section_95",
+          "title": "Module 6: Enforcing corporate guidelines for acceptable Internet browsing behavior",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5484,
+          "length": 83
+        },
+        {
+          "id": "section_96",
+          "title": "Protecting the endpoint from malicious activity",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5567,
+          "length": 53
+        },
+        {
+          "id": "section_97",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5620,
+          "length": 12
+        },
+        {
+          "id": "section_98",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5632,
+          "length": 26
+        },
+        {
+          "id": "section_99",
+          "title": "Requirements for a pre-emptive, layered web defense",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5658,
+          "length": 52
+        },
+        {
+          "id": "section_100",
+          "title": "WebPulse technical details",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5710,
+          "length": 27
+        },
+        {
+          "id": "section_101",
+          "title": "Introduction to Intelligence Services",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5737,
+          "length": 38
+        },
+        {
+          "id": "section_102",
+          "title": "Using Intelligence Services data feeds in policy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5775,
+          "length": 49
+        },
+        {
+          "id": "section_103",
+          "title": "Ensuring safe downloads",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5824,
+          "length": 24
+        },
+        {
+          "id": "section_104",
+          "title": "Combined policy example",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5848,
+          "length": 24
+        },
+        {
+          "id": "section_105",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5872,
+          "length": 27
+        },
+        {
+          "id": "section_106",
+          "title": "Module 7: Protecting the endpoint from malicious activity",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5899,
+          "length": 60
+        },
+        {
+          "id": "section_107",
+          "title": "Providing security for risky and unknown for risky and unknown websites with HRI",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 5959,
+          "length": 89
+        },
+        {
+          "id": "section_108",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6048,
+          "length": 12
+        },
+        {
+          "id": "section_109",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6060,
+          "length": 26
+        },
+        {
+          "id": "section_110",
+          "title": "Instroduction to High Risk Isolation?",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6086,
+          "length": 38
+        },
+        {
+          "id": "section_111",
+          "title": "Configuring HRI",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6124,
+          "length": 16
+        },
+        {
+          "id": "section_112",
+          "title": "Overview of Full Isolation",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6140,
+          "length": 27
+        },
+        {
+          "id": "section_113",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "Module 8: Providing security for risky and unknown for risky and unknown websites with High Risk Isolation",
+          "keywords": [],
+          "position": 6167,
+          "length": 134
+        },
+        {
+          "id": "section_114",
+          "title": "Enhancing security with virus scanning",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6301,
+          "length": 43
+        },
+        {
+          "id": "section_115",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6344,
+          "length": 12
+        },
+        {
+          "id": "section_116",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6356,
+          "length": 26
+        },
+        {
+          "id": "section_117",
+          "title": "Introduction to Content Analysis",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6382,
+          "length": 33
+        },
+        {
+          "id": "section_118",
+          "title": "Configuring communication with Edge SWG over ICAP",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6415,
+          "length": 50
+        },
+        {
+          "id": "section_119",
+          "title": "Configure malware scanning options on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6465,
+          "length": 47
+        },
+        {
+          "id": "section_120",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6512,
+          "length": 27
+        },
+        {
+          "id": "section_121",
+          "title": "Module 9: Enhancing security and virus scanning",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6539,
+          "length": 48
+        },
+        {
+          "id": "section_122",
+          "title": "Using Malware Analysis to analyze potentially malicious files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6587,
+          "length": 67
+        },
+        {
+          "id": "section_123",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6654,
+          "length": 12
+        },
+        {
+          "id": "section_124",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6666,
+          "length": 26
+        },
+        {
+          "id": "section_125",
+          "title": "Introduction to Malware Analysis",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6692,
+          "length": 34
+        },
+        {
+          "id": "section_126",
+          "title": "Preparing to use Malware Analysis",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6726,
+          "length": 34
+        },
+        {
+          "id": "section_127",
+          "title": "Performing Malware Analysis",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6760,
+          "length": 28
+        },
+        {
+          "id": "section_128",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6788,
+          "length": 27
+        },
+        {
+          "id": "section_129",
+          "title": "Module 10: Using malware analysis to analyze potentially malicious files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6815,
+          "length": 73
+        },
+        {
+          "id": "section_130",
+          "title": "Monitoring Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6888,
+          "length": 34
+        },
+        {
+          "id": "section_131",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6922,
+          "length": 12
+        },
+        {
+          "id": "section_132",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6934,
+          "length": 26
+        },
+        {
+          "id": "section_133",
+          "title": "Monitoring devices from within Management Center",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 6960,
+          "length": 49
+        },
+        {
+          "id": "section_134",
+          "title": "Configuring device alerts in Management Center",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7009,
+          "length": 47
+        },
+        {
+          "id": "section_135",
+          "title": "Using Active Sessions and the Event Log on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7056,
+          "length": 52
+        },
+        {
+          "id": "section_136",
+          "title": "Using health checks on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7108,
+          "length": 32
+        },
+        {
+          "id": "section_137",
+          "title": "Monitoring Content Analysis",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7140,
+          "length": 28
+        },
+        {
+          "id": "section_138",
+          "title": "Monitoring Reporter",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7168,
+          "length": 20
+        },
+        {
+          "id": "section_139",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7188,
+          "length": 27
+        },
+        {
+          "id": "section_140",
+          "title": "Module 11: Monitoring Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7215,
+          "length": 40
+        },
+        {
+          "id": "section_141",
+          "title": "Reporting for Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7255,
+          "length": 36
+        },
+        {
+          "id": "section_142",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7291,
+          "length": 12
+        },
+        {
+          "id": "section_143",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7303,
+          "length": 26
+        },
+        {
+          "id": "section_144",
+          "title": "How Reporter delivers centralizeed web reporting and visibility",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7329,
+          "length": 64
+        },
+        {
+          "id": "section_145",
+          "title": "Configuring access logging on Edge SWG to integrate with Reporter",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7393,
+          "length": 67
+        },
+        {
+          "id": "section_146",
+          "title": "Using the RPAC to configure log processing on Reporter",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7460,
+          "length": 55
+        },
+        {
+          "id": "section_147",
+          "title": "Running reports",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7515,
+          "length": 17
+        },
+        {
+          "id": "section_148",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7532,
+          "length": 27
+        },
+        {
+          "id": "section_149",
+          "title": "Module 12: Reporting for Edge SWG features",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7559,
+          "length": 43
+        },
+        {
+          "id": "section_150",
+          "title": "Understanding SGOS architecture and caching on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7602,
+          "length": 57
+        },
+        {
+          "id": "section_151",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7659,
+          "length": 12
+        },
+        {
+          "id": "section_152",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7671,
+          "length": 26
+        },
+        {
+          "id": "section_153",
+          "title": "SGOS architecture",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7697,
+          "length": 18
+        },
+        {
+          "id": "section_154",
+          "title": "Caching on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7715,
+          "length": 20
+        },
+        {
+          "id": "section_155",
+          "title": "Using HTTP compression",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7735,
+          "length": 23
+        },
+        {
+          "id": "section_156",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7758,
+          "length": 27
+        },
+        {
+          "id": "section_157",
+          "title": "Module 13: Understanding SGOS architecture and caching on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7785,
+          "length": 67
+        },
+        {
+          "id": "section_158",
+          "title": "Using built-in diagnostic tools on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7852,
+          "length": 48
+        },
+        {
+          "id": "section_159",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7900,
+          "length": 12
+        },
+        {
+          "id": "section_160",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7912,
+          "length": 26
+        },
+        {
+          "id": "section_161",
+          "title": "Exploring sysinfo files",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7938,
+          "length": 24
+        },
+        {
+          "id": "section_162",
+          "title": "Using policy tracing and policy coverage tools to analyze policy decisions",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 7962,
+          "length": 75
+        },
+        {
+          "id": "section_163",
+          "title": "Using packet captures to analyze network traffic",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8037,
+          "length": 49
+        },
+        {
+          "id": "section_164",
+          "title": "Sending service information to Symantec support",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8086,
+          "length": 48
+        },
+        {
+          "id": "section_165",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8134,
+          "length": 27
+        },
+        {
+          "id": "section_166",
+          "title": "Module 14: Using built-in diagnostic tools on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8161,
+          "length": 55
+        },
+        {
+          "id": "section_167",
+          "title": "Expanding security with cloud integrations",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8216,
+          "length": 46
+        },
+        {
+          "id": "section_168",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8262,
+          "length": 12
+        },
+        {
+          "id": "section_169",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8274,
+          "length": 26
+        },
+        {
+          "id": "section_170",
+          "title": "Introduction to Cloud SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8300,
+          "length": 26
+        },
+        {
+          "id": "section_171",
+          "title": "Using Universal Policy Enforcement",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8326,
+          "length": 36
+        },
+        {
+          "id": "section_172",
+          "title": "Integrating CloudSOC with Symantec Network Protection",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8362,
+          "length": 54
+        },
+        {
+          "id": "section_173",
+          "title": "Edge SWG Administration R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8416,
+          "length": 27
+        },
+        {
+          "id": "section_174",
+          "title": "Module 15: Expanding security with cloud integrations",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8443,
+          "length": 55
+        },
+        {
+          "id": "section_175",
+          "title": "Edge SWG diagnostics and troubleshooting overview",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8498,
+          "length": 50
+        },
+        {
+          "id": "section_176",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8548,
+          "length": 12
+        },
+        {
+          "id": "section_177",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8560,
+          "length": 26
+        },
+        {
+          "id": "section_178",
+          "title": "Symantec troubleshooting methodology",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8586,
+          "length": 38
+        },
+        {
+          "id": "section_179",
+          "title": "Symantec Edge SWG component review",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8624,
+          "length": 36
+        },
+        {
+          "id": "section_180",
+          "title": "Key diagnostic tools review",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8660,
+          "length": 28
+        },
+        {
+          "id": "section_181",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8688,
+          "length": 44
+        },
+        {
+          "id": "section_182",
+          "title": "Module 1: Edge SWG diagnostics and troulbeshooting overview",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8732,
+          "length": 60
+        },
+        {
+          "id": "section_183",
+          "title": "Diagnosing common issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8792,
+          "length": 41
+        },
+        {
+          "id": "section_184",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8833,
+          "length": 12
+        },
+        {
+          "id": "section_185",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8845,
+          "length": 26
+        },
+        {
+          "id": "section_186",
+          "title": "Diagnosing CPU usage issues",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8871,
+          "length": 28
+        },
+        {
+          "id": "section_187",
+          "title": "Diagnosing memory usage issues",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8899,
+          "length": 32
+        },
+        {
+          "id": "section_188",
+          "title": "Diagnosing issues with external dependencies",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8931,
+          "length": 45
+        },
+        {
+          "id": "section_189",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 8976,
+          "length": 44
+        },
+        {
+          "id": "section_190",
+          "title": "Module 2: Diagnosing common issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9020,
+          "length": 47
+        },
+        {
+          "id": "section_191",
+          "title": "Troubleshooting authentication issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9067,
+          "length": 54
+        },
+        {
+          "id": "section_192",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9121,
+          "length": 12
+        },
+        {
+          "id": "section_193",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9133,
+          "length": 26
+        },
+        {
+          "id": "section_194",
+          "title": "Overview of authentication on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9159,
+          "length": 39
+        },
+        {
+          "id": "section_195",
+          "title": "Defining issues related to authentication",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9198,
+          "length": 42
+        },
+        {
+          "id": "section_196",
+          "title": "Diagnosing issues related to authentication",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9240,
+          "length": 44
+        },
+        {
+          "id": "section_197",
+          "title": "Solving issues related to authentication",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9284,
+          "length": 41
+        },
+        {
+          "id": "section_198",
+          "title": "Result—Communicating result or contacting Symantec support",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9325,
+          "length": 61
+        },
+        {
+          "id": "section_199",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9386,
+          "length": 44
+        },
+        {
+          "id": "section_200",
+          "title": "Module 3: Troubleshooting authentication issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9430,
+          "length": 60
+        },
+        {
+          "id": "section_201",
+          "title": "Troubleshooting encrypted traffic management issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9490,
+          "length": 68
+        },
+        {
+          "id": "section_202",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9558,
+          "length": 12
+        },
+        {
+          "id": "section_203",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9570,
+          "length": 26
+        },
+        {
+          "id": "section_204",
+          "title": "Review of SSL interception on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9596,
+          "length": 40
+        },
+        {
+          "id": "section_205",
+          "title": "Defining issues related to SSL interception",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9636,
+          "length": 45
+        },
+        {
+          "id": "section_206",
+          "title": "Diagnosing issues related to SSL interception",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9681,
+          "length": 46
+        },
+        {
+          "id": "section_207",
+          "title": "Solving issues related to SSL interception",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9727,
+          "length": 43
+        },
+        {
+          "id": "section_208",
+          "title": "Result—Communicating result or contacting Symantec support",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9770,
+          "length": 61
+        },
+        {
+          "id": "section_209",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9831,
+          "length": 44
+        },
+        {
+          "id": "section_210",
+          "title": "Module 4: Troubleshooting encrypted traffic management issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9875,
+          "length": 74
+        },
+        {
+          "id": "section_211",
+          "title": "Troubleshooting DNS issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9949,
+          "length": 42
+        },
+        {
+          "id": "section_212",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 9991,
+          "length": 12
+        },
+        {
+          "id": "section_213",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10003,
+          "length": 26
+        },
+        {
+          "id": "section_214",
+          "title": "Overview of DNS service on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10029,
+          "length": 37
+        },
+        {
+          "id": "section_215",
+          "title": "Defining issues related to DNS lookups",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10066,
+          "length": 40
+        },
+        {
+          "id": "section_216",
+          "title": "Diagnosing issues related to DNS lookups",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10106,
+          "length": 42
+        },
+        {
+          "id": "section_217",
+          "title": "Solving issues related to DNS lookups",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10148,
+          "length": 39
+        },
+        {
+          "id": "section_218",
+          "title": "Result—Communicating result or contacting Symantec support",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10187,
+          "length": 61
+        },
+        {
+          "id": "section_219",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10248,
+          "length": 44
+        },
+        {
+          "id": "section_220",
+          "title": "Module 5: Troubleshooting DNS issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10292,
+          "length": 49
+        },
+        {
+          "id": "section_221",
+          "title": "Troubleshooting policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10341,
+          "length": 45
+        },
+        {
+          "id": "section_222",
+          "title": "Exam Topics",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10386,
+          "length": 12
+        },
+        {
+          "id": "section_223",
+          "title": "Applicable Course Content",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10398,
+          "length": 26
+        },
+        {
+          "id": "section_224",
+          "title": "Review of policy operation on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10424,
+          "length": 40
+        },
+        {
+          "id": "section_225",
+          "title": "Defining policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10464,
+          "length": 36
+        },
+        {
+          "id": "section_226",
+          "title": "Diagnosing policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10500,
+          "length": 38
+        },
+        {
+          "id": "section_227",
+          "title": "Solving policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10538,
+          "length": 35
+        },
+        {
+          "id": "section_228",
+          "title": "Result—Communicating result or contacting Symantec support",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10573,
+          "length": 61
+        },
+        {
+          "id": "section_229",
+          "title": "Edge SWG Diagnostics and Troubleshooting R2",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10634,
+          "length": 44
+        },
+        {
+          "id": "section_230",
+          "title": "Module 6: Troubleshooting policy issues on Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10678,
+          "length": 53
+        },
+        {
+          "id": "section_231",
+          "title": "Sample Exam Questions",
+          "level": 0,
+          "content": "Review the following sample questions prior to taking an exam to gain a better understanding of the types of questions asked.\n",
+          "keywords": [],
+          "position": 10731,
+          "length": 150
+        },
+        {
+          "id": "section_232",
+          "title": "Which is the primary advantage of an inline Edge SWG deployment?",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10881,
+          "length": 65
+        },
+        {
+          "id": "section_233",
+          "title": "Ease of deployment",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10946,
+          "length": 19
+        },
+        {
+          "id": "section_234",
+          "title": "More easily implemented redundancy",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 10965,
+          "length": 36
+        },
+        {
+          "id": "section_235",
+          "title": "Decreases the amount of traffic to Edge SWG",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11001,
+          "length": 45
+        },
+        {
+          "id": "section_236",
+          "title": "Eliminates single point of failure",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11046,
+          "length": 35
+        },
+        {
+          "id": "section_237",
+          "title": "Which two (2) categories of HTTPS traffic are typically not decrypted? (Select two)",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11081,
+          "length": 84
+        },
+        {
+          "id": "section_238",
+          "title": "Financial services",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11165,
+          "length": 19
+        },
+        {
+          "id": "section_239",
+          "title": "Health",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11184,
+          "length": 7
+        },
+        {
+          "id": "section_240",
+          "title": "Social media",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11191,
+          "length": 13
+        },
+        {
+          "id": "section_241",
+          "title": "News media",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11204,
+          "length": 11
+        },
+        {
+          "id": "section_242",
+          "title": "Gambling",
+          "level": 0,
+          "content": "Which threat risk level would likely be assigned to an unproven URL without an established history of normal behavior?",
+          "keywords": [],
+          "position": 11215,
+          "length": 128
+        },
+        {
+          "id": "section_243",
+          "title": "Low",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11343,
+          "length": 4
+        },
+        {
+          "id": "section_244",
+          "title": "Medium-Low",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11347,
+          "length": 11
+        },
+        {
+          "id": "section_245",
+          "title": "Medium",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11358,
+          "length": 7
+        },
+        {
+          "id": "section_246",
+          "title": "High",
+          "level": 0,
+          "content": "              4.    Which protocol does Edge SWG use to communicate with Symantec DLP?",
+          "keywords": [],
+          "position": 11365,
+          "length": 93
+        },
+        {
+          "id": "section_247",
+          "title": "Secure Socket Layer",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11458,
+          "length": 20
+        },
+        {
+          "id": "section_248",
+          "title": "File Transfer Protocol",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11478,
+          "length": 23
+        },
+        {
+          "id": "section_249",
+          "title": "Hypertext Transport Protocol",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11501,
+          "length": 29
+        },
+        {
+          "id": "section_250",
+          "title": "Internet Content Adaption Protocol",
+          "level": 0,
+          "content": "5.     How would an administrator restrict the ability of financial personnel to access HR records in Reporter?",
+          "keywords": [],
+          "position": 11530,
+          "length": 147
+        },
+        {
+          "id": "section_251",
+          "title": "Configure separate databases for financial and HR records",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11677,
+          "length": 58
+        },
+        {
+          "id": "section_252",
+          "title": "Restrict access by financial personnel to HR-related fields in the database",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11735,
+          "length": 76
+        },
+        {
+          "id": "section_253",
+          "title": "Ensure that HR log sources are not uploaded to financial databases",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11811,
+          "length": 67
+        },
+        {
+          "id": "section_254",
+          "title": "Assign dedicated Edge SWGs for each assigned role in the company",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11878,
+          "length": 66
+        },
+        {
+          "id": "section_255",
+          "title": "Sample Exam Answers:",
+          "level": 0,
+          "content": " ",
+          "keywords": [],
+          "position": 11944,
+          "length": 24
+        },
+        {
+          "id": "section_256",
+          "title": "A",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11968,
+          "length": 2
+        },
+        {
+          "id": "section_257",
+          "title": "A, B",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11970,
+          "length": 5
+        },
+        {
+          "id": "section_258",
+          "title": "C",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11975,
+          "length": 2
+        },
+        {
+          "id": "section_259",
+          "title": "D",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11977,
+          "length": 2
+        },
+        {
+          "id": "section_260",
+          "title": "B",
+          "level": 0,
+          "content": "",
+          "keywords": [],
+          "position": 11979,
+          "length": 1
+        }
+      ],
+      "toc": [
+        {
+          "title": ": Symantec Web Protection—Edge SWG R2 Technical Specialist",
+          "level": 0,
+          "page": null,
+          "position": null
+        }
+      ],
+      "page_count": null,
+      "has_images": false,
+      "has_tables": false,
+      "has_code": false
+    },
+    "keywords": [
+      "symantec",
+      "policy",
+      "traffic",
+      "topics",
+      "administration",
+      "edge",
+      "troubleshooting",
+      "issues",
+      "authentication",
+      "applicable",
+      "security",
+      "exam",
+      "using",
+      "module",
+      "management",
+      "course",
+      "content",
+      "related",
+      "with",
+      "introduction"
+    ],
+    "content_hash": "b8f7613770bbf5ab",
+    "indexed_at": {
+      "secs_since_epoch": 1759395820,
+      "nanos_since_epoch": 332286509
     },
     "index_version": 1
   },

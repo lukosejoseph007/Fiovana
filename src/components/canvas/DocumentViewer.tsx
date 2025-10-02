@@ -10,6 +10,10 @@ import { documentService, structureService, contentClassificationService } from 
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
 import DocumentRenderer from './DocumentRenderer'
+import DocumentEditor from '../editor/DocumentEditor'
+import { useDocumentState } from '../../hooks/useDocumentState'
+import { useAutoSave } from '../../hooks/useAutoSave'
+import '../../styles/editor.css'
 
 interface DocumentViewerProps {
   documentId: string
@@ -67,8 +71,42 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   // Note: hoveredHighlight temporarily disabled - will be re-implemented with React-based overlays
   // const [hoveredHighlight, setHoveredHighlight] = useState<string | null>(null)
   const [showIntelligenceBar, setShowIntelligenceBar] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const intelligenceBarRef = useRef<HTMLDivElement>(null)
+
+  // Document state management with auto-save
+  const {
+    content: editedContent,
+    isDirty,
+    isSaving,
+    lastSaved,
+    error: saveError,
+    updateContent,
+    save: saveDocument,
+    initialize: initializeDocumentState,
+  } = useDocumentState(document?.content || '', {
+    onSave: async (content: string) => {
+      // TODO: Implement actual backend save with Tauri command
+      console.log('Saving document:', documentId, 'Content length:', content.length)
+      // Simulate save operation
+      await new Promise(resolve => setTimeout(resolve, 800))
+    },
+    onDirtyChange: (dirty: boolean) => {
+      setShowUnsavedWarning(dirty)
+    },
+  })
+
+  // Auto-save functionality (5 second delay)
+  useAutoSave(editedContent, isDirty, {
+    enabled: isEditMode,
+    delay: 5000,
+    onAutoSave: saveDocument,
+    onError: (error: Error) => {
+      console.error('Auto-save failed:', error)
+    },
+  })
 
   // Generate AI suggestions for the document
   const generateAISuggestions = useCallback(async () => {
@@ -332,6 +370,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     loadDocument()
   }, [loadDocument])
 
+  // Initialize document state when document loads
+  useEffect(() => {
+    if (document?.content) {
+      initializeDocumentState(document.content)
+    }
+  }, [document?.content, initializeDocumentState])
+
   // Add event listeners for text selection
   useEffect(() => {
     const doc = window.document
@@ -452,23 +497,38 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       {/* Document Header Strip */}
       <div
         style={{
-          height: '32px',
-          padding: `0 ${designTokens.spacing[4]}`,
-          background: designTokens.colors.surface.secondary,
-          borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
+          minHeight: '48px',
+          padding: `${designTokens.spacing[3]} ${designTokens.spacing[6]}`,
+          background: 'linear-gradient(to bottom, rgba(26, 26, 30, 0.95), rgba(22, 22, 26, 0.98))',
+          backdropFilter: 'blur(10px)',
+          borderBottom: `1px solid rgba(255, 255, 255, 0.08)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
         }}
       >
         {/* Document Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[3] }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: designTokens.spacing[3],
+            flex: 1,
+            minWidth: 0, // Allow flex item to shrink
+          }}
+        >
+          <Icon
+            name="Document"
+            size={18}
+            style={{ color: designTokens.colors.accent.ai, flexShrink: 0 }}
+          />
           <span
             style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              fontWeight: designTokens.typography.fontWeight.medium,
+              fontSize: designTokens.typography.fontSize.base,
+              fontWeight: designTokens.typography.fontWeight.semibold,
               color: designTokens.colors.text.primary,
-              maxWidth: '300px',
+              maxWidth: '400px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -480,9 +540,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           <Badge
             variant="confidence"
             style={{
-              background: `${designTokens.colors.accent.ai}20`,
+              background: `${designTokens.colors.accent.ai}15`,
               color: designTokens.colors.accent.ai,
               fontSize: designTokens.typography.fontSize.xs,
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: `1px solid ${designTokens.colors.accent.ai}30`,
+              flexShrink: 0,
             }}
           >
             {Math.round(confidenceScore * 100)}% confidence
@@ -493,6 +557,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               variant="default"
               style={{
                 fontSize: designTokens.typography.fontSize.xs,
+                padding: '4px 10px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: designTokens.colors.text.secondary,
+                flexShrink: 0,
               }}
             >
               {classification.categories?.[0]?.name || 'Unknown'}
@@ -501,22 +571,139 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[2] }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: designTokens.spacing[2],
+            flexShrink: 0,
+          }}
+        >
+          {/* Save Button (shown in edit mode) */}
+          {isEditMode && (
+            <>
+              <Tooltip
+                content={
+                  isDirty ? 'Save changes (auto-saves every 5 seconds)' : 'No unsaved changes'
+                }
+              >
+                <Button
+                  variant={isDirty ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={saveDocument}
+                  disabled={!isDirty || isSaving}
+                  style={{
+                    fontWeight: 600,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    ...(isDirty
+                      ? {
+                          background: 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)',
+                          boxShadow: '0 2px 8px rgba(64, 192, 87, 0.3)',
+                        }
+                      : {}),
+                  }}
+                >
+                  <Icon name={isSaving ? 'Spinner' : 'Document'} size={16} />
+                  {isSaving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}
+                </Button>
+              </Tooltip>
+
+              {/* Save Status Indicator */}
+              {lastSaved && !isDirty && (
+                <span
+                  style={{
+                    fontSize: designTokens.typography.fontSize.xs,
+                    color: designTokens.colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Saved {new Date(lastSaved).toLocaleTimeString()}
+                </span>
+              )}
+
+              {/* Error Indicator */}
+              {saveError && (
+                <Tooltip content={saveError}>
+                  <Badge
+                    variant="error"
+                    style={{
+                      fontSize: designTokens.typography.fontSize.xs,
+                      padding: '4px 8px',
+                    }}
+                  >
+                    <Icon name="X" size={12} />
+                    Save failed
+                  </Badge>
+                </Tooltip>
+              )}
+
+              <div
+                style={{
+                  width: '1px',
+                  height: '20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  margin: `0 ${designTokens.spacing[1]}`,
+                }}
+              />
+            </>
+          )}
+
+          <Tooltip content={isEditMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}>
+            <Button
+              variant={isEditMode ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => {
+                if (isEditMode && isDirty && showUnsavedWarning) {
+                  // Warn user about unsaved changes
+                  const confirmSwitch = window.confirm(
+                    'You have unsaved changes. Switch to view mode anyway? (Changes will be lost)'
+                  )
+                  if (!confirmSwitch) return
+                }
+                setIsEditMode(!isEditMode)
+              }}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+                ...(isEditMode
+                  ? {
+                      background: 'linear-gradient(135deg, #4c6ef5 0%, #5c7cff 100%)',
+                      boxShadow: '0 2px 8px rgba(76, 110, 245, 0.3)',
+                    }
+                  : {}),
+              }}
+            >
+              <Icon name={isEditMode ? 'Document' : 'Generate'} size={16} />
+              {isEditMode ? 'View' : 'Edit'}
+            </Button>
+          </Tooltip>
+
+          <div
+            style={{
+              width: '1px',
+              height: '20px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              margin: `0 ${designTokens.spacing[1]}`,
+            }}
+          />
+
           <Tooltip content="Analyze Document">
-            <Button variant="ghost" size="sm">
-              <Icon name="Search" size={14} />
+            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+              <Icon name="Search" size={16} />
             </Button>
           </Tooltip>
 
           <Tooltip content="Generate Content">
-            <Button variant="ghost" size="sm">
-              <Icon name="Generate" size={14} />
+            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+              <Icon name="Generate" size={16} />
             </Button>
           </Tooltip>
 
           <Tooltip content="Compare">
-            <Button variant="ghost" size="sm">
-              <Icon name="Compare" size={14} />
+            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+              <Icon name="Compare" size={16} />
             </Button>
           </Tooltip>
 
@@ -591,31 +778,42 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         ref={contentRef}
         style={{
           flex: 1,
-          padding: designTokens.spacing[8],
+          padding: isEditMode ? 0 : designTokens.spacing[8],
           overflowY: 'auto',
           backgroundColor: designTokens.colors.background.canvas,
-          maxWidth: '75ch', // Optimal reading line length
+          maxWidth: isEditMode ? '100%' : '75ch', // Full width for editor, optimal reading for viewer
           margin: '0 auto',
           width: '100%',
         }}
       >
-        {document?.content && (
-          <DocumentRenderer
-            content={document.content}
-            documentType={
-              document.type ||
-              (document.metadata?.customFields?.detected_mime_type as string) ||
-              document.path?.split('.').pop() ||
-              undefined
-            }
-            documentName={document.name || document.path}
-            style={{
-              fontSize: designTokens.typography.fontSize.base,
-              lineHeight: designTokens.typography.lineHeight.relaxed,
-              color: designTokens.colors.text.primary,
-            }}
-          />
-        )}
+        {document?.content &&
+          (isEditMode ? (
+            <DocumentEditor
+              initialContent={document.content}
+              onChange={(content: string) => {
+                // Update document state for dirty tracking and auto-save
+                updateContent(content)
+                console.log('Content changed, length:', content.length, 'isDirty:', isDirty)
+              }}
+              className="h-full"
+            />
+          ) : (
+            <DocumentRenderer
+              content={document.content}
+              documentType={
+                document.type ||
+                (document.metadata?.customFields?.detected_mime_type as string) ||
+                document.path?.split('.').pop() ||
+                undefined
+              }
+              documentName={document.name || document.path}
+              style={{
+                fontSize: designTokens.typography.fontSize.base,
+                lineHeight: designTokens.typography.lineHeight.relaxed,
+                color: designTokens.colors.text.primary,
+              }}
+            />
+          ))}
       </div>
 
       {/* Floating Intelligence Bar */}

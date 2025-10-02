@@ -1,0 +1,301 @@
+/* Lexical Editor Styles */
+
+.document-editor-container {
+  width: 100%;
+  height: 100%;
+  direction: ltr !important;
+}
+
+.editor-shell {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  background-color: #16161a;
+  border: none !important;
+  border-radius: 0 !important;
+  direction: ltr !important;
+}
+
+.editor-container {
+  background-color: #16161a;
+  position: relative;
+  padding: 0 32px; /* Add horizontal padding */
+  direction: ltr !important;
+}
+
+.editor-input {
+  resize: none;
+  font-size: 15px;
+  caret-color: #ffffff;
+  display: block;
+  position: relative;
+  tab-size: 4;
+  outline: 0;
+  padding: 24px 0;
+  min-height: 400px;
+  direction: ltr !important; /* Force left-to-right text direction */
+  text-align: left !important; /* Force left alignment */
+  unicode-bidi: normal !important; /* Ensure proper text direction */
+  writing-mode: horizontal-tb !important; /* Force horizontal writing */
+  color: #ffffff;
+  background-color: transparent;
+}
+
+/* Override all Lexical default styles that might affect text direction */
+.editor-input * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Ensure ContentEditable root has proper direction */
+[contenteditable='true'] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+.editor-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 24px;
+  left: 32px; /* Match the editor-container horizontal padding */
+  font-size: 15px;
+  user-select: none;
+  display: inline-block;
+  pointer-events: none;
+}
+
+.editor-paragraph {
+  margin: 0;
+  margin-bottom: 8px;
+  position: relative;
+  direction: ltr;
+  text-align: left;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+.editor-heading-h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0.67em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-heading-h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.75em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-heading-h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0.83em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-heading-h4 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 1.12em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-heading-h5 {
+  font-size: 0.83em;
+  font-weight: bold;
+  margin: 1.5em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-heading-h6 {
+  font-size: 0.75em;
+  font-weight: bold;
+  margin: 1.67em 0;
+  direction: ltr;
+  text-align: left;
+  color: #f0f0f0;
+}
+
+.editor-quote {
+  margin: 0;
+  margin-left: 20px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.6);
+  border-left-color: rgba(255, 255, 255, 0.3);
+  border-left-width: 4px;
+  border-left-style: solid;
+  padding-left: 16px;
+  direction: ltr;
+  text-align: left;
+}
+
+.editor-list-ol {
+  padding: 0;
+  margin: 0;
+  margin-left: 16px;
+  direction: ltr;
+  text-align: left;
+  color: #e0e0e0;
+}
+
+.editor-list-ul {
+  padding: 0;
+  margin: 0;
+  margin-left: 16px;
+  direction: ltr;
+  text-align: left;
+  color: #e0e0e0;
+}
+
+.editor-listitem {
+  margin: 8px 32px;
+  direction: ltr;
+  text-align: left;
+  color: #e0e0e0;
+}
+
+.editor-link {
+  color: #6b9eff;
+  text-decoration: none;
+  direction: ltr;
+}
+
+.editor-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-text-bold {
+  font-weight: bold;
+  color: inherit;
+}
+
+.editor-text-italic {
+  font-style: italic;
+  color: inherit;
+}
+
+.editor-text-underline {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.editor-text-strikethrough {
+  text-decoration: line-through;
+  color: inherit;
+}
+
+.editor-text-code {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  font-family: 'Fira Code', Menlo, Consolas, Monaco, monospace;
+  font-size: 90%;
+  border-radius: 4px;
+  color: #ff6b9d;
+  direction: ltr;
+}
+
+.editor-code {
+  background-color: rgba(255, 255, 255, 0.05);
+  font-family: 'Fira Code', Menlo, Consolas, Monaco, monospace;
+  display: block;
+  padding: 16px;
+  line-height: 1.6;
+  font-size: 13px;
+  margin: 16px 0;
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  direction: ltr;
+  text-align: left;
+}
+
+/* Toolbar Styles */
+.toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 12px 32px; /* Match editor padding */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #1a1a1e;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar-item {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.toolbar-item:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.toolbar-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbar-item.active {
+  background-color: rgba(76, 110, 245, 0.2);
+  color: #6b9eff;
+}
+
+/* Dropdown select styling */
+.toolbar-item select,
+.toolbar select {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: #252529;
+  color: #e0e0e0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.toolbar-item select:hover,
+.toolbar select:hover {
+  background-color: #2d2d33;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.toolbar-item select option,
+.toolbar select option {
+  background-color: #1a1a1e;
+  color: #e0e0e0;
+  padding: 8px;
+}
+
+.divider {
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.15);
+  height: 24px;
+  margin: 0 8px;
+}
