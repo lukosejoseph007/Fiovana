@@ -6171,24 +6171,24 @@
     "id": "doc_45041c38cb8aac6f",
     "path": "/home/lukosejoseph007/Desktop/test_document.txt",
     "title": "test_document",
-    "summary": "test content for validation edited version\n\nThis is the new version.",
-    "content": "test content for validation edited version\n\nThis is the new version.",
+    "summary": "test content for validation edited version this was done by someone",
+    "content": "test content for validation edited version this was done by someone",
     "metadata": {
       "basic": {
         "file_name": "test_document.txt",
         "file_extension": "txt",
-        "file_size": 68,
+        "file_size": 67,
         "created": {
           "secs_since_epoch": 1759355567,
           "nanos_since_epoch": 50216855
         },
         "modified": {
-          "secs_since_epoch": 1759435947,
-          "nanos_since_epoch": 447847166
+          "secs_since_epoch": 1759436638,
+          "nanos_since_epoch": 538797212
         },
         "accessed": {
-          "secs_since_epoch": 1759435944,
-          "nanos_since_epoch": 840883583
+          "secs_since_epoch": 1759435947,
+          "nanos_since_epoch": 448646778
         },
         "is_file": true,
         "is_dir": false,
@@ -6197,14 +6197,14 @@
       "content": {
         "detected_mime_type": "text/plain",
         "encoding": "UTF-8",
-        "line_endings": "LF",
-        "preview": "test content for validation edited version\n\nThis is the new version.",
+        "line_endings": null,
+        "preview": "test content for validation edited version this was done by someone",
         "language": "Unknown",
         "stats": {
-          "char_count": 68,
+          "char_count": 67,
           "word_count": 11,
-          "line_count": 3,
-          "paragraph_count": 2,
+          "line_count": 1,
+          "paragraph_count": 1,
           "binary_ratio": 0.0
         }
       },
@@ -6216,10 +6216,10 @@
         "security_flags": []
       },
       "technical": {
-        "entropy": 3.8694332474050706,
+        "entropy": 3.797340036531741,
         "compression_ratio": 1.0,
         "checksums": {
-          "sha256": "ff7afb996da6886613896be1ecd775eb3a2b3f6ec4798dfc964347425ffb356b"
+          "sha256": "587cebfd8faadc50fdbc7733eb3c0a091691e6e99cfda9e2321e4fd417fbe2aa"
         },
         "structure": {
           "has_structure": false,
@@ -6229,7 +6229,7 @@
         }
       },
       "document": {
-        "title": "test content for validation edited version",
+        "title": "test content for validation edited version this was done by someone",
         "author": null,
         "subject": null,
         "keywords": [],
@@ -6237,7 +6237,7 @@
         "producer": null,
         "creation_date": null,
         "modification_date": null,
-        "page_count": 3,
+        "page_count": 1,
         "document_language": null,
         "format_properties": {}
       }
@@ -6251,18 +6251,19 @@
           "id": "main",
           "title": "Main Content",
           "level": 0,
-          "content": "test content for validation edited version\n\nThis is the new version.",
+          "content": "test content for validation edited version this was done by someone",
           "keywords": [
-            "validation",
-            "test",
-            "edited",
-            "content",
             "version",
-            "version.",
-            "this"
+            "someone",
+            "edited",
+            "this",
+            "validation",
+            "done",
+            "content",
+            "test"
           ],
           "position": 0,
-          "length": 68
+          "length": 67
         }
       ],
       "toc": null,
@@ -6272,18 +6273,19 @@
       "has_code": false
     },
     "keywords": [
+      "edited",
+      "content",
+      "this",
       "test",
       "version",
-      "version.",
       "validation",
-      "this",
-      "content",
-      "edited"
+      "someone",
+      "done"
     ],
-    "content_hash": "6ed1d279ac63a9a0",
+    "content_hash": "8c6ae93a717dfa2b",
     "indexed_at": {
-      "secs_since_epoch": 1759435947,
-      "nanos_since_epoch": 448948980
+      "secs_since_epoch": 1759436638,
+      "nanos_since_epoch": 540360771
     },
     "index_version": 1
   },
