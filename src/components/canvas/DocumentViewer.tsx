@@ -9,7 +9,7 @@ import {
 import { documentService, structureService, contentClassificationService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
-import MarkdownRenderer from './MarkdownRenderer'
+import DocumentRenderer from './DocumentRenderer'
 
 interface DocumentViewerProps {
   documentId: string
@@ -600,8 +600,15 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         }}
       >
         {document?.content && (
-          <MarkdownRenderer
+          <DocumentRenderer
             content={document.content}
+            documentType={
+              document.type ||
+              (document.metadata?.customFields?.detected_mime_type as string) ||
+              document.path?.split('.').pop() ||
+              undefined
+            }
+            documentName={document.name || document.path}
             style={{
               fontSize: designTokens.typography.fontSize.base,
               lineHeight: designTokens.typography.lineHeight.relaxed,

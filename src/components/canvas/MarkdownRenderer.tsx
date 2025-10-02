@@ -15,8 +15,9 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
 import rehypeHighlight from 'rehype-highlight'
+import 'github-markdown-css/github-markdown.css'
+import 'highlight.js/styles/github.css'
 import '../../styles/markdown.css'
-import 'highlight.js/styles/github.css' // GitHub-style code highlighting
 
 interface MarkdownRendererProps {
   /**

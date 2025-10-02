@@ -1,10 +1,8 @@
 /**
  * Professional Markdown Styles
- * Combines GitHub-style markdown with custom enhancements
+ * Custom enhancements for Proxemic
+ * (GitHub markdown CSS is imported directly in the component)
  */
-
-/* Import GitHub Markdown CSS base */
-@import 'github-markdown-css/github-markdown.css';
 
 /* Custom enhancements for Proxemic */
 .markdown-renderer {
@@ -28,7 +26,12 @@
   }
 
   .markdown-renderer pre {
-    background-color: #161b22;
+    background-color: rgba(22, 27, 34, 0.6);
+    border: 1px solid rgba(48, 54, 61, 0.5);
+  }
+
+  .markdown-renderer pre code {
+    color: #c9d1d9;
   }
 
   .markdown-renderer blockquote {
@@ -48,6 +51,11 @@
   .markdown-renderer table th,
   .markdown-renderer table td {
     border: 1px solid #30363d;
+  }
+
+  .markdown-renderer h1,
+  .markdown-renderer h2 {
+    border-bottom-color: #30363d;
   }
 }
 
@@ -100,9 +108,10 @@
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
+  background-color: rgba(175, 184, 193, 0.15);
   border-radius: 6px;
   margin-bottom: 16px;
+  border: 1px solid rgba(175, 184, 193, 0.2);
 }
 
 .markdown-renderer code {
@@ -157,21 +166,22 @@
 .markdown-renderer table th {
   font-weight: 600;
   padding: 6px 13px;
-  border: 1px solid #dfe2e5;
+  border: 1px solid rgba(175, 184, 193, 0.3);
+  background-color: rgba(175, 184, 193, 0.1);
 }
 
 .markdown-renderer table td {
   padding: 6px 13px;
-  border: 1px solid #dfe2e5;
+  border: 1px solid rgba(175, 184, 193, 0.3);
 }
 
 .markdown-renderer table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
+  background-color: transparent;
+  border-top: 1px solid rgba(175, 184, 193, 0.3);
 }
 
 .markdown-renderer table tr:nth-child(2n) {
-  background-color: #f6f8fa;
+  background-color: rgba(175, 184, 193, 0.05);
 }
 
 /* Links */
@@ -188,7 +198,7 @@
 .markdown-renderer img {
   max-width: 100%;
   box-sizing: content-box;
-  background-color: #fff;
+  background-color: transparent;
   border-radius: 6px;
   margin-bottom: 16px;
 }
