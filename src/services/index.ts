@@ -43,6 +43,17 @@ export { clusteringService, ClusteringService } from './clusteringService'
 export { multiWorkspaceService, MultiWorkspaceService } from './multiWorkspaceService'
 export { realTimeProcessingService, RealTimeProcessingService } from './realTimeProcessingService'
 
+// Offline & Caching Services
+export { offlineSupport, OfflineSupport } from './OfflineSupport'
+export type {
+  OfflineStatus,
+  CachedDocument,
+  CachedConversation,
+  QueuedOperation,
+  CacheConfig,
+  OllamaStatus,
+} from './OfflineSupport'
+
 // Import service instances for use in health checks
 import { workspaceService } from './workspaceService'
 import { documentService } from './documentService'

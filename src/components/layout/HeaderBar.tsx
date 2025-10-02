@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react'
 import { designTokens } from '../../styles/tokens'
 import { useLayout } from './useLayoutContext'
-import { Dropdown, Icon } from '../ui'
+import { Dropdown, Icon, OfflineIndicator } from '../ui'
 import ActionsDropdown from '../ui/ActionsDropdown'
 import SettingsDropdown from '../ui/SettingsDropdown'
 import type { ActionCategory } from '../ui/ActionsDropdown'
@@ -338,6 +338,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <div style={rightZoneStyles}>
           <CollaboratorAvatars collaborators={collaborators} />
           <AIStatusIndicator aiStatus={aiStatus} />
+
+          {/* Offline Status Indicator */}
+          <OfflineIndicator position="inline" showDetails={true} />
 
           {/* Active Operations Badge */}
           {activeOperations.length > 0 && (

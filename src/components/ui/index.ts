@@ -61,6 +61,10 @@ export type {
   LongOperationProgressProps,
 } from './LoadingStates'
 
+// Offline Support Components
+export { OfflineIndicator } from './OfflineIndicator'
+export type { OfflineIndicatorProps } from './OfflineIndicator'
+
 // Re-export icon assets for convenience
 export { Icons } from '../../assets/icons/utils'
 export type { IconProps } from '../../assets/icons/types'
