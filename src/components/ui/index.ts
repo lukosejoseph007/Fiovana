@@ -40,6 +40,27 @@ export type { EmptyStateProps, EmptyStateAction } from './EmptyState'
 export { default as LoadingState, Skeleton, ProgressCard } from './LoadingState'
 export type { LoadingStateProps, SkeletonProps, ProgressCardProps } from './LoadingState'
 
+// Enhanced Loading States System
+export {
+  TopProgressLine,
+  AIThinkingIndicator,
+  Skeleton as SkeletonNew,
+  DocumentSkeleton,
+  ChatSkeleton,
+  CardSkeleton,
+  ListSkeleton,
+  OperationProgressTracker,
+  LongOperationProgress,
+} from './LoadingStates'
+export type {
+  TopProgressLineProps,
+  AIThinkingIndicatorProps,
+  SkeletonProps as SkeletonNewProps,
+  OperationProgress,
+  OperationProgressTrackerProps,
+  LongOperationProgressProps,
+} from './LoadingStates'
+
 // Re-export icon assets for convenience
 export { Icons } from '../../assets/icons/utils'
 export type { IconProps } from '../../assets/icons/types'

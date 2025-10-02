@@ -16,10 +16,21 @@ import { AIProvidersModal } from './components/settings/AIProvidersModal'
 import { WorkspaceSettingsModal } from './components/settings/WorkspaceSettingsModal'
 import { UserPreferencesModal } from './components/settings/UserPreferencesModal'
 import { ErrorBoundary } from './components/error/ErrorBoundary'
+import LoadingState from './components/ui/LoadingState'
+import { LongOperationProgress, type OperationProgress } from './components/ui/LoadingStates'
 import { documentService } from './services'
 import { apiClient } from './api/client'
+import LoadingStatesDemo from './components/demo/LoadingStatesDemo'
+import { designTokens } from './styles/tokens'
 
-type ViewMode = 'document' | 'dashboard' | 'analytics' | 'search' | 'discovery' | 'collections'
+type ViewMode =
+  | 'document'
+  | 'dashboard'
+  | 'analytics'
+  | 'search'
+  | 'discovery'
+  | 'collections'
+  | 'loading-demo'
 
 // Component that uses layout context
 const AppContent: React.FC = () => {
@@ -38,30 +49,95 @@ const AppContent: React.FC = () => {
   const [isWorkspaceSettingsModalOpen, setIsWorkspaceSettingsModalOpen] = useState(false)
   const [isUserPreferencesModalOpen, setIsUserPreferencesModalOpen] = useState(false)
 
+  // App initialization state
+  const [isAppLoading, setIsAppLoading] = useState(true)
+  const [initOperations, setInitOperations] = useState<OperationProgress[]>([])
+
+  // Helper to update operation status
+  const updateInitOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
+    setInitOperations(prev => prev.map(op => (op.id === id ? { ...op, ...updates } : op)))
+  }, [])
+
   // Initialize document indexer and AI system on app startup
   useEffect(() => {
-    const initializeDocumentSystem = async () => {
+    const initializeApp = async () => {
+      // Initialize operations tracking
+      const operations: OperationProgress[] = [
+        {
+          id: 'init-ui',
+          operation: 'Initializing user interface',
+          status: 'in-progress',
+          progress: 10,
+        },
+        {
+          id: 'init-document-system',
+          operation: 'Loading document indexer',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'init-ai-system',
+          operation: 'Connecting AI services',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'init-workspace',
+          operation: 'Preparing workspace',
+          status: 'pending',
+          progress: 0,
+        },
+      ]
+      setInitOperations(operations)
+
+      // Small delay to show the loading screen
+      await new Promise(resolve => setTimeout(resolve, 300))
+      updateInitOperation('init-ui', { status: 'completed', progress: 100 })
+
+      // Initialize document system
+      updateInitOperation('init-document-system', { status: 'in-progress', progress: 20 })
       try {
         console.log('Initializing document indexer...')
         const result = await documentService.initializeIndexer()
         if (result.success) {
           console.log('Document indexer initialized successfully')
+          updateInitOperation('init-document-system', {
+            status: 'in-progress',
+            progress: 60,
+            details: 'Loading document index...',
+          })
+
           // Get initial stats
           const stats = await documentService.getIndexStats()
           if (stats.success && stats.data) {
             console.log(
               `Document index ready: ${stats.data.total_documents} documents, ${stats.data.total_keywords} keywords`
             )
+            updateInitOperation('init-document-system', {
+              status: 'completed',
+              progress: 100,
+              details: `${stats.data.total_documents} documents indexed`,
+            })
+          } else {
+            updateInitOperation('init-document-system', { status: 'completed', progress: 100 })
           }
         } else {
           console.warn('Document indexer initialization returned false:', result.error)
+          updateInitOperation('init-document-system', {
+            status: 'failed',
+            details: result.error || 'Initialization failed',
+          })
         }
       } catch (error) {
         console.error('Failed to initialize document indexer:', error)
+        updateInitOperation('init-document-system', {
+          status: 'failed',
+          details: 'Failed to initialize',
+        })
       }
-    }
 
-    const initializeAISystem = async () => {
+      // Initialize AI system
+      updateInitOperation('init-ai-system', { status: 'in-progress', progress: 20 })
       try {
         console.log('Initializing AI system...')
         // Load existing AI settings
@@ -82,20 +158,53 @@ const AppContent: React.FC = () => {
 
           if (hasValidConfig) {
             console.log('Valid AI configuration found, initializing AI system...')
+            updateInitOperation('init-ai-system', {
+              status: 'in-progress',
+              progress: 60,
+              details: `Connecting to ${settings.provider}...`,
+            })
             await apiClient.invoke('init_ai_system', { config: settings })
             console.log('AI system initialized successfully')
+            updateInitOperation('init-ai-system', {
+              status: 'completed',
+              progress: 100,
+              details: `Connected to ${settings.provider}`,
+            })
           } else {
             console.log('No valid AI configuration found, skipping AI initialization')
+            updateInitOperation('init-ai-system', {
+              status: 'completed',
+              progress: 100,
+              details: 'No AI provider configured',
+            })
           }
+        } else {
+          updateInitOperation('init-ai-system', {
+            status: 'completed',
+            progress: 100,
+            details: 'Using default settings',
+          })
         }
       } catch (error) {
         console.error('Failed to initialize AI system:', error)
+        updateInitOperation('init-ai-system', {
+          status: 'failed',
+          details: 'Connection failed',
+        })
       }
+
+      // Initialize workspace
+      updateInitOperation('init-workspace', { status: 'in-progress', progress: 50 })
+      await new Promise(resolve => setTimeout(resolve, 200))
+      updateInitOperation('init-workspace', { status: 'completed', progress: 100 })
+
+      // Wait a bit to show completion
+      await new Promise(resolve => setTimeout(resolve, 500))
+      setIsAppLoading(false)
     }
 
-    initializeDocumentSystem()
-    initializeAISystem()
-  }, [])
+    initializeApp()
+  }, [updateInitOperation])
 
   // Handle navigation item selection
   const handleNavigationSelect = useCallback(
@@ -116,6 +225,9 @@ const AppContent: React.FC = () => {
       } else if (item.id === 'smart-collections') {
         console.log('Switching to collections view')
         setViewMode('collections')
+      } else if (item.id === 'loading-demo') {
+        console.log('Switching to loading demo view')
+        setViewMode('loading-demo')
       } else {
         // For document items from "Active Documents" section, open the document
         console.log('Opening document with ID:', item.id)
@@ -216,6 +328,170 @@ const AppContent: React.FC = () => {
     }
   }, [])
 
+  // Show loading screen during app initialization
+  if (isAppLoading) {
+    return (
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: designTokens.colors.background.canvas,
+          flexDirection: 'column',
+          gap: designTokens.spacing[8],
+        }}
+      >
+        {/* Logo/Branding */}
+        <div
+          style={{
+            fontSize: designTokens.typography.fontSize['3xl'],
+            fontWeight: designTokens.typography.fontWeight.bold,
+            color: designTokens.colors.accent.ai,
+            marginBottom: designTokens.spacing[4],
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: designTokens.spacing[3],
+              justifyContent: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: designTokens.borderRadius.lg,
+                background: `linear-gradient(135deg, ${designTokens.colors.accent.ai}, ${designTokens.colors.accent.semantic})`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+              }}
+            >
+              P
+            </div>
+            <span>Proxemic</span>
+          </div>
+          <div
+            style={{
+              fontSize: designTokens.typography.fontSize.sm,
+              fontWeight: designTokens.typography.fontWeight.normal,
+              color: designTokens.colors.text.secondary,
+              marginTop: designTokens.spacing[2],
+            }}
+          >
+            AI-Powered Document Intelligence
+          </div>
+        </div>
+
+        {/* Loading Progress */}
+        <div style={{ width: '100%', maxWidth: '600px', padding: `0 ${designTokens.spacing[6]}` }}>
+          <LongOperationProgress
+            operation="Initializing Proxemic"
+            details={
+              initOperations.find(op => op.status === 'in-progress')?.operation || 'Starting up...'
+            }
+            variant="ai"
+          />
+
+          <div style={{ marginTop: designTokens.spacing[6] }}>
+            {initOperations.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: designTokens.spacing[2],
+                }}
+              >
+                {initOperations.map(op => (
+                  <div
+                    key={op.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: designTokens.spacing[3],
+                      padding: designTokens.spacing[2],
+                      borderRadius: designTokens.borderRadius.md,
+                      backgroundColor:
+                        op.status === 'in-progress'
+                          ? designTokens.colors.surface.secondary
+                          : 'transparent',
+                      transition: `all ${designTokens.animation.duration.normal}`,
+                    }}
+                  >
+                    {op.status === 'completed' && (
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          backgroundColor: designTokens.colors.confidence.high,
+                        }}
+                      />
+                    )}
+                    {op.status === 'in-progress' && (
+                      <LoadingState variant="spinner" size="sm" style={{ padding: 0 }} />
+                    )}
+                    {op.status === 'pending' && (
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          border: `2px solid ${designTokens.colors.border.subtle}`,
+                        }}
+                      />
+                    )}
+                    {op.status === 'failed' && (
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          backgroundColor: designTokens.colors.confidence.critical,
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontSize: designTokens.typography.fontSize.sm,
+                          color: designTokens.colors.text.primary,
+                          fontWeight:
+                            op.status === 'in-progress'
+                              ? designTokens.typography.fontWeight.medium
+                              : designTokens.typography.fontWeight.normal,
+                        }}
+                      >
+                        {op.operation}
+                      </div>
+                      {op.details && (
+                        <div
+                          style={{
+                            fontSize: designTokens.typography.fontSize.xs,
+                            color: designTokens.colors.text.tertiary,
+                            marginTop: designTokens.spacing[0.5],
+                          }}
+                        >
+                          {op.details}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {/* Header */}
@@ -307,6 +583,13 @@ const AppContent: React.FC = () => {
               return (
                 <ErrorBoundary>
                   <SmartCollections workspaceId="default" />
+                </ErrorBoundary>
+              )
+            } else if (viewMode === 'loading-demo') {
+              console.log('Rendering LoadingStatesDemo component')
+              return (
+                <ErrorBoundary>
+                  <LoadingStatesDemo />
                 </ErrorBoundary>
               )
             } else {

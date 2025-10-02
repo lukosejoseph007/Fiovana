@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Icon from '../ui/Icon'
 import Badge from '../ui/Badge'
+import { AIThinkingIndicator } from '../ui/LoadingStates'
 import { aiService, ChatMessage, ChatRequest } from '../../services/aiService'
 
 export interface ConversationModeProps {
@@ -541,19 +542,20 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
           />
         ))}
 
-        {/* Typing Indicator */}
+        {/* AI Thinking/Typing Indicator */}
         {conversationState.isTyping && (
-          <div style={loadingIndicatorStyles}>
-            <Icon name="Loader" size={16} className="animate-spin" />
-            AI is typing...
+          <div
+            style={{ marginBottom: designTokens.spacing[3], paddingLeft: designTokens.spacing[2] }}
+          >
+            <AIThinkingIndicator message="AI is typing..." size="sm" showDots={true} />
           </div>
         )}
 
-        {/* Loading Indicator */}
         {conversationState.isLoading && !conversationState.isTyping && (
-          <div style={loadingIndicatorStyles}>
-            <Icon name="Loader" size={16} className="animate-spin" />
-            AI is thinking...
+          <div
+            style={{ marginBottom: designTokens.spacing[3], paddingLeft: designTokens.spacing[2] }}
+          >
+            <AIThinkingIndicator message="AI is thinking..." size="sm" showDots={true} />
           </div>
         )}
 

@@ -5,6 +5,7 @@ import Progress from '../ui/Progress'
 import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
 import Tooltip from '../ui/Tooltip'
+import { CardSkeleton } from '../ui/LoadingStates'
 // import { workspaceAnalyzerService } from '../../services/workspaceAnalyzerService'
 
 export interface AIOperationEffectivenessProps {
@@ -238,16 +239,7 @@ const AIOperationEffectiveness: React.FC<AIOperationEffectivenessProps> = ({
   }, [])
 
   if (isLoading) {
-    return (
-      <Card className={className} style={style}>
-        <div style={{ padding: designTokens.spacing[6], textAlign: 'center' }}>
-          <Icon name="Loader" size={32} style={{ marginBottom: designTokens.spacing[4] }} />
-          <p style={{ color: designTokens.colors.text.secondary }}>
-            Loading AI effectiveness data...
-          </p>
-        </div>
-      </Card>
-    )
+    return <CardSkeleton style={style} className={className} />
   }
 
   if (error) {

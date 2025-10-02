@@ -6,6 +6,7 @@ import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import { KnowledgeGraph } from '../visualization/KnowledgeGraph'
+import { LongOperationProgress, type OperationProgress } from '../ui/LoadingStates'
 // import { workspaceAnalyzerService } from '../../services/workspaceAnalyzerService'
 // import { knowledgeAnalyzerService } from '../../services/knowledgeAnalyzerService'
 // import { smartOrganizerService } from '../../services/smartOrganizerService'
@@ -176,120 +177,183 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
 }) => {
   const [analysis, setAnalysis] = useState<WorkspaceAnalysis | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingOperations, setLoadingOperations] = useState<OperationProgress[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selectedWorkspace] = useState<string>(workspaceId || 'default')
 
-  // Load workspace analysis
-  const loadAnalysis = useCallback(async (_wsId: string) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Run multiple analysis operations in parallel
-      await Promise.allSettled([
-        // workspaceAnalyzerService.analyzeWorkspace(wsId),
-        Promise.resolve({ success: true, data: { health: { score: 82 } } }),
-        // knowledgeAnalyzerService.analyzeWorkspace(wsId),
-        Promise.resolve({ success: true, data: { coverage: 73 } }),
-        // smartOrganizerService.analyzeDocumentOrganization(wsId),
-        Promise.resolve({ success: true, data: { efficiency: 80 } }),
-      ])
-
-      // Create comprehensive analysis from results
-      const analysis: WorkspaceAnalysis = {
-        health: {
-          score: 82,
-          status: 'good',
-          factors: [
-            { name: 'Document Quality', score: 85, impact: 'high' },
-            { name: 'Knowledge Coverage', score: 78, impact: 'high' },
-            { name: 'Organization', score: 80, impact: 'medium' },
-            { name: 'Collaboration', score: 88, impact: 'medium' },
-            { name: 'Usage Patterns', score: 75, impact: 'low' },
-          ],
-        },
-        knowledge: {
-          coverage: 73,
-          gaps: [
-            { area: 'API Documentation', severity: 'critical', documents: 2 },
-            { area: 'Security Guidelines', severity: 'moderate', documents: 5 },
-            { area: 'Troubleshooting', severity: 'moderate', documents: 8 },
-            { area: 'Best Practices', severity: 'minor', documents: 12 },
-          ],
-          strengths: [
-            'Comprehensive user guides',
-            'Well-documented processes',
-            'Good technical coverage',
-            'Regular updates',
-          ],
-          recommendations: [
-            'Add missing API documentation',
-            'Expand security guidelines',
-            'Create troubleshooting handbook',
-            'Standardize formatting across documents',
-          ],
-        },
-        organization: {
-          efficiency: 77,
-          duplicates: 6,
-          outdated: 14,
-          suggestions: [
-            {
-              action: 'Merge duplicate documents',
-              impact: 'Reduce confusion, improve findability',
-              effort: 'medium',
-            },
-            {
-              action: 'Archive outdated content',
-              impact: 'Cleaner workspace, better search',
-              effort: 'low',
-            },
-            {
-              action: 'Create topic-based collections',
-              impact: 'Better organization, faster navigation',
-              effort: 'medium',
-            },
-            {
-              action: 'Standardize naming conventions',
-              impact: 'Improved consistency',
-              effort: 'high',
-            },
-          ],
-        },
-        relationships: {
-          connected: 45,
-          isolated: 8,
-          clusters: [
-            { name: 'User Documentation', size: 18, strength: 0.85 },
-            { name: 'Technical Specs', size: 12, strength: 0.72 },
-            { name: 'Process Guides', size: 15, strength: 0.68 },
-            { name: 'Training Materials', size: 9, strength: 0.61 },
-          ],
-        },
-        trends: {
-          activity: [
-            { period: 'This Week', documents: 12, conversations: 34 },
-            { period: 'Last Week', documents: 8, conversations: 28 },
-            { period: 'Two Weeks Ago', documents: 15, conversations: 41 },
-            { period: 'Three Weeks Ago', documents: 6, conversations: 22 },
-          ],
-          growth: 'increasing',
-          usage: [
-            { category: 'Documentation', percentage: 45 },
-            { category: 'Collaboration', percentage: 28 },
-            { category: 'Analysis', percentage: 15 },
-            { category: 'Generation', percentage: 12 },
-          ],
-        },
-      }
-
-      setAnalysis(analysis)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze workspace')
-    } finally {
-      setIsLoading(false)
-    }
+  // Helper to update operation status
+  const updateOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
+    setLoadingOperations(prev => prev.map(op => (op.id === id ? { ...op, ...updates } : op)))
   }, [])
+
+  // Load workspace analysis
+  const loadAnalysis = useCallback(
+    async (_wsId: string) => {
+      setIsLoading(true)
+      setError(null)
+
+      // Initialize operations
+      const operations: OperationProgress[] = [
+        {
+          id: 'analyze-health',
+          operation: 'Analyzing workspace health',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-knowledge',
+          operation: 'Mapping knowledge coverage',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-organization',
+          operation: 'Evaluating organization',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-relationships',
+          operation: 'Building relationship graph',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-trends',
+          operation: 'Analyzing usage trends',
+          status: 'pending',
+          progress: 0,
+        },
+      ]
+      setLoadingOperations(operations)
+
+      try {
+        // Run analysis operations sequentially with progress updates
+        updateOperation('analyze-health', { status: 'in-progress', progress: 20 })
+        await Promise.resolve({ success: true, data: { health: { score: 82 } } })
+        updateOperation('analyze-health', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-knowledge', { status: 'in-progress', progress: 30 })
+        await Promise.resolve({ success: true, data: { coverage: 73 } })
+        updateOperation('analyze-knowledge', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-organization', { status: 'in-progress', progress: 40 })
+        await Promise.resolve({ success: true, data: { efficiency: 80 } })
+        updateOperation('analyze-organization', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-relationships', { status: 'in-progress', progress: 60 })
+        await new Promise(resolve => setTimeout(resolve, 300))
+        updateOperation('analyze-relationships', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-trends', { status: 'in-progress', progress: 80 })
+        await new Promise(resolve => setTimeout(resolve, 200))
+        updateOperation('analyze-trends', { status: 'completed', progress: 100 })
+
+        // Create comprehensive analysis from results
+        const analysis: WorkspaceAnalysis = {
+          health: {
+            score: 82,
+            status: 'good',
+            factors: [
+              { name: 'Document Quality', score: 85, impact: 'high' },
+              { name: 'Knowledge Coverage', score: 78, impact: 'high' },
+              { name: 'Organization', score: 80, impact: 'medium' },
+              { name: 'Collaboration', score: 88, impact: 'medium' },
+              { name: 'Usage Patterns', score: 75, impact: 'low' },
+            ],
+          },
+          knowledge: {
+            coverage: 73,
+            gaps: [
+              { area: 'API Documentation', severity: 'critical', documents: 2 },
+              { area: 'Security Guidelines', severity: 'moderate', documents: 5 },
+              { area: 'Troubleshooting', severity: 'moderate', documents: 8 },
+              { area: 'Best Practices', severity: 'minor', documents: 12 },
+            ],
+            strengths: [
+              'Comprehensive user guides',
+              'Well-documented processes',
+              'Good technical coverage',
+              'Regular updates',
+            ],
+            recommendations: [
+              'Add missing API documentation',
+              'Expand security guidelines',
+              'Create troubleshooting handbook',
+              'Standardize formatting across documents',
+            ],
+          },
+          organization: {
+            efficiency: 77,
+            duplicates: 6,
+            outdated: 14,
+            suggestions: [
+              {
+                action: 'Merge duplicate documents',
+                impact: 'Reduce confusion, improve findability',
+                effort: 'medium',
+              },
+              {
+                action: 'Archive outdated content',
+                impact: 'Cleaner workspace, better search',
+                effort: 'low',
+              },
+              {
+                action: 'Create topic-based collections',
+                impact: 'Better organization, faster navigation',
+                effort: 'medium',
+              },
+              {
+                action: 'Standardize naming conventions',
+                impact: 'Improved consistency',
+                effort: 'high',
+              },
+            ],
+          },
+          relationships: {
+            connected: 45,
+            isolated: 8,
+            clusters: [
+              { name: 'User Documentation', size: 18, strength: 0.85 },
+              { name: 'Technical Specs', size: 12, strength: 0.72 },
+              { name: 'Process Guides', size: 15, strength: 0.68 },
+              { name: 'Training Materials', size: 9, strength: 0.61 },
+            ],
+          },
+          trends: {
+            activity: [
+              { period: 'This Week', documents: 12, conversations: 34 },
+              { period: 'Last Week', documents: 8, conversations: 28 },
+              { period: 'Two Weeks Ago', documents: 15, conversations: 41 },
+              { period: 'Three Weeks Ago', documents: 6, conversations: 22 },
+            ],
+            growth: 'increasing',
+            usage: [
+              { category: 'Documentation', percentage: 45 },
+              { category: 'Collaboration', percentage: 28 },
+              { category: 'Analysis', percentage: 15 },
+              { category: 'Generation', percentage: 12 },
+            ],
+          },
+        }
+
+        setAnalysis(analysis)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to analyze workspace')
+        // Mark all in-progress operations as failed
+        setLoadingOperations(prev =>
+          prev.map(op =>
+            op.status === 'in-progress' || op.status === 'pending'
+              ? { ...op, status: 'failed', details: 'Analysis failed' }
+              : op
+          )
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [updateOperation]
+  )
 
   // Load analysis on mount and workspace change
   useEffect(() => {
@@ -356,9 +420,73 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
   if (isLoading) {
     return (
       <div className={`proxemic-workspace-insights ${className}`} style={containerStyles}>
-        <div style={loadingStyles}>
-          <Icon name="Loader" size={32} className="animate-spin" />
-          <span>Analyzing workspace...</span>
+        <div
+          style={{
+            padding: designTokens.spacing[6],
+            display: 'flex',
+            flexDirection: 'column',
+            gap: designTokens.spacing[4],
+          }}
+        >
+          <LongOperationProgress
+            operation="Analyzing Workspace"
+            details={
+              loadingOperations.find(op => op.status === 'in-progress')?.operation ||
+              'Preparing analysis...'
+            }
+            variant="ai"
+          />
+
+          <div style={{ marginTop: designTokens.spacing[2] }}>
+            {loadingOperations.map(op => (
+              <div
+                key={op.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: designTokens.spacing[2],
+                  padding: `${designTokens.spacing[2]} 0`,
+                  borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
+                }}
+              >
+                {op.status === 'completed' && (
+                  <Icon name="AlertCircle" size={16} color={designTokens.colors.confidence.high} />
+                )}
+                {op.status === 'in-progress' && <Icon name="Loader" size={16} />}
+                {op.status === 'pending' && (
+                  <div
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      border: `2px solid ${designTokens.colors.border.subtle}`,
+                    }}
+                  />
+                )}
+                {op.status === 'failed' && (
+                  <Icon
+                    name="AlertTriangle"
+                    size={16}
+                    color={designTokens.colors.confidence.critical}
+                  />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.sm,
+                      color: designTokens.colors.text.primary,
+                      fontWeight:
+                        op.status === 'in-progress'
+                          ? designTokens.typography.fontWeight.medium
+                          : designTokens.typography.fontWeight.normal,
+                    }}
+                  >
+                    {op.operation}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )

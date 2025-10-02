@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
+import { CardSkeleton } from '../ui/LoadingStates'
 import { smartOrganizerService, aiService } from '../../services'
 import { colors, spacing, typography } from '../../styles/tokens'
 import type { SmartOrganization, OrganizationSuggestion, ApiResponse } from '../../types'
@@ -264,12 +265,11 @@ Provide practical organization criteria including:
       <div
         style={{
           padding: spacing[6],
-          textAlign: 'center',
           backgroundColor: colors.surface.primary,
           minHeight: '100vh',
         }}
       >
-        <div style={{ color: colors.text.secondary }}>Loading collections...</div>
+        <CardSkeleton count={3} />
       </div>
     )
   }

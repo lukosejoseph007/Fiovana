@@ -5,6 +5,7 @@ import Progress from '../ui/Progress'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
+import { LongOperationProgress, type OperationProgress } from '../ui/LoadingStates'
 // import { documentService } from '../../services/documentService'
 import { structureService } from '../../services/structureService'
 // import { contentClassificationService } from '../../services/contentClassificationService'
@@ -150,83 +151,148 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
 }) => {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingOperations, setLoadingOperations] = useState<OperationProgress[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<string | null>(documentId || null)
 
-  // Load document analysis
-  const loadAnalysis = useCallback(async (docId: string) => {
-    if (!docId) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Run multiple analysis operations in parallel
-      const [structureResult] = await Promise.allSettled([
-        structureService.analyzeDocumentStructure(docId),
-        // contentClassificationService.classifyDocument(docId),
-        Promise.resolve({ success: true, data: { type: 'document', confidence: 0.85 } }),
-        styleAnalysisService.analyzeDocumentStyle(docId),
-      ])
-
-      // Process results and create comprehensive analysis
-      const analysis: DocumentAnalysis = {
-        structure: {
-          score: structureResult.status === 'fulfilled' && structureResult.value.success ? 85 : 0, // Mock score, would come from actual analysis
-          headings: 12, // Mock data
-          sections: 5,
-          completeness: 'good',
-          issues: ['Missing conclusion section', 'Inconsistent heading hierarchy'],
-        },
-        clarity: {
-          score: 78,
-          readabilityLevel: 'College',
-          avgSentenceLength: 18.2,
-          complexWords: 45,
-          suggestions: [
-            'Consider shorter sentences in introduction',
-            'Define technical terms on first use',
-            'Add more examples for complex concepts',
-          ],
-        },
-        concepts: {
-          keyTerms: [
-            { term: 'Machine Learning', frequency: 24, importance: 0.9 },
-            { term: 'Neural Network', frequency: 18, importance: 0.8 },
-            { term: 'Deep Learning', frequency: 15, importance: 0.7 },
-            { term: 'Algorithm', frequency: 31, importance: 0.6 },
-          ],
-          categories: [
-            { category: 'Technical Documentation', confidence: 0.92 },
-            { category: 'Educational Content', confidence: 0.78 },
-            { category: 'Process Description', confidence: 0.65 },
-          ],
-          relationships: [
-            { from: 'Machine Learning', to: 'Neural Network', type: 'contains' },
-            { from: 'Neural Network', to: 'Deep Learning', type: 'enables' },
-          ],
-        },
-        procedures: {
-          identified: 6,
-          complete: 4,
-          missing: ['Error handling procedure', 'Validation steps'],
-          quality: 'medium',
-        },
-        gaps: {
-          critical: ['Missing safety guidelines'],
-          moderate: ['Incomplete examples', 'No troubleshooting section'],
-          minor: ['Formatting inconsistencies', 'Minor typos'],
-          severity: 'medium',
-        },
-      }
-
-      setAnalysis(analysis)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze document')
-    } finally {
-      setIsLoading(false)
-    }
+  // Helper to update operation status
+  const updateOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
+    setLoadingOperations(prev => prev.map(op => (op.id === id ? { ...op, ...updates } : op)))
   }, [])
+
+  // Load document analysis
+  const loadAnalysis = useCallback(
+    async (docId: string) => {
+      if (!docId) return
+
+      setIsLoading(true)
+      setError(null)
+
+      // Initialize operations
+      const operations: OperationProgress[] = [
+        {
+          id: 'analyze-structure',
+          operation: 'Analyzing document structure',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-content',
+          operation: 'Classifying content type',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'analyze-style',
+          operation: 'Analyzing writing style',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'extract-concepts',
+          operation: 'Extracting key concepts',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'identify-gaps',
+          operation: 'Identifying content gaps',
+          status: 'pending',
+          progress: 0,
+        },
+      ]
+      setLoadingOperations(operations)
+
+      try {
+        // Run analysis operations sequentially with progress updates
+        updateOperation('analyze-structure', { status: 'in-progress', progress: 20 })
+        const structureResult = await structureService.analyzeDocumentStructure(docId)
+        updateOperation('analyze-structure', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-content', { status: 'in-progress', progress: 30 })
+        await Promise.resolve({ success: true, data: { type: 'document', confidence: 0.85 } })
+        updateOperation('analyze-content', { status: 'completed', progress: 100 })
+
+        updateOperation('analyze-style', { status: 'in-progress', progress: 40 })
+        await styleAnalysisService.analyzeDocumentStyle(docId)
+        updateOperation('analyze-style', { status: 'completed', progress: 100 })
+
+        updateOperation('extract-concepts', { status: 'in-progress', progress: 60 })
+        await new Promise(resolve => setTimeout(resolve, 300))
+        updateOperation('extract-concepts', { status: 'completed', progress: 100 })
+
+        updateOperation('identify-gaps', { status: 'in-progress', progress: 80 })
+        await new Promise(resolve => setTimeout(resolve, 200))
+        updateOperation('identify-gaps', { status: 'completed', progress: 100 })
+
+        // Process results and create comprehensive analysis
+        const analysis: DocumentAnalysis = {
+          structure: {
+            score: structureResult.success ? 85 : 0, // Mock score, would come from actual analysis
+            headings: 12, // Mock data
+            sections: 5,
+            completeness: 'good',
+            issues: ['Missing conclusion section', 'Inconsistent heading hierarchy'],
+          },
+          clarity: {
+            score: 78,
+            readabilityLevel: 'College',
+            avgSentenceLength: 18.2,
+            complexWords: 45,
+            suggestions: [
+              'Consider shorter sentences in introduction',
+              'Define technical terms on first use',
+              'Add more examples for complex concepts',
+            ],
+          },
+          concepts: {
+            keyTerms: [
+              { term: 'Machine Learning', frequency: 24, importance: 0.9 },
+              { term: 'Neural Network', frequency: 18, importance: 0.8 },
+              { term: 'Deep Learning', frequency: 15, importance: 0.7 },
+              { term: 'Algorithm', frequency: 31, importance: 0.6 },
+            ],
+            categories: [
+              { category: 'Technical Documentation', confidence: 0.92 },
+              { category: 'Educational Content', confidence: 0.78 },
+              { category: 'Process Description', confidence: 0.65 },
+            ],
+            relationships: [
+              { from: 'Machine Learning', to: 'Neural Network', type: 'contains' },
+              { from: 'Neural Network', to: 'Deep Learning', type: 'enables' },
+            ],
+          },
+          procedures: {
+            identified: 6,
+            complete: 4,
+            missing: ['Error handling procedure', 'Validation steps'],
+            quality: 'medium',
+          },
+          gaps: {
+            critical: ['Missing safety guidelines'],
+            moderate: ['Incomplete examples', 'No troubleshooting section'],
+            minor: ['Formatting inconsistencies', 'Minor typos'],
+            severity: 'medium',
+          },
+        }
+
+        setAnalysis(analysis)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to analyze document')
+        // Mark all in-progress operations as failed
+        setLoadingOperations(prev =>
+          prev.map(op =>
+            op.status === 'in-progress' || op.status === 'pending'
+              ? { ...op, status: 'failed', details: 'Analysis failed' }
+              : op
+          )
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [updateOperation]
+  )
 
   // Load analysis when document changes
   useEffect(() => {
@@ -285,15 +351,6 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
     color: designTokens.colors.text.secondary,
   }
 
-  const loadingStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '200px',
-    flexDirection: 'column' as const,
-    gap: designTokens.spacing[3],
-  }
-
   if (!selectedDocument) {
     return (
       <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
@@ -321,9 +378,73 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
   if (isLoading) {
     return (
       <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
-        <div style={loadingStyles}>
-          <Icon name="Loader" size={32} className="animate-spin" />
-          <span>Analyzing document...</span>
+        <div
+          style={{
+            padding: designTokens.spacing[6],
+            display: 'flex',
+            flexDirection: 'column',
+            gap: designTokens.spacing[4],
+          }}
+        >
+          <LongOperationProgress
+            operation="Analyzing Document"
+            details={
+              loadingOperations.find(op => op.status === 'in-progress')?.operation ||
+              'Preparing analysis...'
+            }
+            variant="ai"
+          />
+
+          <div style={{ marginTop: designTokens.spacing[2] }}>
+            {loadingOperations.map(op => (
+              <div
+                key={op.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: designTokens.spacing[2],
+                  padding: `${designTokens.spacing[2]} 0`,
+                  borderBottom: `1px solid ${designTokens.colors.border.subtle}`,
+                }}
+              >
+                {op.status === 'completed' && (
+                  <Icon name="AlertCircle" size={16} color={designTokens.colors.confidence.high} />
+                )}
+                {op.status === 'in-progress' && <Icon name="Loader" size={16} />}
+                {op.status === 'pending' && (
+                  <div
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      border: `2px solid ${designTokens.colors.border.subtle}`,
+                    }}
+                  />
+                )}
+                {op.status === 'failed' && (
+                  <Icon
+                    name="AlertTriangle"
+                    size={16}
+                    color={designTokens.colors.confidence.critical}
+                  />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.sm,
+                      color: designTokens.colors.text.primary,
+                      fontWeight:
+                        op.status === 'in-progress'
+                          ? designTokens.typography.fontWeight.medium
+                          : designTokens.typography.fontWeight.normal,
+                    }}
+                  >
+                    {op.operation}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )

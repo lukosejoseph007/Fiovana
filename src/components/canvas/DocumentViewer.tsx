@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Card, Button, Icon, Badge, Tooltip, Dropdown } from '../ui'
+import {
+  DocumentSkeleton,
+  LongOperationProgress,
+  OperationProgressTracker,
+  type OperationProgress,
+} from '../ui/LoadingStates'
 import { documentService, structureService, contentClassificationService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
@@ -53,6 +59,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [selectedText, setSelectedText] = useState<string>('')
   const [selectionPosition, setSelectionPosition] = useState<{ x: number; y: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingOperations, setLoadingOperations] = useState<OperationProgress[]>([])
   const [hoveredHighlight, setHoveredHighlight] = useState<string | null>(null)
   const [showIntelligenceBar, setShowIntelligenceBar] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -138,13 +145,55 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     }
   }, [documentId])
 
+  // Helper to update operation status
+  const updateOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
+    setLoadingOperations(prev => prev.map(op => (op.id === id ? { ...op, ...updates } : op)))
+  }, [])
+
   // Load document data
   const loadDocument = useCallback(async () => {
     if (!documentId) return
 
     setIsLoading(true)
+
+    // Initialize operations
+    const operations: OperationProgress[] = [
+      {
+        id: 'load-document',
+        operation: 'Loading document metadata',
+        status: 'pending',
+        progress: 0,
+      },
+      {
+        id: 'load-structure',
+        operation: 'Analyzing document structure',
+        status: 'pending',
+        progress: 0,
+      },
+      {
+        id: 'load-classification',
+        operation: 'Classifying content type',
+        status: 'pending',
+        progress: 0,
+      },
+      {
+        id: 'generate-suggestions',
+        operation: 'Generating AI suggestions',
+        status: 'pending',
+        progress: 0,
+      },
+      {
+        id: 'generate-highlights',
+        operation: 'Analyzing semantic content',
+        status: 'pending',
+        progress: 0,
+      },
+    ]
+    setLoadingOperations(operations)
+
     try {
       // Load document content
+      updateOperation('load-document', { status: 'in-progress', progress: 10 })
       console.log('Loading document with ID:', documentId)
       const docResponse = await documentService.getDocument(documentId)
       console.log('Document response:', docResponse)
@@ -152,39 +201,67 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       if (docResponse.success && docResponse.data) {
         console.log('Document loaded successfully:', docResponse.data)
         setDocument(docResponse.data)
+        updateOperation('load-document', { status: 'completed', progress: 100 })
       } else {
         console.error('Failed to load document:', docResponse.error)
+        updateOperation('load-document', {
+          status: 'failed',
+          details: docResponse.error || 'Failed to load document',
+        })
       }
 
       // Load document structure - use the file path from the loaded document
       if (docResponse.data?.path) {
+        updateOperation('load-structure', { status: 'in-progress', progress: 20 })
         const structureResponse = await structureService.analyzeDocumentStructure(
           docResponse.data.path
         )
         if (structureResponse.success && structureResponse.data) {
           setStructure(structureResponse.data)
+          updateOperation('load-structure', { status: 'completed', progress: 100 })
+        } else {
+          updateOperation('load-structure', { status: 'failed', details: 'Analysis failed' })
         }
 
         // Load content classification - use the file path
+        updateOperation('load-classification', { status: 'in-progress', progress: 30 })
         const classificationResponse = await contentClassificationService.classifyContentType(
           docResponse.data.path
         )
         if (classificationResponse.success && classificationResponse.data) {
           setClassification(classificationResponse.data)
+          updateOperation('load-classification', { status: 'completed', progress: 100 })
+        } else {
+          updateOperation('load-classification', {
+            status: 'failed',
+            details: 'Classification failed',
+          })
         }
       }
 
       // Generate AI suggestions (mock for now)
+      updateOperation('generate-suggestions', { status: 'in-progress', progress: 40 })
       await generateAISuggestions()
+      updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
 
       // Generate semantic highlights (mock for now)
+      updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
       await generateSemanticHighlights()
+      updateOperation('generate-highlights', { status: 'completed', progress: 100 })
     } catch (error) {
       console.error('Failed to load document:', error)
+      // Mark all in-progress operations as failed
+      setLoadingOperations(prev =>
+        prev.map(op =>
+          op.status === 'in-progress' || op.status === 'pending'
+            ? { ...op, status: 'failed', details: 'Operation failed' }
+            : op
+        )
+      )
     } finally {
       setIsLoading(false)
     }
-  }, [documentId, generateAISuggestions, generateSemanticHighlights])
+  }, [documentId, generateAISuggestions, generateSemanticHighlights, updateOperation])
 
   // Handle text selection
   const handleTextSelection = useCallback(() => {
@@ -388,39 +465,38 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       <div
         style={{
           height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           background: designTokens.colors.background.canvas,
+          padding: designTokens.spacing[6],
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: designTokens.spacing[6],
         }}
       >
+        {/* Loading progress tracker */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: designTokens.spacing[4],
+            maxWidth: '600px',
+            margin: '0 auto',
+            width: '100%',
           }}
         >
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              border: `3px solid ${designTokens.colors.border.subtle}`,
-              borderTop: `3px solid ${designTokens.colors.accent.ai}`,
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }}
+          <LongOperationProgress
+            operation="Loading Document"
+            details={
+              loadingOperations.find(op => op.status === 'in-progress')?.operation ||
+              'Preparing to load...'
+            }
+            variant="ai"
           />
-          <span
-            style={{
-              color: designTokens.colors.text.secondary,
-              fontSize: designTokens.typography.fontSize.base,
-            }}
-          >
-            Loading document...
-          </span>
+
+          <div style={{ marginTop: designTokens.spacing[6] }}>
+            <OperationProgressTracker operations={loadingOperations} maxVisible={5} />
+          </div>
         </div>
+
+        {/* Document skeleton (shown below progress) */}
+        <DocumentSkeleton />
       </div>
     )
   }

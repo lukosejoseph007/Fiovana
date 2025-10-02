@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Card from '../ui/Card'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
+import { CardSkeleton } from '../ui/LoadingStates'
 import {
   smartOrganizerService,
   relationshipService,
@@ -238,20 +239,8 @@ export const ContentDiscovery: React.FC<ContentDiscoveryProps> = ({
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="p-4">
-              <div className="h-4 bg-gray-700 rounded w-1/3 mb-3"></div>
-              <div className="h-3 bg-gray-700 rounded w-2/3 mb-4"></div>
-              <div className="space-y-2">
-                {[1, 2].map(j => (
-                  <div key={j} className="h-10 bg-gray-700 rounded"></div>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div style={{ padding: spacing[6] }}>
+        <CardSkeleton count={3} />
       </div>
     )
   }

@@ -4,6 +4,7 @@ import Card from '../ui/Card'
 import Progress from '../ui/Progress'
 import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
+import { CardSkeleton } from '../ui/LoadingStates'
 import { workspaceAnalyzerService } from '../../services/workspaceAnalyzerService'
 
 export interface ContentQualityTrendsProps {
@@ -185,14 +186,7 @@ const ContentQualityTrends: React.FC<ContentQualityTrendsProps> = ({
   }, [qualityData, selectedMetric])
 
   if (isLoading) {
-    return (
-      <Card className={className} style={style}>
-        <div style={{ padding: designTokens.spacing[6], textAlign: 'center' }}>
-          <Icon name="Loader" size={32} style={{ marginBottom: designTokens.spacing[4] }} />
-          <p style={{ color: designTokens.colors.text.secondary }}>Loading quality trends...</p>
-        </div>
-      </Card>
-    )
+    return <CardSkeleton style={style} className={className} />
   }
 
   if (error) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Card, Button, Icon } from '../ui'
+import { AIThinkingIndicator } from '../ui/LoadingStates'
 import { aiService, workspaceService } from '../../services'
 import { designTokens } from '../../styles/tokens'
 import { Message, WorkspaceHealth } from '../../types'
@@ -1193,27 +1194,10 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
               )
             })}
 
-            {/* Loading Indicator */}
+            {/* AI Thinking Indicator */}
             {isLoading && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: designTokens.spacing[2],
-                  color: designTokens.colors.text.secondary,
-                  marginBottom: designTokens.spacing[4],
-                }}
-              >
-                <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: designTokens.colors.accent.ai,
-                    animation: `${designTokens.animation.keyframes.pulse} 1s ease-in-out infinite`,
-                  }}
-                />
-                <span>AI is thinking...</span>
+              <div style={{ marginBottom: designTokens.spacing[4] }}>
+                <AIThinkingIndicator message="AI is thinking..." size="md" showDots={true} />
               </div>
             )}
           </div>

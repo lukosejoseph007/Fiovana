@@ -5,6 +5,7 @@ import Progress from '../ui/Progress'
 import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
 import Tooltip from '../ui/Tooltip'
+import { CardSkeleton } from '../ui/LoadingStates'
 import { styleAnalysisService } from '../../services/styleAnalysisService'
 
 export interface StyleConsistencyAnalysisProps {
@@ -227,16 +228,7 @@ const StyleConsistencyAnalysis: React.FC<StyleConsistencyAnalysisProps> = ({
   }, [])
 
   if (isLoading) {
-    return (
-      <Card className={className} style={style}>
-        <div style={{ padding: designTokens.spacing[6], textAlign: 'center' }}>
-          <Icon name="Loader" size={32} style={{ marginBottom: designTokens.spacing[4] }} />
-          <p style={{ color: designTokens.colors.text.secondary }}>
-            Loading consistency analysis...
-          </p>
-        </div>
-      </Card>
-    )
+    return <CardSkeleton style={style} className={className} />
   }
 
   if (error) {

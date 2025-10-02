@@ -10,6 +10,7 @@ import Badge from '../ui/Badge'
 import { Icon, type IconComponentProps } from '../ui/Icon'
 import Progress from '../ui/Progress'
 import Tooltip from '../ui/Tooltip'
+import { ListSkeleton } from '../ui/LoadingStates'
 import { useLayout } from '../layout/useLayoutContext'
 import {
   workspaceAnalyzerService,
@@ -87,6 +88,12 @@ export const NavigationPanel: React.FC<NavigationPanelProps> = ({
           id: 'analytics-dashboard',
           label: 'Analytics Dashboard',
           icon: 'Analyze',
+          status: 'info',
+        },
+        {
+          id: 'loading-demo',
+          label: 'Loading States Demo',
+          icon: 'Loader',
           status: 'info',
         },
       ],
@@ -963,26 +970,7 @@ const NavigationSection: React.FC<NavigationSectionProps> = ({
             animation: `slideDown ${animation.duration.normal} ${animation.easing.easeOut}`,
           }}
         >
-          {section.loading && (
-            <div
-              style={{
-                padding: spacing[3],
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2],
-              }}
-            >
-              <Icon name="Spinner" size={14} />
-              <span
-                style={{
-                  fontSize: typography.fontSize.xs,
-                  color: colors.text.secondary,
-                }}
-              >
-                Loading...
-              </span>
-            </div>
-          )}
+          {section.loading && <ListSkeleton count={3} style={{ padding: spacing[2] }} />}
 
           {section.error && (
             <div

@@ -6,6 +6,7 @@ import Badge from '../ui/Badge'
 import Icon from '../ui/Icon'
 import Progress from '../ui/Progress'
 import Tooltip from '../ui/Tooltip'
+import { CardSkeleton } from '../ui/LoadingStates'
 import { workspaceAnalyzerService } from '../../services/workspaceAnalyzerService'
 import type { WorkspaceAnalysis } from '../../types'
 
@@ -218,23 +219,7 @@ const WorkspaceIntelligence: React.FC<WorkspaceIntelligenceProps> = ({
   if (isLoading && !analysis) {
     return (
       <div className={`proxemic-workspace-intelligence ${className}`} style={containerStyles}>
-        <Card>
-          <div
-            style={{
-              padding: designTokens.spacing[8],
-              textAlign: 'center',
-              color: designTokens.colors.text.secondary,
-            }}
-          >
-            <Icon
-              name="Loader"
-              size={48}
-              color={designTokens.colors.accent.ai}
-              style={{ marginBottom: designTokens.spacing[4] }}
-            />
-            <div>Loading workspace intelligence...</div>
-          </div>
-        </Card>
+        <CardSkeleton count={3} />
       </div>
     )
   }
