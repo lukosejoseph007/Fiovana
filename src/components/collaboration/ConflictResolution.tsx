@@ -24,7 +24,10 @@ export interface Conflict {
 
 export interface ConflictResolutionProps {
   conflicts: Conflict[]
-  onResolveConflict: (conflictId: string, resolution: 'accept-local' | 'accept-remote' | 'merge') => void
+  onResolveConflict: (
+    conflictId: string,
+    resolution: 'accept-local' | 'accept-remote' | 'merge'
+  ) => void
   onDismissConflict: (conflictId: string) => void
   onRefreshConflicts: () => void
   className?: string
@@ -39,10 +42,7 @@ export const ConflictResolution: React.FC<ConflictResolutionProps> = ({
 }) => {
   const [expandedConflicts, setExpandedConflicts] = useState<Set<string>>(new Set())
 
-  const pendingConflicts = useMemo(
-    () => conflicts.filter(c => c.status === 'pending'),
-    [conflicts]
-  )
+  const pendingConflicts = useMemo(() => conflicts.filter(c => c.status === 'pending'), [conflicts])
 
   const resolvedConflicts = useMemo(
     () => conflicts.filter(c => c.status !== 'pending'),
@@ -305,7 +305,8 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
           <div className="conflict-info">
             <Info size={14} />
             <span>
-              Yjs uses CRDTs for automatic conflict-free merging. Manual resolution is rarely needed.
+              Yjs uses CRDTs for automatic conflict-free merging. Manual resolution is rarely
+              needed.
             </span>
           </div>
         </div>
@@ -507,10 +508,18 @@ interface ResolvedConflictCardProps {
 
 const ResolvedConflictCard: React.FC<ResolvedConflictCardProps> = ({ conflict, onDismiss }) => {
   const statusColor =
-    conflict.status === 'accepted' ? '#10b981' : conflict.status === 'rejected' ? '#ef4444' : '#8b5cf6'
+    conflict.status === 'accepted'
+      ? '#10b981'
+      : conflict.status === 'rejected'
+        ? '#ef4444'
+        : '#8b5cf6'
 
   const StatusIcon =
-    conflict.status === 'accepted' ? CheckCircle : conflict.status === 'rejected' ? XCircle : RefreshCw
+    conflict.status === 'accepted'
+      ? CheckCircle
+      : conflict.status === 'rejected'
+        ? XCircle
+        : RefreshCw
 
   return (
     <div className="resolved-conflict-card">

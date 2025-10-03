@@ -11,6 +11,7 @@ pub mod ollama;
 pub mod openrouter;
 pub mod prompts;
 pub mod response;
+pub mod text_operations;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};

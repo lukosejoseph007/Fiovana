@@ -622,6 +622,12 @@ async fn main() {
             commands::stop_collaboration_server,
             commands::get_collaboration_server_status,
             commands::get_collaboration_server_info,
+            // Text operation commands
+            commands::execute_text_operation,
+            commands::get_available_text_operations,
+            commands::get_text_operation_description,
+            commands::get_text_operations_info,
+            commands::test_text_operations,
         ])
         .setup(move |app| {
             info!("Application setup complete");

@@ -106,12 +106,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   })
 
   // Conflict resolution hook for collaborative editing
-  const {
-    conflicts,
-    resolveConflict,
-    dismissConflict,
-    refreshConflicts,
-  } = useConflictResolution({
+  const { conflicts, resolveConflict, dismissConflict, refreshConflicts } = useConflictResolution({
     ydoc: null, // Will be connected to Yjs document when real-time editing is enabled
     enabled: collaboration?.settings.enabled && isEditMode,
     onConflictDetected: conflict => {
@@ -123,12 +118,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   })
 
   // Offline sync hook for queuing operations when offline
-  const {
-    isSyncing,
-    queuedOperations,
-    syncProgress,
-    triggerSync,
-  } = useOfflineSync({
+  const { isSyncing, queuedOperations, syncProgress, triggerSync } = useOfflineSync({
     ydoc: null, // Will be connected to Yjs document when real-time editing is enabled
     enabled: collaboration?.settings.enabled && isEditMode,
     autoSync: true,
@@ -306,148 +296,151 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   }, [])
 
   // Load document data
-  const loadDocument = useCallback(async (skipLoadingState = false) => {
-    if (!documentId) return
+  const loadDocument = useCallback(
+    async (skipLoadingState = false) => {
+      if (!documentId) return
 
-    // Only show loading state if not skipped (e.g., during save reload)
-    if (!skipLoadingState) {
-      setIsLoading(true)
-
-      // Initialize operations
-      const operations: OperationProgress[] = [
-        {
-          id: 'load-document',
-          operation: 'Loading document metadata',
-          status: 'pending',
-          progress: 0,
-        },
-        {
-          id: 'load-structure',
-          operation: 'Analyzing document structure',
-          status: 'pending',
-          progress: 0,
-        },
-        {
-          id: 'load-classification',
-          operation: 'Classifying content type',
-          status: 'pending',
-          progress: 0,
-        },
-        {
-          id: 'generate-suggestions',
-          operation: 'Generating AI suggestions',
-          status: 'pending',
-          progress: 0,
-        },
-        {
-          id: 'generate-highlights',
-          operation: 'Analyzing semantic content',
-          status: 'pending',
-          progress: 0,
-        },
-      ]
-      setLoadingOperations(operations)
-    }
-
-    try {
-      // Load document content
+      // Only show loading state if not skipped (e.g., during save reload)
       if (!skipLoadingState) {
-        updateOperation('load-document', { status: 'in-progress', progress: 10 })
-      }
-      console.log('Loading document with ID:', documentId)
-      const docResponse = await documentService.getDocument(documentId)
-      console.log('Document response:', docResponse)
+        setIsLoading(true)
 
-      if (docResponse.success && docResponse.data) {
-        console.log('Document loaded successfully:', docResponse.data)
-        setDocument(docResponse.data)
-        if (!skipLoadingState) {
-          updateOperation('load-document', { status: 'completed', progress: 100 })
-        }
-      } else {
-        console.error('Failed to load document:', docResponse.error)
-        if (!skipLoadingState) {
-          updateOperation('load-document', {
-            status: 'failed',
-            details: docResponse.error || 'Failed to load document',
-          })
-        }
+        // Initialize operations
+        const operations: OperationProgress[] = [
+          {
+            id: 'load-document',
+            operation: 'Loading document metadata',
+            status: 'pending',
+            progress: 0,
+          },
+          {
+            id: 'load-structure',
+            operation: 'Analyzing document structure',
+            status: 'pending',
+            progress: 0,
+          },
+          {
+            id: 'load-classification',
+            operation: 'Classifying content type',
+            status: 'pending',
+            progress: 0,
+          },
+          {
+            id: 'generate-suggestions',
+            operation: 'Generating AI suggestions',
+            status: 'pending',
+            progress: 0,
+          },
+          {
+            id: 'generate-highlights',
+            operation: 'Analyzing semantic content',
+            status: 'pending',
+            progress: 0,
+          },
+        ]
+        setLoadingOperations(operations)
       }
 
-      // Load document structure - use the file path from the loaded document
-      if (docResponse.data?.path) {
+      try {
+        // Load document content
         if (!skipLoadingState) {
-          updateOperation('load-structure', { status: 'in-progress', progress: 20 })
+          updateOperation('load-document', { status: 'in-progress', progress: 10 })
         }
-        const structureResponse = await structureService.analyzeDocumentStructure(
-          docResponse.data.path
-        )
-        if (structureResponse.success && structureResponse.data) {
-          setStructure(structureResponse.data)
+        console.log('Loading document with ID:', documentId)
+        const docResponse = await documentService.getDocument(documentId)
+        console.log('Document response:', docResponse)
+
+        if (docResponse.success && docResponse.data) {
+          console.log('Document loaded successfully:', docResponse.data)
+          setDocument(docResponse.data)
           if (!skipLoadingState) {
-            updateOperation('load-structure', { status: 'completed', progress: 100 })
+            updateOperation('load-document', { status: 'completed', progress: 100 })
           }
         } else {
+          console.error('Failed to load document:', docResponse.error)
           if (!skipLoadingState) {
-            updateOperation('load-structure', { status: 'failed', details: 'Analysis failed' })
-          }
-        }
-
-        // Load content classification - use the file path
-        if (!skipLoadingState) {
-          updateOperation('load-classification', { status: 'in-progress', progress: 30 })
-        }
-        const classificationResponse = await contentClassificationService.classifyContentType(
-          docResponse.data.path
-        )
-        if (classificationResponse.success && classificationResponse.data) {
-          setClassification(classificationResponse.data)
-          if (!skipLoadingState) {
-            updateOperation('load-classification', { status: 'completed', progress: 100 })
-          }
-        } else {
-          if (!skipLoadingState) {
-            updateOperation('load-classification', {
+            updateOperation('load-document', {
               status: 'failed',
-              details: 'Classification failed',
+              details: docResponse.error || 'Failed to load document',
             })
           }
         }
-      }
 
-      // Generate AI suggestions (mock for now)
-      if (!skipLoadingState) {
-        updateOperation('generate-suggestions', { status: 'in-progress', progress: 40 })
-      }
-      await generateAISuggestions()
-      if (!skipLoadingState) {
-        updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
-      }
-
-      // Note: Semantic highlights temporarily disabled
-      // updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
-      // await generateSemanticHighlights()
-      if (!skipLoadingState) {
-        updateOperation('generate-highlights', { status: 'completed', progress: 100 })
-      }
-    } catch (error) {
-      console.error('Failed to load document:', error)
-      // Mark all in-progress operations as failed (only if not skipped)
-      if (!skipLoadingState) {
-        setLoadingOperations(prev =>
-          prev.map(op =>
-            op.status === 'in-progress' || op.status === 'pending'
-              ? { ...op, status: 'failed', details: 'Operation failed' }
-              : op
+        // Load document structure - use the file path from the loaded document
+        if (docResponse.data?.path) {
+          if (!skipLoadingState) {
+            updateOperation('load-structure', { status: 'in-progress', progress: 20 })
+          }
+          const structureResponse = await structureService.analyzeDocumentStructure(
+            docResponse.data.path
           )
-        )
+          if (structureResponse.success && structureResponse.data) {
+            setStructure(structureResponse.data)
+            if (!skipLoadingState) {
+              updateOperation('load-structure', { status: 'completed', progress: 100 })
+            }
+          } else {
+            if (!skipLoadingState) {
+              updateOperation('load-structure', { status: 'failed', details: 'Analysis failed' })
+            }
+          }
+
+          // Load content classification - use the file path
+          if (!skipLoadingState) {
+            updateOperation('load-classification', { status: 'in-progress', progress: 30 })
+          }
+          const classificationResponse = await contentClassificationService.classifyContentType(
+            docResponse.data.path
+          )
+          if (classificationResponse.success && classificationResponse.data) {
+            setClassification(classificationResponse.data)
+            if (!skipLoadingState) {
+              updateOperation('load-classification', { status: 'completed', progress: 100 })
+            }
+          } else {
+            if (!skipLoadingState) {
+              updateOperation('load-classification', {
+                status: 'failed',
+                details: 'Classification failed',
+              })
+            }
+          }
+        }
+
+        // Generate AI suggestions (mock for now)
+        if (!skipLoadingState) {
+          updateOperation('generate-suggestions', { status: 'in-progress', progress: 40 })
+        }
+        await generateAISuggestions()
+        if (!skipLoadingState) {
+          updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
+        }
+
+        // Note: Semantic highlights temporarily disabled
+        // updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
+        // await generateSemanticHighlights()
+        if (!skipLoadingState) {
+          updateOperation('generate-highlights', { status: 'completed', progress: 100 })
+        }
+      } catch (error) {
+        console.error('Failed to load document:', error)
+        // Mark all in-progress operations as failed (only if not skipped)
+        if (!skipLoadingState) {
+          setLoadingOperations(prev =>
+            prev.map(op =>
+              op.status === 'in-progress' || op.status === 'pending'
+                ? { ...op, status: 'failed', details: 'Operation failed' }
+                : op
+            )
+          )
+        }
+      } finally {
+        if (!skipLoadingState) {
+          setIsLoading(false)
+        }
       }
-    } finally {
-      if (!skipLoadingState) {
-        setIsLoading(false)
-      }
-    }
-  }, [documentId, generateAISuggestions, updateOperation])
+    },
+    [documentId, generateAISuggestions, updateOperation]
+  )
 
   // Handle text selection
   const handleTextSelection = useCallback(() => {

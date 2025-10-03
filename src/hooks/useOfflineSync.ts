@@ -78,6 +78,8 @@ export const useOfflineSync = ({
     for (let i = 0; i < operationsToSync.length; i++) {
       const operation = operationsToSync[i]
 
+      if (!operation) continue
+
       try {
         // Update status to syncing
         setState(prev => ({
@@ -109,18 +111,21 @@ export const useOfflineSync = ({
         console.error('Failed to sync operation:', operation.id, error)
 
         // Increment retry count
-        const updatedOp = { ...operation, retryCount: operation.retryCount + 1 }
+        const updatedOp: QueuedOperation = {
+          ...operation,
+          retryCount: operation.retryCount + 1,
+          status: operation.retryCount + 1 >= maxRetries ? 'failed' : 'pending',
+        }
 
         if (updatedOp.retryCount >= maxRetries) {
           // Move to failed operations
-          updatedOp.status = 'failed'
           failedOps.push(updatedOp)
         } else {
           // Keep in queue for retry
           setState(prev => ({
             ...prev,
             queuedOperations: prev.queuedOperations.map(op =>
-              op.id === operation.id ? { ...updatedOp, status: 'pending' as const } : op
+              op.id === operation.id ? updatedOp : op
             ),
           }))
         }

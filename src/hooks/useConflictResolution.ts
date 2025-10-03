@@ -36,12 +36,8 @@ export const useConflictResolution = ({
     (update: Uint8Array, origin: unknown, _doc: Y.Doc) => {
       if (!enabled) return
 
-      // Decode the update to analyze changes
+      // Analyze update for conflicts
       try {
-        const decoder = Y.decoding.createDecoder(update)
-        // Read decoder position (not used in simplified conflict detection)
-        Y.decoding.readVarUint(decoder)
-
         // Check if this is a concurrent update (simplified detection)
         // In a real implementation, you'd analyze the update structure more thoroughly
         const isConcurrent = origin !== 'local'

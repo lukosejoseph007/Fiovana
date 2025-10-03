@@ -38,6 +38,9 @@ export {
 export { workspaceBackupService, WorkspaceBackupService } from './workspaceBackupService'
 export { workspaceAiService, WorkspaceAiService } from './workspaceAiService'
 
+// Text Operations Service
+export * from './textOperationService'
+
 // Advanced Integration Services
 export { vectorOperationsService, VectorOperationsService } from './vectorOperationsService'
 export { clusteringService, ClusteringService } from './clusteringService'

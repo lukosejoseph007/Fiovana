@@ -119,7 +119,9 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
                     style={{ width: `${syncProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-neutral-400 mt-1">{Math.round(syncProgress)}% complete</p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  {Math.round(syncProgress)}% complete
+                </p>
               </div>
             )}
 
@@ -139,7 +141,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
                 label="Queued Operations"
                 value={status.queuedOperationsCount}
                 color={status.queuedOperationsCount > 0 ? 'text-amber-500' : 'text-neutral-400'}
-                icon={status.queuedOperationsCount > 0 ? <AlertTriangle className="w-3 h-3" /> : undefined}
+                icon={
+                  status.queuedOperationsCount > 0 ? (
+                    <AlertTriangle className="w-3 h-3" />
+                  ) : undefined
+                }
               />
               <StatItem
                 label="Cached Documents"
