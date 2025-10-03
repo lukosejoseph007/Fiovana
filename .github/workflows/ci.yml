@@ -230,11 +230,12 @@ jobs:
       - name: Build Tauri app (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
+          brew install coreutils
           MAX_ATTEMPTS=3
           ATTEMPT=1
           while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
             echo "Build attempt $ATTEMPT of $MAX_ATTEMPTS..."
-            if timeout 45m npm run tauri build; then
+            if gtimeout 45m npm run tauri build; then
               echo "Build succeeded on attempt $ATTEMPT"
               exit 0
             else
