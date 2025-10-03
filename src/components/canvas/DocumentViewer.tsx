@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Card, Button, Icon, Badge, Tooltip, Dropdown } from '../ui'
+import { Button, Icon, Badge, Tooltip, Dropdown } from '../ui'
 import {
   DocumentSkeleton,
   LongOperationProgress,
@@ -79,19 +79,15 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([])
   // Note: semanticHighlights temporarily disabled - will be re-implemented with React-based overlays
   // const [semanticHighlights, setSemanticHighlights] = useState<SemanticHighlight[]>([])
-  const [selectedText, setSelectedText] = useState<string>('')
-  const [selectionPosition, setSelectionPosition] = useState<{ x: number; y: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadingOperations, setLoadingOperations] = useState<OperationProgress[]>([])
   // Note: hoveredHighlight temporarily disabled - will be re-implemented with React-based overlays
   // const [hoveredHighlight, setHoveredHighlight] = useState<string | null>(null)
-  const [showIntelligenceBar, setShowIntelligenceBar] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showPresencePanel, setShowPresencePanel] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
-  const intelligenceBarRef = useRef<HTMLDivElement>(null)
 
   // Collaboration context
   const collaboration = useCollaboration()
@@ -442,36 +438,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     [documentId, generateAISuggestions, updateOperation]
   )
 
-  // Handle text selection
-  const handleTextSelection = useCallback(() => {
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) {
-      setSelectedText('')
-      setSelectionPosition(null)
-      setShowIntelligenceBar(false)
-      return
-    }
-
-    const range = selection.getRangeAt(0)
-    const text = range.toString().trim()
-
-    if (text.length > 0) {
-      setSelectedText(text)
-
-      // Get selection position for floating intelligence bar
-      const rect = range.getBoundingClientRect()
-      setSelectionPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 10,
-      })
-      setShowIntelligenceBar(true)
-    } else {
-      setSelectedText('')
-      setSelectionPosition(null)
-      setShowIntelligenceBar(false)
-    }
-  }, [])
-
   // Handle AI suggestion click
   const handleAISuggestionClick = useCallback(
     (suggestion: AISuggestion) => {
@@ -531,18 +497,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       initializeDocumentState(document.content)
     }
   }, [document?.content, initializeDocumentState])
-
-  // Add event listeners for text selection
-  useEffect(() => {
-    const doc = window.document
-    doc.addEventListener('mouseup', handleTextSelection)
-    doc.addEventListener('keyup', handleTextSelection)
-
-    return () => {
-      doc.removeEventListener('mouseup', handleTextSelection)
-      doc.removeEventListener('keyup', handleTextSelection)
-    }
-  }, [handleTextSelection])
 
   // Note: Highlight and suggestion click handlers temporarily disabled
   // Will be re-implemented with React-based overlay system
@@ -752,7 +706,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: designTokens.spacing[2],
+            gap: designTokens.spacing[3],
             flexShrink: 0,
           }}
         >
@@ -828,7 +782,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
           <Tooltip content={isEditMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}>
             <Button
-              variant={isEditMode ? 'primary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => {
                 if (isEditMode && isDirty && showUnsavedWarning) {
@@ -844,12 +798,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 fontWeight: 600,
                 padding: '8px 16px',
                 borderRadius: '8px',
-                ...(isEditMode
-                  ? {
-                      background: 'linear-gradient(135deg, #4c6ef5 0%, #5c7cff 100%)',
-                      boxShadow: '0 2px 8px rgba(76, 110, 245, 0.3)',
-                    }
-                  : {}),
               }}
             >
               <Icon name={isEditMode ? 'Document' : 'Generate'} size={16} />
@@ -878,27 +826,36 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               width: '1px',
               height: '20px',
               background: 'rgba(255, 255, 255, 0.1)',
-              margin: `0 ${designTokens.spacing[1]}`,
+              margin: `0 ${designTokens.spacing[2]}`,
             }}
           />
 
-          <Tooltip content="Analyze Document">
-            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-              <Icon name="Search" size={16} />
-            </Button>
-          </Tooltip>
+          {/* Quick Action Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: designTokens.spacing[1],
+            }}
+          >
+            <Tooltip content="Analyze Document">
+              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+                <Icon name="Search" size={16} />
+              </Button>
+            </Tooltip>
 
-          <Tooltip content="Generate Content">
-            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-              <Icon name="Generate" size={16} />
-            </Button>
-          </Tooltip>
+            <Tooltip content="Generate Content">
+              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+                <Icon name="Generate" size={16} />
+              </Button>
+            </Tooltip>
 
-          <Tooltip content="Compare">
-            <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-              <Icon name="Compare" size={16} />
-            </Button>
-          </Tooltip>
+            <Tooltip content="Compare">
+              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
+                <Icon name="Compare" size={16} />
+              </Button>
+            </Tooltip>
+          </div>
 
           {/* Document Actions Menu */}
           <Dropdown
@@ -983,6 +940,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           (isEditMode ? (
             <DocumentEditor
               initialContent={document.content}
+              documentId={documentId}
+              documentTitle={document.name || 'Untitled Document'}
               onChange={(content: string) => {
                 // Update document state for dirty tracking and auto-save
                 updateContent(content)
@@ -1019,55 +978,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           />
         )}
       </div>
-
-      {/* Floating Intelligence Bar */}
-      {showIntelligenceBar && selectedText && selectionPosition && (
-        <Card
-          ref={intelligenceBarRef}
-          variant="glass"
-          style={{
-            position: 'fixed',
-            top: selectionPosition.y - 50,
-            left: selectionPosition.x - 150,
-            width: '300px',
-            padding: designTokens.spacing[3],
-            zIndex: designTokens.zIndex.popover,
-            pointerEvents: 'auto',
-          }}
-        >
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.secondary,
-              marginBottom: designTokens.spacing[2],
-            }}
-          >
-            Selected: "{selectedText.substring(0, 50)}
-            {selectedText.length > 50 ? '...' : ''}"
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: designTokens.spacing[2],
-              flexWrap: 'wrap',
-            }}
-          >
-            <Button variant="ghost" size="sm">
-              <Icon name="Search" size="xs" />
-              Define
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Icon name="Generate" size="xs" />
-              Explain
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Icon name="Compare" size="xs" />
-              Related
-            </Button>
-          </div>
-        </Card>
-      )}
 
       {/* Change Tracking Indicators */}
       <div

@@ -2,11 +2,9 @@
 use crate::ai::text_operations::{
     DocumentContext, TextOperation, TextOperationProcessor, TextOperationResult,
 };
-use crate::ai::AIOrchestrator;
+use crate::commands::ai_commands::AIState;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tauri::State;
-use tokio::sync::Mutex;
 
 /// Request structure for text operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,14 +18,13 @@ pub struct TextOperationRequest {
 #[tauri::command]
 pub async fn execute_text_operation(
     request: TextOperationRequest,
-    ai_orchestrator: State<'_, Option<Arc<Mutex<AIOrchestrator>>>>,
+    ai_state: State<'_, AIState>,
 ) -> Result<TextOperationResult, String> {
     // Get AI orchestrator
-    let orchestrator = ai_orchestrator
+    let state_guard = ai_state.lock().await;
+    let orchestrator = state_guard
         .as_ref()
-        .ok_or_else(|| "AI system not initialized".to_string())?;
-
-    let orchestrator_lock = orchestrator.lock().await;
+        .ok_or_else(|| "AI system not initialized. Please initialize AI in settings first.".to_string())?;
 
     // Create processor
     let processor = TextOperationProcessor::new();
@@ -38,7 +35,7 @@ pub async fn execute_text_operation(
             request.text,
             request.operation,
             request.context,
-            &orchestrator_lock,
+            orchestrator,
         )
         .await
 }
@@ -87,7 +84,7 @@ pub struct OperationInfo {
 #[tauri::command]
 pub async fn test_text_operations(
     sample_text: Option<String>,
-    ai_orchestrator: State<'_, Option<Arc<Mutex<AIOrchestrator>>>>,
+    ai_state: State<'_, AIState>,
 ) -> Result<Vec<TextOperationResult>, String> {
     let text =
         sample_text.unwrap_or_else(|| "The quick brown fox jumps over the lazy dog.".to_string());
@@ -108,7 +105,7 @@ pub async fn test_text_operations(
             context: None,
         };
 
-        match execute_text_operation(request, ai_orchestrator.clone()).await {
+        match execute_text_operation(request, ai_state.clone()).await {
             Ok(result) => results.push(result),
             Err(e) => {
                 tracing::warn!("Test operation failed: {}", e);

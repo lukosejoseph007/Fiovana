@@ -15,7 +15,7 @@ const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
   placement = 'top',
-  delay = 1000,
+  delay = 300,
   disabled = false,
   className = '',
   contentClassName = '',

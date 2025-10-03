@@ -167,9 +167,7 @@ function ToolbarPlugin(): React.JSX.Element {
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')
         }}
-        className={`toolbar-item px-3 py-1 rounded font-bold ${
-          isBold ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded font-bold ${isBold ? 'active' : ''}`}
         aria-label="Format Bold"
         title="Bold (Ctrl+B)"
       >
@@ -179,9 +177,7 @@ function ToolbarPlugin(): React.JSX.Element {
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')
         }}
-        className={`toolbar-item px-3 py-1 rounded italic ${
-          isItalic ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded italic ${isItalic ? 'active' : ''}`}
         aria-label="Format Italic"
         title="Italic (Ctrl+I)"
       >
@@ -191,9 +187,7 @@ function ToolbarPlugin(): React.JSX.Element {
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
         }}
-        className={`toolbar-item px-3 py-1 rounded underline ${
-          isUnderline ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded underline ${isUnderline ? 'active' : ''}`}
         aria-label="Format Underline"
         title="Underline (Ctrl+U)"
       >
@@ -203,9 +197,7 @@ function ToolbarPlugin(): React.JSX.Element {
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
         }}
-        className={`toolbar-item px-3 py-1 rounded line-through ${
-          isStrikethrough ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded line-through ${isStrikethrough ? 'active' : ''}`}
         aria-label="Format Strikethrough"
         title="Strikethrough"
       >
@@ -247,9 +239,7 @@ function ToolbarPlugin(): React.JSX.Element {
 
       <button
         onClick={formatBulletList}
-        className={`toolbar-item px-3 py-1 rounded ${
-          blockType === 'ul' ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded ${blockType === 'ul' ? 'active' : ''}`}
         aria-label="Bullet List"
         title="Bullet List"
       >
@@ -257,9 +247,7 @@ function ToolbarPlugin(): React.JSX.Element {
       </button>
       <button
         onClick={formatNumberedList}
-        className={`toolbar-item px-3 py-1 rounded ${
-          blockType === 'ol' ? 'bg-blue-100' : 'hover:bg-gray-100'
-        }`}
+        className={`toolbar-item px-3 py-1 rounded ${blockType === 'ol' ? 'active' : ''}`}
         aria-label="Numbered List"
         title="Numbered List"
       >
