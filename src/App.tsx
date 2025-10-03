@@ -22,6 +22,7 @@ import { documentService } from './services'
 import { apiClient } from './api/client'
 import LoadingStatesDemo from './components/demo/LoadingStatesDemo'
 import { designTokens } from './styles/tokens'
+import { CollaborationProvider } from './context/CollaborationContext'
 
 type ViewMode =
   | 'document'
@@ -784,9 +785,11 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <AppShell>
-        <AppContent />
-      </AppShell>
+      <CollaborationProvider>
+        <AppShell>
+          <AppContent />
+        </AppShell>
+      </CollaborationProvider>
     </ErrorBoundary>
   )
 }

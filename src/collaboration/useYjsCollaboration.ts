@@ -79,7 +79,9 @@ export const useYjsCollaboration = ({
 
     try {
       // WebSocket provider configuration
-      const wsUrl = (import.meta as { env?: { VITE_COLLABORATION_WS_URL?: string } }).env?.VITE_COLLABORATION_WS_URL || 'ws://localhost:1234'
+      const wsUrl =
+        (import.meta as { env?: { VITE_COLLABORATION_WS_URL?: string } }).env
+          ?.VITE_COLLABORATION_WS_URL || 'ws://localhost:1234'
 
       provider = new WebsocketProvider(wsUrl, documentId, ydoc, {
         connect: true,
@@ -136,7 +138,8 @@ export const useYjsCollaboration = ({
           providerRef.current = webrtcProvider
           setState(prev => ({ ...prev, isConnected: true, error: null }))
         } catch (webrtcError) {
-          const error = webrtcError instanceof Error ? webrtcError : new Error('WebRTC initialization failed')
+          const error =
+            webrtcError instanceof Error ? webrtcError : new Error('WebRTC initialization failed')
           setState(prev => ({ ...prev, error }))
         }
       })

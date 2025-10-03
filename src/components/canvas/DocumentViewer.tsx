@@ -17,8 +17,13 @@ import { Document, DocumentStructure, ContentClassification } from '../../types'
 import DocumentRenderer from './DocumentRenderer'
 import DocumentEditor from '../editor/DocumentEditor'
 import VersionHistory from '../editor/VersionHistory'
+import { ActiveUsers } from '../collaboration/ActiveUsers'
+import { UserPresence } from '../collaboration/UserPresence'
+import { LiveCursors } from '../collaboration/LiveCursors'
 import { useDocumentState } from '../../hooks/useDocumentState'
 import { useAutoSave } from '../../hooks/useAutoSave'
+import { useCollaboration } from '../../context/useCollaboration'
+import { useTypingIndicator } from '../../hooks/useTypingIndicator'
 import '../../styles/editor.css'
 
 interface DocumentViewerProps {
@@ -80,8 +85,43 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [isEditMode, setIsEditMode] = useState(false)
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
+  const [showPresencePanel, setShowPresencePanel] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const intelligenceBarRef = useRef<HTMLDivElement>(null)
+
+  // Collaboration context
+  const collaboration = useCollaboration()
+
+  // Typing indicator hook (will be integrated with DocumentEditor in future task)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { isTyping, handleTyping } = useTypingIndicator({
+    onTypingChange: typing => {
+      // Update typing state for current user in collaboration context
+      collaboration?.updateUserTyping(collaboration.currentUserId, typing)
+    },
+  })
+
+  // Convert Map to Array for component props
+  const collaborationUsers = useMemo(() => {
+    return Array.from(collaboration?.users.values() || []).map(user => ({
+      ...user,
+      isActive: Date.now() - user.lastSeen < 30000, // Active if seen in last 30 seconds
+    }))
+  }, [collaboration?.users])
+
+  // Get cursor positions for LiveCursors
+  const cursorPositions = useMemo(() => {
+    return collaborationUsers
+      .filter(user => user.cursor && user.id !== collaboration?.currentUserId)
+      .map(user => ({
+        userId: user.id,
+        userName: user.name,
+        userColor: user.color,
+        x: user.cursor!.x,
+        y: user.cursor!.y,
+        lastUpdate: user.lastSeen,
+      }))
+  }, [collaborationUsers, collaboration?.currentUserId])
 
   // Document state management with auto-save
   const {
@@ -607,6 +647,16 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               {classification.categories?.[0]?.name || 'Unknown'}
             </Badge>
           )}
+
+          {/* Active Users Badge */}
+          {collaboration?.settings.enabled && collaboration.settings.showPresence && (
+            <ActiveUsers
+              users={collaborationUsers}
+              currentUserId={collaboration.currentUserId}
+              size="small"
+              onClick={() => setShowPresencePanel(!showPresencePanel)}
+            />
+          )}
         </div>
 
         {/* Actions */}
@@ -979,6 +1029,59 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           }}
         />
       )}
+
+      {/* Live Cursors Overlay */}
+      {collaboration?.settings.enabled && collaboration.settings.showCursors && (
+        <LiveCursors
+          cursors={cursorPositions}
+          containerRef={contentRef}
+          showLabels={true}
+          fadeTimeout={3000}
+        />
+      )}
+
+      {/* User Presence Panel */}
+      {showPresencePanel && collaboration?.settings.enabled && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '80px',
+            right: '24px',
+            zIndex: 10000,
+            animation: 'slideInRight 0.2s ease-out',
+          }}
+        >
+          <UserPresence
+            users={collaborationUsers.map(user => ({
+              id: user.id,
+              name: user.name,
+              color: user.color,
+              isActive: user.isActive,
+              cursor: user.cursor,
+              lastSeen: user.lastSeen,
+            }))}
+            currentUserId={collaboration.currentUserId}
+            isConnected={collaboration.isConnected}
+            onUserClick={userId => {
+              console.log('User clicked:', userId)
+              // Future: Focus on user's cursor position
+            }}
+          />
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }

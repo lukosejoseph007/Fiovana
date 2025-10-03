@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod app_config;
 pub mod app_state;
+pub mod collaboration;
 pub mod commands;
 pub mod document;
 pub mod filesystem;

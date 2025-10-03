@@ -10,7 +10,11 @@ export interface YjsProviderProps {
   userColor?: string
   onSync?: (isSynced: boolean) => void
   onError?: (error: Error) => void
-  children: (doc: Y.Doc, provider: WebsocketProvider | WebrtcProvider | null, awareness: Awareness) => React.ReactNode
+  children: (
+    doc: Y.Doc,
+    provider: WebsocketProvider | WebrtcProvider | null,
+    awareness: Awareness
+  ) => React.ReactNode
 }
 
 export interface ProviderStatus {
@@ -45,7 +49,9 @@ const YjsProvider: React.FC<YjsProviderProps> = ({
 
     try {
       // WebSocket provider configuration
-      const wsUrl = (import.meta as { env?: { VITE_COLLABORATION_WS_URL?: string } }).env?.VITE_COLLABORATION_WS_URL || 'ws://localhost:1234'
+      const wsUrl =
+        (import.meta as { env?: { VITE_COLLABORATION_WS_URL?: string } }).env
+          ?.VITE_COLLABORATION_WS_URL || 'ws://localhost:1234'
 
       provider = new WebsocketProvider(wsUrl, documentId, ydoc, {
         connect: true,
@@ -95,7 +101,8 @@ const YjsProvider: React.FC<YjsProviderProps> = ({
           providerRef.current = webrtcProvider
           setStatus(prev => ({ ...prev, connected: true, error: null }))
         } catch (webrtcError) {
-          const error = webrtcError instanceof Error ? webrtcError : new Error('WebRTC initialization failed')
+          const error =
+            webrtcError instanceof Error ? webrtcError : new Error('WebRTC initialization failed')
           setStatus(prev => ({ ...prev, error }))
           onError?.(error)
         }

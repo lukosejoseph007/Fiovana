@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod ai;
 mod app_config;
 mod app_state;
+mod collaboration;
 mod commands;
 mod db;
 mod document;
@@ -205,6 +206,10 @@ async fn main() {
     let content_adapter_state: commands::content_adaptation_commands::ContentAdapterState =
         std::sync::Arc::new(tokio::sync::Mutex::new(None));
 
+    // Initialize collaboration server state
+    let collaboration_server_state: commands::collaboration_commands::CollaborationServerState =
+        std::sync::Arc::new(tokio::sync::RwLock::new(None));
+
     // Initialize document indexing service
     let (indexing_sender, indexing_receiver) =
         services::document_indexing::create_indexing_channel();
@@ -245,6 +250,7 @@ async fn main() {
         .manage(conversation_context_state)
         .manage(template_manager_state)
         .manage(content_adapter_state)
+        .manage(collaboration_server_state)
         .manage(workspace_manager_for_commands)
         .manage(ai_orchestrator_for_workspace)
         .manage(Arc::new(Mutex::new(None::<crate::ai::document_commands::DocumentCommandProcessor>)))
@@ -611,6 +617,11 @@ async fn main() {
             commands::get_lifecycle_analysis_stats,
             commands::track_document_access,
             commands::calculate_workspace_health_score,
+            // Collaboration server commands
+            commands::start_collaboration_server,
+            commands::stop_collaboration_server,
+            commands::get_collaboration_server_status,
+            commands::get_collaboration_server_info,
         ])
         .setup(move |app| {
             info!("Application setup complete");
