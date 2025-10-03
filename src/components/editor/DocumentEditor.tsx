@@ -20,6 +20,7 @@ import { $getRoot, $getSelection, $isRangeSelection } from 'lexical'
 import HistoryPlugin from './plugins/HistoryPlugin'
 import AutoLinkPlugin from './plugins/AutoLinkPlugin'
 import ToolbarPlugin from './plugins/ToolbarPlugin'
+import AIAutoCompletePlugin from './plugins/AIAutoCompletePlugin'
 import { AITextMenu } from './AITextMenu'
 import { AIOperationModal } from './AIOperationModal'
 import { useAITextOperations } from '../../hooks/useAITextOperations'
@@ -32,6 +33,7 @@ interface DocumentEditorProps {
   className?: string
   documentId?: string
   documentTitle?: string
+  enableAutoComplete?: boolean
 }
 
 const editorTheme = {
@@ -301,6 +303,7 @@ function DocumentEditor({
   className = '',
   documentId,
   documentTitle,
+  enableAutoComplete = true,
 }: DocumentEditorProps): React.JSX.Element {
   const contentChangedRef = useRef(false)
 
@@ -363,11 +366,18 @@ function DocumentEditor({
             <LinkPlugin />
             <AutoLinkPlugin />
             {!readOnly && (
-              <AITextMenuPlugin
-                documentId={documentId}
-                documentTitle={documentTitle}
-                onContentChange={handleContentChange}
-              />
+              <>
+                <AITextMenuPlugin
+                  documentId={documentId}
+                  documentTitle={documentTitle}
+                  onContentChange={handleContentChange}
+                />
+                <AIAutoCompletePlugin
+                  enabled={enableAutoComplete}
+                  documentId={documentId}
+                  documentTitle={documentTitle}
+                />
+              </>
             )}
           </div>
         </div>

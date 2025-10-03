@@ -87,6 +87,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showPresencePanel, setShowPresencePanel] = useState(false)
+  const [enableAutoComplete, setEnableAutoComplete] = useState(true)
   const contentRef = useRef<HTMLDivElement>(null)
 
   // Collaboration context
@@ -805,6 +806,33 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </Button>
           </Tooltip>
 
+          {/* AI Auto-Complete Toggle (shown in edit mode) */}
+          {isEditMode && (
+            <Tooltip
+              content={
+                enableAutoComplete
+                  ? 'Disable AI Auto-Complete Suggestions'
+                  : 'Enable AI Auto-Complete Suggestions'
+              }
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEnableAutoComplete(!enableAutoComplete)}
+                style={{
+                  fontWeight: 600,
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: enableAutoComplete ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                  border: enableAutoComplete ? '1px solid rgba(59, 130, 246, 0.3)' : 'none',
+                }}
+              >
+                <Icon name="Generate" size={16} />
+                {enableAutoComplete ? 'AI On' : 'AI Off'}
+              </Button>
+            </Tooltip>
+          )}
+
           <Tooltip content="Version History">
             <Button
               variant="ghost"
@@ -942,6 +970,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               initialContent={document.content}
               documentId={documentId}
               documentTitle={document.name || 'Untitled Document'}
+              enableAutoComplete={enableAutoComplete}
               onChange={(content: string) => {
                 // Update document state for dirty tracking and auto-save
                 updateContent(content)

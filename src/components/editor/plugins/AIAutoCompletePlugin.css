@@ -1,0 +1,256 @@
+/* AI Auto-Complete Suggestion Styles */
+
+.ai-autocomplete-suggestion {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface-color, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  min-width: 300px;
+  padding: 12px;
+  animation: slideIn 0.2s ease-out;
+  pointer-events: auto;
+  transition: box-shadow 0.2s ease;
+}
+
+.ai-autocomplete-suggestion.dragging {
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.2),
+    0 6px 12px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  cursor: grab;
+  user-select: none;
+}
+
+.suggestion-header:active {
+  cursor: grabbing;
+}
+
+.suggestion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-icon {
+  font-size: 16px;
+}
+
+.suggestion-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.drag-hint {
+  font-size: 16px;
+  color: var(--text-secondary, #9ca3af);
+  letter-spacing: -2px;
+  font-weight: bold;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.suggestion-header:hover .drag-hint {
+  opacity: 1;
+}
+
+.suggestion-hint {
+  font-size: 11px;
+  color: var(--text-secondary, #6b7280);
+  margin-left: auto;
+  font-style: italic;
+}
+
+.suggestion-content {
+  margin-bottom: 12px;
+}
+
+.suggestion-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary, #111827);
+  padding: 8px;
+  background: var(--hover-color, #f9fafb);
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color, #3b82f6);
+  margin-bottom: 8px;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.suggestion-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.confidence-bar-container {
+  flex: 1;
+  height: 4px;
+  background: var(--hover-color, #e5e7eb);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.confidence-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  font-size: 11px;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.suggestion-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.suggestion-accept-button,
+.suggestion-dismiss-button {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.suggestion-accept-button {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.suggestion-accept-button:hover {
+  background: var(--primary-hover, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.suggestion-accept-button:active {
+  transform: translateY(0);
+}
+
+.suggestion-dismiss-button {
+  background: transparent;
+  color: var(--text-secondary, #6b7280);
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.suggestion-dismiss-button:hover {
+  background: var(--hover-color, #f3f4f6);
+  color: var(--text-primary, #111827);
+}
+
+.suggestion-dismiss-button:active {
+  background: var(--active-color, #e5e7eb);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .ai-autocomplete-suggestion {
+    background: var(--surface-color, #1f2937);
+    border-color: var(--border-color, #374151);
+  }
+
+  .suggestion-header {
+    border-bottom-color: var(--border-color, #374151);
+  }
+
+  .suggestion-label {
+    color: var(--text-primary, #f9fafb);
+  }
+
+  .suggestion-hint {
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  .suggestion-text {
+    color: var(--text-primary, #f9fafb);
+    background: var(--hover-color, #111827);
+  }
+
+  .confidence-text {
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  .confidence-bar-container {
+    background: var(--hover-color, #374151);
+  }
+
+  .suggestion-dismiss-button {
+    color: var(--text-secondary, #9ca3af);
+    border-color: var(--border-color, #374151);
+  }
+
+  .suggestion-dismiss-button:hover {
+    background: var(--hover-color, #374151);
+    color: var(--text-primary, #f9fafb);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ai-autocomplete-suggestion {
+    max-width: calc(100vw - 32px);
+    min-width: 280px;
+  }
+
+  .suggestion-hint {
+    display: none;
+  }
+}
