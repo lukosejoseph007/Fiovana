@@ -21,6 +21,7 @@ import { ActiveUsers } from '../collaboration/ActiveUsers'
 import { UserPresence } from '../collaboration/UserPresence'
 import { LiveCursors } from '../collaboration/LiveCursors'
 import { ConflictResolution } from '../collaboration/ConflictResolution'
+import { Comments } from '../collaboration/Comments'
 import { OfflineIndicator } from '../ui/OfflineIndicator'
 import { useDocumentState } from '../../hooks/useDocumentState'
 import { useAutoSave } from '../../hooks/useAutoSave'
@@ -87,8 +88,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showPresencePanel, setShowPresencePanel] = useState(false)
-  const [enableAutoComplete, setEnableAutoComplete] = useState(true)
+  const [enableAutoComplete, setEnableAutoComplete] = useState(false)
+  const [showSaveNotification, setShowSaveNotification] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  const saveNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Collaboration context
   const collaboration = useCollaboration()
@@ -192,6 +195,15 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         }
 
         console.log('Document saved successfully:', response.data)
+
+        // Show save notification
+        setShowSaveNotification(true)
+        if (saveNotificationTimeoutRef.current) {
+          clearTimeout(saveNotificationTimeoutRef.current)
+        }
+        saveNotificationTimeoutRef.current = setTimeout(() => {
+          setShowSaveNotification(false)
+        }, 3000)
 
         // Create a version snapshot after successful save
         try {
@@ -741,19 +753,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 </Button>
               </Tooltip>
 
-              {/* Save Status Indicator */}
-              {lastSaved && !isDirty && (
-                <span
-                  style={{
-                    fontSize: designTokens.typography.fontSize.xs,
-                    color: designTokens.colors.text.secondary,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Saved {new Date(lastSaved).toLocaleTimeString()}
-                </span>
-              )}
-
               {/* Error Indicator */}
               {saveError && (
                 <Tooltip content={saveError}>
@@ -846,6 +845,25 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             >
               <Icon name="Document" size={16} />
               Versions
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Comments & Annotations">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Toggle comments sidebar by dispatching custom event
+                window.dispatchEvent(new CustomEvent('toggleCommentsSidebar'))
+              }}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+              }}
+            >
+              <Icon name="MessageCircle" size={16} />
+              Comments
             </Button>
           </Tooltip>
 
@@ -1107,6 +1125,50 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           />
         </div>
       )}
+
+      {/* Comments & Annotations System */}
+      <Comments documentId={documentId} contentRef={contentRef} isEditMode={isEditMode} />
+
+      {/* Save Notification Toast */}
+      {showSaveNotification && lastSaved && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10000,
+            backgroundColor: designTokens.colors.accent.success,
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            boxShadow: designTokens.shadows.lg,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontFamily: designTokens.typography.fonts.sans.join(', '),
+            fontSize: designTokens.typography.fontSize.sm,
+            fontWeight: 500,
+            animation: 'slideUpFade 0.3s ease-out',
+          }}
+        >
+          <Icon name="AlertCircle" size={16} />
+          Saved at {new Date(lastSaved).toLocaleTimeString()}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideUpFade {
+          from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
+      `}</style>
 
       <style>{`
         @keyframes slideInRight {

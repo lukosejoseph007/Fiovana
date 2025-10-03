@@ -108,7 +108,11 @@ const DocumentRenderer: React.FC<DocumentRendererProps> = ({
    */
   switch (format) {
     case 'markdown':
-      return <MarkdownRenderer content={content} style={style} />
+      return (
+        <div data-document-renderer>
+          <MarkdownRenderer content={content} style={style} />
+        </div>
+      )
 
     case 'pdf':
       // PDF rendering will be implemented in a future phase

@@ -53,6 +53,11 @@ const AppContent: React.FC = () => {
   // App initialization state
   const [isAppLoading, setIsAppLoading] = useState(true)
   const [initOperations, setInitOperations] = useState<OperationProgress[]>([])
+  const [aiStatus, setAiStatus] = useState<{
+    isConnected: boolean
+    isProcessing: boolean
+    provider?: string
+  }>({ isConnected: false, isProcessing: false })
 
   // Helper to update operation status
   const updateInitOperation = useCallback((id: string, updates: Partial<OperationProgress>) => {
@@ -137,62 +142,111 @@ const AppContent: React.FC = () => {
         })
       }
 
-      // Initialize AI system
+      // Initialize AI system (non-blocking with timeout)
       updateInitOperation('init-ai-system', { status: 'in-progress', progress: 20 })
-      try {
-        console.log('Initializing AI system...')
-        // Load existing AI settings
-        const settingsResponse = await apiClient.invoke('get_ai_settings')
-        if (settingsResponse.success && settingsResponse.data) {
-          const settings = settingsResponse.data as {
-            provider?: string
-            anthropicApiKey?: string
-            openrouterApiKey?: string
-            selectedModel?: string
-          }
 
-          // Only initialize if we have a provider and API key configured
-          const hasValidConfig =
-            (settings.provider === 'anthropic' && settings.anthropicApiKey) ||
-            (settings.provider === 'openrouter' && settings.openrouterApiKey) ||
-            settings.provider === 'local'
+      // Create a timeout promise
+      const aiTimeout = new Promise<void>(resolve => {
+        setTimeout(() => {
+          console.warn('AI system initialization timeout (10s)')
+          resolve()
+        }, 10000) // 10 second timeout
+      })
 
-          if (hasValidConfig) {
-            console.log('Valid AI configuration found, initializing AI system...')
-            updateInitOperation('init-ai-system', {
-              status: 'in-progress',
-              progress: 60,
-              details: `Connecting to ${settings.provider}...`,
-            })
-            await apiClient.invoke('init_ai_system', { config: settings })
-            console.log('AI system initialized successfully')
-            updateInitOperation('init-ai-system', {
-              status: 'completed',
-              progress: 100,
-              details: `Connected to ${settings.provider}`,
-            })
+      // Create the AI initialization promise
+      const aiInit = (async () => {
+        try {
+          console.log('Initializing AI system...')
+          // Load existing AI settings
+          const settingsResponse = await apiClient.invoke('get_ai_settings')
+          if (settingsResponse.success && settingsResponse.data) {
+            const settings = settingsResponse.data as {
+              provider?: string
+              anthropicApiKey?: string
+              openrouterApiKey?: string
+              selectedModel?: string
+            }
+
+            // Only initialize if we have a provider and API key configured
+            const hasValidConfig =
+              (settings.provider === 'anthropic' && settings.anthropicApiKey) ||
+              (settings.provider === 'openrouter' && settings.openrouterApiKey) ||
+              settings.provider === 'local'
+
+            if (hasValidConfig) {
+              console.log('Valid AI configuration found, initializing AI system...')
+              updateInitOperation('init-ai-system', {
+                status: 'in-progress',
+                progress: 60,
+                details: `Connecting to ${settings.provider}...`,
+              })
+              await apiClient.invoke('init_ai_system', { config: settings })
+              console.log('AI system initialized successfully')
+
+              // Update AI status
+              setAiStatus({
+                isConnected: true,
+                isProcessing: false,
+                provider: settings.provider,
+              })
+
+              updateInitOperation('init-ai-system', {
+                status: 'completed',
+                progress: 100,
+                details: `Connected to ${settings.provider}`,
+              })
+            } else {
+              console.log('No valid AI configuration found, skipping AI initialization')
+
+              // Set AI as disconnected
+              setAiStatus({
+                isConnected: false,
+                isProcessing: false,
+              })
+
+              updateInitOperation('init-ai-system', {
+                status: 'completed',
+                progress: 100,
+                details: 'No AI provider configured',
+              })
+            }
           } else {
-            console.log('No valid AI configuration found, skipping AI initialization')
+            setAiStatus({
+              isConnected: false,
+              isProcessing: false,
+            })
             updateInitOperation('init-ai-system', {
               status: 'completed',
               progress: 100,
-              details: 'No AI provider configured',
+              details: 'Using default settings',
             })
           }
-        } else {
+        } catch (error) {
+          console.error('Failed to initialize AI system:', error)
+          setAiStatus({
+            isConnected: false,
+            isProcessing: false,
+          })
           updateInitOperation('init-ai-system', {
-            status: 'completed',
-            progress: 100,
-            details: 'Using default settings',
+            status: 'failed',
+            details: 'Connection failed',
           })
         }
-      } catch (error) {
-        console.error('Failed to initialize AI system:', error)
+      })()
+
+      // Race between timeout and AI init - don't block app startup
+      await Promise.race([aiInit, aiTimeout]).catch(() => {
+        // Even if there's an error, continue with app initialization
+        console.log('AI initialization completed or timed out, continuing...')
+        setAiStatus({
+          isConnected: false,
+          isProcessing: false,
+        })
         updateInitOperation('init-ai-system', {
           status: 'failed',
-          details: 'Connection failed',
+          details: 'Connection timeout',
         })
-      }
+      })
 
       // Initialize workspace
       updateInitOperation('init-workspace', { status: 'in-progress', progress: 50 })
@@ -503,6 +557,7 @@ const AppContent: React.FC = () => {
           onAISettingsClick={handleAISettingsClick}
           onWorkspaceSettingsClick={handleWorkspaceSettingsClick}
           onUserPreferencesClick={handleUserPreferencesClick}
+          aiStatus={aiStatus}
           activeOperations={
             activeOperation
               ? [

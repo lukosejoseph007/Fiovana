@@ -303,7 +303,7 @@ function DocumentEditor({
   className = '',
   documentId,
   documentTitle,
-  enableAutoComplete = true,
+  enableAutoComplete = false,
 }: DocumentEditorProps): React.JSX.Element {
   const contentChangedRef = useRef(false)
 
@@ -336,7 +336,7 @@ function DocumentEditor({
   }, [])
 
   return (
-    <div className={`document-editor-container ${className}`} dir="ltr">
+    <div className={`document-editor-container ${className}`} dir="ltr" data-document-editor>
       <LexicalComposer initialConfig={initialConfig}>
         <div className="editor-shell" dir="ltr">
           {!readOnly && <ToolbarPlugin />}

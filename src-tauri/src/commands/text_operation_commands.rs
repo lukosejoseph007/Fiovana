@@ -22,9 +22,9 @@ pub async fn execute_text_operation(
 ) -> Result<TextOperationResult, String> {
     // Get AI orchestrator
     let state_guard = ai_state.lock().await;
-    let orchestrator = state_guard
-        .as_ref()
-        .ok_or_else(|| "AI system not initialized. Please initialize AI in settings first.".to_string())?;
+    let orchestrator = state_guard.as_ref().ok_or_else(|| {
+        "AI system not initialized. Please initialize AI in settings first.".to_string()
+    })?;
 
     // Create processor
     let processor = TextOperationProcessor::new();

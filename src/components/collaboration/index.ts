@@ -10,3 +10,8 @@ export type { ActiveUsersProps, ActiveUser } from './ActiveUsers'
 
 export { ConflictResolution } from './ConflictResolution'
 export type { ConflictResolutionProps, Conflict, ConflictChange } from './ConflictResolution'
+
+export { Comments } from './Comments'
+export type { Comment, CommentThreadData } from './CommentThread'
+export { CommentThread } from './CommentThread'
+export { CommentSidebar } from './CommentSidebar'

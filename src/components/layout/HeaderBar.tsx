@@ -337,7 +337,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         {/* Right Zone - Collaborators, AI Status, Panel Toggles, Settings */}
         <div style={rightZoneStyles}>
           <CollaboratorAvatars collaborators={collaborators} />
-          <AIStatusIndicator aiStatus={aiStatus} />
+          <AIStatusIndicator aiStatus={aiStatus} onClick={onAISettingsClick} />
 
           {/* Offline Status Indicator */}
           <OfflineIndicator position="inline" showDetails={true} />
@@ -624,30 +624,52 @@ interface AIStatusIndicatorProps {
     isProcessing: boolean
     provider?: string
   }
+  onClick?: () => void
 }
 
 const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({
   aiStatus = { isConnected: false, isProcessing: false },
+  onClick,
 }) => {
   const getStatusColor = () => {
-    if (!aiStatus.isConnected) return designTokens.colors.text.tertiary
-    if (aiStatus.isProcessing) return designTokens.colors.accent.ai
-    return designTokens.colors.confidence.high
+    if (!aiStatus.isConnected) return '#ef4444' // Red for disconnected
+    if (aiStatus.isProcessing) return designTokens.colors.accent.ai // Blue for processing
+    return '#10b981' // Green for connected
   }
 
   const getStatusText = () => {
     if (!aiStatus.isConnected) return 'AI Disconnected'
     if (aiStatus.isProcessing) return 'AI Processing...'
-    return `AI Ready${aiStatus.provider ? ` (${aiStatus.provider})` : ''}`
+    return 'AI Connected'
   }
 
-  const indicatorStyles = {
-    width: '12px',
-    height: '12px',
+  const getProviderText = () => {
+    if (!aiStatus.provider) return null
+    const provider = aiStatus.provider.charAt(0).toUpperCase() + aiStatus.provider.slice(1)
+    return provider
+  }
+
+  const indicatorContainerStyles: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '6px 12px',
+    borderRadius: designTokens.borderRadius.md,
+    backgroundColor: designTokens.colors.surface.secondary,
+    border: `1px solid ${designTokens.colors.border.subtle}`,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontSize: designTokens.typography.fontSize.xs,
+    color: designTokens.colors.text.primary,
+  }
+
+  const indicatorDotStyles: React.CSSProperties = {
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
     backgroundColor: getStatusColor(),
     animation: aiStatus.isProcessing ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
-    cursor: 'pointer',
+    flexShrink: 0,
   }
 
   return (
@@ -662,10 +684,36 @@ const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({
               opacity: 0.5;
             }
           }
+          .ai-status-container:hover {
+            background-color: ${designTokens.colors.surface.tertiary};
+            border-color: ${designTokens.colors.border.medium};
+          }
         `}
       </style>
 
-      <div style={indicatorStyles} title={getStatusText()} aria-label={getStatusText()} />
+      <div
+        className="ai-status-container"
+        style={indicatorContainerStyles}
+        title={`${getStatusText()}${getProviderText() ? ` - ${getProviderText()}` : ''}`}
+        aria-label={getStatusText()}
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onClick?.()
+          }
+        }}
+      >
+        <div style={indicatorDotStyles} />
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {aiStatus.isConnected ? (
+            <>AI{getProviderText() ? ` (${getProviderText()})` : ''}</>
+          ) : (
+            'AI Off'
+          )}
+        </span>
+      </div>
     </>
   )
 }
