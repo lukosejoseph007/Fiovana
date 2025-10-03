@@ -20,10 +20,14 @@ import VersionHistory from '../editor/VersionHistory'
 import { ActiveUsers } from '../collaboration/ActiveUsers'
 import { UserPresence } from '../collaboration/UserPresence'
 import { LiveCursors } from '../collaboration/LiveCursors'
+import { ConflictResolution } from '../collaboration/ConflictResolution'
+import { OfflineIndicator } from '../ui/OfflineIndicator'
 import { useDocumentState } from '../../hooks/useDocumentState'
 import { useAutoSave } from '../../hooks/useAutoSave'
 import { useCollaboration } from '../../context/useCollaboration'
 import { useTypingIndicator } from '../../hooks/useTypingIndicator'
+import { useConflictResolution } from '../../hooks/useConflictResolution'
+import { useOfflineSync } from '../../hooks/useOfflineSync'
 import '../../styles/editor.css'
 
 interface DocumentViewerProps {
@@ -101,6 +105,49 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     },
   })
 
+  // Conflict resolution hook for collaborative editing
+  const {
+    conflicts,
+    resolveConflict,
+    dismissConflict,
+    refreshConflicts,
+  } = useConflictResolution({
+    ydoc: null, // Will be connected to Yjs document when real-time editing is enabled
+    enabled: collaboration?.settings.enabled && isEditMode,
+    onConflictDetected: conflict => {
+      console.log('Conflict detected:', conflict)
+    },
+    onConflictResolved: (conflictId, resolution) => {
+      console.log('Conflict resolved:', conflictId, resolution)
+    },
+  })
+
+  // Offline sync hook for queuing operations when offline
+  const {
+    isSyncing,
+    queuedOperations,
+    syncProgress,
+    triggerSync,
+  } = useOfflineSync({
+    ydoc: null, // Will be connected to Yjs document when real-time editing is enabled
+    enabled: collaboration?.settings.enabled && isEditMode,
+    autoSync: true,
+    maxRetries: 3,
+    onSyncStart: () => {
+      console.log('Sync started')
+    },
+    onSyncComplete: (success, syncedCount) => {
+      console.log('Sync completed:', success, 'Synced:', syncedCount)
+      // After sync, check for conflicts
+      if (success) {
+        refreshConflicts()
+      }
+    },
+    onOperationQueued: operation => {
+      console.log('Operation queued:', operation)
+    },
+  })
+
   // Convert Map to Array for component props
   const collaborationUsers = useMemo(() => {
     return Array.from(collaboration?.users.values() || []).map(user => ({
@@ -167,6 +214,11 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           // Don't fail the save if version creation fails
           console.warn('Failed to create version snapshot:', versionError)
         }
+
+        // Reload the document to get the latest saved content from backend
+        // This ensures the viewer shows the latest version
+        // Skip loading state to avoid showing loading UI during save
+        await loadDocument(true)
       } catch (error) {
         console.error('Save failed:', error)
         throw error
@@ -254,49 +306,54 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   }, [])
 
   // Load document data
-  const loadDocument = useCallback(async () => {
+  const loadDocument = useCallback(async (skipLoadingState = false) => {
     if (!documentId) return
 
-    setIsLoading(true)
+    // Only show loading state if not skipped (e.g., during save reload)
+    if (!skipLoadingState) {
+      setIsLoading(true)
 
-    // Initialize operations
-    const operations: OperationProgress[] = [
-      {
-        id: 'load-document',
-        operation: 'Loading document metadata',
-        status: 'pending',
-        progress: 0,
-      },
-      {
-        id: 'load-structure',
-        operation: 'Analyzing document structure',
-        status: 'pending',
-        progress: 0,
-      },
-      {
-        id: 'load-classification',
-        operation: 'Classifying content type',
-        status: 'pending',
-        progress: 0,
-      },
-      {
-        id: 'generate-suggestions',
-        operation: 'Generating AI suggestions',
-        status: 'pending',
-        progress: 0,
-      },
-      {
-        id: 'generate-highlights',
-        operation: 'Analyzing semantic content',
-        status: 'pending',
-        progress: 0,
-      },
-    ]
-    setLoadingOperations(operations)
+      // Initialize operations
+      const operations: OperationProgress[] = [
+        {
+          id: 'load-document',
+          operation: 'Loading document metadata',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'load-structure',
+          operation: 'Analyzing document structure',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'load-classification',
+          operation: 'Classifying content type',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'generate-suggestions',
+          operation: 'Generating AI suggestions',
+          status: 'pending',
+          progress: 0,
+        },
+        {
+          id: 'generate-highlights',
+          operation: 'Analyzing semantic content',
+          status: 'pending',
+          progress: 0,
+        },
+      ]
+      setLoadingOperations(operations)
+    }
 
     try {
       // Load document content
-      updateOperation('load-document', { status: 'in-progress', progress: 10 })
+      if (!skipLoadingState) {
+        updateOperation('load-document', { status: 'in-progress', progress: 10 })
+      }
       console.log('Loading document with ID:', documentId)
       const docResponse = await documentService.getDocument(documentId)
       console.log('Document response:', docResponse)
@@ -304,65 +361,91 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       if (docResponse.success && docResponse.data) {
         console.log('Document loaded successfully:', docResponse.data)
         setDocument(docResponse.data)
-        updateOperation('load-document', { status: 'completed', progress: 100 })
+        if (!skipLoadingState) {
+          updateOperation('load-document', { status: 'completed', progress: 100 })
+        }
       } else {
         console.error('Failed to load document:', docResponse.error)
-        updateOperation('load-document', {
-          status: 'failed',
-          details: docResponse.error || 'Failed to load document',
-        })
+        if (!skipLoadingState) {
+          updateOperation('load-document', {
+            status: 'failed',
+            details: docResponse.error || 'Failed to load document',
+          })
+        }
       }
 
       // Load document structure - use the file path from the loaded document
       if (docResponse.data?.path) {
-        updateOperation('load-structure', { status: 'in-progress', progress: 20 })
+        if (!skipLoadingState) {
+          updateOperation('load-structure', { status: 'in-progress', progress: 20 })
+        }
         const structureResponse = await structureService.analyzeDocumentStructure(
           docResponse.data.path
         )
         if (structureResponse.success && structureResponse.data) {
           setStructure(structureResponse.data)
-          updateOperation('load-structure', { status: 'completed', progress: 100 })
+          if (!skipLoadingState) {
+            updateOperation('load-structure', { status: 'completed', progress: 100 })
+          }
         } else {
-          updateOperation('load-structure', { status: 'failed', details: 'Analysis failed' })
+          if (!skipLoadingState) {
+            updateOperation('load-structure', { status: 'failed', details: 'Analysis failed' })
+          }
         }
 
         // Load content classification - use the file path
-        updateOperation('load-classification', { status: 'in-progress', progress: 30 })
+        if (!skipLoadingState) {
+          updateOperation('load-classification', { status: 'in-progress', progress: 30 })
+        }
         const classificationResponse = await contentClassificationService.classifyContentType(
           docResponse.data.path
         )
         if (classificationResponse.success && classificationResponse.data) {
           setClassification(classificationResponse.data)
-          updateOperation('load-classification', { status: 'completed', progress: 100 })
+          if (!skipLoadingState) {
+            updateOperation('load-classification', { status: 'completed', progress: 100 })
+          }
         } else {
-          updateOperation('load-classification', {
-            status: 'failed',
-            details: 'Classification failed',
-          })
+          if (!skipLoadingState) {
+            updateOperation('load-classification', {
+              status: 'failed',
+              details: 'Classification failed',
+            })
+          }
         }
       }
 
       // Generate AI suggestions (mock for now)
-      updateOperation('generate-suggestions', { status: 'in-progress', progress: 40 })
+      if (!skipLoadingState) {
+        updateOperation('generate-suggestions', { status: 'in-progress', progress: 40 })
+      }
       await generateAISuggestions()
-      updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
+      if (!skipLoadingState) {
+        updateOperation('generate-suggestions', { status: 'completed', progress: 100 })
+      }
 
       // Note: Semantic highlights temporarily disabled
       // updateOperation('generate-highlights', { status: 'in-progress', progress: 50 })
       // await generateSemanticHighlights()
-      updateOperation('generate-highlights', { status: 'completed', progress: 100 })
+      if (!skipLoadingState) {
+        updateOperation('generate-highlights', { status: 'completed', progress: 100 })
+      }
     } catch (error) {
       console.error('Failed to load document:', error)
-      // Mark all in-progress operations as failed
-      setLoadingOperations(prev =>
-        prev.map(op =>
-          op.status === 'in-progress' || op.status === 'pending'
-            ? { ...op, status: 'failed', details: 'Operation failed' }
-            : op
+      // Mark all in-progress operations as failed (only if not skipped)
+      if (!skipLoadingState) {
+        setLoadingOperations(prev =>
+          prev.map(op =>
+            op.status === 'in-progress' || op.status === 'pending'
+              ? { ...op, status: 'failed', details: 'Operation failed' }
+              : op
+          )
         )
-      )
+      }
     } finally {
-      setIsLoading(false)
+      if (!skipLoadingState) {
+        setIsLoading(false)
+      }
     }
   }, [documentId, generateAISuggestions, updateOperation])
 
@@ -657,6 +740,18 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               onClick={() => setShowPresencePanel(!showPresencePanel)}
             />
           )}
+
+          {/* Offline Indicator */}
+          {collaboration?.settings.enabled && isEditMode && (
+            <OfflineIndicator
+              position="inline"
+              showDetails={false}
+              showSyncProgress={queuedOperations.length > 0}
+              syncProgress={syncProgress}
+              isSyncing={isSyncing}
+              onManualSync={triggerSync}
+            />
+          )}
         </div>
 
         {/* Actions */}
@@ -919,6 +1014,17 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               }}
             />
           ))}
+
+        {/* Conflict Resolution Component */}
+        {collaboration?.settings.enabled && isEditMode && conflicts.length > 0 && (
+          <ConflictResolution
+            conflicts={conflicts}
+            onResolveConflict={resolveConflict}
+            onDismissConflict={dismissConflict}
+            onRefreshConflicts={refreshConflicts}
+            className="mt-4"
+          />
+        )}
       </div>
 
       {/* Floating Intelligence Bar */}

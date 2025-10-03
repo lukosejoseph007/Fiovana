@@ -1,17 +1,26 @@
 // Offline Indicator Component
 import React, { useState } from 'react'
 import { useOfflineStatus } from '../../hooks/useOfflineStatus'
+import { RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react'
 
 export interface OfflineIndicatorProps {
   className?: string
   showDetails?: boolean
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'inline'
+  showSyncProgress?: boolean
+  syncProgress?: number
+  isSyncing?: boolean
+  onManualSync?: () => void
 }
 
 export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   className = '',
   showDetails = false,
   position = 'inline',
+  showSyncProgress = false,
+  syncProgress = 0,
+  isSyncing = false,
+  onManualSync,
 }) => {
   const { status, isOnline, processQueue } = useOfflineStatus()
   const [showTooltip, setShowTooltip] = useState(false)
@@ -34,7 +43,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
 
   const handleSync = async (): Promise<void> => {
     if (isOnline && status.queuedOperationsCount > 0) {
-      await processQueue()
+      if (onManualSync) {
+        onManualSync()
+      } else {
+        await processQueue()
+      }
     }
   }
 
@@ -93,12 +106,40 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
               </div>
             )}
 
+            {/* Sync Progress */}
+            {showSyncProgress && isSyncing && (
+              <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <RefreshCw className="w-4 h-4 text-cyan-500 animate-spin" />
+                  <span className="text-xs font-medium text-cyan-500">Syncing Changes...</span>
+                </div>
+                <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-cyan-500 rounded-full transition-all duration-300"
+                    style={{ width: `${syncProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-neutral-400 mt-1">{Math.round(syncProgress)}% complete</p>
+              </div>
+            )}
+
+            {/* Sync Success */}
+            {showSyncProgress && !isSyncing && syncProgress === 100 && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-xs font-medium text-green-500">All Changes Synced!</span>
+                </div>
+              </div>
+            )}
+
             {/* Statistics */}
             <div className="space-y-2">
               <StatItem
                 label="Queued Operations"
                 value={status.queuedOperationsCount}
                 color={status.queuedOperationsCount > 0 ? 'text-amber-500' : 'text-neutral-400'}
+                icon={status.queuedOperationsCount > 0 ? <AlertTriangle className="w-3 h-3" /> : undefined}
               />
               <StatItem
                 label="Cached Documents"
@@ -157,10 +198,14 @@ const StatItem: React.FC<{
   label: string
   value: number | string
   color?: string
-}> = ({ label, value, color = 'text-neutral-400' }) => (
+  icon?: React.ReactNode
+}> = ({ label, value, color = 'text-neutral-400', icon }) => (
   <div className="flex justify-between items-center text-xs">
     <span className="text-neutral-500">{label}</span>
-    <span className={`font-medium ${color}`}>{value}</span>
+    <div className="flex items-center gap-1">
+      {icon && <span className={color}>{icon}</span>}
+      <span className={`font-medium ${color}`}>{value}</span>
+    </div>
   </div>
 )
 

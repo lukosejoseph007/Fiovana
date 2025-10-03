@@ -7,3 +7,6 @@ export type { LiveCursorsProps, CursorPosition } from './LiveCursors'
 
 export { ActiveUsers } from './ActiveUsers'
 export type { ActiveUsersProps, ActiveUser } from './ActiveUsers'
+
+export { ConflictResolution } from './ConflictResolution'
+export type { ConflictResolutionProps, Conflict, ConflictChange } from './ConflictResolution'
