@@ -751,7 +751,25 @@ impl StructureAnalyzer {
         let content_end = std::cmp::min(end + context_size, content.len());
 
         if content_start < content_end {
-            Some(content[content_start..content_end].to_string())
+            // Find the nearest character boundaries
+            let safe_start = content
+                .char_indices()
+                .find(|(i, _)| *i >= content_start)
+                .map(|(i, _)| i)
+                .unwrap_or(content_start);
+
+            let safe_end = content
+                .char_indices()
+                .take_while(|(i, _)| *i < content_end)
+                .last()
+                .map(|(i, c)| i + c.len_utf8())
+                .unwrap_or(content_end);
+
+            if safe_start < safe_end && safe_end <= content.len() {
+                Some(content[safe_start..safe_end].to_string())
+            } else {
+                None
+            }
         } else {
             None
         }
