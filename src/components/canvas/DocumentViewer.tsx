@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Button, Icon, Badge, Tooltip, Dropdown } from '../ui'
+import { Icon } from '../ui'
 import {
   DocumentSkeleton,
   LongOperationProgress,
@@ -16,13 +16,12 @@ import { designTokens } from '../../styles/tokens'
 import { Document, DocumentStructure, ContentClassification } from '../../types'
 import DocumentRenderer from './DocumentRenderer'
 import DocumentEditor from '../editor/DocumentEditor'
+import DocumentToolbar, { type ToolbarGroup } from './DocumentToolbar'
 import VersionHistory from '../editor/VersionHistory'
-import { ActiveUsers } from '../collaboration/ActiveUsers'
 import { UserPresence } from '../collaboration/UserPresence'
 import { LiveCursors } from '../collaboration/LiveCursors'
 import { ConflictResolution } from '../collaboration/ConflictResolution'
 import { Comments } from '../collaboration/Comments'
-import { OfflineIndicator } from '../ui/OfflineIndicator'
 import { useDocumentState } from '../../hooks/useDocumentState'
 import { useAutoSave } from '../../hooks/useAutoSave'
 import { useCollaboration } from '../../context/useCollaboration'
@@ -531,6 +530,196 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     return factors.reduce((acc, factor) => acc + factor, 0) / factors.length
   }, [document, classification, structure])
 
+  // Create toolbar action groups with proper typing
+  const homeActions = useMemo<ToolbarGroup[]>(
+    () => [
+      {
+        id: 'mode',
+        label: 'Mode',
+        actions: [
+          {
+            id: 'toggle-mode',
+            label: isEditMode ? 'View' : 'Edit',
+            icon: isEditMode ? ('Eye' as const) : ('Edit' as const),
+            onClick: () => {
+              if (isEditMode && isDirty && showUnsavedWarning) {
+                const confirmSwitch = window.confirm(
+                  'You have unsaved changes. Switch to view mode anyway? (Changes will be lost)'
+                )
+                if (!confirmSwitch) return
+              }
+              setIsEditMode(!isEditMode)
+            },
+            tooltip: isEditMode ? 'Switch to View Mode' : 'Switch to Edit Mode',
+            showLabel: true,
+            variant: isEditMode ? ('secondary' as const) : ('ghost' as const),
+          },
+          ...(isEditMode
+            ? [
+                {
+                  id: 'ai-autocomplete',
+                  label: enableAutoComplete ? 'AI On' : 'AI Off',
+                  icon: 'Sparkles' as const,
+                  onClick: () => setEnableAutoComplete(!enableAutoComplete),
+                  tooltip: enableAutoComplete
+                    ? 'Disable AI Auto-Complete'
+                    : 'Enable AI Auto-Complete',
+                  showLabel: true,
+                  variant: enableAutoComplete ? ('secondary' as const) : ('ghost' as const),
+                },
+              ]
+            : []),
+        ],
+      },
+    ],
+    [isEditMode, isDirty, showUnsavedWarning, enableAutoComplete]
+  )
+
+  const reviewActions = useMemo<ToolbarGroup[]>(
+    () => [
+      {
+        id: 'versions',
+        label: 'Versions',
+        actions: [
+          {
+            id: 'version-history',
+            label: 'Versions',
+            icon: 'History' as const,
+            onClick: () => setShowVersionHistory(true),
+            tooltip: 'Version History',
+            showLabel: true,
+          },
+          {
+            id: 'compare',
+            label: 'Compare',
+            icon: 'GitCompare' as const,
+            onClick: () => {
+              if (document && editedContent) {
+                setDiffOldContent(document.content || '')
+                setDiffNewContent(editedContent)
+                setShowDocumentDiff(true)
+              }
+            },
+            tooltip: 'Compare Versions',
+            showLabel: true,
+          },
+        ],
+      },
+      {
+        id: 'collaboration',
+        label: 'Collaboration',
+        actions: [
+          {
+            id: 'comments',
+            label: 'Comments',
+            icon: 'MessageCircle' as const,
+            onClick: () => window.dispatchEvent(new CustomEvent('toggleCommentsSidebar')),
+            tooltip: 'Comments & Annotations',
+            showLabel: true,
+          },
+          {
+            id: 'track-changes',
+            label: 'Track',
+            icon: 'GitBranch' as const,
+            onClick: () => setShowTrackChangesPanel(!showTrackChangesPanel),
+            tooltip: 'Track Changes',
+            showLabel: true,
+            variant: showTrackChangesPanel ? ('secondary' as const) : ('ghost' as const),
+            badge: changes.length > 0 ? changes.length : undefined,
+          },
+          {
+            id: 'review-changes',
+            label: 'Review',
+            icon: 'CheckCircle' as const,
+            onClick: () => setShowChangeReview(true),
+            tooltip: 'Review Changes',
+            showLabel: true,
+          },
+        ],
+      },
+    ],
+    [document, editedContent, showTrackChangesPanel, changes.length]
+  )
+
+  const aiToolsActions = useMemo<ToolbarGroup[]>(
+    () => [
+      {
+        id: 'ai-analysis',
+        label: 'AI Analysis',
+        actions: [
+          {
+            id: 'analyze',
+            label: 'Analyze',
+            icon: 'Search' as const,
+            onClick: () => console.log('Analyze document'),
+            tooltip: 'Analyze Document',
+            showLabel: true,
+          },
+          {
+            id: 'deep-analysis',
+            label: 'Deep',
+            icon: 'Zap' as const,
+            onClick: () => console.log('Deep analysis'),
+            tooltip: 'Deep Analysis',
+            showLabel: true,
+          },
+        ],
+      },
+      {
+        id: 'ai-generation',
+        label: 'AI Generation',
+        actions: [
+          {
+            id: 'generate',
+            label: 'Generate',
+            icon: 'Sparkles' as const,
+            onClick: () => console.log('Generate content'),
+            tooltip: 'Generate Content',
+            showLabel: true,
+          },
+          {
+            id: 'suggestions',
+            label: 'Suggest',
+            icon: 'Lightbulb' as const,
+            onClick: () => generateAISuggestions(),
+            tooltip: 'AI Suggestions',
+            showLabel: true,
+            badge: aiSuggestions.length > 0 ? aiSuggestions.length : undefined,
+          },
+        ],
+      },
+    ],
+    [aiSuggestions.length, generateAISuggestions]
+  )
+
+  const moreActions = useMemo<ToolbarGroup[]>(
+    () => [
+      {
+        id: 'document-actions',
+        label: 'Document',
+        actions: [
+          {
+            id: 'rename',
+            label: 'Rename',
+            icon: 'Edit' as const,
+            onClick: () => console.log('Rename document'),
+            tooltip: 'Rename Document',
+            showLabel: true,
+          },
+          {
+            id: 'download',
+            label: 'Download',
+            icon: 'Download' as const,
+            onClick: () => console.log('Download document'),
+            tooltip: 'Download',
+            showLabel: true,
+          },
+        ],
+      },
+    ],
+    []
+  )
+
   // Load data on mount
   useEffect(() => {
     loadDocument()
@@ -648,414 +837,40 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         position: 'relative',
       }}
     >
-      {/* Document Header Strip */}
-      <div
-        style={{
-          minHeight: '48px',
-          padding: `${designTokens.spacing[3]} ${designTokens.spacing[6]}`,
-          background: 'linear-gradient(to bottom, rgba(26, 26, 30, 0.95), rgba(22, 22, 26, 0.98))',
-          backdropFilter: 'blur(10px)',
-          borderBottom: `1px solid rgba(255, 255, 255, 0.08)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-        }}
-      >
-        {/* Document Info */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: designTokens.spacing[3],
-            flex: 1,
-            minWidth: 0, // Allow flex item to shrink
-          }}
-        >
-          <Icon
-            name="Document"
-            size={18}
-            style={{ color: designTokens.colors.accent.ai, flexShrink: 0 }}
-          />
-          <span
-            style={{
-              fontSize: designTokens.typography.fontSize.base,
-              fontWeight: designTokens.typography.fontWeight.semibold,
-              color: designTokens.colors.text.primary,
-              maxWidth: '400px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {document.name}
-          </span>
-
-          <Badge
-            variant="confidence"
-            style={{
-              background: `${designTokens.colors.accent.ai}15`,
-              color: designTokens.colors.accent.ai,
-              fontSize: designTokens.typography.fontSize.xs,
-              padding: '4px 10px',
-              borderRadius: '6px',
-              border: `1px solid ${designTokens.colors.accent.ai}30`,
-              flexShrink: 0,
-            }}
-          >
-            {Math.round(confidenceScore * 100)}% confidence
-          </Badge>
-
-          {classification && (
-            <Badge
-              variant="default"
-              style={{
-                fontSize: designTokens.typography.fontSize.xs,
-                padding: '4px 10px',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: designTokens.colors.text.secondary,
-                flexShrink: 0,
-              }}
-            >
-              {classification.categories?.[0]?.name || 'Unknown'}
-            </Badge>
-          )}
-
-          {/* Active Users Badge */}
-          {collaboration?.settings.enabled && collaboration.settings.showPresence && (
-            <ActiveUsers
-              users={collaborationUsers}
-              currentUserId={collaboration.currentUserId}
-              size="small"
-              onClick={() => setShowPresencePanel(!showPresencePanel)}
-            />
-          )}
-
-          {/* Offline Indicator */}
-          {collaboration?.settings.enabled && isEditMode && (
-            <OfflineIndicator
-              position="inline"
-              showDetails={false}
-              showSyncProgress={queuedOperations.length > 0}
-              syncProgress={syncProgress}
-              isSyncing={isSyncing}
-              onManualSync={triggerSync}
-            />
-          )}
-        </div>
-
-        {/* Actions */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: designTokens.spacing[3],
-            flexShrink: 0,
-          }}
-        >
-          {/* Save Button (shown in edit mode) */}
-          {isEditMode && (
-            <>
-              <Tooltip
-                content={
-                  isDirty ? 'Save changes (auto-saves every 5 seconds)' : 'No unsaved changes'
-                }
-              >
-                <Button
-                  variant={isDirty ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={saveDocument}
-                  disabled={!isDirty || isSaving}
-                  style={{
-                    fontWeight: 600,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    ...(isDirty
-                      ? {
-                          background: 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)',
-                          boxShadow: '0 2px 8px rgba(64, 192, 87, 0.3)',
-                        }
-                      : {}),
-                  }}
-                >
-                  <Icon name={isSaving ? 'Spinner' : 'Document'} size={16} />
-                  {isSaving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}
-                </Button>
-              </Tooltip>
-
-              {/* Error Indicator */}
-              {saveError && (
-                <Tooltip content={saveError}>
-                  <Badge
-                    variant="error"
-                    style={{
-                      fontSize: designTokens.typography.fontSize.xs,
-                      padding: '4px 8px',
-                    }}
-                  >
-                    <Icon name="X" size={12} />
-                    Save failed
-                  </Badge>
-                </Tooltip>
-              )}
-
-              <div
-                style={{
-                  width: '1px',
-                  height: '20px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  margin: `0 ${designTokens.spacing[1]}`,
-                }}
-              />
-            </>
-          )}
-
-          <Tooltip content={isEditMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (isEditMode && isDirty && showUnsavedWarning) {
-                  // Warn user about unsaved changes
-                  const confirmSwitch = window.confirm(
-                    'You have unsaved changes. Switch to view mode anyway? (Changes will be lost)'
-                  )
-                  if (!confirmSwitch) return
-                }
-                setIsEditMode(!isEditMode)
-              }}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name={isEditMode ? 'Document' : 'Generate'} size={16} />
-              {isEditMode ? 'View' : 'Edit'}
-            </Button>
-          </Tooltip>
-
-          {/* AI Auto-Complete Toggle (shown in edit mode) */}
-          {isEditMode && (
-            <Tooltip
-              content={
-                enableAutoComplete
-                  ? 'Disable AI Auto-Complete Suggestions'
-                  : 'Enable AI Auto-Complete Suggestions'
-              }
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setEnableAutoComplete(!enableAutoComplete)}
-                style={{
-                  fontWeight: 600,
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  backgroundColor: enableAutoComplete ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                  border: enableAutoComplete ? '1px solid rgba(59, 130, 246, 0.3)' : 'none',
-                }}
-              >
-                <Icon name="Generate" size={16} />
-                {enableAutoComplete ? 'AI On' : 'AI Off'}
-              </Button>
-            </Tooltip>
-          )}
-
-          <Tooltip content="Version History">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowVersionHistory(true)}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name="Document" size={16} />
-              Versions
-            </Button>
-          </Tooltip>
-
-          <Tooltip content="Comments & Annotations">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                // Toggle comments sidebar by dispatching custom event
-                window.dispatchEvent(new CustomEvent('toggleCommentsSidebar'))
-              }}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name="MessageCircle" size={16} />
-              Comments
-            </Button>
-          </Tooltip>
-
-          <Tooltip content="Track Changes">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTrackChangesPanel(!showTrackChangesPanel)}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-                backgroundColor: showTrackChangesPanel ? 'rgba(59, 130, 246, 0.2)' : undefined,
-              }}
-            >
-              <Icon name="Edit" size={16} />
-              Track Changes
-            </Button>
-          </Tooltip>
-
-          <Tooltip content="Review Changes">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowChangeReview(true)}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name="FileText" size={16} />
-              Review
-            </Button>
-          </Tooltip>
-
-          <Tooltip content="Compare Versions">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                // For comparison, use current content vs. original document content
-                if (document && editedContent) {
-                  setDiffOldContent(document.content || '')
-                  setDiffNewContent(editedContent)
-                  setShowDocumentDiff(true)
-                }
-              }}
-              style={{
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: '8px',
-              }}
-            >
-              <Icon name="Document" size={16} />
-              Compare
-            </Button>
-          </Tooltip>
-
-          <div
-            style={{
-              width: '1px',
-              height: '20px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              margin: `0 ${designTokens.spacing[2]}`,
-            }}
-          />
-
-          {/* Quick Action Buttons */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: designTokens.spacing[1],
-            }}
-          >
-            <Tooltip content="Analyze Document">
-              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-                <Icon name="Search" size={16} />
-              </Button>
-            </Tooltip>
-
-            <Tooltip content="Generate Content">
-              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-                <Icon name="Generate" size={16} />
-              </Button>
-            </Tooltip>
-
-            <Tooltip content="Compare">
-              <Button variant="ghost" size="sm" style={{ padding: '8px' }}>
-                <Icon name="Compare" size={16} />
-              </Button>
-            </Tooltip>
-          </div>
-
-          {/* Document Actions Menu */}
-          <Dropdown
-            options={[
-              {
-                value: 'rename',
-                label: 'Rename Document',
-              },
-              {
-                value: 'download',
-                label: 'Download',
-              },
-              {
-                value: 'compare',
-                label: 'Compare with...',
-              },
-              {
-                value: 'analyze',
-                label: 'Deep Analysis',
-              },
-              {
-                value: 'divider',
-                label: '---',
-                disabled: true,
-              },
-              {
-                value: 'delete',
-                label: 'Delete',
-              },
-            ]}
-            onChange={(value: string | undefined) => {
-              if (!value || value === 'divider') return
-
-              console.log('Document action:', value)
-              // Handle actions through conversational interface
-              switch (value) {
-                case 'rename':
-                  console.log('Rename document:', documentId)
-                  break
-                case 'download':
-                  console.log('Download document:', documentId)
-                  break
-                case 'compare':
-                  console.log('Compare document:', documentId)
-                  break
-                case 'analyze':
-                  console.log('Analyze document:', documentId)
-                  break
-                case 'delete':
-                  console.log('Delete document:', documentId)
-                  break
-              }
-            }}
-            placeholder="More Actions"
-            size="sm"
-          />
-
-          {onClose && (
-            <Tooltip content="Close">
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <Icon name="ChevronDown" size={14} />
-              </Button>
-            </Tooltip>
-          )}
-        </div>
-      </div>
+      {/* New Document Toolbar */}
+      <DocumentToolbar
+        documentName={document.name}
+        documentIcon="FileText"
+        confidence={confidenceScore}
+        documentType={classification?.categories?.[0]?.name || 'Unknown'}
+        activeUsers={collaborationUsers}
+        currentUserId={collaboration?.currentUserId}
+        showPresence={collaboration?.settings.enabled && collaboration.settings.showPresence}
+        onTogglePresence={() => setShowPresencePanel(!showPresencePanel)}
+        isSyncing={isSyncing}
+        queuedOperations={queuedOperations.length}
+        syncProgress={syncProgress}
+        onManualSync={triggerSync}
+        showOfflineIndicator={collaboration?.settings.enabled || false}
+        isEditMode={isEditMode}
+        onSave={saveDocument}
+        isSaving={isSaving}
+        isDirty={isDirty}
+        saveError={saveError || undefined}
+        lastSaved={lastSaved}
+        homeActions={homeActions}
+        reviewActions={reviewActions}
+        aiToolsActions={aiToolsActions}
+        moreActions={moreActions}
+        dropdownActions={[
+          { value: 'delete', label: 'Delete Document' },
+          { value: 'duplicate', label: 'Duplicate' },
+          { value: 'export', label: 'Export as...' },
+        ]}
+        onDropdownAction={value => console.log('Dropdown action:', value)}
+        onClose={onClose}
+        defaultTab="home"
+      />
 
       {/* Document Content */}
       <div

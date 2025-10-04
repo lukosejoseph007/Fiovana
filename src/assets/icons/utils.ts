@@ -53,6 +53,13 @@ import {
   EditIcon,
   PaletteIcon,
   InfoIcon,
+  HistoryIcon,
+  GitBranchIcon,
+  CheckCircleIcon,
+  LightbulbIcon,
+  SparklesIcon,
+  CheckIcon,
+  DownloadIcon,
 } from './index'
 
 // Utility function to get document type icon component
@@ -130,6 +137,13 @@ export const Icons = {
   Edit: EditIcon,
   Palette: PaletteIcon,
   Info: InfoIcon,
+  History: HistoryIcon,
+  GitBranch: GitBranchIcon,
+  CheckCircle: CheckCircleIcon,
+  Lightbulb: LightbulbIcon,
+  Sparkles: SparklesIcon,
+  Check: CheckIcon,
+  Download: DownloadIcon,
 
   // Utility
   getDocumentTypeIcon,
