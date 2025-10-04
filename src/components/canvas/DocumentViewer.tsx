@@ -29,6 +29,9 @@ import { useCollaboration } from '../../context/useCollaboration'
 import { useTypingIndicator } from '../../hooks/useTypingIndicator'
 import { useConflictResolution } from '../../hooks/useConflictResolution'
 import { useOfflineSync } from '../../hooks/useOfflineSync'
+import { useTrackChanges } from '../../hooks/useTrackChanges'
+import { TrackChanges } from '../editor/TrackChanges'
+import { ChangeReview } from '../editor/ChangeReview'
 import '../../styles/editor.css'
 
 interface DocumentViewerProps {
@@ -90,6 +93,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showPresencePanel, setShowPresencePanel] = useState(false)
   const [enableAutoComplete, setEnableAutoComplete] = useState(false)
   const [showSaveNotification, setShowSaveNotification] = useState(false)
+  const [showTrackChangesPanel, setShowTrackChangesPanel] = useState(false)
+  const [showChangeReview, setShowChangeReview] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const saveNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -135,6 +140,29 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     },
     onOperationQueued: operation => {
       console.log('Operation queued:', operation)
+    },
+  })
+
+  // Track Changes hook for revision tracking
+  const {
+    changes,
+    isTrackingEnabled,
+    showChanges,
+    addChange, // eslint-disable-line @typescript-eslint/no-unused-vars
+    acceptChange,
+    rejectChange,
+    acceptAllChanges,
+    rejectAllChanges,
+    toggleTracking,
+    toggleShowChanges,
+  } = useTrackChanges({
+    enabled: false, // Track changes is opt-in
+    currentUser: collaboration?.settings.username || 'You',
+    onChangeAccepted: change => {
+      console.log('Change accepted:', change)
+    },
+    onChangeRejected: change => {
+      console.log('Change rejected:', change)
     },
   })
 
@@ -867,6 +895,39 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </Button>
           </Tooltip>
 
+          <Tooltip content="Track Changes">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTrackChangesPanel(!showTrackChangesPanel)}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+                backgroundColor: showTrackChangesPanel ? 'rgba(59, 130, 246, 0.2)' : undefined,
+              }}
+            >
+              <Icon name="Edit" size={16} />
+              Track Changes
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Review Changes">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowChangeReview(true)}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+              }}
+            >
+              <Icon name="FileText" size={16} />
+              Review
+            </Button>
+          </Tooltip>
+
           <div
             style={{
               width: '1px',
@@ -1128,6 +1189,66 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
       {/* Comments & Annotations System */}
       <Comments documentId={documentId} contentRef={contentRef} isEditMode={isEditMode} />
+
+      {/* Track Changes Panel */}
+      {showTrackChangesPanel && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '80px',
+            right: 0,
+            bottom: 0,
+            zIndex: 9999,
+            animation: 'slideInRight 0.2s ease-out',
+          }}
+        >
+          <TrackChanges
+            changes={changes}
+            onAcceptChange={acceptChange}
+            onRejectChange={rejectChange}
+            onAcceptAll={acceptAllChanges}
+            onRejectAll={rejectAllChanges}
+            isTrackingEnabled={isTrackingEnabled}
+            onToggleTracking={toggleTracking}
+            showChanges={showChanges}
+            onToggleShowChanges={toggleShowChanges}
+            currentUser="You"
+          />
+        </div>
+      )}
+
+      {/* Change Review Modal */}
+      {showChangeReview && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10001,
+            padding: '24px',
+          }}
+          onClick={() => setShowChangeReview(false)}
+        >
+          <div onClick={e => e.stopPropagation()}>
+            <ChangeReview
+              changes={changes}
+              documentTitle={document?.name || 'Untitled Document'}
+              onAcceptChange={acceptChange}
+              onRejectChange={rejectChange}
+              onAcceptAll={acceptAllChanges}
+              onRejectAll={rejectAllChanges}
+              onClose={() => setShowChangeReview(false)}
+              currentUser="You"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Save Notification Toast */}
       {showSaveNotification && lastSaved && (

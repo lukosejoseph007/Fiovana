@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react'
 import { designTokens } from '../../styles/tokens'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'minimal'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'minimal' | 'success' | 'danger'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   leftIcon?: React.ReactNode
@@ -140,6 +140,52 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           boxShadow: `0 0 0 2px ${designTokens.colors.state.focus}40`,
         },
       },
+      success: {
+        backgroundColor: '#10b981',
+        color: '#ffffff',
+        boxShadow: designTokens.shadows.base,
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: '#059669',
+                transform: `translateY(-1px)`,
+                boxShadow: designTokens.shadows.md,
+              }
+            : {},
+        '&:focus': {
+          boxShadow: `0 0 0 3px rgba(16, 185, 129, 0.4)`,
+        },
+        '&:active':
+          !disabled && !isLoading
+            ? {
+                transform: `translateY(0)`,
+                backgroundColor: '#047857',
+              }
+            : {},
+      },
+      danger: {
+        backgroundColor: '#ef4444',
+        color: '#ffffff',
+        boxShadow: designTokens.shadows.base,
+        '&:hover':
+          !disabled && !isLoading
+            ? {
+                backgroundColor: '#dc2626',
+                transform: `translateY(-1px)`,
+                boxShadow: designTokens.shadows.md,
+              }
+            : {},
+        '&:focus': {
+          boxShadow: `0 0 0 3px rgba(239, 68, 68, 0.4)`,
+        },
+        '&:active':
+          !disabled && !isLoading
+            ? {
+                transform: `translateY(0)`,
+                backgroundColor: '#b91c1c',
+              }
+            : {},
+      },
     }
 
     const combinedStyles = {
@@ -205,6 +251,24 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               `
                   : ''
               }
+              ${
+                !disabled && !isLoading && variant === 'success'
+                  ? `
+                background-color: #059669;
+                transform: translateY(-1px);
+                box-shadow: ${designTokens.shadows.md};
+              `
+                  : ''
+              }
+              ${
+                !disabled && !isLoading && variant === 'danger'
+                  ? `
+                background-color: #dc2626;
+                transform: translateY(-1px);
+                box-shadow: ${designTokens.shadows.md};
+              `
+                  : ''
+              }
             }
 
             .proxemic-button:focus {
@@ -237,6 +301,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                   ? `
                 background-color: ${designTokens.variants.button.minimal.hover};
                 box-shadow: 0 0 0 2px ${designTokens.colors.state.focus}40;
+              `
+                  : ''
+              }
+              ${
+                variant === 'success'
+                  ? `
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+              `
+                  : ''
+              }
+              ${
+                variant === 'danger'
+                  ? `
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4);
               `
                   : ''
               }
