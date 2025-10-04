@@ -32,6 +32,7 @@ import { useOfflineSync } from '../../hooks/useOfflineSync'
 import { useTrackChanges } from '../../hooks/useTrackChanges'
 import { TrackChanges } from '../editor/TrackChanges'
 import { ChangeReview } from '../editor/ChangeReview'
+import { DocumentDiff } from '../editor/DocumentDiff'
 import '../../styles/editor.css'
 
 interface DocumentViewerProps {
@@ -95,6 +96,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showSaveNotification, setShowSaveNotification] = useState(false)
   const [showTrackChangesPanel, setShowTrackChangesPanel] = useState(false)
   const [showChangeReview, setShowChangeReview] = useState(false)
+  const [showDocumentDiff, setShowDocumentDiff] = useState(false)
+  const [diffOldContent, setDiffOldContent] = useState<string>('')
+  const [diffNewContent, setDiffNewContent] = useState<string>('')
   const contentRef = useRef<HTMLDivElement>(null)
   const saveNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -928,6 +932,29 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </Button>
           </Tooltip>
 
+          <Tooltip content="Compare Versions">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                // For comparison, use current content vs. original document content
+                if (document && editedContent) {
+                  setDiffOldContent(document.content || '')
+                  setDiffNewContent(editedContent)
+                  setShowDocumentDiff(true)
+                }
+              }}
+              style={{
+                fontWeight: 600,
+                padding: '8px 16px',
+                borderRadius: '8px',
+              }}
+            >
+              <Icon name="Document" size={16} />
+              Compare
+            </Button>
+          </Tooltip>
+
           <div
             style={{
               width: '1px',
@@ -1248,6 +1275,27 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             />
           </div>
         </div>
+      )}
+
+      {/* Document Diff Modal */}
+      {showDocumentDiff && (
+        <DocumentDiff
+          oldContent={diffOldContent}
+          newContent={diffNewContent}
+          oldTitle="Original Version"
+          newTitle="Current Version"
+          onClose={() => setShowDocumentDiff(false)}
+          onMergeLeft={() => {
+            // Merge left: use new version (current content)
+            updateContent(diffNewContent)
+            setShowDocumentDiff(false)
+          }}
+          onMergeRight={() => {
+            // Merge right: revert to old version (original)
+            updateContent(diffOldContent)
+            setShowDocumentDiff(false)
+          }}
+        />
       )}
 
       {/* Save Notification Toast */}
