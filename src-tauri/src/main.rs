@@ -953,10 +953,7 @@ mod tests {
     /// Helper function to save current environment state
     fn save_env_state() -> Vec<(String, Option<String>)> {
         vec![
-            (
-                "FIOVANA_ENV".to_string(),
-                std::env::var("FIOVANA_ENV").ok(),
-            ),
+            ("FIOVANA_ENV".to_string(), std::env::var("FIOVANA_ENV").ok()),
             ("RUST_ENV".to_string(), std::env::var("RUST_ENV").ok()),
             ("NODE_ENV".to_string(), std::env::var("NODE_ENV").ok()),
             (

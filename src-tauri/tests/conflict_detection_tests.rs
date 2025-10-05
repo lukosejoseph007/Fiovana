@@ -238,8 +238,8 @@ async fn test_watcher_config_creation() {
         enable_resource_monitoring: false,
         resource_monitor_config: fiovana::resource_monitor::ResourceMonitorConfig::default(),
         enable_optimized_processing: false,
-        event_processor_config:
-            fiovana::filesystem::event_processor::EventProcessorConfig::default(),
+        event_processor_config: fiovana::filesystem::event_processor::EventProcessorConfig::default(
+        ),
         enable_health_monitoring: false,
         health_monitor_config: fiovana::filesystem::health_monitor::HealthMonitorConfig::default(),
     };

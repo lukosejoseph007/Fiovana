@@ -169,10 +169,7 @@ impl StartupValidator {
 
             // 2. Check for disabled security features in production
             let critical_security_settings = [
-                (
-                    "FIOVANA_ENABLE_MAGIC_VALIDATION",
-                    "Magic number validation",
-                ),
+                ("FIOVANA_ENABLE_MAGIC_VALIDATION", "Magic number validation"),
                 (
                     "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES",
                     "Workspace boundary enforcement",

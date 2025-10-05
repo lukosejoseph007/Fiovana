@@ -111,11 +111,11 @@ mod tests {
 // Tests for batch processing functionality
 #[cfg(test)]
 mod batch_tests {
-    use notify::event::ModifyKind;
-    use notify::{Event, EventKind};
     use fiovana::filesystem::security::path_validator::PathValidator;
     use fiovana::filesystem::security::security_config::SecurityConfig;
     use fiovana::filesystem::watcher::{EventDebouncer, FileEvent};
+    use notify::event::ModifyKind;
+    use notify::{Event, EventKind};
     use std::path::PathBuf;
     use std::time::Duration;
 
