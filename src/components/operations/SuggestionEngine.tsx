@@ -536,7 +536,7 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
 
   if (loading && suggestions.length === 0) {
     return (
-      <div className={`proxemic-suggestion-engine ${className}`} style={containerStyles}>
+      <div className={`fiovana-suggestion-engine ${className}`} style={containerStyles}>
         <div style={emptyStateStyles}>
           <Icon name="Loader" size={24} style={{ marginBottom: designTokens.spacing[2] }} />
           <div>Analyzing workspace for suggestions...</div>
@@ -547,7 +547,7 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
 
   if (suggestions.length === 0) {
     return (
-      <div className={`proxemic-suggestion-engine ${className}`} style={containerStyles}>
+      <div className={`fiovana-suggestion-engine ${className}`} style={containerStyles}>
         <div style={emptyStateStyles}>
           <Icon name="Health" size={24} style={{ marginBottom: designTokens.spacing[2] }} />
           <div>All caught up! No suggestions at the moment.</div>
@@ -557,7 +557,7 @@ const SuggestionEngine: React.FC<SuggestionEngineProps> = ({
   }
 
   return (
-    <div className={`proxemic-suggestion-engine ${className}`} style={containerStyles}>
+    <div className={`fiovana-suggestion-engine ${className}`} style={containerStyles}>
       {/* Header */}
       <div style={headerStyles}>
         <div style={titleStyles}>

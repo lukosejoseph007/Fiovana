@@ -109,7 +109,7 @@ impl EmbeddingEngine {
         // Helper function to load UI settings
         async fn load_ui_embedding_settings(
         ) -> Option<crate::commands::embedding_settings_commands::EmbeddingSettings> {
-            let config_dir = dirs::config_dir()?.join("proxemic");
+            let config_dir = dirs::config_dir()?.join("fiovana");
             let settings_file = config_dir.join("embedding_settings.json");
 
             if !settings_file.exists() {

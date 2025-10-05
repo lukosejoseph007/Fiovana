@@ -47,9 +47,9 @@ ehthumbs.db
 Thumbs.db
 
 # Application specific
-Proxemic.db
-Proxemic.db-shm
-Proxemic.db-wal
+Fiovana.db
+Fiovana.db-shm
+Fiovana.db-wal
 vector_index/
 temp/
 
@@ -61,4 +61,4 @@ temp/
 projectinfo/
 
 # User-generated data
-src-tauri/.proxemic/
+src-tauri/.fiovana/

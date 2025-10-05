@@ -1,4 +1,4 @@
-// Core UI Components for Proxemic
+// Core UI Components for Fiovana
 // Based on the refined visual architecture with enterprise-grade functionality
 
 export { default as Button } from './Button'

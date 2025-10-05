@@ -1,8 +1,8 @@
 // Integration test for the audit logger system
 #[cfg(test)]
 mod tests {
-    use proxemic::filesystem::security::audit_logger;
-    use proxemic::filesystem::SecurityError;
+    use fiovana::filesystem::security::audit_logger;
+    use fiovana::filesystem::SecurityError;
     use std::path::Path;
 
     #[test]

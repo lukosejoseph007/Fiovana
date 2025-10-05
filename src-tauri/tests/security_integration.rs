@@ -7,14 +7,14 @@ use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 // Bring in your library types
-use proxemic::commands::{
+use fiovana::commands::{
     get_file_info_secure_with_validator, import_file_with_validator,
     validate_file_for_import_with_validator, FileInfo,
 };
-use proxemic::filesystem::errors::SecurityError;
-use proxemic::filesystem::security::magic_number_validator::MagicNumberValidator;
-use proxemic::filesystem::security::path_validator::PathValidator;
-use proxemic::filesystem::security::security_config::SecurityConfig;
+use fiovana::filesystem::errors::SecurityError;
+use fiovana::filesystem::security::magic_number_validator::MagicNumberValidator;
+use fiovana::filesystem::security::path_validator::PathValidator;
+use fiovana::filesystem::security::security_config::SecurityConfig;
 use tokio::runtime::Runtime;
 
 // ==================== HELPER FUNCTIONS ====================
@@ -351,7 +351,7 @@ fn validate_tempdir_workflow() {
 
 #[tokio::test]
 async fn validate_async_command_security() {
-    use proxemic::filesystem::operations::validate_file_for_import;
+    use fiovana::filesystem::operations::validate_file_for_import;
 
     // Bad path traversal
     let bad = "../../etc/passwd";

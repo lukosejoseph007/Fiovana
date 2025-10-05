@@ -396,7 +396,7 @@ const OperationsToolbar: React.FC<OperationsToolbarProps> = ({
 
   return (
     <>
-      <div className={`proxemic-operations-toolbar ${className}`} style={containerStyles}>
+      <div className={`fiovana-operations-toolbar ${className}`} style={containerStyles}>
         {/* Left Section - Quick Actions */}
         <div style={operationsGroupStyles}>
           {(Object.keys(OPERATIONS) as OperationType[]).map(operationType => {

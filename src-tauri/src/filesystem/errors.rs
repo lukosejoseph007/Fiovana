@@ -4,7 +4,7 @@
 use std::fmt;
 use thiserror::Error;
 
-/// Comprehensive security error types for the Proxemic filesystem security system
+/// Comprehensive security error types for the Fiovana filesystem security system
 #[derive(Error, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[allow(dead_code)]
 pub enum SecurityError {

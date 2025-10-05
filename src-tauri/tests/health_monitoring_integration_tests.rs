@@ -1,12 +1,12 @@
 // tests/health_monitoring_integration_tests.rs
 // Integration tests for the comprehensive health monitoring and recovery system
 
-use proxemic::filesystem::health_monitor::{
+use fiovana::filesystem::health_monitor::{
     CircuitBreakerConfig, HealthCheckType, HealthMonitorConfig, HealthStatus, RecoveryAction,
     WatcherHealthMonitor,
 };
-use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
-use proxemic::resource_monitor::{ResourceMonitor, ResourceMonitorConfig};
+use fiovana::filesystem::watcher::{DocumentWatcher, WatcherConfig};
+use fiovana::resource_monitor::{ResourceMonitor, ResourceMonitorConfig};
 use std::time::Duration;
 use tempfile::tempdir;
 

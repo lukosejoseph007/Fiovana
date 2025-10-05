@@ -453,7 +453,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
   }, [])
 
   return (
-    <div className={`proxemic-batch-manager ${className}`} style={containerStyles}>
+    <div className={`fiovana-batch-manager ${className}`} style={containerStyles}>
       {/* Header */}
       <div style={queueHeaderStyles}>
         <div>

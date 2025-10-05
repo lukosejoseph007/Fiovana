@@ -146,7 +146,7 @@ const Progress: React.FC<ProgressProps> = ({
         </style>
       )}
 
-      <div className={`proxemic-progress ${className}`} style={containerStyles}>
+      <div className={`fiovana-progress ${className}`} style={containerStyles}>
         {(showLabel || showPercentage) && (
           <div style={labelContainerStyles}>
             {showLabel && (

@@ -241,7 +241,7 @@ const NLProcessor: React.FC<NLProcessorProps> = ({
 
   // Load recent commands from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('proxemic_recent_commands')
+    const stored = localStorage.getItem('fiovana_recent_commands')
     if (stored) {
       try {
         setRecentCommands(JSON.parse(stored))
@@ -255,7 +255,7 @@ const NLProcessor: React.FC<NLProcessorProps> = ({
   const saveRecentCommand = useCallback((command: string) => {
     setRecentCommands(prev => {
       const updated = [command, ...prev.filter(c => c !== command)].slice(0, 10)
-      localStorage.setItem('proxemic_recent_commands', JSON.stringify(updated))
+      localStorage.setItem('fiovana_recent_commands', JSON.stringify(updated))
       return updated
     })
   }, [])
@@ -461,7 +461,7 @@ const NLProcessor: React.FC<NLProcessorProps> = ({
   }
 
   return (
-    <div className={`proxemic-nl-processor ${className}`} style={containerStyles}>
+    <div className={`fiovana-nl-processor ${className}`} style={containerStyles}>
       {/* Input Form */}
       <form onSubmit={handleSubmit}>
         <div style={inputContainerStyles}>

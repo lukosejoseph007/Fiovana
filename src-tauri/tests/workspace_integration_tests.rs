@@ -1,8 +1,8 @@
 // src-tauri/tests/workspace_integration_tests.rs
 // Integration tests for complete workspace workflows
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{
     CreateWorkspaceRequest, UpdateRecentWorkspaceRequest, WorkspaceManager, WorkspaceTemplate,
 };
 use std::path::{Path, PathBuf};

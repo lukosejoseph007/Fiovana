@@ -152,7 +152,7 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
 
   if (isCollapsed && collapsible) {
     return (
-      <div className={`proxemic-intelligence-panel collapsed ${className}`} style={containerStyles}>
+      <div className={`fiovana-intelligence-panel collapsed ${className}`} style={containerStyles}>
         <div style={headerStyles}>
           <button
             onClick={handleToggleCollapse}
@@ -168,7 +168,7 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
   }
 
   return (
-    <div className={`proxemic-intelligence-panel ${className}`} style={containerStyles}>
+    <div className={`fiovana-intelligence-panel ${className}`} style={containerStyles}>
       {/* Panel Header */}
       <div style={headerStyles}>
         <h2 style={titleStyles}>Intelligence</h2>
@@ -223,37 +223,37 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
       {/* Inline Styles for Hover Effects */}
       <style>
         {`
-          .proxemic-intelligence-panel button:hover {
+          .fiovana-intelligence-panel button:hover {
             background-color: ${designTokens.colors.state.hover};
             color: ${designTokens.colors.text.primary};
           }
 
-          .proxemic-intelligence-panel button:focus {
+          .fiovana-intelligence-panel button:focus {
             outline: none;
             box-shadow: 0 0 0 2px ${designTokens.colors.state.focus}40;
           }
 
-          .proxemic-intelligence-panel.collapsed {
+          .fiovana-intelligence-panel.collapsed {
             min-width: 48px;
             max-width: 48px;
           }
 
           /* Custom scrollbar for panel content */
-          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar {
+          .fiovana-intelligence-panel .panel-content::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-track {
+          .fiovana-intelligence-panel .panel-content::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-thumb {
+          .fiovana-intelligence-panel .panel-content::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-intelligence-panel .panel-content::-webkit-scrollbar-thumb:hover {
+          .fiovana-intelligence-panel .panel-content::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}

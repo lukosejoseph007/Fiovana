@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Proxemic",
+    "name": "Fiovana",
     "version": "0.1.0",
     "environment": "Production",
     "debug": false,
@@ -25,7 +25,7 @@
     "enable_magic_number_validation": true,
     "enable_path_traversal_protection": true,
     "enable_file_quarantine": true,
-    "quarantine_directory": "/tmp/proxemic_quarantine",
+    "quarantine_directory": "/tmp/fiovana_quarantine",
     "audit_enabled": true,
     "rate_limit_enabled": true,
     "max_requests_per_minute": 60
@@ -34,7 +34,7 @@
     "level": "warn",
     "format": "json",
     "file_enabled": true,
-    "file_path": "./logs/proxemic.log",
+    "file_path": "./logs/fiovana.log",
     "console_enabled": false,
     "max_file_size_mb": 10,
     "max_files": 10,
@@ -53,7 +53,7 @@
     "compress_logs": true
   },
   "database": {
-    "url": "sqlite:./Proxemic.db",
+    "url": "sqlite:./Fiovana.db",
     "max_connections": 5,
     "connection_timeout_ms": 30000,
     "enable_migrations": true,

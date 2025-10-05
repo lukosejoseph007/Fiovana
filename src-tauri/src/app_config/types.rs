@@ -56,7 +56,7 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            name: "Proxemic".to_string(),
+            name: "Fiovana".to_string(),
             version: "0.1.0".to_string(),
             environment: Environment::Development,
             debug: true,
@@ -190,7 +190,7 @@ impl SecurityConfig {
             max_requests_per_minute: 200, // More permissive for development
             max_concurrent_file_operations: 10,
 
-            quarantine_directory: std::env::temp_dir().join("proxemic_quarantine"),
+            quarantine_directory: std::env::temp_dir().join("fiovana_quarantine"),
         }
     }
 
@@ -199,20 +199,20 @@ impl SecurityConfig {
         // Try to use system-appropriate secure temp location
         if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
             // Linux with XDG runtime directory
-            PathBuf::from(runtime_dir).join("proxemic_quarantine")
-        } else if let Ok(temp_dir) = std::env::var("PROXEMIC_QUARANTINE_DIR") {
+            PathBuf::from(runtime_dir).join("fiovana_quarantine")
+        } else if let Ok(temp_dir) = std::env::var("FIOVANA_QUARANTINE_DIR") {
             // Explicit override from environment
             PathBuf::from(temp_dir)
         } else {
             // Fallback to system temp with restricted permissions
-            std::env::temp_dir().join("proxemic_secure_quarantine")
+            std::env::temp_dir().join("fiovana_secure_quarantine")
         }
     }
 
     /// Apply environment variable overrides for security settings
     pub fn apply_env_overrides(&mut self) -> Result<(), String> {
         // File size limit override
-        if let Ok(max_size_str) = std::env::var("PROXEMIC_MAX_FILE_SIZE") {
+        if let Ok(max_size_str) = std::env::var("FIOVANA_MAX_FILE_SIZE") {
             match max_size_str.parse::<u64>() {
                 Ok(size) => {
                     if size <= 500 * 1024 * 1024 {
@@ -220,16 +220,16 @@ impl SecurityConfig {
                         self.max_file_size = size;
                     } else {
                         return Err(
-                            "PROXEMIC_MAX_FILE_SIZE exceeds maximum allowed (500MB)".to_string()
+                            "FIOVANA_MAX_FILE_SIZE exceeds maximum allowed (500MB)".to_string()
                         );
                     }
                 }
-                Err(_) => return Err("Invalid PROXEMIC_MAX_FILE_SIZE value".to_string()),
+                Err(_) => return Err("Invalid FIOVANA_MAX_FILE_SIZE value".to_string()),
             }
         }
 
         // Rate limit override
-        if let Ok(rate_str) = std::env::var("PROXEMIC_MAX_REQUESTS_PER_MINUTE") {
+        if let Ok(rate_str) = std::env::var("FIOVANA_MAX_REQUESTS_PER_MINUTE") {
             match rate_str.parse::<u32>() {
                 Ok(rate) => {
                     if rate <= 1000 {
@@ -237,38 +237,38 @@ impl SecurityConfig {
                         self.max_requests_per_minute = rate;
                     } else {
                         return Err(
-                            "PROXEMIC_MAX_REQUESTS_PER_MINUTE exceeds maximum (1000)".to_string()
+                            "FIOVANA_MAX_REQUESTS_PER_MINUTE exceeds maximum (1000)".to_string()
                         );
                     }
                 }
-                Err(_) => return Err("Invalid PROXEMIC_MAX_REQUESTS_PER_MINUTE value".to_string()),
+                Err(_) => return Err("Invalid FIOVANA_MAX_REQUESTS_PER_MINUTE value".to_string()),
             }
         }
 
         // Quarantine directory override
-        if let Ok(quarantine_dir) = std::env::var("PROXEMIC_QUARANTINE_DIR") {
+        if let Ok(quarantine_dir) = std::env::var("FIOVANA_QUARANTINE_DIR") {
             let path = PathBuf::from(quarantine_dir);
             if path.is_absolute() {
                 self.quarantine_directory = path;
             } else {
-                return Err("PROXEMIC_QUARANTINE_DIR must be an absolute path".to_string());
+                return Err("FIOVANA_QUARANTINE_DIR must be an absolute path".to_string());
             }
         }
 
         // Security feature toggles (with validation for production)
-        if let Ok(audit_str) = std::env::var("PROXEMIC_AUDIT_ENABLED") {
+        if let Ok(audit_str) = std::env::var("FIOVANA_AUDIT_ENABLED") {
             self.audit_enabled = audit_str.to_lowercase() == "true";
         }
 
-        if let Ok(rate_limit_str) = std::env::var("PROXEMIC_RATE_LIMIT_ENABLED") {
+        if let Ok(rate_limit_str) = std::env::var("FIOVANA_RATE_LIMIT_ENABLED") {
             self.rate_limit_enabled = rate_limit_str.to_lowercase() == "true";
         }
 
-        if let Ok(magic_str) = std::env::var("PROXEMIC_MAGIC_NUMBER_VALIDATION") {
+        if let Ok(magic_str) = std::env::var("FIOVANA_MAGIC_NUMBER_VALIDATION") {
             self.enable_magic_number_validation = magic_str.to_lowercase() == "true";
         }
 
-        if let Ok(quarantine_str) = std::env::var("PROXEMIC_ENABLE_QUARANTINE") {
+        if let Ok(quarantine_str) = std::env::var("FIOVANA_ENABLE_QUARANTINE") {
             self.enable_file_quarantine = quarantine_str.to_lowercase() == "true";
         }
 
@@ -429,7 +429,7 @@ pub struct DatabaseConfig {
 impl Default for DatabaseConfig {
     fn default() -> Self {
         Self {
-            url: "sqlite:./Proxemic.db".to_string(),
+            url: "sqlite:./Fiovana.db".to_string(),
             max_connections: 10,
             connection_timeout_ms: 30000,
             enable_migrations: true,
@@ -483,7 +483,7 @@ impl Default for WorkspaceManagerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct ProxemicConfig {
+pub struct FiovanaConfig {
     pub app: AppConfig,
     pub security: SecurityConfig,
     pub logging: LoggingConfig,
@@ -498,7 +498,7 @@ pub struct ProxemicConfig {
     pub loaded_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl ProxemicConfig {
+impl FiovanaConfig {
     /// Create environment-appropriate default configuration
     pub fn for_environment(env: &Environment) -> Self {
         let mut config = Self {
@@ -594,7 +594,7 @@ impl ProxemicConfig {
         }
 
         // Debug override - fix the logic here
-        if let Ok(debug_str) = std::env::var("PROXEMIC_DEBUG") {
+        if let Ok(debug_str) = std::env::var("FIOVANA_DEBUG") {
             let debug_enabled = debug_str.to_lowercase() == "true";
 
             // Only validate in production if trying to ENABLE debug
@@ -678,18 +678,18 @@ impl ProxemicConfig {
     pub fn config_file_names(env: &Environment) -> Vec<String> {
         match env {
             Environment::Development => vec![
-                "proxemic.dev.json".to_string(),
+                "fiovana.dev.json".to_string(),
                 "config.dev.json".to_string(),
-                "proxemic.json".to_string(),
+                "fiovana.json".to_string(),
             ],
             Environment::Staging => vec![
-                "proxemic.staging.json".to_string(),
+                "fiovana.staging.json".to_string(),
                 "config.staging.json".to_string(),
-                "proxemic.json".to_string(),
+                "fiovana.json".to_string(),
             ],
             Environment::Production => vec![
-                "proxemic.prod.json".to_string(),
-                "proxemic.production.json".to_string(),
+                "fiovana.prod.json".to_string(),
+                "fiovana.production.json".to_string(),
                 "config.prod.json".to_string(),
                 "config.production.json".to_string(),
             ],

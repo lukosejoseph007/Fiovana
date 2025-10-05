@@ -72,7 +72,7 @@ pub async fn convert_document_format(
 ) -> Result<FormatConversionResponse, String> {
     async fn inner(request: ConvertDocumentRequest) -> Result<FormatConversionResponse> {
         // Create temporary directory for conversion operations
-        let temp_dir = std::env::temp_dir().join("proxemic_conversions");
+        let temp_dir = std::env::temp_dir().join("fiovana_conversions");
         std::fs::create_dir_all(&temp_dir)
             .map_err(|e| anyhow::anyhow!("Failed to create temp directory: {}", e))?;
 
@@ -144,7 +144,7 @@ pub async fn check_conversion_capability(
     source_format: DocumentFormat,
     target_format: DocumentFormat,
 ) -> Result<ConversionCapabilityResponse, String> {
-    let temp_dir = std::env::temp_dir().join("proxemic_conversions");
+    let temp_dir = std::env::temp_dir().join("fiovana_conversions");
     let converter = FormatConverter::new(temp_dir);
 
     let supported = converter.is_conversion_supported(&source_format, &target_format);

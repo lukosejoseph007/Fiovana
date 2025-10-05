@@ -419,7 +419,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`proxemic-workspace-insights ${className}`} style={containerStyles}>
+      <div className={`fiovana-workspace-insights ${className}`} style={containerStyles}>
         <div
           style={{
             padding: designTokens.spacing[6],
@@ -494,7 +494,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
 
   if (error) {
     return (
-      <div className={`proxemic-workspace-insights ${className}`} style={containerStyles}>
+      <div className={`fiovana-workspace-insights ${className}`} style={containerStyles}>
         <div style={loadingStyles}>
           <Icon name="AlertCircle" size={48} color={designTokens.colors.accent.alert} />
           <h3
@@ -527,7 +527,7 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
   }
 
   return (
-    <div className={`proxemic-workspace-insights ${className}`} style={containerStyles}>
+    <div className={`fiovana-workspace-insights ${className}`} style={containerStyles}>
       {/* Header */}
       <div style={headerStyles}>
         <div style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[2] }}>
@@ -902,21 +902,21 @@ const WorkspaceInsights: React.FC<WorkspaceInsightsProps> = ({
           }
 
           /* Custom scrollbar for scroll container */
-          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar {
+          .fiovana-workspace-insights .scroll-container::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-track {
+          .fiovana-workspace-insights .scroll-container::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-thumb {
+          .fiovana-workspace-insights .scroll-container::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-workspace-insights .scroll-container::-webkit-scrollbar-thumb:hover {
+          .fiovana-workspace-insights .scroll-container::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}

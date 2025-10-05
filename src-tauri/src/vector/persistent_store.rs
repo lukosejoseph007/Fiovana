@@ -20,7 +20,7 @@ pub struct PersistentVectorConfig {
 impl Default for PersistentVectorConfig {
     fn default() -> Self {
         Self {
-            storage_path: PathBuf::from(".proxemic/vector_store"),
+            storage_path: PathBuf::from(".fiovana/vector_store"),
             auto_save_interval_seconds: 300, // 5 minutes
             max_memory_chunks: 10000,
             enable_compression: true,

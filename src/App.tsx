@@ -430,7 +430,7 @@ const AppContent: React.FC = () => {
             >
               P
             </div>
-            <span>Proxemic</span>
+            <span>Fiovana</span>
           </div>
           <div
             style={{
@@ -447,7 +447,7 @@ const AppContent: React.FC = () => {
         {/* Loading Progress */}
         <div style={{ width: '100%', maxWidth: '600px', padding: `0 ${designTokens.spacing[6]}` }}>
           <LongOperationProgress
-            operation="Initializing Proxemic"
+            operation="Initializing Fiovana"
             details={
               initOperations.find(op => op.status === 'in-progress')?.operation || 'Starting up...'
             }

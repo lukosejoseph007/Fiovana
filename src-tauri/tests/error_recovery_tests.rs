@@ -1,4 +1,4 @@
-use proxemic::filesystem::security::{
+use fiovana::filesystem::security::{
     circuit_breaker::{CircuitBreaker, CircuitBreakerConfig},
     safe_mode::{SafeModeLevel, SafeModeManager},
 };

@@ -2,14 +2,14 @@
 //! Workspace-specific configuration management
 
 use super::*;
-use crate::app_config::types::ProxemicConfig;
+use crate::app_config::types::FiovanaConfig;
 use serde::{Deserialize, Serialize};
 
-/// Workspace-specific configuration that extends the base ProxemicConfig
+/// Workspace-specific configuration that extends the base FiovanaConfig
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceConfig {
     #[serde(flatten)]
-    pub base_config: ProxemicConfig,
+    pub base_config: FiovanaConfig,
     pub workspace: WorkspaceSettings,
 }
 
@@ -27,7 +27,7 @@ pub struct WorkspaceSettings {
 
 impl WorkspaceConfig {
     /// Create a workspace configuration from base config and template
-    pub fn from_base_config(base_config: ProxemicConfig, template: WorkspaceTemplate) -> Self {
+    pub fn from_base_config(base_config: FiovanaConfig, template: WorkspaceTemplate) -> Self {
         let now = Utc::now();
 
         // Get template-specific settings
@@ -69,7 +69,7 @@ impl WorkspaceConfig {
     pub async fn save_to_workspace(&self, workspace_path: &Path) -> WorkspaceResult<()> {
         let config_path = workspace_path.join(WORKSPACE_CONFIG_FILE);
 
-        // Ensure the .proxemic directory exists
+        // Ensure the .fiovana directory exists
         if let Some(parent) = config_path.parent() {
             tokio::fs::create_dir_all(parent).await?;
         }

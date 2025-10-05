@@ -107,7 +107,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className = '', style }) 
 
   return (
     <LayoutContext.Provider value={layoutContextValue}>
-      <div className={`proxemic-app-shell ${className}`} style={containerStyles}>
+      <div className={`fiovana-app-shell ${className}`} style={containerStyles}>
         {children}
       </div>
     </LayoutContext.Provider>
@@ -139,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({ children, className = '', style 
   }
 
   return (
-    <header className={`proxemic-header ${className}`} style={headerStyles}>
+    <header className={`fiovana-header ${className}`} style={headerStyles}>
       {children}
 
       {/* Mobile menu controls */}
@@ -220,7 +220,7 @@ export const Main: React.FC<MainProps> = ({ children, className = '', style }) =
   }
 
   return (
-    <main className={`proxemic-main ${className}`} style={mainStyles}>
+    <main className={`fiovana-main ${className}`} style={mainStyles}>
       {children}
     </main>
   )
@@ -294,7 +294,7 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
         />
       )}
 
-      <nav className={`proxemic-navigation ${className}`} style={navigationStyles}>
+      <nav className={`fiovana-navigation ${className}`} style={navigationStyles}>
         <div className="navigation-content" style={navigationContentStyles}>
           {children}
         </div>
@@ -311,21 +311,21 @@ export const Navigation: React.FC<NavigationProps> = ({ children, className = ''
       {/* Custom scrollbar styles for navigation panel */}
       <style>
         {`
-          .proxemic-navigation .navigation-content::-webkit-scrollbar {
+          .fiovana-navigation .navigation-content::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-navigation .navigation-content::-webkit-scrollbar-track {
+          .fiovana-navigation .navigation-content::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-navigation .navigation-content::-webkit-scrollbar-thumb {
+          .fiovana-navigation .navigation-content::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-navigation .navigation-content::-webkit-scrollbar-thumb:hover {
+          .fiovana-navigation .navigation-content::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}
@@ -353,7 +353,7 @@ export const Canvas: React.FC<CanvasProps> = ({ children, className = '', style 
   }
 
   return (
-    <div className={`proxemic-canvas ${className}`} style={canvasStyles}>
+    <div className={`fiovana-canvas ${className}`} style={canvasStyles}>
       {children}
     </div>
   )
@@ -421,7 +421,7 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
         />
       )}
 
-      <aside className={`proxemic-intelligence ${className}`} style={intelligenceStyles}>
+      <aside className={`fiovana-intelligence ${className}`} style={intelligenceStyles}>
         {/* Drag handle for resizing */}
         <DragHandle
           position="left"
@@ -436,21 +436,21 @@ export const Intelligence: React.FC<IntelligenceProps> = ({ children, className 
       {/* Custom scrollbar styles for intelligence panel */}
       <style>
         {`
-          .proxemic-intelligence .intelligence-content::-webkit-scrollbar {
+          .fiovana-intelligence .intelligence-content::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-track {
+          .fiovana-intelligence .intelligence-content::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-thumb {
+          .fiovana-intelligence .intelligence-content::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-intelligence .intelligence-content::-webkit-scrollbar-thumb:hover {
+          .fiovana-intelligence .intelligence-content::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}

@@ -177,7 +177,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
           <style>
             {`
-              .proxemic-input:hover {
+              .fiovana-input:hover {
                 ${
                   !disabled && variant === 'default'
                     ? `
@@ -203,7 +203,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 }
               }
 
-              .proxemic-input:focus {
+              .fiovana-input:focus {
                 outline: none;
                 ${
                   variant === 'default'
@@ -233,7 +233,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 }
               }
 
-              .proxemic-input::placeholder {
+              .fiovana-input::placeholder {
                 color: ${designTokens.colors.text.tertiary};
                 opacity: 1;
               }
@@ -242,7 +242,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
           <input
             ref={ref}
-            className={`proxemic-input ${className}`}
+            className={`fiovana-input ${className}`}
             style={inputStyles}
             disabled={disabled}
             {...props}

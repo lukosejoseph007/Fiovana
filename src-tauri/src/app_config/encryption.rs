@@ -13,7 +13,7 @@ pub struct ConfigEncryption;
 impl ConfigEncryption {
     /// Generate a 32-byte AES key from environment variables or machine ID
     pub fn get_encryption_key() -> ConfigResult<[u8; 32]> {
-        if let Ok(key_str) = env::var("PROXEMIC_ENCRYPTION_KEY") {
+        if let Ok(key_str) = env::var("FIOVANA_ENCRYPTION_KEY") {
             if key_str.len() >= 32 {
                 let mut key = [0u8; 32];
                 key.copy_from_slice(&key_str.as_bytes()[..32]);
@@ -22,7 +22,7 @@ impl ConfigEncryption {
         }
 
         let machine_id = Self::get_machine_identifier()?;
-        let combined = format!("{}{}", machine_id, "proxemic_config_v1");
+        let combined = format!("{}{}", machine_id, "fiovana_config_v1");
         let mut hasher = Sha256::new();
         hasher.update(combined.as_bytes());
         let hash = hasher.finalize();
@@ -111,7 +111,7 @@ impl ConfigEncryption {
     /// Encrypt sensitive fields
     #[allow(dead_code)]
     pub fn encrypt_sensitive_config(
-        config: &mut crate::app_config::types::ProxemicConfig,
+        config: &mut crate::app_config::types::FiovanaConfig,
     ) -> ConfigResult<()> {
         let key = Self::get_encryption_key()?;
         if let Some(ref api_key) = config.ai.openrouter_api_key {
@@ -134,7 +134,7 @@ impl ConfigEncryption {
 
     /// Decrypt sensitive fields with migration (XOR → AES)
     pub fn decrypt_sensitive_config(
-        config: &mut crate::app_config::types::ProxemicConfig,
+        config: &mut crate::app_config::types::FiovanaConfig,
     ) -> ConfigResult<()> {
         let key = Self::get_encryption_key()?;
 

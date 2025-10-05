@@ -1,4 +1,4 @@
-use proxemic::filesystem::security::safe_mode::{SafeModeLevel, SafeModeManager};
+use fiovana::filesystem::security::safe_mode::{SafeModeLevel, SafeModeManager};
 use std::fs;
 use tempfile::tempdir;
 

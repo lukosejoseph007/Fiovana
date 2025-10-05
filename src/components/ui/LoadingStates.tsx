@@ -1,7 +1,7 @@
 /**
  * LoadingStates Component
  *
- * Comprehensive loading state system matching the Proxemic design system
+ * Comprehensive loading state system matching the Fiovana design system
  * Features:
  * - Skeleton screens matching content structure
  * - Progress lines at top of panels (no spinners)

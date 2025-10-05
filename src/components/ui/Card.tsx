@@ -71,7 +71,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <>
         <style>
           {`
-            .proxemic-card {
+            .fiovana-card {
               ${
                 hoverable || clickable
                   ? `
@@ -101,22 +101,22 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
               }
             }
 
-            .proxemic-card-hoverable:hover {
+            .fiovana-card-hoverable:hover {
               transform: translateY(-2px);
               box-shadow: ${variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg};
             }
 
-            .proxemic-card-clickable:hover {
+            .fiovana-card-clickable:hover {
               transform: translateY(-2px);
               box-shadow: ${variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg};
             }
 
-            .proxemic-card-clickable:active {
+            .fiovana-card-clickable:active {
               transform: translateY(0px);
               box-shadow: ${variant === 'glass' ? designTokens.shadows.glassMedium : designTokens.shadows.md};
             }
 
-            .proxemic-card-clickable:focus {
+            .fiovana-card-clickable:focus {
               outline: none;
               box-shadow: ${variant === 'glass' ? designTokens.shadows.glassStrong : designTokens.shadows.lg},
                          0 0 0 3px ${designTokens.colors.state.focus}40;
@@ -125,7 +125,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         </style>
         <div
           ref={ref}
-          className={`proxemic-card ${hoverable ? 'proxemic-card-hoverable' : ''} ${clickable ? 'proxemic-card-clickable' : ''} ${className}`}
+          className={`fiovana-card ${hoverable ? 'fiovana-card-hoverable' : ''} ${clickable ? 'fiovana-card-clickable' : ''} ${className}`}
           style={combinedStyles}
           tabIndex={clickable ? 0 : undefined}
           role={clickable ? 'button' : undefined}
@@ -145,7 +145,7 @@ export const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
   ({ children, className = '', style, ...props }, ref) => (
     <div
       ref={ref}
-      className={`proxemic-card-header ${className}`}
+      className={`fiovana-card-header ${className}`}
       style={{
         padding: `${designTokens.spacing[4]} ${designTokens.spacing[4]} 0 ${designTokens.spacing[4]}`,
         ...style,
@@ -163,7 +163,7 @@ export const CardBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
   ({ children, className = '', style, ...props }, ref) => (
     <div
       ref={ref}
-      className={`proxemic-card-body ${className}`}
+      className={`fiovana-card-body ${className}`}
       style={{
         padding: designTokens.spacing[4],
         ...style,
@@ -181,7 +181,7 @@ export const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
   ({ children, className = '', style, ...props }, ref) => (
     <div
       ref={ref}
-      className={`proxemic-card-footer ${className}`}
+      className={`fiovana-card-footer ${className}`}
       style={{
         padding: `0 ${designTokens.spacing[4]} ${designTokens.spacing[4]} ${designTokens.spacing[4]}`,
         marginTop: 'auto',

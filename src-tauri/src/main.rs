@@ -120,7 +120,7 @@ async fn main() {
         std::process::exit(1);
     }
 
-    info!("Starting Proxemic application...");
+    info!("Starting Fiovana application...");
     info!("Environment: {:?}", config_manager.environment());
 
     // Initialize workspace manager
@@ -698,7 +698,7 @@ fn init_early_logging() {
     // Configure basic logging for security initialization
     let log_level = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         // Default log levels based on security level
-        match std::env::var("PROXEMIC_SECURITY_LEVEL")
+        match std::env::var("FIOVANA_SECURITY_LEVEL")
             .unwrap_or_default()
             .as_str()
         {
@@ -715,7 +715,7 @@ fn init_early_logging() {
     );
 
     // Use structured logging in production
-    if std::env::var("PROXEMIC_STRUCTURED_LOGGING").unwrap_or_default() == "true" {
+    if std::env::var("FIOVANA_STRUCTURED_LOGGING").unwrap_or_default() == "true" {
         subscriber
             .with(tracing_subscriber::fmt::layer().json())
             .init();
@@ -834,7 +834,7 @@ fn setup_security_monitoring(app: &tauri::App) -> Result<(), Box<dyn std::error:
     let security_level = &state.security_state.validation_result.security_level;
 
     // Set up security monitoring based on security level
-    let audit_enabled = std::env::var("PROXEMIC_AUDIT_LOGGING_ENABLED")
+    let audit_enabled = std::env::var("FIOVANA_AUDIT_LOGGING_ENABLED")
         .unwrap_or_default()
         .to_lowercase()
         == "true"
@@ -860,7 +860,7 @@ fn setup_security_monitoring(app: &tauri::App) -> Result<(), Box<dyn std::error:
         // - Compliance logging
     }
 
-    let performance_monitoring = std::env::var("PROXEMIC_PERFORMANCE_MONITORING")
+    let performance_monitoring = std::env::var("FIOVANA_PERFORMANCE_MONITORING")
         .unwrap_or_default()
         .to_lowercase()
         == "true"
@@ -954,30 +954,30 @@ mod tests {
     fn save_env_state() -> Vec<(String, Option<String>)> {
         vec![
             (
-                "PROXEMIC_ENV".to_string(),
-                std::env::var("PROXEMIC_ENV").ok(),
+                "FIOVANA_ENV".to_string(),
+                std::env::var("FIOVANA_ENV").ok(),
             ),
             ("RUST_ENV".to_string(), std::env::var("RUST_ENV").ok()),
             ("NODE_ENV".to_string(), std::env::var("NODE_ENV").ok()),
             (
-                "PROXEMIC_SECURITY_LEVEL".to_string(),
-                std::env::var("PROXEMIC_SECURITY_LEVEL").ok(),
+                "FIOVANA_SECURITY_LEVEL".to_string(),
+                std::env::var("FIOVANA_SECURITY_LEVEL").ok(),
             ),
             (
-                "PROXEMIC_ENABLE_MAGIC_VALIDATION".to_string(),
-                std::env::var("PROXEMIC_ENABLE_MAGIC_VALIDATION").ok(),
+                "FIOVANA_ENABLE_MAGIC_VALIDATION".to_string(),
+                std::env::var("FIOVANA_ENABLE_MAGIC_VALIDATION").ok(),
             ),
             (
-                "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
-                std::env::var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES").ok(),
+                "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
+                std::env::var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES").ok(),
             ),
             (
-                "PROXEMIC_AUDIT_LOGGING_ENABLED".to_string(),
-                std::env::var("PROXEMIC_AUDIT_LOGGING_ENABLED").ok(),
+                "FIOVANA_AUDIT_LOGGING_ENABLED".to_string(),
+                std::env::var("FIOVANA_AUDIT_LOGGING_ENABLED").ok(),
             ),
             (
-                "PROXEMIC_ENCRYPTION_KEY".to_string(),
-                std::env::var("PROXEMIC_ENCRYPTION_KEY").ok(),
+                "FIOVANA_ENCRYPTION_KEY".to_string(),
+                std::env::var("FIOVANA_ENCRYPTION_KEY").ok(),
             ),
         ]
     }
@@ -1004,7 +1004,7 @@ mod tests {
         }
 
         // Set minimal valid environment for testing
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "development");
 
         let result = initialize_security_system();
         assert!(
@@ -1036,13 +1036,13 @@ mod tests {
         }
 
         // Set production environment properly
-        std::env::set_var("PROXEMIC_ENV", "Production"); // Note: Capital P
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
-        std::env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        std::env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        std::env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        std::env::set_var("FIOVANA_ENV", "Production"); // Note: Capital P
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "production");
+        std::env::set_var("FIOVANA_ENABLE_MAGIC_VALIDATION", "true");
+        std::env::set_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        std::env::set_var("FIOVANA_AUDIT_LOGGING_ENABLED", "true");
         std::env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "production_key_32_chars_unique_123",
         );
 
@@ -1082,15 +1082,15 @@ mod tests {
         }
 
         // Test that insecure production config prevents startup
-        std::env::set_var("PROXEMIC_ENV", "Production");
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var("FIOVANA_ENV", "Production");
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "production");
         std::env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "your_secure_32_character_key_here_change_this",
         ); // Default/insecure key
-        std::env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        std::env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        std::env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        std::env::set_var("FIOVANA_ENABLE_MAGIC_VALIDATION", "true");
+        std::env::set_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        std::env::set_var("FIOVANA_AUDIT_LOGGING_ENABLED", "true");
 
         let result = initialize_security_system();
 
@@ -1129,8 +1129,8 @@ mod tests {
         }
 
         // Test that configuration system works with security system
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
-        std::env::set_var("PROXEMIC_ENV", "Development");
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "development");
+        std::env::set_var("FIOVANA_ENV", "Development");
 
         // Verify the integration points exist and work
         let result = initialize_security_system();
@@ -1169,22 +1169,22 @@ mod tests {
         }
 
         // Set minimal required environment
-        std::env::set_var("PROXEMIC_ENV", "Production");
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var("FIOVANA_ENV", "Production");
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "production");
         std::env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "debug_key_32_chars_for_testing_123",
         );
 
         println!("\n=== Debug: Environment Variables After Setting ===");
-        println!("PROXEMIC_ENV: {:?}", std::env::var("PROXEMIC_ENV"));
+        println!("FIOVANA_ENV: {:?}", std::env::var("FIOVANA_ENV"));
         println!(
-            "PROXEMIC_SECURITY_LEVEL: {:?}",
-            std::env::var("PROXEMIC_SECURITY_LEVEL")
+            "FIOVANA_SECURITY_LEVEL: {:?}",
+            std::env::var("FIOVANA_SECURITY_LEVEL")
         );
         println!(
-            "PROXEMIC_ENCRYPTION_KEY: {:?}",
-            std::env::var("PROXEMIC_ENCRYPTION_KEY").map(|s| format!("{}...", &s[..8]))
+            "FIOVANA_ENCRYPTION_KEY: {:?}",
+            std::env::var("FIOVANA_ENCRYPTION_KEY").map(|s| format!("{}...", &s[..8]))
         );
 
         let result = initialize_security_system();

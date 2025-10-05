@@ -257,7 +257,7 @@ pub fn init_file_logging(log_dir: Option<PathBuf>) -> io::Result<LogRotationMana
     let log_dir = log_dir.unwrap_or_else(|| {
         dirs::data_dir()
             .unwrap_or_else(|| PathBuf::from("./logs"))
-            .join("proxemic")
+            .join("fiovana")
             .join("security_logs")
     });
 

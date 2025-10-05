@@ -10,7 +10,7 @@ import type { Icons } from '../../assets/icons/utils'
 
 type IconName = Exclude<keyof typeof Icons, 'getDocumentTypeIcon'>
 
-const TOOLBAR_COLLAPSED_KEY = 'proxemic_toolbar_collapsed'
+const TOOLBAR_COLLAPSED_KEY = 'fiovana_toolbar_collapsed'
 
 export interface ToolbarAction {
   id: string

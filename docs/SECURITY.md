@@ -49,21 +49,21 @@ pub struct SecurityConfig {
 Security settings can be configured via environment variables for deployment flexibility:
 
 #### Core Security Settings
-- `PROXEMIC_SECURITY_LEVEL`: Security level (`development`, `production`, `high_security`)
-- `PROXEMIC_MAX_FILE_SIZE`: Maximum file size in bytes (default: 100MB)
-- `PROXEMIC_MAX_PATH_LENGTH`: Maximum path length in characters (default: 260)
-- `PROXEMIC_MAX_CONCURRENT_OPERATIONS`: Maximum concurrent operations (default: 10)
+- `FIOVANA_SECURITY_LEVEL`: Security level (`development`, `production`, `high_security`)
+- `FIOVANA_MAX_FILE_SIZE`: Maximum file size in bytes (default: 100MB)
+- `FIOVANA_MAX_PATH_LENGTH`: Maximum path length in characters (default: 260)
+- `FIOVANA_MAX_CONCURRENT_OPERATIONS`: Maximum concurrent operations (default: 10)
 
 #### Critical Security Features
-- `PROXEMIC_ENABLE_MAGIC_VALIDATION`: Enable magic number validation (`true`/`false`)
-- `PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES`: Enforce workspace boundaries (`true`/`false`)
-- `PROXEMIC_AUDIT_LOGGING_ENABLED`: Enable audit logging (`true`/`false`)
+- `FIOVANA_ENABLE_MAGIC_VALIDATION`: Enable magic number validation (`true`/`false`)
+- `FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES`: Enforce workspace boundaries (`true`/`false`)
+- `FIOVANA_AUDIT_LOGGING_ENABLED`: Enable audit logging (`true`/`false`)
 
 #### Advanced Security Options
-- `PROXEMIC_ENABLE_CONTENT_SCANNING`: Enable content scanning (`true`/`false`)
-- `PROXEMIC_SUSPICIOUS_FILE_AGE_THRESHOLD`: Suspicious file age threshold in seconds
-- `PROXEMIC_RATE_LIMIT_PER_MINUTE`: Rate limiting threshold
-- `PROXEMIC_CONFIG_VALIDATION`: Configuration validation strictness
+- `FIOVANA_ENABLE_CONTENT_SCANNING`: Enable content scanning (`true`/`false`)
+- `FIOVANA_SUSPICIOUS_FILE_AGE_THRESHOLD`: Suspicious file age threshold in seconds
+- `FIOVANA_RATE_LIMIT_PER_MINUTE`: Rate limiting threshold
+- `FIOVANA_CONFIG_VALIDATION`: Configuration validation strictness
 
 ### JSON Schema Validation
 

@@ -2,9 +2,9 @@
 // Tests for conflict detection functionality
 
 use chrono::Utc;
-use proxemic::filesystem::event_persistence::PersistenceConfig;
-use proxemic::filesystem::security::security_config::SecurityConfig;
-use proxemic::filesystem::watcher::{ConflictDetector, ConflictType, FileSnapshot, WatcherConfig};
+use fiovana::filesystem::event_persistence::PersistenceConfig;
+use fiovana::filesystem::security::security_config::SecurityConfig;
+use fiovana::filesystem::watcher::{ConflictDetector, ConflictType, FileSnapshot, WatcherConfig};
 use std::fs::{self, File};
 use std::io::Write;
 use std::time::Duration;
@@ -236,12 +236,12 @@ async fn test_watcher_config_creation() {
         persistence_config: PersistenceConfig::default(),
         workspace_id: None,
         enable_resource_monitoring: false,
-        resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
+        resource_monitor_config: fiovana::resource_monitor::ResourceMonitorConfig::default(),
         enable_optimized_processing: false,
         event_processor_config:
-            proxemic::filesystem::event_processor::EventProcessorConfig::default(),
+            fiovana::filesystem::event_processor::EventProcessorConfig::default(),
         enable_health_monitoring: false,
-        health_monitor_config: proxemic::filesystem::health_monitor::HealthMonitorConfig::default(),
+        health_monitor_config: fiovana::filesystem::health_monitor::HealthMonitorConfig::default(),
     };
 
     assert_eq!(config.debounce_duration, Duration::from_millis(500));

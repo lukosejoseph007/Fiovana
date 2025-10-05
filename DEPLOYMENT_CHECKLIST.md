@@ -1,4 +1,4 @@
-# Proxemic Production Deployment Checklist
+# Fiovana Production Deployment Checklist
 
 ## ✅ Completed Security & Optimization Features
 
@@ -30,9 +30,9 @@
 ## 📦 Generated Deployment Artifacts
 
 ### Executable Files
-- **Main Binary**: `src-tauri/target/release/proxemic.exe` (6.96 MB)
-- **MSI Installer**: `src-tauri/target/release/bundle/msi/Proxemic_0.1.0_x64_en-US.msi` (3.01 MB)
-- **NSIS Installer**: `src-tauri/target/release/bundle/nsis/Proxemic_0.1.0_x64-setup.exe` (2.01 MB)
+- **Main Binary**: `src-tauri/target/release/fiovana.exe` (6.96 MB)
+- **MSI Installer**: `src-tauri/target/release/bundle/msi/Fiovana_0.1.0_x64_en-US.msi` (3.01 MB)
+- **NSIS Installer**: `src-tauri/target/release/bundle/nsis/Fiovana_0.1.0_x64-setup.exe` (2.01 MB)
 
 ### Configuration Files Updated
 1. `src-tauri/tauri.conf.json` - CSP and security settings

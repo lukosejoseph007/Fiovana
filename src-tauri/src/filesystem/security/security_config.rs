@@ -164,7 +164,7 @@ impl SecurityConfig {
     /// Apply environment variable overrides with fixed error types
     pub fn apply_environment_overrides(&mut self) -> Result<(), SecurityConfigError> {
         // Security level override
-        if let Ok(level_str) = std::env::var("PROXEMIC_SECURITY_LEVEL") {
+        if let Ok(level_str) = std::env::var("FIOVANA_SECURITY_LEVEL") {
             match level_str.to_lowercase().as_str() {
                 "development" => self.security_level = SecurityLevel::Development,
                 "production" => {
@@ -177,7 +177,7 @@ impl SecurityConfig {
                 }
                 _ => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_SECURITY_LEVEL".to_string(),
+                        var: "FIOVANA_SECURITY_LEVEL".to_string(),
                         error: format!("Invalid security level: {}", level_str),
                     })
                 }
@@ -185,13 +185,13 @@ impl SecurityConfig {
         }
 
         // File size override (with validation)
-        if let Ok(size_str) = std::env::var("PROXEMIC_MAX_FILE_SIZE") {
+        if let Ok(size_str) = std::env::var("FIOVANA_MAX_FILE_SIZE") {
             match size_str.parse::<u64>() {
                 Ok(size) => {
                     if size > 1024 * 1024 * 1024 {
                         // 1GB hard limit
                         return Err(SecurityConfigError::EnvVarError {
-                            var: "PROXEMIC_MAX_FILE_SIZE".to_string(),
+                            var: "FIOVANA_MAX_FILE_SIZE".to_string(),
                             error: "File size limit cannot exceed 1GB".to_string(),
                         });
                     }
@@ -199,7 +199,7 @@ impl SecurityConfig {
                 }
                 Err(_) => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MAX_FILE_SIZE".to_string(),
+                        var: "FIOVANA_MAX_FILE_SIZE".to_string(),
                         error: "Invalid numeric value".to_string(),
                     })
                 }
@@ -207,24 +207,24 @@ impl SecurityConfig {
         }
 
         // Memory monitoring thresholds
-        if let Ok(warning_str) = std::env::var("PROXEMIC_MEMORY_WARNING_THRESHOLD_KB") {
+        if let Ok(warning_str) = std::env::var("FIOVANA_MEMORY_WARNING_THRESHOLD_KB") {
             match warning_str.parse::<u64>() {
                 Ok(threshold) => self.memory_warning_threshold_kb = threshold,
                 Err(_) => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MEMORY_WARNING_THRESHOLD_KB".to_string(),
+                        var: "FIOVANA_MEMORY_WARNING_THRESHOLD_KB".to_string(),
                         error: "Invalid numeric value".to_string(),
                     })
                 }
             }
         }
 
-        if let Ok(critical_str) = std::env::var("PROXEMIC_MEMORY_CRITICAL_THRESHOLD_KB") {
+        if let Ok(critical_str) = std::env::var("FIOVANA_MEMORY_CRITICAL_THRESHOLD_KB") {
             match critical_str.parse::<u64>() {
                 Ok(threshold) => self.memory_critical_threshold_kb = threshold,
                 Err(_) => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MEMORY_CRITICAL_THRESHOLD_KB".to_string(),
+                        var: "FIOVANA_MEMORY_CRITICAL_THRESHOLD_KB".to_string(),
                         error: "Invalid numeric value".to_string(),
                     })
                 }
@@ -232,13 +232,13 @@ impl SecurityConfig {
         }
 
         // Monitoring enabled override
-        if let Ok(monitoring_str) = std::env::var("PROXEMIC_MONITORING_ENABLED") {
+        if let Ok(monitoring_str) = std::env::var("FIOVANA_MONITORING_ENABLED") {
             match monitoring_str.to_lowercase().as_str() {
                 "true" | "1" | "yes" => self.monitoring_enabled = true,
                 "false" | "0" | "no" => self.monitoring_enabled = false,
                 _ => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MONITORING_ENABLED".to_string(),
+                        var: "FIOVANA_MONITORING_ENABLED".to_string(),
                         error: "Must be true/false, 1/0, or yes/no".to_string(),
                     })
                 }
@@ -246,13 +246,13 @@ impl SecurityConfig {
         }
 
         // Path length override (with validation)
-        if let Ok(path_len_str) = std::env::var("PROXEMIC_MAX_PATH_LENGTH") {
+        if let Ok(path_len_str) = std::env::var("FIOVANA_MAX_PATH_LENGTH") {
             match path_len_str.parse::<usize>() {
                 Ok(length) => {
                     if !(50..=4096).contains(&length) {
                         // Reasonable bounds
                         return Err(SecurityConfigError::EnvVarError {
-                            var: "PROXEMIC_MAX_PATH_LENGTH".to_string(),
+                            var: "FIOVANA_MAX_PATH_LENGTH".to_string(),
                             error: "Path length must be between 50 and 4096 characters".to_string(),
                         });
                     }
@@ -260,7 +260,7 @@ impl SecurityConfig {
                 }
                 Err(_) => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MAX_PATH_LENGTH".to_string(),
+                        var: "FIOVANA_MAX_PATH_LENGTH".to_string(),
                         error: "Invalid numeric value".to_string(),
                     })
                 }
@@ -268,7 +268,7 @@ impl SecurityConfig {
         }
 
         // Magic number validation override
-        if let Ok(magic_str) = std::env::var("PROXEMIC_ENABLE_MAGIC_VALIDATION") {
+        if let Ok(magic_str) = std::env::var("FIOVANA_ENABLE_MAGIC_VALIDATION") {
             match magic_str.to_lowercase().as_str() {
                 "true" | "1" | "yes" => self.enable_magic_number_validation = true,
                 "false" | "0" | "no" => {
@@ -285,7 +285,7 @@ impl SecurityConfig {
                 }
                 _ => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_ENABLE_MAGIC_VALIDATION".to_string(),
+                        var: "FIOVANA_ENABLE_MAGIC_VALIDATION".to_string(),
                         error: "Must be true/false, 1/0, or yes/no".to_string(),
                     })
                 }
@@ -293,12 +293,12 @@ impl SecurityConfig {
         }
 
         // Concurrent operations override
-        if let Ok(ops_str) = std::env::var("PROXEMIC_MAX_CONCURRENT_OPERATIONS") {
+        if let Ok(ops_str) = std::env::var("FIOVANA_MAX_CONCURRENT_OPERATIONS") {
             match ops_str.parse::<u32>() {
                 Ok(ops) => {
                     if ops > 1000 {
                         return Err(SecurityConfigError::EnvVarError {
-                            var: "PROXEMIC_MAX_CONCURRENT_OPERATIONS".to_string(),
+                            var: "FIOVANA_MAX_CONCURRENT_OPERATIONS".to_string(),
                             error: "Cannot exceed 1000 concurrent operations".to_string(),
                         });
                     }
@@ -306,7 +306,7 @@ impl SecurityConfig {
                 }
                 Err(_) => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_MAX_CONCURRENT_OPERATIONS".to_string(),
+                        var: "FIOVANA_MAX_CONCURRENT_OPERATIONS".to_string(),
                         error: "Invalid numeric value".to_string(),
                     })
                 }
@@ -314,7 +314,7 @@ impl SecurityConfig {
         }
 
         // Workspace boundaries override
-        if let Ok(boundaries_str) = std::env::var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES") {
+        if let Ok(boundaries_str) = std::env::var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES") {
             match boundaries_str.to_lowercase().as_str() {
                 "true" | "1" | "yes" => self.enforce_workspace_boundaries = true,
                 "false" | "0" | "no" => {
@@ -330,7 +330,7 @@ impl SecurityConfig {
                 }
                 _ => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
+                        var: "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
                         error: "Must be true/false, 1/0, or yes/no".to_string(),
                     })
                 }
@@ -338,13 +338,13 @@ impl SecurityConfig {
         }
 
         // Audit logging override
-        if let Ok(audit_str) = std::env::var("PROXEMIC_AUDIT_LOGGING_ENABLED") {
+        if let Ok(audit_str) = std::env::var("FIOVANA_AUDIT_LOGGING_ENABLED") {
             match audit_str.to_lowercase().as_str() {
                 "true" | "1" | "yes" => self.audit_logging_enabled = true,
                 "false" | "0" | "no" => self.audit_logging_enabled = false,
                 _ => {
                     return Err(SecurityConfigError::EnvVarError {
-                        var: "PROXEMIC_AUDIT_LOGGING_ENABLED".to_string(),
+                        var: "FIOVANA_AUDIT_LOGGING_ENABLED".to_string(),
                         error: "Must be true/false, 1/0, or yes/no".to_string(),
                     })
                 }
@@ -603,7 +603,7 @@ impl SecurityConfig {
 impl Default for SecurityConfig {
     fn default() -> Self {
         // Determine security level from environment or default to development
-        let security_level = std::env::var("PROXEMIC_SECURITY_LEVEL")
+        let security_level = std::env::var("FIOVANA_SECURITY_LEVEL")
             .unwrap_or_else(|_| "development".to_string())
             .to_lowercase();
 
@@ -682,9 +682,9 @@ mod tests {
 
     #[test]
     fn test_environment_overrides() {
-        std::env::set_var("PROXEMIC_MAX_FILE_SIZE", "1048576"); // 1MB
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
-        std::env::set_var("PROXEMIC_MONITORING_ENABLED", "true");
+        std::env::set_var("FIOVANA_MAX_FILE_SIZE", "1048576"); // 1MB
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "production");
+        std::env::set_var("FIOVANA_MONITORING_ENABLED", "true");
 
         let app_config = AppSecurityConfig::default();
         let config = SecurityConfig::from_app_config_with_env(&app_config);
@@ -696,9 +696,9 @@ mod tests {
         assert!(config.monitoring_enabled);
 
         // Clean up
-        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
-        std::env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        std::env::remove_var("PROXEMIC_MONITORING_ENABLED");
+        std::env::remove_var("FIOVANA_MAX_FILE_SIZE");
+        std::env::remove_var("FIOVANA_SECURITY_LEVEL");
+        std::env::remove_var("FIOVANA_MONITORING_ENABLED");
     }
 
     #[test]

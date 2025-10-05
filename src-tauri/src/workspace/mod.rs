@@ -1,5 +1,5 @@
 // src-tauri/src/workspace/mod.rs
-//! Workspace management system for Proxemic
+//! Workspace management system for Fiovana
 //!
 //! This module provides functionality for creating, managing, and organizing
 //! project workspaces with standardized directory structures and configuration.
@@ -56,14 +56,14 @@ pub const WORKSPACE_DIRECTORIES: &[&str] = &[
     "intelligence/conversations",
     "outputs/drafts",
     "outputs/approved",
-    ".proxemic/cache",
+    ".fiovana/cache",
 ];
 
 /// Workspace metadata file name
-pub const WORKSPACE_METADATA_FILE: &str = ".proxemic/workspace.json";
+pub const WORKSPACE_METADATA_FILE: &str = ".fiovana/workspace.json";
 
 /// Workspace configuration file name
-pub const WORKSPACE_CONFIG_FILE: &str = ".proxemic/config.json";
+pub const WORKSPACE_CONFIG_FILE: &str = ".fiovana/config.json";
 
 /// Represents a workspace instance with its metadata and configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

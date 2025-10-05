@@ -1,4 +1,4 @@
-# Proxemic Development Guide
+# Fiovana Development Guide
 
 ## Development Workflows
 
@@ -50,7 +50,7 @@ OPENROUTER_API_KEY=your_key
 ANTHROPIC_API_KEY=your_key
 RUST_LOG=info
 TAURI_DEV_PORT=3000
-DATABASE_URL=sqlite:./Proxemic.db
+DATABASE_URL=sqlite:./Fiovana.db
 ```
 
 ## CI/CD Pipeline
@@ -77,4 +77,4 @@ cargo clean && npm cache clean --force
 npm install && cd src-tauri && cargo update
 
 # Reset database
-rm Proxemic.db
+rm Fiovana.db

@@ -1,5 +1,5 @@
-use proxemic::filesystem::security::audit_logger::SecurityAuditor;
-use proxemic::filesystem::security::audit_logger::SecurityLevel;
+use fiovana::filesystem::security::audit_logger::SecurityAuditor;
+use fiovana::filesystem::security::audit_logger::SecurityLevel;
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -42,7 +42,7 @@ fn test_correlation_id_generation() {
 
 #[test]
 fn test_file_access_logging() {
-    use proxemic::filesystem::errors::SecurityError;
+    use fiovana::filesystem::errors::SecurityError;
     use std::path::Path;
 
     let path = Path::new("/test/path");

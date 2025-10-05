@@ -239,7 +239,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
           }
 
-          .proxemic-dropdown-trigger:hover {
+          .fiovana-dropdown-trigger:hover {
             ${
               !disabled
                 ? `
@@ -249,38 +249,38 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
           }
 
-          .proxemic-dropdown-trigger:focus {
+          .fiovana-dropdown-trigger:focus {
             border-color: ${designTokens.colors.state.focus};
             box-shadow: 0 0 0 3px ${designTokens.colors.state.focus}40;
           }
 
-          .proxemic-dropdown-option:hover {
+          .fiovana-dropdown-option:hover {
             background-color: ${designTokens.colors.state.hover};
           }
 
-          .proxemic-dropdown-option-highlighted {
+          .fiovana-dropdown-option-highlighted {
             background-color: ${designTokens.colors.state.hover};
           }
 
-          .proxemic-dropdown-option-disabled {
+          .fiovana-dropdown-option-disabled {
             opacity: 0.5;
             cursor: not-allowed;
           }
 
-          .proxemic-dropdown-clear:hover {
+          .fiovana-dropdown-clear:hover {
             color: ${designTokens.colors.text.primary};
           }
 
-          .proxemic-dropdown::-webkit-scrollbar {
+          .fiovana-dropdown::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-dropdown::-webkit-scrollbar-track {
+          .fiovana-dropdown::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-dropdown::-webkit-scrollbar-thumb {
+          .fiovana-dropdown::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
@@ -289,7 +289,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
       <div ref={dropdownRef} style={{ position: 'relative', width: fullWidth ? '100%' : 'auto' }}>
         <div
-          className={`proxemic-dropdown-trigger ${className}`}
+          className={`fiovana-dropdown-trigger ${className}`}
           style={triggerStyles}
           onClick={toggleDropdown}
           tabIndex={disabled ? -1 : 0}
@@ -310,7 +310,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
           {clearable && selectedOption && (
             <button
-              className="proxemic-dropdown-clear"
+              className="fiovana-dropdown-clear"
               style={clearButtonStyles}
               onClick={handleClear}
               aria-label="Clear selection"
@@ -345,7 +345,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
         {isOpen && (
           <div
-            className={`proxemic-dropdown ${dropdownClassName}`}
+            className={`fiovana-dropdown ${dropdownClassName}`}
             style={dropdownStyles}
             role="listbox"
           >
@@ -373,9 +373,9 @@ const Dropdown: React.FC<DropdownProps> = ({
               filteredOptions.map((option, index) => (
                 <div
                   key={option.value}
-                  className={`proxemic-dropdown-option ${
-                    index === highlightedIndex ? 'proxemic-dropdown-option-highlighted' : ''
-                  } ${option.disabled ? 'proxemic-dropdown-option-disabled' : ''}`}
+                  className={`fiovana-dropdown-option ${
+                    index === highlightedIndex ? 'fiovana-dropdown-option-highlighted' : ''
+                  } ${option.disabled ? 'fiovana-dropdown-option-disabled' : ''}`}
                   style={optionStyles}
                   onClick={() => !option.disabled && handleSelect(option.value)}
                   role="option"

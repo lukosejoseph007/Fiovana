@@ -341,7 +341,7 @@ This workspace is designed for creating, maintaining, and organizing documentati
     async fn save_workspace_metadata(&self, workspace_info: &WorkspaceInfo) -> WorkspaceResult<()> {
         let metadata_path = workspace_info.path.join(WORKSPACE_METADATA_FILE);
 
-        // Ensure the .proxemic directory exists
+        // Ensure the .fiovana directory exists
         if let Some(parent) = metadata_path.parent() {
             fs::create_dir_all(parent).await?;
         }

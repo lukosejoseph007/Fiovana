@@ -1,7 +1,7 @@
-# Proxemic - Secure AI-Powered Document Intelligence Platform
+# Fiovana - Secure AI-Powered Document Intelligence Platform
 
 ## Overview
-Proxemic is a secure desktop application built with Tauri (Rust + TypeScript) that provides AI-powered document analysis and processing with enterprise-grade security features.
+Fiovana is a secure desktop application built with Tauri (Rust + TypeScript) that provides AI-powered document analysis and processing with enterprise-grade security features.
 
 ## Getting Started
 
@@ -14,8 +14,8 @@ Proxemic is a secure desktop application built with Tauri (Rust + TypeScript) th
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/lukosejoseph007/Proxemic.git
-   cd Proxemic
+   git clone https://github.com/lukosejoseph007/Fiovana.git
+   cd Fiovana
    ```
 
 2. Install frontend dependencies:
@@ -57,16 +57,16 @@ RUST_LOG=info
 TAURI_DEV_PORT=3000
 
 # Database Configuration
-DATABASE_URL=sqlite:./Proxemic.db
+DATABASE_URL=sqlite:./Fiovana.db
 
 # Security Configuration (Production Hardened)
-PROXEMIC_SECURITY_LEVEL=development
-PROXEMIC_MAX_FILE_SIZE=104857600
-PROXEMIC_MAX_PATH_LENGTH=260
-PROXEMIC_MAX_CONCURRENT_OPERATIONS=10
-PROXEMIC_ENABLE_MAGIC_VALIDATION=true
-PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES=true
-PROXEMIC_AUDIT_LOGGING_ENABLED=true
+FIOVANA_SECURITY_LEVEL=development
+FIOVANA_MAX_FILE_SIZE=104857600
+FIOVANA_MAX_PATH_LENGTH=260
+FIOVANA_MAX_CONCURRENT_OPERATIONS=10
+FIOVANA_ENABLE_MAGIC_VALIDATION=true
+FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES=true
+FIOVANA_AUDIT_LOGGING_ENABLED=true
 ```
 
 ## Key Features
@@ -97,7 +97,7 @@ PROXEMIC_AUDIT_LOGGING_ENABLED=true
 
 ### Project Structure
 ```
-proxemic/
+fiovana/
 ├── src/                 # Frontend (TypeScript/React)
 ├── src-tauri/          # Backend (Rust)
 ├── docs/               # Documentation

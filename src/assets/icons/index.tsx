@@ -1,4 +1,4 @@
-// Icon System for Proxemic
+// Icon System for Fiovana
 // Consistent icon library with semantic meanings
 
 import React from 'react'

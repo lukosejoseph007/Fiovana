@@ -156,7 +156,7 @@ interface DocumentToolbarProps {
 
 ### localStorage Key
 ```typescript
-const TOOLBAR_COLLAPSED_KEY = 'proxemic_toolbar_collapsed'
+const TOOLBAR_COLLAPSED_KEY = 'fiovana_toolbar_collapsed'
 ```
 
 ### Storage Format

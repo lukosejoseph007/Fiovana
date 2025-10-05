@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🔧 Proxemic Safe Test Runner - Preventing Infinite Loops"
+echo "🔧 Fiovana Safe Test Runner - Preventing Infinite Loops"
 echo "========================================================"
 
 # Configuration

@@ -1,8 +1,8 @@
 // src-tauri/tests/workspace_security_tests.rs
 // Security tests for workspace access control and path validation
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{CreateWorkspaceRequest, WorkspaceManager, WorkspaceTemplate};
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{CreateWorkspaceRequest, WorkspaceManager, WorkspaceTemplate};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
@@ -378,8 +378,8 @@ async fn test_workspace_access_control() {
                 assert_ne!(path_a, path_b, "Workspace paths should be different");
 
                 // Verify that each workspace has its own metadata
-                let metadata_a = path_a.join(".proxemic/workspace.json");
-                let metadata_b = path_b.join(".proxemic/workspace.json");
+                let metadata_a = path_a.join(".fiovana/workspace.json");
+                let metadata_b = path_b.join(".fiovana/workspace.json");
 
                 assert!(
                     metadata_a.exists(),
@@ -539,7 +539,7 @@ async fn test_workspace_metadata_security() {
         .await
         .expect("Failed to create workspace");
 
-    let metadata_path = workspace_path.join(".proxemic/workspace.json");
+    let metadata_path = workspace_path.join(".fiovana/workspace.json");
     assert!(metadata_path.exists(), "Metadata file should exist");
 
     // Read and verify metadata security
@@ -681,15 +681,15 @@ async fn test_concurrent_access_security() {
                         .workspace_manager
                         .validate_workspace(&workspace_path_clone)
                         .await
-                        .map(|_| proxemic::workspace::WorkspaceInfo {
+                        .map(|_| fiovana::workspace::WorkspaceInfo {
                             path: workspace_path_clone.clone(),
                             name: format!("concurrent_test_{}", i),
                             version: "1.0.0".to_string(),
                             created: chrono::Utc::now(),
                             last_modified: chrono::Utc::now(),
                             last_accessed: chrono::Utc::now(),
-                            import_settings: proxemic::workspace::ImportSettings::default(),
-                            ai_settings: proxemic::workspace::WorkspaceAISettings::default(),
+                            import_settings: fiovana::workspace::ImportSettings::default(),
+                            ai_settings: fiovana::workspace::WorkspaceAISettings::default(),
                             is_favorite: false,
                             access_count: 1,
                         })
@@ -700,15 +700,15 @@ async fn test_concurrent_access_security() {
                         .workspace_manager
                         .is_workspace(&workspace_path_clone)
                         .await
-                        .map(|_| proxemic::workspace::WorkspaceInfo {
+                        .map(|_| fiovana::workspace::WorkspaceInfo {
                             path: workspace_path_clone.clone(),
                             name: format!("concurrent_test_{}", i),
                             version: "1.0.0".to_string(),
                             created: chrono::Utc::now(),
                             last_modified: chrono::Utc::now(),
                             last_accessed: chrono::Utc::now(),
-                            import_settings: proxemic::workspace::ImportSettings::default(),
-                            ai_settings: proxemic::workspace::WorkspaceAISettings::default(),
+                            import_settings: fiovana::workspace::ImportSettings::default(),
+                            ai_settings: fiovana::workspace::WorkspaceAISettings::default(),
                             is_favorite: false,
                             access_count: 1,
                         })
@@ -719,15 +719,15 @@ async fn test_concurrent_access_security() {
                         .workspace_manager
                         .get_workspace_stats(&workspace_path_clone)
                         .await
-                        .map(|_| proxemic::workspace::WorkspaceInfo {
+                        .map(|_| fiovana::workspace::WorkspaceInfo {
                             path: workspace_path_clone.clone(),
                             name: format!("concurrent_test_{}", i),
                             version: "1.0.0".to_string(),
                             created: chrono::Utc::now(),
                             last_modified: chrono::Utc::now(),
                             last_accessed: chrono::Utc::now(),
-                            import_settings: proxemic::workspace::ImportSettings::default(),
-                            ai_settings: proxemic::workspace::WorkspaceAISettings::default(),
+                            import_settings: fiovana::workspace::ImportSettings::default(),
+                            ai_settings: fiovana::workspace::WorkspaceAISettings::default(),
                             is_favorite: false,
                             access_count: 1,
                         })

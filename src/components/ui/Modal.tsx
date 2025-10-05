@@ -197,39 +197,39 @@ const Modal: React.FC<ModalProps> = ({
             }
           }
 
-          .proxemic-modal-close:hover {
+          .fiovana-modal-close:hover {
             background-color: ${designTokens.colors.state.hover};
             color: ${designTokens.colors.text.primary};
           }
 
-          .proxemic-modal-close:focus {
+          .fiovana-modal-close:focus {
             outline: none;
             background-color: ${designTokens.colors.state.hover};
             box-shadow: 0 0 0 2px ${designTokens.colors.state.focus}40;
           }
 
-          .proxemic-modal-content::-webkit-scrollbar {
+          .fiovana-modal-content::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-modal-content::-webkit-scrollbar-track {
+          .fiovana-modal-content::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-modal-content::-webkit-scrollbar-thumb {
+          .fiovana-modal-content::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-modal-content::-webkit-scrollbar-thumb:hover {
+          .fiovana-modal-content::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}
       </style>
 
       <div
-        className={`proxemic-modal-overlay ${overlayClassName}`}
+        className={`fiovana-modal-overlay ${overlayClassName}`}
         style={overlayStyles}
         onClick={handleOverlayClick}
         role="dialog"
@@ -238,7 +238,7 @@ const Modal: React.FC<ModalProps> = ({
       >
         <div
           ref={modalRef}
-          className={`proxemic-modal ${className}`}
+          className={`fiovana-modal ${className}`}
           style={modalStyles}
           tabIndex={-1}
         >
@@ -251,7 +251,7 @@ const Modal: React.FC<ModalProps> = ({
               )}
               {showCloseButton && (
                 <button
-                  className="proxemic-modal-close"
+                  className="fiovana-modal-close"
                   style={closeButtonStyles}
                   onClick={onClose}
                   aria-label="Close modal"
@@ -274,7 +274,7 @@ const Modal: React.FC<ModalProps> = ({
             </div>
           )}
 
-          <div className="proxemic-modal-content" style={contentStyles}>
+          <div className="fiovana-modal-content" style={contentStyles}>
             {children}
           </div>
         </div>

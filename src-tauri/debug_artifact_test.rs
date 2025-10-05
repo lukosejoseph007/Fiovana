@@ -1,4 +1,4 @@
-use proxemic::filesystem::security::deployment_checker::DeploymentChecker;
+use fiovana::filesystem::security::deployment_checker::DeploymentChecker;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io;

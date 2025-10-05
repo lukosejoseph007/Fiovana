@@ -1,8 +1,8 @@
 // src-tauri/tests/cross_platform_compatibility_tests.rs
 // Cross-platform compatibility tests for workspace operations
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{
     CreateWorkspaceRequest, WorkspaceManager, WorkspaceTemplate, WORKSPACE_DIRECTORIES,
 };
 use std::path::PathBuf;
@@ -335,7 +335,7 @@ async fn test_cross_platform_metadata_serialization() {
         .expect("Failed to create workspace");
 
     // Verify metadata can be serialized and deserialized correctly
-    let metadata_path = workspace_path.join(".proxemic/workspace.json");
+    let metadata_path = workspace_path.join(".fiovana/workspace.json");
     assert!(metadata_path.exists(), "Metadata file should exist");
 
     // Read raw metadata file

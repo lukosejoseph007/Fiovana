@@ -1,7 +1,7 @@
 // src-tauri/tests/notification_tests.rs
 // Integration tests for the notification system
 
-use proxemic::filesystem::watcher::{ConflictResult, ConflictType, FileEvent};
+use fiovana::filesystem::watcher::{ConflictResult, ConflictType, FileEvent};
 use std::path::PathBuf;
 
 // Mock notification emitter for testing

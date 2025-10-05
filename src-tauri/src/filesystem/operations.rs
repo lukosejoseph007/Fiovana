@@ -274,13 +274,13 @@ mod tests {
 
     #[test]
     fn test_production_security_level() {
-        std::env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        std::env::set_var("FIOVANA_SECURITY_LEVEL", "production");
 
         // Test that environment variable affects default config
         let config = SecurityConfig::default();
         assert!(config.enable_magic_number_validation);
         assert!(config.enforce_workspace_boundaries);
 
-        std::env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        std::env::remove_var("FIOVANA_SECURITY_LEVEL");
     }
 }

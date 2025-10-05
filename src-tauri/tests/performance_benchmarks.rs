@@ -1,8 +1,8 @@
 // src-tauri/tests/performance_benchmarks.rs
 // Performance validation tests for the security validation system
 
-use proxemic::filesystem::security::path_validator::PathValidator;
-use proxemic::filesystem::security::security_config::SecurityConfig;
+use fiovana::filesystem::security::path_validator::PathValidator;
+use fiovana::filesystem::security::security_config::SecurityConfig;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 use tempfile::TempDir;

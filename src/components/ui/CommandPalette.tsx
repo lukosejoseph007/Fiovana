@@ -523,7 +523,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         }}
       >
         <div
-          className={`proxemic-command-palette ${className}`}
+          className={`fiovana-command-palette ${className}`}
           style={{
             width: '100%',
             maxWidth: '640px',

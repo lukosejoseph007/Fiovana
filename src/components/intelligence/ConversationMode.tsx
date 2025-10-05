@@ -225,7 +225,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
     const welcomeMessage: ChatMessage = {
       role: 'system',
       content:
-        'Welcome to Proxemic Intelligence. I can help you analyze documents, generate content, and optimize your workspace. How can I assist you today?',
+        'Welcome to Fiovana Intelligence. I can help you analyze documents, generate content, and optimize your workspace. How can I assist you today?',
     }
 
     setConversationState(prev => ({
@@ -333,7 +333,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
     const url = URL.createObjectURL(dataBlob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `proxemic-conversation-${Date.now()}.json`
+    link.download = `fiovana-conversation-${Date.now()}.json`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -446,7 +446,7 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
   }
 
   return (
-    <div className={`proxemic-conversation-mode ${className}`} style={containerStyles}>
+    <div className={`fiovana-conversation-mode ${className}`} style={containerStyles}>
       {/* Conversation Header with Actions */}
       <div
         style={{
@@ -646,45 +646,45 @@ const ConversationMode: React.FC<ConversationModeProps> = ({
             animation: spin 1s linear infinite;
           }
 
-          .proxemic-conversation-mode .suggestion-badge:hover {
+          .fiovana-conversation-mode .suggestion-badge:hover {
             background-color: ${designTokens.colors.state.hover};
             transform: translateY(-1px);
           }
 
-          .proxemic-conversation-mode .export-button:hover,
-          .proxemic-conversation-mode .import-button:hover {
+          .fiovana-conversation-mode .export-button:hover,
+          .fiovana-conversation-mode .import-button:hover {
             background-color: ${designTokens.colors.state.hover};
             color: ${designTokens.colors.text.primary};
             border-color: ${designTokens.colors.border.medium};
           }
 
-          .proxemic-conversation-mode .export-button:disabled {
+          .fiovana-conversation-mode .export-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
           }
 
-          .proxemic-conversation-mode .document-reference-card:hover {
+          .fiovana-conversation-mode .document-reference-card:hover {
             background-color: ${designTokens.colors.state.hover};
             border-color: ${designTokens.colors.border.medium};
             transform: translateX(2px);
           }
 
           /* Custom scrollbar for messages container */
-          .proxemic-conversation-mode .messages-container::-webkit-scrollbar {
+          .fiovana-conversation-mode .messages-container::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-track {
+          .fiovana-conversation-mode .messages-container::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-thumb {
+          .fiovana-conversation-mode .messages-container::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-conversation-mode .messages-container::-webkit-scrollbar-thumb:hover {
+          .fiovana-conversation-mode .messages-container::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}

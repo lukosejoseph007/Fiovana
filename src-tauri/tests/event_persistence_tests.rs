@@ -3,10 +3,10 @@
 
 #[cfg(test)]
 mod tests {
-    use proxemic::filesystem::event_persistence::{
+    use fiovana::filesystem::event_persistence::{
         EventPersistence, OfflineReconciliation, PersistenceConfig,
     };
-    use proxemic::filesystem::watcher::FileEvent;
+    use fiovana::filesystem::watcher::FileEvent;
     use std::path::PathBuf;
     use std::time::Duration;
     use tempfile::tempdir;
@@ -361,9 +361,9 @@ mod tests {
 // Integration tests with file watcher
 #[cfg(test)]
 mod integration_tests {
-    use proxemic::filesystem::event_persistence::PersistenceConfig;
-    use proxemic::filesystem::security::security_config::SecurityConfig;
-    use proxemic::filesystem::watcher::{DocumentWatcher, WatcherConfig};
+    use fiovana::filesystem::event_persistence::PersistenceConfig;
+    use fiovana::filesystem::security::security_config::SecurityConfig;
+    use fiovana::filesystem::watcher::{DocumentWatcher, WatcherConfig};
     use std::time::Duration;
     use tauri::test::{mock_app, MockRuntime};
     use tempfile::tempdir;
@@ -381,13 +381,13 @@ mod integration_tests {
             persistence_config: PersistenceConfig::default(),
             workspace_id: Some("integration_test".to_string()),
             enable_resource_monitoring: false,
-            resource_monitor_config: proxemic::resource_monitor::ResourceMonitorConfig::default(),
+            resource_monitor_config: fiovana::resource_monitor::ResourceMonitorConfig::default(),
             enable_optimized_processing: false,
             event_processor_config:
-                proxemic::filesystem::event_processor::EventProcessorConfig::default(),
+                fiovana::filesystem::event_processor::EventProcessorConfig::default(),
             enable_health_monitoring: false,
             health_monitor_config:
-                proxemic::filesystem::health_monitor::HealthMonitorConfig::default(),
+                fiovana::filesystem::health_monitor::HealthMonitorConfig::default(),
         };
 
         let (mut watcher, _event_receiver) =

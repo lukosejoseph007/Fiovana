@@ -175,24 +175,24 @@ const Avatar: React.FC<AvatarProps> = ({
     <>
       <style>
         {`
-          .proxemic-avatar-clickable:hover {
+          .fiovana-avatar-clickable:hover {
             transform: scale(1.05);
             box-shadow: ${designTokens.shadows.md};
           }
 
-          .proxemic-avatar-clickable:focus {
+          .fiovana-avatar-clickable:focus {
             outline: none;
             box-shadow: 0 0 0 3px ${designTokens.colors.state.focus}40;
           }
 
-          .proxemic-avatar-clickable:active {
+          .fiovana-avatar-clickable:active {
             transform: scale(0.95);
           }
         `}
       </style>
 
       <div
-        className={`proxemic-avatar ${onClick ? 'proxemic-avatar-clickable' : ''} ${className}`}
+        className={`fiovana-avatar ${onClick ? 'fiovana-avatar-clickable' : ''} ${className}`}
         style={baseStyles}
         onClick={onClick}
         tabIndex={onClick ? 0 : undefined}
@@ -265,7 +265,7 @@ export const AvatarGroup: React.FC<AvatarGroupProps> = ({
   }
 
   return (
-    <div className={`proxemic-avatar-group ${className}`} style={groupStyles}>
+    <div className={`fiovana-avatar-group ${className}`} style={groupStyles}>
       {visibleAvatars.map((avatar, index) => (
         <div
           key={avatar.id}

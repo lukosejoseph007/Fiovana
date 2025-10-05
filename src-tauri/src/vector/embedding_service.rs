@@ -307,8 +307,8 @@ impl EmbeddingService {
             .post("https://openrouter.ai/api/v1/embeddings")
             .header("Authorization", format!("Bearer {}", api_key))
             .header("Content-Type", "application/json")
-            .header("HTTP-Referer", "https://proxemic.ai") // Required by OpenRouter
-            .header("X-Title", "Proxemic AI Content System")
+            .header("HTTP-Referer", "https://fiovana.ai") // Required by OpenRouter
+            .header("X-Title", "Fiovana AI Content System")
             .json(&request)
             .send()
             .await?;

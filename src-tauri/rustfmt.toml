@@ -1,4 +1,4 @@
-# Rustfmt configuration for Proxemic
+# Rustfmt configuration for Fiovana
 # Controls code formatting to ensure CI consistency
 
 # Formatting style (stable features only)

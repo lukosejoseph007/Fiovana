@@ -159,9 +159,9 @@ impl DeploymentChecker {
         assessment: &mut DeploymentAssessment,
     ) -> Result<(), SecurityConfigError> {
         let required_secure_settings = [
-            ("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true"),
-            ("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true"),
-            ("PROXEMIC_AUDIT_LOGGING_ENABLED", "true"),
+            ("FIOVANA_ENABLE_MAGIC_VALIDATION", "true"),
+            ("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true"),
+            ("FIOVANA_AUDIT_LOGGING_ENABLED", "true"),
         ];
 
         for (var_name, expected_value) in &required_secure_settings {
@@ -192,7 +192,7 @@ impl DeploymentChecker {
         assessment: &mut DeploymentAssessment,
     ) -> Result<(), SecurityConfigError> {
         // Check for debug mode in production
-        if let Ok(debug_value) = env::var("PROXEMIC_DEBUG") {
+        if let Ok(debug_value) = env::var("FIOVANA_DEBUG") {
             if matches!(debug_value.to_lowercase().as_str(), "true" | "1" | "yes") {
                 if matches!(
                     assessment.security_level,
@@ -210,7 +210,7 @@ impl DeploymentChecker {
         }
 
         // Check for overly permissive file size limits
-        if let Ok(file_size_str) = env::var("PROXEMIC_MAX_FILE_SIZE") {
+        if let Ok(file_size_str) = env::var("FIOVANA_MAX_FILE_SIZE") {
             if let Ok(file_size) = file_size_str.parse::<u64>() {
                 if file_size > 500 * 1024 * 1024
                     && matches!(
@@ -226,7 +226,7 @@ impl DeploymentChecker {
         }
 
         // Check for excessive concurrent operations
-        if let Ok(ops_str) = env::var("PROXEMIC_MAX_CONCURRENT_OPERATIONS") {
+        if let Ok(ops_str) = env::var("FIOVANA_MAX_CONCURRENT_OPERATIONS") {
             if let Ok(ops) = ops_str.parse::<u32>() {
                 if ops > 100
                     && matches!(
@@ -248,7 +248,7 @@ impl DeploymentChecker {
         &self,
         assessment: &mut DeploymentAssessment,
     ) -> Result<(), SecurityConfigError> {
-        match env::var("PROXEMIC_ENCRYPTION_KEY") {
+        match env::var("FIOVANA_ENCRYPTION_KEY") {
             Ok(key) => {
                 if key == "your_secure_32_character_key_here_change_this" {
                     assessment.critical_issues.push(
@@ -289,7 +289,7 @@ impl DeploymentChecker {
             SecurityLevel::Production | SecurityLevel::HighSecurity
         ) {
             // Check if audit logging is properly configured
-            if env::var("PROXEMIC_AUDIT_LOGGING_ENABLED")
+            if env::var("FIOVANA_AUDIT_LOGGING_ENABLED")
                 .unwrap_or_default()
                 .to_lowercase()
                 != "true"
@@ -300,7 +300,7 @@ impl DeploymentChecker {
             }
 
             // Check for structured logging
-            if env::var("PROXEMIC_STRUCTURED_LOGGING")
+            if env::var("FIOVANA_STRUCTURED_LOGGING")
                 .unwrap_or_default()
                 .to_lowercase()
                 != "true"
@@ -388,7 +388,7 @@ impl DeploymentChecker {
         let mut recommendations = Vec::new();
 
         // Check if this is a production environment
-        if std::env::var("PROXEMIC_SECURITY_LEVEL")
+        if std::env::var("FIOVANA_SECURITY_LEVEL")
             .unwrap_or_default()
             .to_lowercase()
             == "production"
@@ -423,14 +423,14 @@ impl DeploymentChecker {
         }
 
         // Performance recommendations
-        if env::var("PROXEMIC_MAX_CONCURRENT_OPERATIONS").is_err() {
+        if env::var("FIOVANA_MAX_CONCURRENT_OPERATIONS").is_err() {
             recommendations.push(
-                "Set PROXEMIC_MAX_CONCURRENT_OPERATIONS to control resource usage".to_string(),
+                "Set FIOVANA_MAX_CONCURRENT_OPERATIONS to control resource usage".to_string(),
             );
         }
 
         // Monitoring recommendations
-        if env::var("PROXEMIC_PERFORMANCE_MONITORING")
+        if env::var("FIOVANA_PERFORMANCE_MONITORING")
             .unwrap_or_default()
             .to_lowercase()
             != "true"
@@ -468,7 +468,7 @@ impl DeploymentChecker {
 
         let mut report = String::new();
         report.push_str("╔════════════════════════════════════════════════════════════╗\n");
-        report.push_str("║                  PROXEMIC DEPLOYMENT REPORT                ║\n");
+        report.push_str("║                  FIOVANA DEPLOYMENT REPORT                ║\n");
         report.push_str("╚════════════════════════════════════════════════════════════╝\n\n");
 
         // Overall Status

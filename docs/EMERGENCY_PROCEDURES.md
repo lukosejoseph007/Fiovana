@@ -1,7 +1,7 @@
 # Emergency Procedures Manual
 
 ## Overview
-This document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Proxemic application.
+This document provides detailed emergency procedures for manual override operations, security disable mechanisms, and critical issue resolution in the Fiovana application.
 
 ## Emergency Security Disable Mechanism
 
@@ -43,7 +43,7 @@ curl http://localhost:8080/api/emergency/kill-switch/status
 #### 2. Environment Variable
 ```bash
 # Emergency override via environment
-PROXEMIC_EMERGENCY_DISABLE=true ./proxemic-app
+FIOVANA_EMERGENCY_DISABLE=true ./fiovana-app
 ```
 
 #### 3. Configuration File
@@ -252,7 +252,7 @@ curl -X POST http://localhost:8080/api/emergency/notify \
 
 ```bash
 # Activate kill switch
-PROXEMIC_EMERGENCY=1 ./proxemic-app
+FIOVANA_EMERGENCY=1 ./fiovana-app
 
 # Disable security
 curl -X POST http://localhost:8080/api/security/disable

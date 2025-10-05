@@ -509,7 +509,7 @@ impl TemplateManager {
             ]),
             metadata: TemplateMetadata {
                 version: "1.0".to_string(),
-                author: "Proxemic System".to_string(),
+                author: "Fiovana System".to_string(),
                 created_date: chrono::Utc::now(),
                 last_modified: chrono::Utc::now(),
                 tags: vec!["training".to_string(), "manual".to_string(), "education".to_string()],
@@ -589,7 +589,7 @@ impl TemplateManager {
             )]),
             metadata: TemplateMetadata {
                 version: "1.0".to_string(),
-                author: "Proxemic System".to_string(),
+                author: "Fiovana System".to_string(),
                 created_date: chrono::Utc::now(),
                 last_modified: chrono::Utc::now(),
                 tags: vec![
@@ -679,7 +679,7 @@ impl TemplateManager {
             ]),
             metadata: TemplateMetadata {
                 version: "1.0".to_string(),
-                author: "Proxemic System".to_string(),
+                author: "Fiovana System".to_string(),
                 created_date: chrono::Utc::now(),
                 last_modified: chrono::Utc::now(),
                 tags: vec!["presentation".to_string(), "corporate".to_string(), "slides".to_string()],
@@ -770,7 +770,7 @@ impl TemplateManager {
             ]),
             metadata: TemplateMetadata {
                 version: "1.0".to_string(),
-                author: "Proxemic System".to_string(),
+                author: "Fiovana System".to_string(),
                 created_date: chrono::Utc::now(),
                 last_modified: chrono::Utc::now(),
                 tags: vec!["assessment".to_string(), "quiz".to_string(), "evaluation".to_string()],
@@ -929,7 +929,7 @@ impl TemplateManager {
     pub fn new_default() -> Self {
         let templates_dir = dirs::data_local_dir()
             .unwrap_or_else(|| PathBuf::from("./data"))
-            .join("proxemic")
+            .join("fiovana")
             .join("templates");
 
         TemplateManager::new(templates_dir).unwrap_or_else(|_| {

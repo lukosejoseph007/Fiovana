@@ -6,16 +6,16 @@
 echo "🔍 Starting CPU monitoring for document sync..."
 echo "Press Ctrl+C to stop monitoring"
 
-# Function to get CPU usage for Proxemic processes
+# Function to get CPU usage for Fiovana processes
 get_cpu_usage() {
-    local cpu_usage=$(ps aux | grep -E "(proxemic|tauri)" | grep -v grep | awk '{sum += $3} END {printf "%.1f", sum}')
+    local cpu_usage=$(ps aux | grep -E "(fiovana|tauri)" | grep -v grep | awk '{sum += $3} END {printf "%.1f", sum}')
     echo "${cpu_usage:-0.0}"
 }
 
 # Function to kill high CPU processes
 kill_high_cpu_processes() {
     echo "🔴 EMERGENCY: Killing high CPU processes to prevent system hang"
-    pkill -f "proxemic" 2>/dev/null || true
+    pkill -f "fiovana" 2>/dev/null || true
     pkill -f "tauri" 2>/dev/null || true
     echo "✅ Processes terminated"
 }

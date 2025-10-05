@@ -32,7 +32,7 @@ mod permissions_escalation {
 ///
 /// ## Example
 /// ```rust
-/// use proxemic::filesystem::{PathValidator, SecurityConfig, SecurityError};
+/// use fiovana::filesystem::{PathValidator, SecurityConfig, SecurityError};
 /// use std::path::{Path, PathBuf};
 ///
 /// let config = SecurityConfig::default();
@@ -47,7 +47,7 @@ mod permissions_escalation {
 /// # Examples
 ///
 /// ```rust
-/// use proxemic::filesystem::{PathValidator, SecurityConfig, SecurityError};
+/// use fiovana::filesystem::{PathValidator, SecurityConfig, SecurityError};
 /// use std::path::Path;
 ///
 /// let config = SecurityConfig::default();
@@ -61,7 +61,7 @@ mod permissions_escalation {
 ///
 /// # Example for validate_import_path
 /// ```rust
-/// use proxemic::filesystem::{PathValidator, SecurityConfig, SecurityError};
+/// use fiovana::filesystem::{PathValidator, SecurityConfig, SecurityError};
 /// use std::path::Path;
 ///
 /// let validator = PathValidator::new(SecurityConfig::default(), vec![]);

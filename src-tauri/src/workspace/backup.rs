@@ -548,8 +548,8 @@ impl WorkspaceBackupManager {
         if let Some(location) = self.config.backup_locations.first() {
             Ok(location.clone())
         } else {
-            // Default to .proxemic/backups directory
-            Ok(workspace_path.join(".proxemic/backups"))
+            // Default to .fiovana/backups directory
+            Ok(workspace_path.join(".fiovana/backups"))
         }
     }
 

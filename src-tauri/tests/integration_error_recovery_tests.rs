@@ -1,10 +1,10 @@
 // src-tauri/tests/integration_error_recovery_tests.rs
 // Integration tests for error recovery mechanisms in operations and commands
 
-use proxemic::filesystem::operations::validate_file_for_import;
-use proxemic::filesystem::security::circuit_breaker::CircuitBreakerManager;
-use proxemic::filesystem::security::emergency_procedures::EmergencyManager;
-use proxemic::filesystem::security::safe_mode::SafeModeManager;
+use fiovana::filesystem::operations::validate_file_for_import;
+use fiovana::filesystem::security::circuit_breaker::CircuitBreakerManager;
+use fiovana::filesystem::security::emergency_procedures::EmergencyManager;
+use fiovana::filesystem::security::safe_mode::SafeModeManager;
 use std::fs;
 use tempfile::TempDir;
 

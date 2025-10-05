@@ -101,7 +101,7 @@ pub async fn save_embedding_settings(settings: EmbeddingSettings) -> Result<(), 
     // For now, we'll use a simple file-based approach
     let config_dir = dirs::config_dir()
         .ok_or("Failed to get config directory")?
-        .join("proxemic");
+        .join("fiovana");
 
     std::fs::create_dir_all(&config_dir)
         .map_err(|e| format!("Failed to create config directory: {}", e))?;
@@ -119,7 +119,7 @@ pub async fn save_embedding_settings(settings: EmbeddingSettings) -> Result<(), 
 pub async fn load_embedding_settings() -> Result<EmbeddingSettings, String> {
     let config_dir = dirs::config_dir()
         .ok_or("Failed to get config directory")?
-        .join("proxemic");
+        .join("fiovana");
 
     let settings_file = config_dir.join("embedding_settings.json");
 

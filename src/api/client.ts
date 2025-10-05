@@ -8,7 +8,7 @@ interface CacheEntry {
 }
 
 // Mock AI settings storage for development with localStorage persistence
-const SETTINGS_STORAGE_KEY = 'proxemic_ai_settings'
+const SETTINGS_STORAGE_KEY = 'fiovana_ai_settings'
 
 const loadMockSettings = (): Record<string, unknown> => {
   try {

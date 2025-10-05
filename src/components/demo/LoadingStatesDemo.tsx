@@ -2,7 +2,7 @@
  * Loading States Demo Page
  *
  * Demonstrates all loading state components from the LoadingStates system
- * This page showcases the various loading states available in Proxemic
+ * This page showcases the various loading states available in Fiovana
  */
 
 import React, { useState, useCallback } from 'react'

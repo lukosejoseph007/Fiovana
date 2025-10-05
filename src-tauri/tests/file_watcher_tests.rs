@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod tests {
-    use proxemic::filesystem::watcher::FrontendFileEvent;
+    use fiovana::filesystem::watcher::FrontendFileEvent;
 
     #[test]
     fn test_event_categorization() {
@@ -113,9 +113,9 @@ mod tests {
 mod batch_tests {
     use notify::event::ModifyKind;
     use notify::{Event, EventKind};
-    use proxemic::filesystem::security::path_validator::PathValidator;
-    use proxemic::filesystem::security::security_config::SecurityConfig;
-    use proxemic::filesystem::watcher::{EventDebouncer, FileEvent};
+    use fiovana::filesystem::security::path_validator::PathValidator;
+    use fiovana::filesystem::security::security_config::SecurityConfig;
+    use fiovana::filesystem::watcher::{EventDebouncer, FileEvent};
     use std::path::PathBuf;
     use std::time::Duration;
 
@@ -264,7 +264,7 @@ mod batch_tests {
 #[cfg(test)]
 mod conflict_tests {
     use chrono::Utc;
-    use proxemic::filesystem::watcher::{
+    use fiovana::filesystem::watcher::{
         ConflictDetector, ConflictResult, ConflictType, FileSnapshot,
     };
     use std::fs::{self, File};

@@ -52,11 +52,11 @@ impl EnvironmentValidator {
         validator
     }
 
-    /// Initialize validation rules for all Proxemic environment variables
+    /// Initialize validation rules for all Fiovana environment variables
     fn initialize_rules(&mut self) {
         // Security Level
         self.add_rule(
-            "PROXEMIC_SECURITY_LEVEL",
+            "FIOVANA_SECURITY_LEVEL",
             ValidationRule {
                 var_type: EnvVarType::Enum,
                 min_value: None,
@@ -73,7 +73,7 @@ impl EnvironmentValidator {
 
         // File Security Limits
         self.add_rule(
-            "PROXEMIC_MAX_FILE_SIZE",
+            "FIOVANA_MAX_FILE_SIZE",
             ValidationRule {
                 var_type: EnvVarType::Number,
                 min_value: Some(1024),                   // 1KB minimum
@@ -85,7 +85,7 @@ impl EnvironmentValidator {
         );
 
         self.add_rule(
-            "PROXEMIC_MAX_PATH_LENGTH",
+            "FIOVANA_MAX_PATH_LENGTH",
             ValidationRule {
                 var_type: EnvVarType::Number,
                 min_value: Some(50),
@@ -97,7 +97,7 @@ impl EnvironmentValidator {
         );
 
         self.add_rule(
-            "PROXEMIC_MAX_CONCURRENT_OPERATIONS",
+            "FIOVANA_MAX_CONCURRENT_OPERATIONS",
             ValidationRule {
                 var_type: EnvVarType::Number,
                 min_value: Some(1),
@@ -110,7 +110,7 @@ impl EnvironmentValidator {
 
         // Critical Security Features
         self.add_rule(
-            "PROXEMIC_ENABLE_MAGIC_VALIDATION",
+            "FIOVANA_ENABLE_MAGIC_VALIDATION",
             ValidationRule {
                 var_type: EnvVarType::Boolean,
                 min_value: None,
@@ -129,7 +129,7 @@ impl EnvironmentValidator {
         );
 
         self.add_rule(
-            "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES",
+            "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES",
             ValidationRule {
                 var_type: EnvVarType::Boolean,
                 min_value: None,
@@ -148,7 +148,7 @@ impl EnvironmentValidator {
         );
 
         self.add_rule(
-            "PROXEMIC_AUDIT_LOGGING_ENABLED",
+            "FIOVANA_AUDIT_LOGGING_ENABLED",
             ValidationRule {
                 var_type: EnvVarType::Boolean,
                 min_value: None,
@@ -168,7 +168,7 @@ impl EnvironmentValidator {
 
         // Encryption and API Keys (existence check only)
         self.add_rule(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             ValidationRule {
                 var_type: EnvVarType::String,
                 min_value: Some(32), // Minimum 32 characters for AES-256
@@ -196,24 +196,24 @@ impl EnvironmentValidator {
         self.required_vars.insert(
             SecurityLevel::Production,
             vec![
-                "PROXEMIC_SECURITY_LEVEL".to_string(),
-                "PROXEMIC_ENABLE_MAGIC_VALIDATION".to_string(),
-                "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
-                "PROXEMIC_AUDIT_LOGGING_ENABLED".to_string(),
-                "PROXEMIC_ENCRYPTION_KEY".to_string(),
+                "FIOVANA_SECURITY_LEVEL".to_string(),
+                "FIOVANA_ENABLE_MAGIC_VALIDATION".to_string(),
+                "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
+                "FIOVANA_AUDIT_LOGGING_ENABLED".to_string(),
+                "FIOVANA_ENCRYPTION_KEY".to_string(),
             ],
         );
 
         self.required_vars.insert(
             SecurityLevel::HighSecurity,
             vec![
-                "PROXEMIC_SECURITY_LEVEL".to_string(),
-                "PROXEMIC_ENABLE_MAGIC_VALIDATION".to_string(),
-                "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
-                "PROXEMIC_AUDIT_LOGGING_ENABLED".to_string(),
-                "PROXEMIC_ENCRYPTION_KEY".to_string(),
-                "PROXEMIC_MAX_FILE_SIZE".to_string(),
-                "PROXEMIC_MAX_CONCURRENT_OPERATIONS".to_string(),
+                "FIOVANA_SECURITY_LEVEL".to_string(),
+                "FIOVANA_ENABLE_MAGIC_VALIDATION".to_string(),
+                "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES".to_string(),
+                "FIOVANA_AUDIT_LOGGING_ENABLED".to_string(),
+                "FIOVANA_ENCRYPTION_KEY".to_string(),
+                "FIOVANA_MAX_FILE_SIZE".to_string(),
+                "FIOVANA_MAX_CONCURRENT_OPERATIONS".to_string(),
             ],
         );
 
@@ -282,13 +282,13 @@ impl EnvironmentValidator {
     }
 
     fn determine_security_level(&self) -> Result<SecurityLevel, SecurityConfigError> {
-        match env::var("PROXEMIC_SECURITY_LEVEL") {
+        match env::var("FIOVANA_SECURITY_LEVEL") {
             Ok(level_str) => match level_str.to_lowercase().as_str() {
                 "development" => Ok(SecurityLevel::Development),
                 "production" => Ok(SecurityLevel::Production),
                 "high_security" => Ok(SecurityLevel::HighSecurity),
                 _ => Err(SecurityConfigError::EnvVarError {
-                    var: "PROXEMIC_SECURITY_LEVEL".to_string(),
+                    var: "FIOVANA_SECURITY_LEVEL".to_string(),
                     error: format!("Invalid security level: {}", level_str),
                 }),
             },
@@ -390,9 +390,9 @@ impl EnvironmentValidator {
     ) -> Result<(), SecurityConfigError> {
         // Ensure critical security features are enabled in production
         let critical_boolean_vars = [
-            ("PROXEMIC_ENABLE_MAGIC_VALIDATION", true),
-            ("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", true),
-            ("PROXEMIC_AUDIT_LOGGING_ENABLED", true),
+            ("FIOVANA_ENABLE_MAGIC_VALIDATION", true),
+            ("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", true),
+            ("FIOVANA_AUDIT_LOGGING_ENABLED", true),
         ];
 
         for (var_name, expected_value) in &critical_boolean_vars {
@@ -409,19 +409,19 @@ impl EnvironmentValidator {
         }
 
         // Check for insecure development settings in production
-        if let Ok(debug_value) = env::var("PROXEMIC_DEBUG") {
+        if let Ok(debug_value) = env::var("FIOVANA_DEBUG") {
             if matches!(debug_value.to_lowercase().as_str(), "true" | "1" | "yes") {
                 result.warnings.push(
-                    "Warning: PROXEMIC_DEBUG is enabled in production environment".to_string(),
+                    "Warning: FIOVANA_DEBUG is enabled in production environment".to_string(),
                 );
             }
         }
 
         // Validate encryption key strength
-        if let Ok(encryption_key) = env::var("PROXEMIC_ENCRYPTION_KEY") {
+        if let Ok(encryption_key) = env::var("FIOVANA_ENCRYPTION_KEY") {
             if encryption_key == "your_secure_32_character_key_here_change_this" {
                 result.errors.push(
-                    "Security violation: Default encryption key detected in production. Change PROXEMIC_ENCRYPTION_KEY immediately!".to_string()
+                    "Security violation: Default encryption key detected in production. Change FIOVANA_ENCRYPTION_KEY immediately!".to_string()
                 );
             }
             if encryption_key.len() < 32 {
@@ -440,7 +440,7 @@ impl EnvironmentValidator {
         let result = self.validate_environment()?;
 
         let mut report = String::new();
-        report.push_str("=== Proxemic Environment Configuration Report ===\n\n");
+        report.push_str("=== Fiovana Environment Configuration Report ===\n\n");
 
         report.push_str(&format!("Security Level: {:?}\n", result.security_level));
         report.push_str(&format!("Configuration Valid: {}\n\n", result.valid));
@@ -524,9 +524,9 @@ impl EnvironmentValidator {
             SecurityLevel::Production => {
                 recommendations
                     .push("Configuration suitable for production deployment".to_string());
-                if env::var("PROXEMIC_MAX_FILE_SIZE").is_err() {
+                if env::var("FIOVANA_MAX_FILE_SIZE").is_err() {
                     recommendations.push(
-                        "Consider setting PROXEMIC_MAX_FILE_SIZE to limit resource usage"
+                        "Consider setting FIOVANA_MAX_FILE_SIZE to limit resource usage"
                             .to_string(),
                     );
                 }
@@ -548,7 +548,7 @@ impl EnvironmentValidator {
         }
 
         // Performance recommendations
-        if let Ok(ops_str) = env::var("PROXEMIC_MAX_CONCURRENT_OPERATIONS") {
+        if let Ok(ops_str) = env::var("FIOVANA_MAX_CONCURRENT_OPERATIONS") {
             if let Ok(ops) = ops_str.parse::<u32>() {
                 if ops > 50
                     && matches!(
@@ -556,7 +556,7 @@ impl EnvironmentValidator {
                         SecurityLevel::Production | SecurityLevel::HighSecurity
                     )
                 {
-                    recommendations.push("Consider reducing PROXEMIC_MAX_CONCURRENT_OPERATIONS for better resource management".to_string());
+                    recommendations.push("Consider reducing FIOVANA_MAX_CONCURRENT_OPERATIONS for better resource management".to_string());
                 }
             }
         }
@@ -589,17 +589,17 @@ mod tests {
         let validator = EnvironmentValidator::new();
 
         // Test valid security level
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "production");
         let result = validator.determine_security_level();
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), SecurityLevel::Production);
 
         // Test invalid security level
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "invalid");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "invalid");
         let result = validator.determine_security_level();
         assert!(result.is_err());
 
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        env::remove_var("FIOVANA_SECURITY_LEVEL");
     }
 
     #[test]
@@ -676,12 +676,12 @@ mod tests {
         let validator = EnvironmentValidator::new();
 
         // Set production environment
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
-        env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "false"); // Should trigger error
-        env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "production");
+        env::set_var("FIOVANA_ENABLE_MAGIC_VALIDATION", "false"); // Should trigger error
+        env::set_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        env::set_var("FIOVANA_AUDIT_LOGGING_ENABLED", "true");
         env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "test_key_that_is_long_enough_32_chars",
         );
 
@@ -692,11 +692,11 @@ mod tests {
         assert!(!result.errors.is_empty());
 
         // Clean up
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
-        env::remove_var("PROXEMIC_ENCRYPTION_KEY");
+        env::remove_var("FIOVANA_SECURITY_LEVEL");
+        env::remove_var("FIOVANA_ENABLE_MAGIC_VALIDATION");
+        env::remove_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES");
+        env::remove_var("FIOVANA_AUDIT_LOGGING_ENABLED");
+        env::remove_var("FIOVANA_ENCRYPTION_KEY");
     }
 
     #[test]
@@ -704,14 +704,14 @@ mod tests {
     fn test_encryption_key_validation() {
         let validator = EnvironmentValidator::new();
 
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "production");
         env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "your_secure_32_character_key_here_change_this",
         );
-        env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        env::set_var("FIOVANA_ENABLE_MAGIC_VALIDATION", "true");
+        env::set_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        env::set_var("FIOVANA_AUDIT_LOGGING_ENABLED", "true");
 
         let result = validator.validate_environment().unwrap();
 
@@ -723,10 +723,10 @@ mod tests {
             .any(|e| e.contains("Default encryption key detected")));
 
         // Clean up
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("PROXEMIC_ENCRYPTION_KEY");
-        env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+        env::remove_var("FIOVANA_SECURITY_LEVEL");
+        env::remove_var("FIOVANA_ENCRYPTION_KEY");
+        env::remove_var("FIOVANA_ENABLE_MAGIC_VALIDATION");
+        env::remove_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES");
+        env::remove_var("FIOVANA_AUDIT_LOGGING_ENABLED");
     }
 }

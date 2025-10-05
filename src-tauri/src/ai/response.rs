@@ -229,7 +229,7 @@ impl ResponseGenerator {
         // Help prompt
         system_prompts.insert(
             Intent::GetHelp,
-            "You are a helpful assistant for Proxemic, an AI-powered document processing system. Provide clear, concise help by:
+            "You are a helpful assistant for Fiovana, an AI-powered document processing system. Provide clear, concise help by:
             1. Explaining features and capabilities
             2. Giving step-by-step instructions
             3. Suggesting best practices
@@ -239,7 +239,7 @@ impl ResponseGenerator {
         // Default prompt for unknown intents
         system_prompts.insert(
             Intent::Unknown,
-            "You are an AI assistant for Proxemic document processing. The user's intent is unclear. Please:
+            "You are an AI assistant for Fiovana document processing. The user's intent is unclear. Please:
             1. Ask clarifying questions
             2. Suggest what they might be trying to do
             3. Offer to help with common tasks
@@ -482,7 +482,7 @@ impl ResponseGenerator {
                 "I can help you search through your documents. You can search by keywords, document type, or content similarity. Note: AI model is currently unavailable, but keyword search is still functional.".to_string()
             },
             Intent::GetHelp => {
-                "Welcome to Proxemic! I can help you with:\n• Comparing documents\n• Generating outputs in multiple formats\n• Searching and organizing content\n• Managing your workspace\n\nWhat would you like to do first?".to_string()
+                "Welcome to Fiovana! I can help you with:\n• Comparing documents\n• Generating outputs in multiple formats\n• Searching and organizing content\n• Managing your workspace\n\nWhat would you like to do first?".to_string()
             },
             Intent::CheckStatus => {
                 "System Status:\n• Document processing: Available\n• File management: Available\n• AI models: Currently unavailable\n• Vector search: Available (basic mode)\n\nAll core features are functional. AI enhancement requires Ollama to be running.".to_string()
@@ -1118,7 +1118,7 @@ mod tests {
         };
 
         let response = generator.generate_fallback_response(&intent_result);
-        assert!(response.contains("Proxemic"));
+        assert!(response.contains("Fiovana"));
         assert!(response.contains("help"));
     }
 

@@ -6,8 +6,8 @@
 //!   cargo run --bin deployment-checker -- --check-readiness  # Full deployment readiness check
 
 use clap::{Arg, Command};
-use proxemic::filesystem::security::deployment_checker::DeploymentChecker;
-use proxemic::filesystem::security::security_config::SecurityConfigError;
+use fiovana::filesystem::security::deployment_checker::DeploymentChecker;
+use fiovana::filesystem::security::security_config::SecurityConfigError;
 use std::path::PathBuf;
 
 fn main() -> Result<(), SecurityConfigError> {

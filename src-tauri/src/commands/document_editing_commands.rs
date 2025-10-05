@@ -337,7 +337,7 @@ fn create_backup(file_path: &Path) -> Result<PathBuf, std::io::Error> {
     let backup_dir = file_path
         .parent()
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "No parent directory"))?
-        .join(".proxemic_backups");
+        .join(".fiovana_backups");
 
     fs::create_dir_all(&backup_dir)?;
 
@@ -363,7 +363,7 @@ fn get_versions_directory(file_path: &Path) -> Result<PathBuf, String> {
         .file_stem()
         .ok_or_else(|| "File has no name".to_string())?;
 
-    Ok(parent.join(".proxemic_versions").join(file_stem))
+    Ok(parent.join(".fiovana_versions").join(file_stem))
 }
 
 /// Calculate SHA256 hash of content

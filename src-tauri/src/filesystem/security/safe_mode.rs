@@ -108,24 +108,24 @@ impl SafeModeConfig {
         let mut config = Self::default();
 
         // Load from environment variables
-        if let Ok(level_str) = std::env::var("PROXEMIC_SAFE_MODE_LEVEL") {
+        if let Ok(level_str) = std::env::var("FIOVANA_SAFE_MODE_LEVEL") {
             config.level = level_str.parse()?;
         }
 
-        if let Ok(max_size) = std::env::var("PROXEMIC_MAX_FILE_SIZE_MB") {
+        if let Ok(max_size) = std::env::var("FIOVANA_MAX_FILE_SIZE_MB") {
             config.max_file_size_mb = max_size.parse()?;
         }
 
-        if let Ok(require_magic) = std::env::var("PROXEMIC_REQUIRE_MAGIC_NUMBER") {
+        if let Ok(require_magic) = std::env::var("FIOVANA_REQUIRE_MAGIC_NUMBER") {
             config.require_magic_number = require_magic.parse().unwrap_or(false);
         }
 
-        if let Ok(auto_enable) = std::env::var("PROXEMIC_AUTO_ENABLE_SAFE_MODE") {
+        if let Ok(auto_enable) = std::env::var("FIOVANA_AUTO_ENABLE_SAFE_MODE") {
             config.auto_enable_on_threats = auto_enable.parse().unwrap_or(true);
         }
 
         // Load allowed extensions from env
-        if let Ok(extensions) = std::env::var("PROXEMIC_ALLOWED_EXTENSIONS") {
+        if let Ok(extensions) = std::env::var("FIOVANA_ALLOWED_EXTENSIONS") {
             config.allowed_extensions = extensions
                 .split(',')
                 .map(str::trim)
@@ -134,7 +134,7 @@ impl SafeModeConfig {
         }
 
         // Load blocked directories from env
-        if let Ok(blocked_dirs) = std::env::var("PROXEMIC_BLOCKED_DIRECTORIES") {
+        if let Ok(blocked_dirs) = std::env::var("FIOVANA_BLOCKED_DIRECTORIES") {
             config.blocked_directories = blocked_dirs
                 .split(',')
                 .map(|s| s.trim().to_string())
@@ -305,9 +305,9 @@ mod tests {
 
     #[test]
     fn test_safe_mode_config_from_env() {
-        std::env::set_var("PROXEMIC_SAFE_MODE_LEVEL", "restricted");
-        std::env::set_var("PROXEMIC_MAX_FILE_SIZE_MB", "25");
-        std::env::set_var("PROXEMIC_REQUIRE_MAGIC_NUMBER", "true");
+        std::env::set_var("FIOVANA_SAFE_MODE_LEVEL", "restricted");
+        std::env::set_var("FIOVANA_MAX_FILE_SIZE_MB", "25");
+        std::env::set_var("FIOVANA_REQUIRE_MAGIC_NUMBER", "true");
 
         let config = SafeModeConfig::from_env().unwrap();
 
@@ -316,9 +316,9 @@ mod tests {
         assert!(config.require_magic_number);
 
         // Cleanup
-        std::env::remove_var("PROXEMIC_SAFE_MODE_LEVEL");
-        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE_MB");
-        std::env::remove_var("PROXEMIC_REQUIRE_MAGIC_NUMBER");
+        std::env::remove_var("FIOVANA_SAFE_MODE_LEVEL");
+        std::env::remove_var("FIOVANA_MAX_FILE_SIZE_MB");
+        std::env::remove_var("FIOVANA_REQUIRE_MAGIC_NUMBER");
     }
 
     #[test]

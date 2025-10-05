@@ -216,7 +216,7 @@ impl<R: tauri::Runtime> DocumentWatcher<R> {
             let app_data_dir = app_handle
                 .path()
                 .app_data_dir()
-                .unwrap_or_else(|_| std::env::temp_dir().join("proxemic"));
+                .unwrap_or_else(|_| std::env::temp_dir().join("fiovana"));
 
             // Ensure the directory exists
             if let Err(e) = std::fs::create_dir_all(&app_data_dir) {

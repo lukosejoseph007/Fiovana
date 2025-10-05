@@ -1,7 +1,7 @@
 # Incident Response Procedures
 
 ## Overview
-This document outlines the incident response procedures for security events and system failures in the Proxemic application.
+This document outlines the incident response procedures for security events and system failures in the Fiovana application.
 
 ## Incident Classification
 

@@ -1,7 +1,7 @@
 // src-tauri/tests/json_schema_validation.rs
 // Comprehensive tests for JSON Schema validation of security configuration
 
-use proxemic::filesystem::security::json_schema_validator::JsonSchemaValidator;
+use fiovana::filesystem::security::json_schema_validator::JsonSchemaValidator;
 use serde_json::json;
 
 #[test]

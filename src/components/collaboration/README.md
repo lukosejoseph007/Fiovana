@@ -1,6 +1,6 @@
 # Collaboration Components
 
-This directory contains real-time collaboration components for Proxemic's document editing features.
+This directory contains real-time collaboration components for Fiovana's document editing features.
 
 ## Components
 

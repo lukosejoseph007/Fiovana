@@ -1,7 +1,7 @@
 // src-tauri/src/app_config/mod.rs
 use crate::app_config::encryption::ConfigEncryption;
 use crate::app_config::errors::{ConfigError, ConfigResult};
-use crate::app_config::types::{AppConfig, Environment, ProxemicConfig, SecurityConfig};
+use crate::app_config::types::{AppConfig, Environment, FiovanaConfig, SecurityConfig};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -12,10 +12,10 @@ pub mod encryption;
 pub mod errors;
 pub mod types;
 
-/// Configuration manager for the Proxemic application
+/// Configuration manager for the Fiovana application
 /// Handles loading, validation, and management of application configuration
 pub struct ConfigManager {
-    config: Arc<RwLock<ProxemicConfig>>,
+    config: Arc<RwLock<FiovanaConfig>>,
     #[allow(dead_code)]
     config_paths: Vec<PathBuf>,
     environment: Environment,
@@ -28,7 +28,7 @@ impl ConfigManager {
         let config_paths = Self::get_config_search_paths(&environment)?;
 
         // Start with environment-appropriate defaults
-        let mut config = ProxemicConfig::for_environment(&environment);
+        let mut config = FiovanaConfig::for_environment(&environment);
 
         // Try to load configuration from files
         if let Ok(file_config) = Self::load_configuration(&config_paths, &environment).await {
@@ -115,7 +115,7 @@ impl ConfigManager {
     }
 
     /// Get a read-only reference to the current configuration
-    pub fn get_config(&self) -> Arc<RwLock<ProxemicConfig>> {
+    pub fn get_config(&self) -> Arc<RwLock<FiovanaConfig>> {
         Arc::clone(&self.config)
     }
 
@@ -123,7 +123,7 @@ impl ConfigManager {
     #[allow(dead_code)]
     pub async fn reload(&self) -> ConfigResult<()> {
         // Create new configuration with environment-appropriate defaults
-        let mut new_config = ProxemicConfig::for_environment(&self.environment);
+        let mut new_config = FiovanaConfig::for_environment(&self.environment);
 
         // Try to load from files
         if let Ok(file_config) =
@@ -200,7 +200,7 @@ impl ConfigManager {
         let save_path = path.unwrap_or_else(|| {
             self.config_paths.first().cloned().unwrap_or_else(|| {
                 PathBuf::from(format!(
-                    "proxemic.{}.json",
+                    "fiovana.{}.json",
                     match self.environment {
                         Environment::Development => "dev",
                         Environment::Staging => "staging",
@@ -225,13 +225,13 @@ impl ConfigManager {
     /// Detect the current environment from various sources with validation
     fn detect_environment() -> Environment {
         // Try environment variables in order of precedence
-        if let Ok(env_str) = env::var("PROXEMIC_ENV") {
+        if let Ok(env_str) = env::var("FIOVANA_ENV") {
             if let Ok(env) = Environment::from_str(&env_str) {
-                println!("Environment detected from PROXEMIC_ENV: {:?}", env);
+                println!("Environment detected from FIOVANA_ENV: {:?}", env);
                 return env;
             } else {
                 eprintln!(
-                    "Warning: Invalid PROXEMIC_ENV value '{}', falling back",
+                    "Warning: Invalid FIOVANA_ENV value '{}', falling back",
                     env_str
                 );
             }
@@ -279,7 +279,7 @@ impl ConfigManager {
         let app_config_dir = Self::get_app_config_directory()?;
 
         // Add environment-specific paths in order of priority
-        for filename in ProxemicConfig::config_file_names(environment) {
+        for filename in FiovanaConfig::config_file_names(environment) {
             // First check in app config directory
             paths.push(app_config_dir.join(&filename));
             // Then check current working directory
@@ -289,20 +289,20 @@ impl ConfigManager {
         }
 
         // Add generic fallback paths
-        paths.push(app_config_dir.join("proxemic.json"));
-        paths.push(PathBuf::from("proxemic.json"));
+        paths.push(app_config_dir.join("fiovana.json"));
+        paths.push(PathBuf::from("fiovana.json"));
 
         Ok(paths)
     }
 
     /// Get the application's configuration directory
     fn get_app_config_directory() -> ConfigResult<PathBuf> {
-        if let Ok(config_dir_override) = env::var("PROXEMIC_CONFIG_DIR") {
+        if let Ok(config_dir_override) = env::var("FIOVANA_CONFIG_DIR") {
             return Ok(PathBuf::from(config_dir_override));
         }
 
         if let Some(config_dir) = dirs::config_dir() {
-            let app_config_dir = config_dir.join("proxemic");
+            let app_config_dir = config_dir.join("fiovana");
 
             // Try to create the directory if it doesn't exist
             if !app_config_dir.exists() {
@@ -328,8 +328,8 @@ impl ConfigManager {
     async fn load_configuration(
         config_paths: &[PathBuf],
         environment: &Environment,
-    ) -> ConfigResult<ProxemicConfig> {
-        let mut config = ProxemicConfig::for_environment(environment);
+    ) -> ConfigResult<FiovanaConfig> {
+        let mut config = FiovanaConfig::for_environment(environment);
         let mut found_config = false;
 
         // Try to load from each path in order
@@ -366,9 +366,9 @@ impl ConfigManager {
     }
 
     /// Load a single configuration file
-    async fn load_config_file(path: &Path) -> ConfigResult<ProxemicConfig> {
+    async fn load_config_file(path: &Path) -> ConfigResult<FiovanaConfig> {
         let content = fs::read_to_string(path).await?;
-        let config: ProxemicConfig =
+        let config: FiovanaConfig =
             serde_json::from_str(&content).map_err(|e| ConfigError::ParseError {
                 message: format!("Failed to parse JSON from {}: {}", path.display(), e),
             })?;
@@ -376,7 +376,7 @@ impl ConfigManager {
     }
 
     /// Merge configuration from file into base configuration
-    fn merge_configurations(base: &mut ProxemicConfig, file_config: ProxemicConfig) {
+    fn merge_configurations(base: &mut FiovanaConfig, file_config: FiovanaConfig) {
         // Only merge non-default values from file config
 
         // App config merging
@@ -507,7 +507,7 @@ impl ConfigManager {
 
 /// Initialize the configuration system
 pub async fn init() -> ConfigResult<ConfigManager> {
-    println!("Initializing Proxemic configuration system...");
+    println!("Initializing Fiovana configuration system...");
 
     let config_manager = ConfigManager::new().await?;
 
@@ -549,7 +549,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_config_manager_creation() {
-        std::env::set_var("PROXEMIC_ENV", "Development");
+        std::env::set_var("FIOVANA_ENV", "Development");
 
         let manager = ConfigManager::new().await;
         assert!(manager.is_ok());
@@ -557,13 +557,13 @@ mod tests {
         let manager = manager.unwrap();
         assert!(manager.environment().is_development());
 
-        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("FIOVANA_ENV");
     }
 
     #[tokio::test]
     #[serial]
     async fn test_production_environment_hardening() {
-        std::env::set_var("PROXEMIC_ENV", "Production");
+        std::env::set_var("FIOVANA_ENV", "Production");
 
         let manager = ConfigManager::new().await.unwrap();
         assert!(manager.is_production());
@@ -574,16 +574,16 @@ mod tests {
             assert!(config.security.rate_limit_enabled); // Rate limiting should be enabled
         }
 
-        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("FIOVANA_ENV");
     }
 
     #[tokio::test]
     #[serial]
     async fn test_config_file_loading() {
         let temp_dir = TempDir::new().unwrap();
-        let config_path = temp_dir.path().join("proxemic.dev.json");
+        let config_path = temp_dir.path().join("fiovana.dev.json");
 
-        let test_config = ProxemicConfig {
+        let test_config = FiovanaConfig {
             app: AppConfig {
                 name: "Test App".to_string(),
                 debug: false,
@@ -603,15 +603,15 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_environment_detection() {
-        std::env::set_var("PROXEMIC_ENV", "Production");
+        std::env::set_var("FIOVANA_ENV", "Production");
         let env = ConfigManager::detect_environment();
         assert!(env.is_production());
 
-        std::env::set_var("PROXEMIC_ENV", "Development");
+        std::env::set_var("FIOVANA_ENV", "Development");
         let env = ConfigManager::detect_environment();
         assert!(env.is_development());
 
-        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("FIOVANA_ENV");
 
         // Test fallback
         let env = ConfigManager::detect_environment();
@@ -622,16 +622,16 @@ mod tests {
     #[serial]
     async fn test_environment_overrides() {
         // Clear all environment variables first
-        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("FIOVANA_ENV");
         std::env::remove_var("RUST_ENV");
         std::env::remove_var("NODE_ENV");
-        std::env::remove_var("PROXEMIC_DEBUG");
-        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
+        std::env::remove_var("FIOVANA_DEBUG");
+        std::env::remove_var("FIOVANA_MAX_FILE_SIZE");
 
         // Set specific test environment
-        std::env::set_var("PROXEMIC_ENV", "Development"); // Explicitly set development
-        std::env::set_var("PROXEMIC_DEBUG", "false");
-        std::env::set_var("PROXEMIC_MAX_FILE_SIZE", "1048576"); // 1MB
+        std::env::set_var("FIOVANA_ENV", "Development"); // Explicitly set development
+        std::env::set_var("FIOVANA_DEBUG", "false");
+        std::env::set_var("FIOVANA_MAX_FILE_SIZE", "1048576"); // 1MB
 
         let manager = ConfigManager::new().await.unwrap();
 
@@ -639,20 +639,20 @@ mod tests {
             // The test should pass now - debug should be false due to env override
             assert!(
                 !config.app.debug,
-                "Debug should be false due to PROXEMIC_DEBUG=false"
+                "Debug should be false due to FIOVANA_DEBUG=false"
             );
             assert_eq!(config.security.max_file_size, 1048576);
         }
 
         // Clean up
-        std::env::remove_var("PROXEMIC_DEBUG");
-        std::env::remove_var("PROXEMIC_MAX_FILE_SIZE");
-        std::env::remove_var("PROXEMIC_ENV");
+        std::env::remove_var("FIOVANA_DEBUG");
+        std::env::remove_var("FIOVANA_MAX_FILE_SIZE");
+        std::env::remove_var("FIOVANA_ENV");
     }
 
     #[test]
     fn test_config_validation() {
-        let mut config = ProxemicConfig::default();
+        let mut config = FiovanaConfig::default();
 
         // Valid config should pass
         assert!(config.validate().is_ok());
@@ -662,7 +662,7 @@ mod tests {
         assert!(config.validate().is_err());
 
         // Reset and test production validation
-        config = ProxemicConfig::for_environment(&Environment::Production);
+        config = FiovanaConfig::for_environment(&Environment::Production);
         config.app.debug = true; // This should fail in production
         assert!(config.validate().is_err());
     }

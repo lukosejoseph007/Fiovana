@@ -59,7 +59,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <div
-      className={`proxemic-empty-state ${className}`}
+      className={`fiovana-empty-state ${className}`}
       style={{
         display: 'flex',
         flexDirection: 'column',

@@ -1,8 +1,8 @@
 // src-tauri/tests/workspace_performance_benchmarks.rs
 // Performance benchmarks for workspace operations
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{
     CreateWorkspaceRequest, WorkspaceManager, WorkspaceTemplate, WORKSPACE_DIRECTORIES,
 };
 use std::path::{Path, PathBuf};

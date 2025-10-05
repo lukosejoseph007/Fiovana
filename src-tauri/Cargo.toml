@@ -1,12 +1,12 @@
 [package]
-name = "proxemic"
+name = "fiovana"
 version = "0.1.0"
 description = "AI-powered content transformation system for training materials"
 authors = ["Lukose Joseph"]
 license = "MIT"
-repository = "https://github.com/lukosejoseph007/Proxemic"
+repository = "https://github.com/lukosejoseph007/Fiovana"
 edition = "2021"
-default-run = "proxemic"
+default-run = "fiovana"
 
 [build-dependencies]
 tauri-build = { version = "2.4", features = [] }
@@ -135,5 +135,5 @@ name = "event_persistence_tests"
 path = "tests/event_persistence_tests.rs"
 
 [[bin]]
-name = "proxemic"
+name = "fiovana"
 path = "src/main.rs"

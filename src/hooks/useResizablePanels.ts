@@ -19,13 +19,13 @@ const PANEL_CONFIGS = {
     minWidth: 200,
     maxWidth: 400,
     defaultWidth: Math.floor((window.innerWidth || 1024) * 0.15), // 15% of viewport width
-    storageKey: 'proxemic-navigation-width',
+    storageKey: 'fiovana-navigation-width',
   },
   intelligence: {
     minWidth: 280,
     maxWidth: 500,
     defaultWidth: Math.floor((window.innerWidth || 1024) * 0.25), // 25% of viewport width
-    storageKey: 'proxemic-intelligence-width',
+    storageKey: 'fiovana-intelligence-width',
   },
 } as const
 

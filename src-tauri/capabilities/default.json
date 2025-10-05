@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Proxemic minimal filesystem security - read-only access to user directories",
+  "description": "Fiovana minimal filesystem security - read-only access to user directories",
   "windows": ["main"],
   "permissions": [
     "core:default",

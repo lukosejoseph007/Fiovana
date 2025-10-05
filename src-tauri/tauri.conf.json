@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2.0",
-  "productName": "Proxemic",
+  "productName": "Fiovana",
   "version": "0.1.0",
-  "identifier": "com.lukose.proxemic",
+  "identifier": "com.lukose.fiovana",
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Proxemic",
+        "title": "Fiovana",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -35,8 +35,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Proxemic",
-    "copyright": "Copyright © 2025 Proxemic. All rights reserved.",
+    "publisher": "Fiovana",
+    "copyright": "Copyright © 2025 Fiovana. All rights reserved.",
     "category": "Productivity",
     "shortDescription": "AI-powered content transformation for training materials",
     "longDescription": "Transform training materials with AI-powered document comparison, style preservation, and multi-format output generation."

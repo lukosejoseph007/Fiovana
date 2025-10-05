@@ -1,4 +1,4 @@
-// Layout System for Proxemic
+// Layout System for Fiovana
 // Adaptive three-column layout with responsive behavior
 
 export { default as AppShell } from './AppShell'

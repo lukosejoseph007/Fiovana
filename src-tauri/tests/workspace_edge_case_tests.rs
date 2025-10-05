@@ -1,8 +1,8 @@
 // src-tauri/tests/workspace_edge_case_tests.rs
 // Comprehensive edge case tests for workspace operations
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{
     CreateWorkspaceRequest, WorkspaceInfo, WorkspaceManager, WorkspaceTemplate,
 };
 use std::path::PathBuf;
@@ -238,7 +238,7 @@ async fn test_workspace_permission_restrictions() {
 
             "Test workspace with corrupted metadata" => {
                 // Corrupt the metadata file
-                let metadata_path = workspace_path.join(".proxemic/workspace.json");
+                let metadata_path = workspace_path.join(".fiovana/workspace.json");
                 if metadata_path.exists() {
                     let _ = fs::write(&metadata_path, "{ invalid json content").await;
                 }
@@ -256,7 +256,7 @@ async fn test_workspace_permission_restrictions() {
 
             "Test workspace with invalid JSON metadata" => {
                 // Write invalid JSON to metadata
-                let metadata_path = workspace_path.join(".proxemic/workspace.json");
+                let metadata_path = workspace_path.join(".fiovana/workspace.json");
                 let invalid_json = r#"{"name": "test", "invalid": }"#;
                 let _ = fs::write(&metadata_path, invalid_json).await;
 
@@ -481,7 +481,7 @@ async fn test_workspace_corruption_recovery() {
 
         match scenario {
             "Corrupted metadata file" => {
-                let metadata_path = workspace.path.join(".proxemic/workspace.json");
+                let metadata_path = workspace.path.join(".fiovana/workspace.json");
 
                 // Backup original metadata
                 let original_content = fs::read_to_string(&metadata_path).await.ok();
@@ -515,11 +515,11 @@ async fn test_workspace_corruption_recovery() {
 
             "Missing critical directories" => {
                 let sources_dir = workspace.path.join("sources");
-                let proxemic_dir = workspace.path.join(".proxemic");
+                let fiovana_dir = workspace.path.join(".fiovana");
 
                 // Remove critical directories
                 let _ = fs::remove_dir_all(&sources_dir).await;
-                let _ = fs::remove_dir_all(&proxemic_dir).await;
+                let _ = fs::remove_dir_all(&fiovana_dir).await;
 
                 let validation = fixture
                     .workspace_manager
@@ -540,7 +540,7 @@ async fn test_workspace_corruption_recovery() {
 
                 // Recreate directories for next test
                 let _ = fs::create_dir_all(&sources_dir).await;
-                let _ = fs::create_dir_all(&proxemic_dir).await;
+                let _ = fs::create_dir_all(&fiovana_dir).await;
             }
 
             "Invalid file permissions" => {
@@ -577,7 +577,7 @@ async fn test_workspace_corruption_recovery() {
             }
 
             "Malformed configuration" => {
-                let config_path = workspace.path.join(".proxemic/workspace.json");
+                let config_path = workspace.path.join(".fiovana/workspace.json");
 
                 // Create malformed JSON
                 let malformed_json = r#"
@@ -639,11 +639,11 @@ async fn test_workspace_migration_versions() {
 
         // Create workspace directory structure
         let _ = fs::create_dir_all(&workspace_path).await;
-        let _ = fs::create_dir_all(workspace_path.join(".proxemic")).await;
+        let _ = fs::create_dir_all(workspace_path.join(".fiovana")).await;
         let _ = fs::create_dir_all(workspace_path.join("sources/imports")).await;
 
         // Create old version metadata
-        let metadata_path = workspace_path.join(".proxemic/workspace.json");
+        let metadata_path = workspace_path.join(".fiovana/workspace.json");
         let old_metadata = format!(
             r#"{{
                 "name": "{}",

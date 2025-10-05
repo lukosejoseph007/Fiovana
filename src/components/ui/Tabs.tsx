@@ -80,7 +80,7 @@ const Tabs: React.FC<TabsProps> = ({
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab, variant, size }}>
-      <div className={`proxemic-tabs ${className}`} style={containerStyles}>
+      <div className={`fiovana-tabs ${className}`} style={containerStyles}>
         {children}
       </div>
     </TabsContext.Provider>
@@ -116,7 +116,7 @@ const TabList: React.FC<TabListProps> = ({ className = '', children }) => {
   }
 
   return (
-    <div className={`proxemic-tab-list ${className}`} style={listStyles} role="tablist">
+    <div className={`fiovana-tab-list ${className}`} style={listStyles} role="tablist">
       {children}
     </div>
   )
@@ -209,7 +209,7 @@ const Tab: React.FC<TabProps> = ({
     <>
       <style>
         {`
-          .proxemic-tab:hover:not(:disabled) {
+          .fiovana-tab:hover:not(:disabled) {
             ${
               variant === 'pills'
                 ? `
@@ -227,7 +227,7 @@ const Tab: React.FC<TabProps> = ({
             }
           }
 
-          .proxemic-tab:focus {
+          .fiovana-tab:focus {
             outline: none;
             ${
               variant === 'pills'
@@ -243,7 +243,7 @@ const Tab: React.FC<TabProps> = ({
       </style>
 
       <button
-        className={`proxemic-tab ${className}`}
+        className={`fiovana-tab ${className}`}
         style={tabStyles}
         onClick={handleClick}
         disabled={disabled}
@@ -262,7 +262,7 @@ const Tab: React.FC<TabProps> = ({
 }
 
 const TabPanels: React.FC<TabPanelsProps> = ({ className = '', children }) => {
-  return <div className={`proxemic-tab-panels ${className}`}>{children}</div>
+  return <div className={`fiovana-tab-panels ${className}`}>{children}</div>
 }
 
 const TabPanel: React.FC<TabPanelProps> = ({ value, className = '', children }) => {
@@ -287,7 +287,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ value, className = '', children }) 
       </style>
 
       <div
-        className={`proxemic-tab-panel ${className}`}
+        className={`fiovana-tab-panel ${className}`}
         style={panelStyles}
         role="tabpanel"
         aria-labelledby={`tab-${value}`}

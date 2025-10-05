@@ -1,7 +1,7 @@
 # Backup and Recovery Procedures
 
 ## Overview
-This document outlines the backup and recovery procedures for the Proxemic application. The system includes automated configuration backups with integrity checking and version management.
+This document outlines the backup and recovery procedures for the Fiovana application. The system includes automated configuration backups with integrity checking and version management.
 
 ## Backup Types
 
@@ -79,17 +79,17 @@ curl -X POST http://localhost:8080/api/recovery/application/{backup_id}
 In case of critical failure, the system can be started in recovery mode:
 
 ```bash
-PROXEMIC_RECOVERY_MODE=true ./proxemic-app
+FIOVANA_RECOVERY_MODE=true ./fiovana-app
 ```
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PROXEMIC_BACKUP_ENABLED` | Enable/disable backup system | `true` |
-| `PROXEMIC_BACKUP_DIRECTORY` | Backup storage directory | `./backups` |
-| `PROXEMIC_MAX_BACKUPS` | Maximum number of backups to keep | `10` |
-| `PROXEMIC_RETENTION_DAYS` | Backup retention period | `30` |
+| `FIOVANA_BACKUP_ENABLED` | Enable/disable backup system | `true` |
+| `FIOVANA_BACKUP_DIRECTORY` | Backup storage directory | `./backups` |
+| `FIOVANA_MAX_BACKUPS` | Maximum number of backups to keep | `10` |
+| `FIOVANA_RETENTION_DAYS` | Backup retention period | `30` |
 
 ## Integrity Verification
 

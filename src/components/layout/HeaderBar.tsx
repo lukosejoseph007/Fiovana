@@ -246,26 +246,26 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     <>
       <style>
         {`
-          .proxemic-search-bar:focus {
+          .fiovana-search-bar:focus {
             border-color: ${designTokens.colors.accent.ai};
             box-shadow: 0 0 0 3px ${designTokens.colors.accent.ai}40;
             background-color: ${designTokens.colors.surface.secondary};
           }
 
-          .proxemic-search-bar::placeholder {
+          .fiovana-search-bar::placeholder {
             color: ${designTokens.colors.text.tertiary};
           }
 
-          .proxemic-header-icon:hover {
+          .fiovana-header-icon:hover {
             color: ${designTokens.colors.text.primary};
             background-color: ${designTokens.colors.state.hover};
           }
 
-          .proxemic-avatar-status {
+          .fiovana-avatar-status {
             position: relative;
           }
 
-          .proxemic-avatar-status::after {
+          .fiovana-avatar-status::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -280,7 +280,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       </style>
 
       <div
-        className={`proxemic-header-bar ${className}`}
+        className={`fiovana-header-bar ${className}`}
         style={{ ...headerContentStyles, ...style }}
       >
         {/* Left Zone - Logo and Workspace Selector */}
@@ -291,7 +291,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             onClick={handleLogoClick}
             aria-label="Go to home"
           >
-            Proxemic
+            Fiovana
           </a>
 
           {!isMobile && (
@@ -312,7 +312,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           ) : (
             <div style={{ width: '100%', position: 'relative' }}>
               <input
-                className="proxemic-search-bar"
+                className="fiovana-search-bar"
                 style={searchBarStyles}
                 placeholder="Search, ask, or type / for commands..."
                 onFocus={handleSearchFocus}
@@ -397,7 +397,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
                 justifyContent: 'center',
                 transition: `all ${designTokens.animation.duration.fast}`,
               }}
-              className="proxemic-header-icon"
+              className="fiovana-header-icon"
               aria-label="Toggle Intelligence Panel"
               title="Toggle Intelligence Panel"
               onClick={toggleIntelligence}
@@ -477,7 +477,7 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({ breadcrumbs
         <div key={breadcrumb.path} style={breadcrumbItemStyles}>
           <span
             style={breadcrumbLinkStyles}
-            className="proxemic-header-icon"
+            className="fiovana-header-icon"
             onClick={() => {
               // TODO: Navigate to breadcrumb path
               console.log('Navigate to:', breadcrumb.path)
@@ -581,7 +581,7 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({ collaborators
               ? designTokens.colors.accent.ai
               : designTokens.colors.text.tertiary,
           }}
-          className={collaborator.isActive ? 'proxemic-avatar-status' : ''}
+          className={collaborator.isActive ? 'fiovana-avatar-status' : ''}
           title={`${collaborator.name} (${collaborator.isActive ? 'Active' : 'Offline'})`}
         >
           {collaborator.avatar ? (

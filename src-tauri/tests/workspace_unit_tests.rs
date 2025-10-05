@@ -1,8 +1,8 @@
 // src-tauri/tests/workspace_unit_tests.rs
 // Comprehensive unit tests for workspace operations
 
-use proxemic::app_config::ConfigManager;
-use proxemic::workspace::{
+use fiovana::app_config::ConfigManager;
+use fiovana::workspace::{
     CreateWorkspaceRequest, DuplicateHandling, WorkspaceInfo, WorkspaceManager, WorkspaceTemplate,
     WORKSPACE_CONFIG_FILE, WORKSPACE_DIRECTORIES, WORKSPACE_METADATA_FILE,
 };

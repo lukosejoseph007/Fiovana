@@ -216,7 +216,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               100% { transform: rotate(360deg); }
             }
 
-            .proxemic-button:hover {
+            .fiovana-button:hover {
               ${
                 !disabled && !isLoading && variant === 'primary'
                   ? `
@@ -271,7 +271,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               }
             }
 
-            .proxemic-button:focus {
+            .fiovana-button:focus {
               outline: none;
               ${
                 variant === 'primary'
@@ -320,7 +320,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               }
             }
 
-            .proxemic-button:active {
+            .fiovana-button:active {
               ${
                 !disabled && !isLoading && variant === 'primary'
                   ? `
@@ -334,7 +334,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         </style>
         <button
           ref={ref}
-          className={`proxemic-button ${className}`}
+          className={`fiovana-button ${className}`}
           style={combinedStyles}
           disabled={disabled || isLoading}
           {...props}

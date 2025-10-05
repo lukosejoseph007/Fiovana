@@ -1,5 +1,5 @@
 /**
- * Proxemic Design Token System
+ * Fiovana Design Token System
  *
  * Based on the refined visual architecture with "Conversational Intelligence with Enterprise Structure"
  * Color philosophy: Near-black surfaces with electric cyan accents for AI interactions
@@ -214,7 +214,7 @@ export const animation = {
     easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
     easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    // Custom Proxemic curves
+    // Custom Fiovana curves
     smooth: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     snappy: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
     gentle: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
@@ -302,7 +302,7 @@ export const breakpoints = {
   xl: '1280px', // Desktop
   '2xl': '1536px', // Desktop large
 
-  // Proxemic-specific breakpoints
+  // Fiovana-specific breakpoints
   mobile: '768px', // Below this is mobile
   tablet: '1024px', // Below this is tablet
   desktop: '1024px', // Above this is desktop
@@ -326,7 +326,7 @@ export const zIndex = {
   max: 2147483647,
 } as const
 
-// Layout Dimensions - Proxemic Specific
+// Layout Dimensions - Fiovana Specific
 export const layout = {
   // Main Application Shell
   header: {

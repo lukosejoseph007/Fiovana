@@ -1,7 +1,7 @@
 // src-tauri/tests/backup_integration_test.rs
 // Integration test for backup functionality in Tauri commands
 
-use proxemic::filesystem::security::backup_manager::BackupManager;
+use fiovana::filesystem::security::backup_manager::BackupManager;
 use tempfile::TempDir;
 
 #[test]

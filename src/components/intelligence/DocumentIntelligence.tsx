@@ -353,7 +353,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
 
   if (!selectedDocument) {
     return (
-      <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
+      <div className={`fiovana-document-intelligence ${className}`} style={containerStyles}>
         <div style={emptyStateStyles}>
           <Icon name="FileText" size={48} />
           <h3
@@ -377,7 +377,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
+      <div className={`fiovana-document-intelligence ${className}`} style={containerStyles}>
         <div
           style={{
             padding: designTokens.spacing[6],
@@ -452,7 +452,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
 
   if (error) {
     return (
-      <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
+      <div className={`fiovana-document-intelligence ${className}`} style={containerStyles}>
         <div style={emptyStateStyles}>
           <Icon name="AlertCircle" size={48} color={designTokens.colors.accent.alert} />
           <h3
@@ -481,7 +481,7 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
   }
 
   return (
-    <div className={`proxemic-document-intelligence ${className}`} style={containerStyles}>
+    <div className={`fiovana-document-intelligence ${className}`} style={containerStyles}>
       {/* Header */}
       <div style={headerStyles}>
         <div style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[2] }}>
@@ -823,21 +823,21 @@ const DocumentIntelligence: React.FC<DocumentIntelligenceProps> = ({
           }
 
           /* Custom scrollbar for scroll container */
-          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar {
+          .fiovana-document-intelligence .scroll-container::-webkit-scrollbar {
             width: 6px;
           }
 
-          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-track {
+          .fiovana-document-intelligence .scroll-container::-webkit-scrollbar-track {
             background: ${designTokens.colors.surface.tertiary};
             border-radius: 3px;
           }
 
-          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-thumb {
+          .fiovana-document-intelligence .scroll-container::-webkit-scrollbar-thumb {
             background: ${designTokens.colors.border.medium};
             border-radius: 3px;
           }
 
-          .proxemic-document-intelligence .scroll-container::-webkit-scrollbar-thumb:hover {
+          .fiovana-document-intelligence .scroll-container::-webkit-scrollbar-thumb:hover {
             background: ${designTokens.colors.border.strong};
           }
         `}

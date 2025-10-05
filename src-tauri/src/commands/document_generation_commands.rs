@@ -73,7 +73,7 @@ pub struct DocumentGeneratorState {
 
 impl Default for DocumentGeneratorState {
     fn default() -> Self {
-        let output_dir = std::env::temp_dir().join("proxemic_outputs");
+        let output_dir = std::env::temp_dir().join("fiovana_outputs");
         Self {
             generator: Arc::new(Mutex::new(None)),
             output_generator: Arc::new(Mutex::new(None)),
@@ -92,7 +92,7 @@ pub async fn init_document_generator(
 ) -> Result<bool, String> {
     let output_dir = match output_directory {
         Some(dir) => PathBuf::from(dir),
-        None => std::env::temp_dir().join("proxemic_outputs"),
+        None => std::env::temp_dir().join("fiovana_outputs"),
     };
 
     // Update the output directory
@@ -309,7 +309,7 @@ pub async fn test_document_generation(
         content: test_content.to_string(),
         metadata: {
             let mut meta = HashMap::new();
-            meta.insert("author".to_string(), "Proxemic Test".to_string());
+            meta.insert("author".to_string(), "Fiovana Test".to_string());
             meta.insert("date".to_string(), "2024-01-01".to_string());
             meta
         },

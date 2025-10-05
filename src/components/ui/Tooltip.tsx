@@ -199,7 +199,7 @@ const Tooltip: React.FC<TooltipProps> = ({
     <>
       <div
         ref={triggerRef}
-        className={`proxemic-tooltip-trigger ${className}`}
+        className={`fiovana-tooltip-trigger ${className}`}
         style={triggerStyles}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
@@ -212,7 +212,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       {!disabled && (
         <div
           ref={tooltipRef}
-          className={`proxemic-tooltip ${contentClassName}`}
+          className={`fiovana-tooltip ${contentClassName}`}
           style={tooltipStyles}
           role="tooltip"
         >

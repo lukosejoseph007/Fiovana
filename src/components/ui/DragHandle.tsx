@@ -46,7 +46,7 @@ const DragHandle: React.FC<DragHandleProps> = ({
   return (
     <>
       <div
-        className={`proxemic-drag-handle ${className}`}
+        className={`fiovana-drag-handle ${className}`}
         style={handleStyles}
         onMouseDown={onMouseDown}
         data-testid={`drag-handle-${position}`}
@@ -57,20 +57,20 @@ const DragHandle: React.FC<DragHandleProps> = ({
       {/* Hover and active styles */}
       <style>
         {`
-          .proxemic-drag-handle:hover {
+          .fiovana-drag-handle:hover {
             background-color: ${designTokens.colors.accent.ai}40 !important;
           }
 
-          .proxemic-drag-handle:hover > div {
+          .fiovana-drag-handle:hover > div {
             opacity: 1 !important;
             background-color: ${designTokens.colors.accent.ai} !important;
           }
 
-          .proxemic-drag-handle:active {
+          .fiovana-drag-handle:active {
             background-color: ${designTokens.colors.accent.ai}60 !important;
           }
 
-          .proxemic-drag-handle:active > div {
+          .fiovana-drag-handle:active > div {
             background-color: ${designTokens.colors.accent.ai} !important;
             height: 60px !important;
           }

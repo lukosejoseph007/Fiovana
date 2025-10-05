@@ -8,7 +8,7 @@ pub struct ModelManager {
 
 impl ModelManager {
     pub fn new() -> Result<Self> {
-        let proj_dirs = ProjectDirs::from("com", "proxemic", "Proxemic")
+        let proj_dirs = ProjectDirs::from("com", "fiovana", "Fiovana")
             .ok_or_else(|| anyhow::anyhow!("Failed to get project directories"))?;
 
         let models_dir = proj_dirs.data_dir().join("models");

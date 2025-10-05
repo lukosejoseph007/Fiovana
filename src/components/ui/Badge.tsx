@@ -157,7 +157,7 @@ const Badge: React.FC<BadgeProps> = ({
       )}
 
       <span
-        className={`proxemic-badge ${className}`}
+        className={`fiovana-badge ${className}`}
         style={{ ...combinedStyles, ...pulsingStyles }}
         {...props}
       >

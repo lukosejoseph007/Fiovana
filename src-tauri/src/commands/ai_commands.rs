@@ -489,7 +489,7 @@ pub async fn get_ai_settings() -> Result<serde_json::Value, String> {
     // Try to load from file first
     let config_dir = dirs::config_dir()
         .ok_or("Failed to get config directory")?
-        .join("proxemic");
+        .join("fiovana");
 
     let settings_file = config_dir.join("ai_settings.json");
 
@@ -526,7 +526,7 @@ pub async fn save_ai_settings(settings: serde_json::Value) -> Result<bool, Strin
 
     let config_dir = dirs::config_dir()
         .ok_or("Failed to get config directory")?
-        .join("proxemic");
+        .join("fiovana");
 
     std::fs::create_dir_all(&config_dir)
         .map_err(|e| format!("Failed to create config directory: {}", e))?;

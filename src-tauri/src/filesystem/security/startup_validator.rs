@@ -40,7 +40,7 @@ impl StartupValidator {
     pub fn validate_startup_configuration(
         &self,
     ) -> Result<StartupValidationResult, SecurityConfigError> {
-        info!("Starting Proxemic configuration validation...");
+        info!("Starting Fiovana configuration validation...");
 
         let mut result = StartupValidationResult {
             success: false,
@@ -133,10 +133,10 @@ impl StartupValidator {
 
         // 7. Log final status
         if result.success {
-            info!("✅ Proxemic startup configuration validation completed successfully");
+            info!("✅ Fiovana startup configuration validation completed successfully");
             info!("Security Level: {:?}", result.security_level);
         } else {
-            error!("❌ Proxemic startup configuration validation failed");
+            error!("❌ Fiovana startup configuration validation failed");
             for error in &result.errors {
                 error!("  - {}", error);
             }
@@ -161,7 +161,7 @@ impl StartupValidator {
             SecurityLevel::Production | SecurityLevel::HighSecurity
         ) {
             // 1. Check for default encryption key
-            if let Ok(key) = env::var("PROXEMIC_ENCRYPTION_KEY") {
+            if let Ok(key) = env::var("FIOVANA_ENCRYPTION_KEY") {
                 if key == "your_secure_32_character_key_here_change_this" {
                     result.errors.push("CRITICAL: Default encryption key detected in production! Application startup blocked for security.".to_string());
                 }
@@ -170,14 +170,14 @@ impl StartupValidator {
             // 2. Check for disabled security features in production
             let critical_security_settings = [
                 (
-                    "PROXEMIC_ENABLE_MAGIC_VALIDATION",
+                    "FIOVANA_ENABLE_MAGIC_VALIDATION",
                     "Magic number validation",
                 ),
                 (
-                    "PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES",
+                    "FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES",
                     "Workspace boundary enforcement",
                 ),
-                ("PROXEMIC_AUDIT_LOGGING_ENABLED", "Audit logging"),
+                ("FIOVANA_AUDIT_LOGGING_ENABLED", "Audit logging"),
             ];
 
             for (env_var, feature_name) in &critical_security_settings {
@@ -193,7 +193,7 @@ impl StartupValidator {
             }
 
             // 3. Check for debug mode in production
-            if let Ok(debug) = env::var("PROXEMIC_DEBUG") {
+            if let Ok(debug) = env::var("FIOVANA_DEBUG") {
                 if matches!(debug.to_lowercase().as_str(), "true" | "1" | "yes") {
                     result.errors.push(
                         "CRITICAL: Debug mode enabled in production - security risk".to_string(),
@@ -218,7 +218,7 @@ impl StartupValidator {
         }
 
         // Check for overly permissive settings
-        if let Ok(file_size_str) = env::var("PROXEMIC_MAX_FILE_SIZE") {
+        if let Ok(file_size_str) = env::var("FIOVANA_MAX_FILE_SIZE") {
             if let Ok(file_size) = file_size_str.parse::<u64>() {
                 if file_size > 1024 * 1024 * 1024 {
                     // 1GB
@@ -298,12 +298,12 @@ mod tests {
     fn test_development_mode_startup() {
         // Set up clean test environment - clear ALL environment variables that could affect detection
         let env_vars_to_clear = [
-            "PROXEMIC_ENV",
+            "FIOVANA_ENV",
             "RUST_ENV",
             "NODE_ENV",
             "PRODUCTION",
             "PROD",
-            "PROXEMIC_SECURITY_LEVEL",
+            "FIOVANA_SECURITY_LEVEL",
             "CI",
             "GITHUB_ACTIONS",
             "RUST_LOG",
@@ -314,15 +314,15 @@ mod tests {
         }
 
         // Explicitly set development mode with all necessary variables
-        env::set_var("PROXEMIC_ENV", "development");
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        env::set_var("FIOVANA_ENV", "development");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "development");
         env::set_var("RUST_ENV", "test"); // Explicitly set to test
 
         // Set non-debug log to avoid environment detection confusion
         env::set_var("RUST_LOG", "info");
 
         // Force debug mode to ensure development environment
-        env::set_var("PROXEMIC_DEBUG", "true");
+        env::set_var("FIOVANA_DEBUG", "true");
 
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
@@ -345,7 +345,7 @@ mod tests {
         for var in &env_vars_to_clear {
             env::remove_var(var);
         }
-        env::remove_var("PROXEMIC_DEBUG");
+        env::remove_var("FIOVANA_DEBUG");
     }
 
     #[test]
@@ -353,7 +353,7 @@ mod tests {
     fn test_critical_security_check() {
         // Clear ALL environment variables that could interfere with security level detection
         let env_vars_to_clear = [
-            "PROXEMIC_ENV",
+            "FIOVANA_ENV",
             "RUST_ENV",
             "NODE_ENV",
             "PRODUCTION",
@@ -361,7 +361,7 @@ mod tests {
             "CI",
             "GITHUB_ACTIONS",
             "RUST_LOG",
-            "PROXEMIC_DEBUG",
+            "FIOVANA_DEBUG",
         ];
 
         for var in &env_vars_to_clear {
@@ -369,14 +369,14 @@ mod tests {
         }
 
         // Set production mode with default encryption key (should fail)
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "production");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "production");
         env::set_var(
-            "PROXEMIC_ENCRYPTION_KEY",
+            "FIOVANA_ENCRYPTION_KEY",
             "your_secure_32_character_key_here_change_this",
         );
-        env::set_var("PROXEMIC_ENABLE_MAGIC_VALIDATION", "true");
-        env::set_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES", "true");
-        env::set_var("PROXEMIC_AUDIT_LOGGING_ENABLED", "true");
+        env::set_var("FIOVANA_ENABLE_MAGIC_VALIDATION", "true");
+        env::set_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES", "true");
+        env::set_var("FIOVANA_AUDIT_LOGGING_ENABLED", "true");
 
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
@@ -402,11 +402,11 @@ mod tests {
         );
 
         // Clean up
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
-        env::remove_var("PROXEMIC_ENCRYPTION_KEY");
-        env::remove_var("PROXEMIC_ENABLE_MAGIC_VALIDATION");
-        env::remove_var("PROXEMIC_ENFORCE_WORKSPACE_BOUNDARIES");
-        env::remove_var("PROXEMIC_AUDIT_LOGGING_ENABLED");
+        env::remove_var("FIOVANA_SECURITY_LEVEL");
+        env::remove_var("FIOVANA_ENCRYPTION_KEY");
+        env::remove_var("FIOVANA_ENABLE_MAGIC_VALIDATION");
+        env::remove_var("FIOVANA_ENFORCE_WORKSPACE_BOUNDARIES");
+        env::remove_var("FIOVANA_AUDIT_LOGGING_ENABLED");
 
         // Restore any cleared variables if needed for other tests
     }
@@ -415,7 +415,7 @@ mod tests {
     #[serial]
     fn test_safe_startup_check() {
         // Set up a minimal valid configuration
-        env::set_var("PROXEMIC_SECURITY_LEVEL", "development");
+        env::set_var("FIOVANA_SECURITY_LEVEL", "development");
 
         let validator = StartupValidator::new();
         let result = validator.validate_startup_configuration().unwrap();
@@ -425,6 +425,6 @@ mod tests {
         assert!(result.config_valid);
         assert!(result.environment_ready);
 
-        env::remove_var("PROXEMIC_SECURITY_LEVEL");
+        env::remove_var("FIOVANA_SECURITY_LEVEL");
     }
 }

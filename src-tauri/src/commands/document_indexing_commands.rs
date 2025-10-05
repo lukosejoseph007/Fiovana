@@ -54,9 +54,9 @@ pub async fn init_document_indexer(
     let index_path = if let Some(dir) = index_dir {
         PathBuf::from(dir)
     } else {
-        // Default to workspace/.proxemic/index
+        // Default to workspace/.fiovana/index
         let mut default_path = PathBuf::from(".");
-        default_path.push(".proxemic");
+        default_path.push(".fiovana");
         default_path.push("index");
         default_path
     };

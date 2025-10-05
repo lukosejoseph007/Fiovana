@@ -165,7 +165,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({
       </style>
 
       <div
-        className={`proxemic-loading-state ${className}`}
+        className={`fiovana-loading-state ${className}`}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -320,7 +320,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
 }) => {
   return (
     <div
-      className={`proxemic-progress-card ${className}`}
+      className={`fiovana-progress-card ${className}`}
       style={{
         padding: designTokens.spacing[4],
         background: designTokens.colors.surface.secondary,

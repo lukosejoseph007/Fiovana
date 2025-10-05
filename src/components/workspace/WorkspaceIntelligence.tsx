@@ -218,7 +218,7 @@ const WorkspaceIntelligence: React.FC<WorkspaceIntelligenceProps> = ({
 
   if (isLoading && !analysis) {
     return (
-      <div className={`proxemic-workspace-intelligence ${className}`} style={containerStyles}>
+      <div className={`fiovana-workspace-intelligence ${className}`} style={containerStyles}>
         <CardSkeleton count={3} />
       </div>
     )
@@ -226,7 +226,7 @@ const WorkspaceIntelligence: React.FC<WorkspaceIntelligenceProps> = ({
 
   if (error && !analysis) {
     return (
-      <div className={`proxemic-workspace-intelligence ${className}`} style={containerStyles}>
+      <div className={`fiovana-workspace-intelligence ${className}`} style={containerStyles}>
         <Card>
           <div
             style={{
@@ -269,7 +269,7 @@ const WorkspaceIntelligence: React.FC<WorkspaceIntelligenceProps> = ({
   }
 
   return (
-    <div className={`proxemic-workspace-intelligence ${className}`} style={containerStyles}>
+    <div className={`fiovana-workspace-intelligence ${className}`} style={containerStyles}>
       {/* Header */}
       <div style={headerStyles}>
         <div>

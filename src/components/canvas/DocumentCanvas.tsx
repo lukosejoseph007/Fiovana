@@ -753,7 +753,7 @@ const DocumentCanvas: React.FC<DocumentCanvasProps> = ({
                       letterSpacing: '-0.02em',
                     }}
                   >
-                    {workspaceHealth ? 'Welcome back!' : 'Welcome to Proxemic!'}
+                    {workspaceHealth ? 'Welcome back!' : 'Welcome to Fiovana!'}
                   </div>
 
                   {/* Health Score & Message */}

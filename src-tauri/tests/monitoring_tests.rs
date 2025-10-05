@@ -1,8 +1,8 @@
 // src-tauri/tests/monitoring_tests.rs
 // Tests for the monitoring and performance tracking features
 
-use proxemic::commands::ValidationMetrics;
-use proxemic::filesystem::operations::FileOperationMetrics;
+use fiovana::commands::ValidationMetrics;
+use fiovana::filesystem::operations::FileOperationMetrics;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
@@ -159,10 +159,10 @@ fn test_validation_metrics() {
 #[test]
 fn test_memory_monitor_creation() {
     // Test that memory monitor can be created
-    let _monitor = proxemic::memory_monitor::MemoryMonitor::new();
+    let _monitor = fiovana::memory_monitor::MemoryMonitor::new();
 
     // Test memory usage reading (should be non-zero on most systems)
-    let usage = proxemic::memory_monitor::MemoryMonitor::get_current_memory_usage();
+    let usage = fiovana::memory_monitor::MemoryMonitor::get_current_memory_usage();
 
     // Only assert if we successfully got a reading
     // (might fail in CI environments or unsupported platforms)
@@ -175,7 +175,7 @@ fn test_memory_monitor_creation() {
 
 #[test]
 fn test_memory_monitor_config() {
-    use proxemic::memory_monitor::MemoryMonitorConfig;
+    use fiovana::memory_monitor::MemoryMonitorConfig;
 
     let config = MemoryMonitorConfig::default();
     assert_eq!(config.sampling_interval_secs, 30);
@@ -196,7 +196,7 @@ fn test_memory_monitor_config() {
 
 #[test]
 fn test_security_config_monitoring_fields() {
-    use proxemic::filesystem::security::security_config::SecurityConfig;
+    use fiovana::filesystem::security::security_config::SecurityConfig;
 
     // Test production defaults include monitoring thresholds
     let config = SecurityConfig::production_defaults();
@@ -223,7 +223,7 @@ fn test_security_config_monitoring_fields() {
 
 #[test]
 fn test_memory_stats() {
-    use proxemic::memory_monitor::MemoryStats;
+    use fiovana::memory_monitor::MemoryStats;
 
     let stats = MemoryStats::default();
 
@@ -253,7 +253,7 @@ fn test_memory_stats() {
 
 #[tokio::test]
 async fn test_memory_monitor_sampling() {
-    use proxemic::memory_monitor::{MemoryMonitor, MemoryMonitorConfig};
+    use fiovana::memory_monitor::{MemoryMonitor, MemoryMonitorConfig};
     use std::time::Duration;
 
     let config = MemoryMonitorConfig {
@@ -280,8 +280,8 @@ async fn test_memory_monitor_sampling() {
 
 #[test]
 fn test_performance_metrics_integration() {
-    use proxemic::commands::get_validation_metrics;
-    use proxemic::filesystem::operations::get_file_operation_metrics;
+    use fiovana::commands::get_validation_metrics;
+    use fiovana::filesystem::operations::get_file_operation_metrics;
 
     // Test that global metrics instances are available
     let file_metrics = get_file_operation_metrics();

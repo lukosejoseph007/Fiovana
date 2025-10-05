@@ -1,10 +1,10 @@
 // src-tauri/tests/integration_tests.rs
 // End-to-end integration tests for the security validation system
 
-use proxemic::app_config::types::SecurityConfig as AppSecurityConfig;
-use proxemic::filesystem::security::deployment_checker::DeploymentChecker;
-use proxemic::filesystem::security::path_validator::PathValidator;
-use proxemic::filesystem::security::security_config::SecurityConfig;
+use fiovana::app_config::types::SecurityConfig as AppSecurityConfig;
+use fiovana::filesystem::security::deployment_checker::DeploymentChecker;
+use fiovana::filesystem::security::path_validator::PathValidator;
+use fiovana::filesystem::security::security_config::SecurityConfig;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
@@ -583,7 +583,7 @@ async fn test_deployment_report_generation() {
 
     assert!(!report.is_empty(), "Deployment report should not be empty");
     assert!(
-        report.contains("PROXEMIC DEPLOYMENT REPORT"),
+        report.contains("FIOVANA DEPLOYMENT REPORT"),
         "Report should contain title"
     );
     assert!(
@@ -651,9 +651,9 @@ async fn test_deployment_manifest_generation() {
 
     // Create test files
     let test_files = [
-        ("proxemic-v1.0.0-x64.msi", "Mock Windows installer"),
-        ("proxemic-v1.0.0.dmg", "Mock macOS installer"),
-        ("proxemic-v1.0.0.AppImage", "Mock Linux AppImage"),
+        ("fiovana-v1.0.0-x64.msi", "Mock Windows installer"),
+        ("fiovana-v1.0.0.dmg", "Mock macOS installer"),
+        ("fiovana-v1.0.0.AppImage", "Mock Linux AppImage"),
         ("CHANGELOG.md", "Release changelog"),
     ];
 
