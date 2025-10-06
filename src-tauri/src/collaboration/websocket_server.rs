@@ -221,30 +221,147 @@ impl CollaborationServer {
     /// Handle binary message (Yjs protocol)
     async fn handle_binary_message(
         &self,
-        _connection_id: &str,
+        connection_id: &str,
         data: Vec<u8>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Parse Yjs binary protocol
-        // First byte indicates message type
-        if data.is_empty() {
+        // Format: [message_type, ...room_id_bytes, 0x00, ...message_data]
+        if data.len() < 3 {
+            warn!("Binary message too short");
             return Ok(());
         }
 
-        match data[0] {
+        let message_type = data[0];
+
+        // Find null terminator for room ID
+        let room_id_end = data
+            .iter()
+            .skip(1)
+            .position(|&b| b == 0x00)
+            .map(|pos| pos + 1)
+            .unwrap_or(data.len());
+
+        if room_id_end >= data.len() {
+            warn!("Invalid binary message format");
+            return Ok(());
+        }
+
+        let room_id = String::from_utf8_lossy(&data[1..room_id_end]).to_string();
+        let message_data = &data[room_id_end + 1..];
+
+        match message_type {
             0 => {
-                // Sync Step 1
-                info!("Received Yjs Sync Step 1");
+                // Sync Step 1: Client requests state vector
+                info!("Received Yjs Sync Step 1 for room {}", room_id);
+                self.handle_sync_step1(connection_id, &room_id, message_data)
+                    .await?;
             }
             1 => {
-                // Sync Step 2
-                info!("Received Yjs Sync Step 2");
+                // Sync Step 2: Client sends state vector and receives missing updates
+                info!("Received Yjs Sync Step 2 for room {}", room_id);
+                self.handle_sync_step2(connection_id, &room_id, message_data)
+                    .await?;
             }
             2 => {
-                // Update
-                info!("Received Yjs Update");
+                // Update: Client sends document changes
+                info!(
+                    "Received Yjs Update for room {} ({} bytes)",
+                    room_id,
+                    message_data.len()
+                );
+                self.handle_yjs_update(connection_id, &room_id, message_data)
+                    .await?;
             }
             _ => {
-                warn!("Unknown Yjs message type: {}", data[0]);
+                warn!("Unknown Yjs message type: {}", message_type);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Handle Yjs Sync Step 1: Send current state vector to client
+    async fn handle_sync_step1(
+        &self,
+        connection_id: &str,
+        room_id: &str,
+        _message_data: &[u8],
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Get room state
+        if let Some(room) = self.room_manager.get_room(room_id) {
+            // Get current state vector
+            let state_vector = room.get_state_vector();
+
+            // Construct Sync Step 1 response
+            // Format: [0x00, ...room_id, 0x00, ...state_vector]
+            let mut response = vec![0x00];
+            response.extend_from_slice(room_id.as_bytes());
+            response.push(0x00);
+            response.extend_from_slice(&state_vector);
+
+            // Send to client
+            if let Some(sender) = self.connections.get(connection_id) {
+                sender.send(Message::Binary(response))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Handle Yjs Sync Step 2: Apply client state vector and send missing updates
+    async fn handle_sync_step2(
+        &self,
+        connection_id: &str,
+        room_id: &str,
+        message_data: &[u8],
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(room) = self.room_manager.get_room(room_id) {
+            // Get updates since client's state vector
+            let updates = room.get_updates_since(message_data);
+
+            if !updates.is_empty() {
+                // Construct Sync Step 2 response with updates
+                // Format: [0x01, ...room_id, 0x00, ...updates]
+                let mut response = vec![0x01];
+                response.extend_from_slice(room_id.as_bytes());
+                response.push(0x00);
+                response.extend_from_slice(&updates);
+
+                // Send to client
+                if let Some(sender) = self.connections.get(connection_id) {
+                    sender.send(Message::Binary(response))?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Handle Yjs Update: Apply and broadcast document changes
+    async fn handle_yjs_update(
+        &self,
+        connection_id: &str,
+        room_id: &str,
+        update_data: &[u8],
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(room) = self.room_manager.get_room(room_id) {
+            // Store update in room
+            room.apply_update(update_data.to_vec());
+
+            // Broadcast to all other clients in room
+            // Format: [0x02, ...room_id, 0x00, ...update_data]
+            let mut message = vec![0x02];
+            message.extend_from_slice(room_id.as_bytes());
+            message.push(0x00);
+            message.extend_from_slice(update_data);
+
+            // Broadcast to all connections in room except sender
+            for (conn_id, _) in room.get_users() {
+                if conn_id.as_str() != connection_id {
+                    if let Some(sender) = self.connections.get(&conn_id) {
+                        let _ = sender.send(Message::Binary(message.clone()));
+                    }
+                }
             }
         }
 

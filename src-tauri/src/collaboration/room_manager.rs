@@ -24,6 +24,9 @@ pub struct Room {
     #[allow(dead_code)]
     created_at: chrono::DateTime<chrono::Utc>,
     last_activity: Arc<tokio::sync::RwLock<chrono::DateTime<chrono::Utc>>>,
+    // Yjs document state storage
+    updates: Arc<tokio::sync::RwLock<Vec<Vec<u8>>>>, // Stored Yjs updates
+    state_vector: Arc<tokio::sync::RwLock<Vec<u8>>>, // Current state vector
 }
 
 impl Room {
@@ -34,6 +37,8 @@ impl Room {
             users: Arc::new(DashMap::new()),
             created_at: chrono::Utc::now(),
             last_activity: Arc::new(tokio::sync::RwLock::new(chrono::Utc::now())),
+            updates: Arc::new(tokio::sync::RwLock::new(Vec::new())),
+            state_vector: Arc::new(tokio::sync::RwLock::new(Vec::new())),
         }
     }
 
@@ -93,6 +98,68 @@ impl Room {
             created_at: self.created_at,
             last_activity,
         }
+    }
+
+    /// Get the current state vector
+    pub fn get_state_vector(&self) -> Vec<u8> {
+        // Try to read the state vector, return empty if locked
+        if let Ok(state_vector) = self.state_vector.try_read() {
+            state_vector.clone()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Get updates since a given state vector
+    pub fn get_updates_since(&self, client_state_vector: &[u8]) -> Vec<u8> {
+        // Parse client state vector to determine which updates they need
+        // For a simplified implementation, we check if client has any state
+        if let Ok(updates) = self.updates.try_read() {
+            if client_state_vector.is_empty() {
+                // Client has no state, send all updates
+                updates
+                    .iter()
+                    .flat_map(|update| update.iter())
+                    .copied()
+                    .collect()
+            } else {
+                // Client has some state, send recent updates
+                // In a full implementation, we would parse the state vector properly
+                // For now, we send the last few updates that might be missing
+                let recent_count = std::cmp::min(10, updates.len());
+                if recent_count > 0 {
+                    updates[updates.len() - recent_count..]
+                        .iter()
+                        .flat_map(|update| update.iter())
+                        .copied()
+                        .collect()
+                } else {
+                    Vec::new()
+                }
+            }
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Apply a new update to the document
+    pub fn apply_update(&self, update: Vec<u8>) {
+        // Store the update
+        if let Ok(mut updates) = self.updates.try_write() {
+            updates.push(update.clone());
+
+            // Update the state vector
+            // In a full implementation, this would properly compute the new state vector
+            // For now, we'll use a simplified approach
+            drop(updates);
+
+            if let Ok(mut state_vector) = self.state_vector.try_write() {
+                // Simplified: append update length as state
+                state_vector.extend_from_slice(&(update.len() as u32).to_le_bytes());
+            }
+        }
+
+        self.update_activity();
     }
 }
 

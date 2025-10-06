@@ -4,10 +4,20 @@ import { WebsocketProvider } from 'y-websocket'
 import { WebrtcProvider } from 'y-webrtc'
 import type { LexicalEditor } from 'lexical'
 
+export interface CursorPosition {
+  line: number
+  column: number
+  selection?: {
+    anchor: { line: number; column: number }
+    head: { line: number; column: number }
+  }
+}
+
 export interface CollaborationUser {
   clientID: number
   name: string
   color: string
+  cursor?: CursorPosition
 }
 
 export interface CollaborationState {
@@ -15,6 +25,8 @@ export interface CollaborationState {
   isSynced: boolean
   users: CollaborationUser[]
   error: Error | null
+  connectionState: 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+  reconnectAttempts: number
 }
 
 export interface UseYjsCollaborationOptions {
@@ -23,6 +35,7 @@ export interface UseYjsCollaborationOptions {
   username?: string
   userColor?: string
   enabled?: boolean
+  onCursorChange?: (cursor: CursorPosition) => void
 }
 
 /**
@@ -44,6 +57,8 @@ export const useYjsCollaboration = ({
     isSynced: false,
     users: [],
     error: null,
+    connectionState: 'disconnected',
+    reconnectAttempts: 0,
   })
 
   const docRef = useRef<Y.Doc | null>(null)
@@ -54,12 +69,19 @@ export const useYjsCollaboration = ({
     const users: CollaborationUser[] = []
 
     awarenessStates.forEach((state, clientID) => {
-      if (state && typeof state === 'object' && 'name' in state) {
-        users.push({
-          clientID,
-          name: String(state.name || 'Anonymous'),
-          color: String(state.color || '#808080'),
-        })
+      if (state && typeof state === 'object') {
+        // Extract user info
+        const user = state.user as Record<string, unknown> | undefined
+        const cursor = state.cursor as CursorPosition | undefined
+
+        if (user && typeof user === 'object') {
+          users.push({
+            clientID,
+            name: String(user.name || 'Anonymous'),
+            color: String(user.color || '#808080'),
+            cursor,
+          })
+        }
       }
     })
 
@@ -87,9 +109,11 @@ export const useYjsCollaboration = ({
         connect: true,
       })
 
-      // Set user info in awareness
-      provider.awareness.setLocalStateField('name', username)
-      provider.awareness.setLocalStateField('color', userColor)
+      // Set user info in awareness with proper structure
+      provider.awareness.setLocalStateField('user', {
+        name: username,
+        color: userColor,
+      })
 
       // Connection handlers
       provider.on('status', (event: { status: string }) => {
@@ -128,8 +152,10 @@ export const useYjsCollaboration = ({
             ],
           })
 
-          webrtcProvider.awareness.setLocalStateField('name', username)
-          webrtcProvider.awareness.setLocalStateField('color', userColor)
+          webrtcProvider.awareness.setLocalStateField('user', {
+            name: username,
+            color: userColor,
+          })
 
           webrtcProvider.awareness.on('change', () => {
             updateUsers(webrtcProvider.awareness.getStates())
@@ -159,8 +185,10 @@ export const useYjsCollaboration = ({
           ],
         })
 
-        provider.awareness.setLocalStateField('name', username)
-        provider.awareness.setLocalStateField('color', userColor)
+        provider.awareness.setLocalStateField('user', {
+          name: username,
+          color: userColor,
+        })
 
         provider.awareness.on('change', () => {
           updateUsers(provider!.awareness.getStates())
@@ -181,6 +209,13 @@ export const useYjsCollaboration = ({
     }
   }, [documentId, editor, username, userColor, enabled, updateUsers])
 
+  // Method to update cursor position
+  const updateCursorPosition = useCallback((cursor: CursorPosition) => {
+    if (providerRef.current?.awareness) {
+      providerRef.current.awareness.setLocalStateField('cursor', cursor)
+    }
+  }, [])
+
   const disconnect = useCallback(() => {
     providerRef.current?.destroy()
     docRef.current?.destroy()
@@ -189,12 +224,15 @@ export const useYjsCollaboration = ({
       isSynced: false,
       users: [],
       error: null,
+      connectionState: 'disconnected',
+      reconnectAttempts: 0,
     })
   }, [])
 
   return {
     ...state,
     disconnect,
+    updateCursorPosition,
     doc: docRef.current,
     provider: providerRef.current,
   }
