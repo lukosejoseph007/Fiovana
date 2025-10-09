@@ -154,6 +154,16 @@ export class DocumentService {
   }
 
   /**
+   * Read document content as plain text
+   * Supports DOCX, PDF, TXT, MD file formats
+   */
+  async getDocumentContent(filePath: string): Promise<ApiResponse<string>> {
+    return apiClient.invoke('read_document_content', {
+      filePath: filePath,
+    })
+  }
+
+  /**
    * Extract metadata from document
    */
   async extractMetadata(filePath: string): Promise<ApiResponse<DocumentMetadata>> {

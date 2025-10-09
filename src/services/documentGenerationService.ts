@@ -4,17 +4,32 @@ import { DocumentGeneration, GenerationMetadata, ApiResponse } from '../types'
 
 export class DocumentGenerationService {
   /**
+   * Initialize the document generator (should be called on app startup)
+   */
+  async initializeGenerator(
+    outputDirectory?: string,
+    aiConfig?: unknown
+  ): Promise<ApiResponse<boolean>> {
+    return apiClient.invoke('init_document_generator', {
+      output_directory: outputDirectory,
+      ai_config: aiConfig,
+    })
+  }
+
+  /**
    * Generate document from template
    */
   async generateFromTemplate(
     templateId: string,
-    parameters: Record<string, unknown>,
-    options?: unknown
+    variables: Record<string, unknown>,
+    outputFormat: string = 'docx'
   ): Promise<ApiResponse<DocumentGeneration>> {
-    return apiClient.invoke('generate_document_from_template', {
+    return apiClient.invoke('generate_from_template', {
       template_id: templateId,
-      parameters,
-      options: options || {},
+      request: {
+        variables,
+        output_format: outputFormat,
+      },
     })
   }
 
@@ -205,17 +220,43 @@ export class DocumentGenerationService {
   }
 
   /**
-   * Generate document from data
+   * Generate document from text content
    */
-  async generateFromData(
-    data: unknown,
-    templateType: string,
-    options?: unknown
+  async generateFromText(
+    title: string,
+    content: string,
+    outputFilename: string,
+    outputFormat: string = 'docx',
+    metadata?: Record<string, string>
   ): Promise<ApiResponse<DocumentGeneration>> {
-    return apiClient.invoke('generate_document_from_data', {
-      data,
-      template_type: templateType,
-      options: options || {},
+    // Map the output format string to the proper OutputFormat enum value
+    const formatMap: Record<string, string> = {
+      docx: 'Docx',
+      pdf: 'Pdf',
+      html: 'Html',
+      markdown: 'Markdown',
+      md: 'Markdown',
+      txt: 'PlainText',
+      text: 'PlainText',
+      pptx: 'Docx', // Fallback - PPTX not directly supported in basic generator
+    }
+
+    const mappedFormat = formatMap[outputFormat.toLowerCase()] || 'Docx'
+
+    // Backend expects all parameters wrapped in a 'request' object
+    return apiClient.invoke('generate_document_from_text', {
+      request: {
+        title,
+        content,
+        metadata: metadata || {},
+        options: {
+          format: mappedFormat,
+          template: null,
+          style_options: {},
+          include_metadata: true,
+        },
+        output_filename: outputFilename,
+      },
     })
   }
 

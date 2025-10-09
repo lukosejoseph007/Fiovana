@@ -378,6 +378,7 @@ async fn main() {
             commands::parse_document,
             commands::get_supported_document_formats,
             commands::get_document_processing_stats,
+            commands::read_document_content,
             // AI integration commands
             commands::init_ai_system,
             commands::chat_with_ai,

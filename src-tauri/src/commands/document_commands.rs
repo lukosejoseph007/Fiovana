@@ -140,6 +140,55 @@ pub async fn get_document_processing_stats() -> Result<DocumentStats, String> {
     })
 }
 
+/// Read document content as plain text
+#[tauri::command]
+pub async fn read_document_content(file_path: String) -> Result<String, String> {
+    let path = PathBuf::from(&file_path);
+
+    // Validate file exists
+    if !path.exists() {
+        return Err(format!("File does not exist: {}", file_path));
+    }
+
+    // Determine file type and extract text
+    let extension = path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|s| s.to_lowercase())
+        .unwrap_or_default();
+
+    match extension.as_str() {
+        "docx" => {
+            // Parse DOCX and extract text
+            match DocxParser::parse(&path) {
+                Ok(content) => {
+                    // DocxContent has a text field that contains all the text
+                    Ok(content.text)
+                }
+                Err(e) => Err(format!("Failed to read DOCX content: {}", e)),
+            }
+        }
+        "pdf" => {
+            // Parse PDF and extract text
+            match PdfParser::parse(&path) {
+                Ok(content) => {
+                    // PdfContent has a text field that contains all the text
+                    Ok(content.text)
+                }
+                Err(e) => Err(format!("Failed to read PDF content: {}", e)),
+            }
+        }
+        "txt" | "md" | "markdown" => {
+            // Read plain text files directly
+            std::fs::read_to_string(&path).map_err(|e| format!("Failed to read text file: {}", e))
+        }
+        _ => Err(format!(
+            "Unsupported file format for content reading: {}",
+            extension
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

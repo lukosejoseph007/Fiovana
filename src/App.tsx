@@ -18,7 +18,7 @@ import { UserPreferencesModal } from './components/settings/UserPreferencesModal
 import { ErrorBoundary } from './components/error/ErrorBoundary'
 import LoadingState from './components/ui/LoadingState'
 import { LongOperationProgress, type OperationProgress } from './components/ui/LoadingStates'
-import { documentService } from './services'
+import { documentService, documentGenerationService } from './services'
 import { apiClient } from './api/client'
 import LoadingStatesDemo from './components/demo/LoadingStatesDemo'
 import { designTokens } from './styles/tokens'
@@ -82,6 +82,12 @@ const AppContent: React.FC = () => {
           progress: 0,
         },
         {
+          id: 'init-document-generator',
+          operation: 'Initializing document generator',
+          status: 'pending',
+          progress: 0,
+        },
+        {
           id: 'init-ai-system',
           operation: 'Connecting AI services',
           status: 'pending',
@@ -137,6 +143,33 @@ const AppContent: React.FC = () => {
       } catch (error) {
         console.error('Failed to initialize document indexer:', error)
         updateInitOperation('init-document-system', {
+          status: 'failed',
+          details: 'Failed to initialize',
+        })
+      }
+
+      // Initialize document generator
+      updateInitOperation('init-document-generator', { status: 'in-progress', progress: 20 })
+      try {
+        console.log('Initializing document generator...')
+        const generatorResult = await documentGenerationService.initializeGenerator()
+        if (generatorResult.success) {
+          console.log('Document generator initialized successfully')
+          updateInitOperation('init-document-generator', {
+            status: 'completed',
+            progress: 100,
+            details: 'Generator ready',
+          })
+        } else {
+          console.warn('Document generator initialization returned false:', generatorResult.error)
+          updateInitOperation('init-document-generator', {
+            status: 'failed',
+            details: generatorResult.error || 'Initialization failed',
+          })
+        }
+      } catch (error) {
+        console.error('Failed to initialize document generator:', error)
+        updateInitOperation('init-document-generator', {
           status: 'failed',
           details: 'Failed to initialize',
         })

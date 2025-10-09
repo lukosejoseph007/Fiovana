@@ -1,4 +1,6 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
+import React, { useState, useCallback, useMemo, useRef } from 'react'
+import { invoke } from '@tauri-apps/api/core'
+import { open } from '@tauri-apps/plugin-dialog'
 import { designTokens } from '../../styles/tokens'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
@@ -8,7 +10,6 @@ import Progress from '../ui/Progress'
 import Modal from '../ui/Modal'
 import { documentGenerationService } from '../../services/documentGenerationService'
 import { formatConversionService } from '../../services/formatConversionService'
-import { documentService } from '../../services/documentService'
 
 export interface BatchManagerProps {
   className?: string
@@ -17,44 +18,70 @@ export interface BatchManagerProps {
   onBatchComplete?: (results: BatchOperationResult[]) => void
 }
 
+export interface BatchFile {
+  id: string
+  path: string
+  name: string
+  size: number
+  type: string
+  status: 'pending' | 'processing' | 'completed' | 'error'
+  progress: number
+  error?: string
+  result?: unknown
+}
+
 export interface BatchOperation {
   id: string
-  type: 'generate' | 'convert' | 'analyze' | 'compare'
-  status: 'pending' | 'running' | 'completed' | 'error' | 'cancelled'
-  progress: number
-  documentId?: string
-  documentName?: string
+  type: 'generate' | 'convert' | 'analyze' | 'compare' | 'index' | 'validate'
+  status: 'idle' | 'running' | 'paused' | 'completed' | 'error'
+  files: BatchFile[]
   parameters: Record<string, unknown>
-  result?: unknown
-  error?: string
-  createdAt: Date
   startedAt?: Date
   completedAt?: Date
-  estimatedDuration?: number
-  actualDuration?: number
+  totalProgress: number
 }
 
 export interface BatchOperationResult {
-  operation: BatchOperation
+  fileId: string
+  filePath: string
   success: boolean
   result?: unknown
   error?: string
   duration: number
 }
 
-export interface BatchQueue {
-  id: string
-  name: string
-  operations: BatchOperation[]
-  status: 'idle' | 'running' | 'paused' | 'completed' | 'error'
-  totalOperations: number
-  completedOperations: number
-  failedOperations: number
-  progress: number
-  createdAt: Date
-  startedAt?: Date
-  completedAt?: Date
-}
+const OPERATION_TYPES = [
+  {
+    value: 'validate',
+    label: 'Validate Files',
+    icon: 'Shield',
+    description: 'Check file integrity and format',
+  },
+  {
+    value: 'index',
+    label: 'Index Documents',
+    icon: 'Database',
+    description: 'Add files to search index',
+  },
+  {
+    value: 'analyze',
+    label: 'Analyze Content',
+    icon: 'Search',
+    description: 'Analyze document structure and content',
+  },
+  {
+    value: 'convert',
+    label: 'Convert Format',
+    icon: 'RefreshCw',
+    description: 'Convert to different format',
+  },
+  {
+    value: 'generate',
+    label: 'Generate Outputs',
+    icon: 'FilePlus',
+    description: 'Generate derivative content',
+  },
+] as const
 
 const BatchManager: React.FC<BatchManagerProps> = ({
   className = '',
@@ -62,149 +89,178 @@ const BatchManager: React.FC<BatchManagerProps> = ({
   onClose,
   onBatchComplete,
 }) => {
-  const [queue, setQueue] = useState<BatchQueue>({
+  const [operation, setOperation] = useState<BatchOperation>({
     id: `batch-${Date.now()}`,
-    name: 'Batch Operation',
-    operations: [],
+    type: 'validate',
     status: 'idle',
-    totalOperations: 0,
-    completedOperations: 0,
-    failedOperations: 0,
-    progress: 0,
-    createdAt: new Date(),
+    files: [],
+    parameters: {},
+    totalProgress: 0,
   })
 
+  const [selectedOperationType, setSelectedOperationType] = useState<string>('validate')
+  const [isDragging, setIsDragging] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [results, setResults] = useState<BatchOperationResult[]>([])
-  const [retryEnabled, setRetryEnabled] = useState(true)
-  const [autoDownload, setAutoDownload] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
 
-  // Add operation to queue
-  const addOperation = useCallback((operation: Omit<BatchOperation, 'id' | 'createdAt'>) => {
-    const newOperation: BatchOperation = {
-      ...operation,
-      id: `op-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      createdAt: new Date(),
+  // Handle file selection via dialog
+  const handleSelectFiles = useCallback(async () => {
+    try {
+      const selected = await open({
+        multiple: true,
+        filters: [
+          {
+            name: 'Documents',
+            extensions: ['pdf', 'docx', 'doc', 'txt', 'md', 'html', 'pptx'],
+          },
+        ],
+      })
+
+      if (selected) {
+        const paths = Array.isArray(selected) ? selected : [selected]
+        const newFiles: BatchFile[] = paths.map(path => ({
+          id: `file-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          path,
+          name: path.split('/').pop() || path,
+          size: 0, // Will be populated on processing
+          type: path.split('.').pop() || 'unknown',
+          status: 'pending' as const,
+          progress: 0,
+        }))
+
+        setOperation(prev => ({
+          ...prev,
+          files: [...prev.files, ...newFiles],
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to select files:', error)
     }
-
-    setQueue(prev => ({
-      ...prev,
-      operations: [...prev.operations, newOperation],
-      totalOperations: prev.totalOperations + 1,
-    }))
-
-    return newOperation.id
   }, [])
 
-  // Remove operation from queue (future use for manual queue management)
-  // const removeOperation = useCallback((operationId: string) => {
-  //   setQueue(prev => ({
-  //     ...prev,
-  //     operations: prev.operations.filter(op => op.id !== operationId),
-  //     totalOperations: prev.totalOperations - 1,
-  //   }))
-  // }, [])
+  // Handle drag and drop
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
 
-  // Cancel operation
-  const cancelOperation = useCallback((operationId: string) => {
-    setQueue(prev => ({
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.currentTarget === dropZoneRef.current) {
+      setIsDragging(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    try {
+      const items = Array.from(e.dataTransfer.items)
+      const filePaths: string[] = []
+
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file) {
+            // In Tauri, we need to get the path differently
+            // For now, we'll use the file name as a placeholder
+            filePaths.push(file.name)
+          }
+        }
+      }
+
+      if (filePaths.length > 0) {
+        const newFiles: BatchFile[] = filePaths.map(path => ({
+          id: `file-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          path,
+          name: path.split('/').pop() || path,
+          size: 0,
+          type: path.split('.').pop() || 'unknown',
+          status: 'pending' as const,
+          progress: 0,
+        }))
+
+        setOperation(prev => ({
+          ...prev,
+          files: [...prev.files, ...newFiles],
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to process dropped files:', error)
+    }
+  }, [])
+
+  // Remove file from batch
+  const handleRemoveFile = useCallback((fileId: string) => {
+    setOperation(prev => ({
       ...prev,
-      operations: prev.operations.map(op =>
-        op.id === operationId ? { ...op, status: 'cancelled' as const } : op
-      ),
+      files: prev.files.filter(f => f.id !== fileId),
     }))
   }, [])
 
-  // Retry failed operations
-  const retryFailedOperations = useCallback(() => {
-    setQueue(prev => ({
+  // Clear all files
+  const handleClearAll = useCallback(() => {
+    setOperation(prev => ({
       ...prev,
-      operations: prev.operations.map(op =>
-        op.status === 'error' ? { ...op, status: 'pending' as const, error: undefined } : op
-      ),
-      failedOperations: 0,
+      files: [],
+      status: 'idle',
+      totalProgress: 0,
     }))
+    setResults([])
   }, [])
 
-  // Clear completed operations
-  const clearCompletedOperations = useCallback(() => {
-    setQueue(prev => ({
-      ...prev,
-      operations: prev.operations.filter(op => op.status !== 'completed'),
-      completedOperations: 0,
-    }))
-  }, [])
-
-  // Execute single operation
-  const executeOperation = useCallback(
-    async (operation: BatchOperation): Promise<BatchOperationResult> => {
+  // Process single file
+  const processFile = useCallback(
+    async (file: BatchFile): Promise<BatchOperationResult> => {
       const startTime = Date.now()
 
       try {
-        // Update operation status to running in queue
-        setQueue(prev => ({
-          ...prev,
-          operations: prev.operations.map(op =>
-            op.id === operation.id
-              ? { ...op, status: 'running' as const, startedAt: new Date() }
-              : op
-          ),
-        }))
-
         let result: unknown = null
 
         switch (operation.type) {
-          case 'generate':
-            if (operation.parameters.templateId) {
-              const generateResult = await documentGenerationService.generateFromTemplate(
-                operation.parameters.templateId as string,
-                operation.parameters
-              )
-              result = generateResult.data
-            } else if (operation.parameters.prompt) {
-              const generateResult = await documentGenerationService.generateFromPrompt(
-                operation.parameters.prompt as string,
-                operation.parameters.format as string,
-                operation.parameters
-              )
-              result = generateResult.data
-            }
+          case 'validate':
+            result = await invoke('validate_file_comprehensive', { filePath: file.path })
             break
 
-          case 'convert':
-            if (operation.documentId && operation.parameters.targetFormat) {
-              const convertResult = await formatConversionService.convertDocument(
-                operation.documentId,
-                operation.parameters.targetFormat as string,
-                {
-                  preserveFormatting: (operation.parameters.preserveFormatting as boolean) ?? true,
-                  includeImages: (operation.parameters.includeImages as boolean) ?? true,
-                  customMapping: operation.parameters.customMapping as
-                    | Record<string, string>
-                    | undefined,
-                  quality:
-                    (operation.parameters.quality as 'low' | 'medium' | 'high' | undefined) ??
-                    'high',
-                }
-              )
-              result = convertResult.data
-            }
+          case 'index':
+            result = await invoke('index_document', { filePath: file.path })
             break
 
           case 'analyze':
-            if (operation.documentId) {
-              const analyzeResult = await documentService.analyzeDocument(operation.documentId)
-              result = analyzeResult.data
+            result = await invoke('analyze_document_structure', { filePath: file.path })
+            break
+
+          case 'convert':
+            if (operation.parameters.targetFormat) {
+              result = await formatConversionService.convertDocument(
+                file.path,
+                operation.parameters.targetFormat as string,
+                {
+                  preserveFormatting: true,
+                  includeImages: true,
+                }
+              )
             }
             break
 
-          case 'compare':
-            if (operation.parameters.baselineId && operation.parameters.updatedId) {
-              const compareResult = await documentService.compareDocuments(
-                operation.parameters.baselineId as string,
-                operation.parameters.updatedId as string
+          case 'generate':
+            if (operation.parameters.outputFormat) {
+              result = await documentGenerationService.generateFromPrompt(
+                `Process ${file.name}`,
+                operation.parameters.outputFormat as string,
+                {}
               )
-              result = compareResult.data
             }
             break
 
@@ -212,143 +268,137 @@ const BatchManager: React.FC<BatchManagerProps> = ({
             throw new Error(`Unknown operation type: ${operation.type}`)
         }
 
-        const duration = Date.now() - startTime
-
-        // Auto-download if enabled and result is a document
-        if (autoDownload && result && typeof result === 'object' && 'documentId' in result) {
-          // Trigger download (implementation depends on backend API)
-          console.log('Auto-downloading result:', result)
-        }
-
         return {
-          operation,
+          fileId: file.id,
+          filePath: file.path,
           success: true,
           result,
-          duration,
+          duration: Date.now() - startTime,
         }
       } catch (error) {
-        const duration = Date.now() - startTime
-
         return {
-          operation,
+          fileId: file.id,
+          filePath: file.path,
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-          duration,
+          duration: Date.now() - startTime,
         }
       }
     },
-    [autoDownload]
+    [operation.type, operation.parameters]
   )
 
-  // Process queue
-  const processQueue = useCallback(async () => {
-    if (queue.status === 'running') return
+  // Start batch processing
+  const handleStartBatch = useCallback(async () => {
+    if (operation.files.length === 0) return
 
-    setQueue(prev => ({ ...prev, status: 'running', startedAt: new Date() }))
+    setOperation(prev => ({
+      ...prev,
+      status: 'running',
+      startedAt: new Date(),
+      totalProgress: 0,
+    }))
 
-    const pendingOperations = queue.operations.filter(op => op.status === 'pending')
     const operationResults: BatchOperationResult[] = []
+    const totalFiles = operation.files.length
 
-    for (const operation of pendingOperations) {
-      // Check if queue was paused or cancelled
-      if (queue.status === 'paused') {
+    for (let i = 0; i < operation.files.length; i++) {
+      if (isPaused) {
+        setOperation(prev => ({ ...prev, status: 'paused' }))
         break
       }
 
-      const result = await executeOperation(operation)
+      const file = operation.files[i]
+      if (!file) continue
+
+      // Update file status to processing
+      setOperation(prev => ({
+        ...prev,
+        files: prev.files.map(f =>
+          f.id === file.id ? { ...f, status: 'processing' as const, progress: 0 } : f
+        ),
+      }))
+
+      // Process file
+      const result = await processFile(file)
       operationResults.push(result)
 
-      setQueue(prev => {
-        const updatedOperations = prev.operations.map(op =>
-          op.id === operation.id
+      // Update file status
+      setOperation(prev => ({
+        ...prev,
+        files: prev.files.map(f =>
+          f.id === file.id
             ? {
-                ...op,
+                ...f,
                 status: result.success ? ('completed' as const) : ('error' as const),
                 progress: 100,
-                result: result.result,
                 error: result.error,
-                completedAt: new Date(),
-                actualDuration: result.duration,
+                result: result.result,
               }
-            : op
-        )
+            : f
+        ),
+        totalProgress: Math.round(((i + 1) / totalFiles) * 100),
+      }))
 
-        const completed = updatedOperations.filter(op => op.status === 'completed').length
-        const failed = updatedOperations.filter(op => op.status === 'error').length
-        const total = updatedOperations.length
-
-        return {
+      // Simulate progress for visual feedback
+      for (let progress = 0; progress <= 100; progress += 20) {
+        setOperation(prev => ({
           ...prev,
-          operations: updatedOperations,
-          completedOperations: completed,
-          failedOperations: failed,
-          progress: total > 0 ? ((completed + failed) / total) * 100 : 0,
-        }
-      })
-
-      // Retry logic
-      if (!result.success && retryEnabled && operation.parameters.retryCount !== undefined) {
-        const retryCount = (operation.parameters.retryCount as number) || 0
-        if (retryCount < 3) {
-          // Retry up to 3 times
-          console.log(`Retrying operation ${operation.id} (attempt ${retryCount + 1}/3)`)
-          addOperation({
-            ...operation,
-            status: 'pending',
-            parameters: { ...operation.parameters, retryCount: retryCount + 1 },
-          })
-        }
+          files: prev.files.map(f =>
+            f.id === file.id && f.status === 'processing' ? { ...f, progress } : f
+          ),
+        }))
+        await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
 
-    setResults(prev => [...prev, ...operationResults])
-
-    setQueue(prev => ({
+    setResults(operationResults)
+    setOperation(prev => ({
       ...prev,
       status: 'completed',
       completedAt: new Date(),
-      progress: 100,
+      totalProgress: 100,
     }))
 
     setShowResults(true)
     onBatchComplete?.(operationResults)
-  }, [queue, executeOperation, retryEnabled, addOperation, onBatchComplete])
+  }, [operation.files, isPaused, processFile, onBatchComplete])
 
-  // Pause queue processing
-  const pauseQueue = useCallback(() => {
-    setQueue(prev => ({ ...prev, status: 'paused' }))
+  // Pause processing
+  const handlePause = useCallback(() => {
+    setIsPaused(true)
+    setOperation(prev => ({ ...prev, status: 'paused' }))
   }, [])
 
-  // Resume queue processing
-  const resumeQueue = useCallback(() => {
-    setQueue(prev => ({ ...prev, status: 'running' }))
-    processQueue()
-  }, [processQueue])
+  // Resume processing
+  const handleResume = useCallback(() => {
+    setIsPaused(false)
+    handleStartBatch()
+  }, [handleStartBatch])
 
-  // Cancel all operations
-  const cancelAllOperations = useCallback(() => {
-    setQueue(prev => ({
+  // Retry failed files
+  const handleRetryFailed = useCallback(() => {
+    setOperation(prev => ({
       ...prev,
-      operations: prev.operations.map(op =>
-        op.status === 'pending' || op.status === 'running'
-          ? { ...op, status: 'cancelled' as const }
-          : op
+      files: prev.files.map(f =>
+        f.status === 'error'
+          ? { ...f, status: 'pending' as const, progress: 0, error: undefined }
+          : f
       ),
       status: 'idle',
     }))
   }, [])
 
-  // Calculate estimated time remaining
-  const estimatedTimeRemaining = useMemo(() => {
-    const pendingOperations = queue.operations.filter(op => op.status === 'pending')
-    const avgDuration =
-      queue.operations
-        .filter(op => op.actualDuration)
-        .reduce((sum, op) => sum + (op.actualDuration || 0), 0) /
-        queue.operations.filter(op => op.actualDuration).length || 30000 // Default 30s
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = operation.files.length
+    const completed = operation.files.filter(f => f.status === 'completed').length
+    const failed = operation.files.filter(f => f.status === 'error').length
+    const processing = operation.files.filter(f => f.status === 'processing').length
+    const pending = operation.files.filter(f => f.status === 'pending').length
 
-    return pendingOperations.length * avgDuration
-  }, [queue.operations])
+    return { total, completed, failed, processing, pending }
+  }, [operation.files])
 
   // Format time
   const formatTime = useCallback((ms: number) => {
@@ -357,55 +407,80 @@ const BatchManager: React.FC<BatchManagerProps> = ({
     return `${Math.round(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`
   }, [])
 
-  // Auto-start processing when operations are added
-  useEffect(() => {
-    if (queue.operations.some(op => op.status === 'pending') && queue.status === 'idle') {
-      processQueue()
+  // Get operation icon
+  const getFileIcon = useCallback((type: string) => {
+    switch (type.toLowerCase()) {
+      case 'pdf':
+        return 'FileText'
+      case 'docx':
+      case 'doc':
+        return 'FileText'
+      case 'txt':
+      case 'md':
+        return 'FileText'
+      case 'html':
+        return 'Code'
+      case 'pptx':
+        return 'Presentation'
+      default:
+        return 'File'
     }
-  }, [queue.operations, queue.status, processQueue])
+  }, [])
+
+  const getStatusColor = useCallback((status: BatchFile['status']) => {
+    switch (status) {
+      case 'completed':
+        return designTokens.colors.confidence.high
+      case 'error':
+        return designTokens.colors.accent.alert
+      case 'processing':
+        return designTokens.colors.accent.ai
+      default:
+        return designTokens.colors.text.tertiary
+    }
+  }, [])
 
   // Memoized styles
   const containerStyles = useMemo(
     () => ({
       padding: designTokens.spacing[6],
-      maxWidth: '800px',
+      maxWidth: '900px',
       margin: '0 auto',
       ...style,
     }),
     [style]
   )
 
-  const queueHeaderStyles = {
+  const headerStyles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: designTokens.spacing[4],
   }
 
-  const queueStatsStyles = {
-    display: 'flex',
-    gap: designTokens.spacing[4],
+  const dropZoneStyles = {
+    border: `2px dashed ${isDragging ? designTokens.colors.accent.ai : designTokens.colors.border.medium}`,
+    borderRadius: designTokens.borderRadius.lg,
+    padding: designTokens.spacing[8],
+    textAlign: 'center' as const,
+    backgroundColor: isDragging
+      ? `${designTokens.colors.accent.ai}10`
+      : designTokens.colors.surface.secondary,
+    transition: `all ${designTokens.animation.duration.fast} ${designTokens.animation.easing.easeOut}`,
+    cursor: 'pointer',
     marginBottom: designTokens.spacing[4],
   }
 
-  const statCardStyles = {
-    flex: 1,
-    padding: designTokens.spacing[3],
-    textAlign: 'center' as const,
-  }
-
-  const operationListStyles = {
+  const fileListStyles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: designTokens.spacing[2],
     maxHeight: '400px',
     overflowY: 'auto' as const,
-    padding: designTokens.spacing[2],
-    backgroundColor: designTokens.colors.surface.secondary,
-    borderRadius: designTokens.borderRadius.md,
+    marginBottom: designTokens.spacing[4],
   }
 
-  const operationItemStyles = {
+  const fileItemStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: designTokens.spacing[3],
@@ -415,47 +490,16 @@ const BatchManager: React.FC<BatchManagerProps> = ({
     border: `1px solid ${designTokens.colors.border.medium}`,
   }
 
-  const actionsStyles = {
-    display: 'flex',
-    gap: designTokens.spacing[2],
-    marginTop: designTokens.spacing[4],
-    justifyContent: 'flex-end',
+  const statsCardStyles = {
+    flex: 1,
+    padding: designTokens.spacing[3],
+    textAlign: 'center' as const,
   }
-
-  const getOperationIcon = useCallback((type: BatchOperation['type']) => {
-    switch (type) {
-      case 'generate':
-        return 'file-plus'
-      case 'convert':
-        return 'refresh-cw'
-      case 'analyze':
-        return 'search'
-      case 'compare':
-        return 'git-compare'
-      default:
-        return 'file'
-    }
-  }, [])
-
-  const getStatusColor = useCallback((status: BatchOperation['status']) => {
-    switch (status) {
-      case 'completed':
-        return designTokens.colors.confidence.high
-      case 'error':
-        return designTokens.colors.accent.alert
-      case 'running':
-        return designTokens.colors.accent.ai
-      case 'cancelled':
-        return designTokens.colors.text.tertiary
-      default:
-        return designTokens.colors.text.secondary
-    }
-  }, [])
 
   return (
     <div className={`fiovana-batch-manager ${className}`} style={containerStyles}>
       {/* Header */}
-      <div style={queueHeaderStyles}>
+      <div style={headerStyles}>
         <div>
           <h2
             style={{
@@ -473,7 +517,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
               color: designTokens.colors.text.secondary,
             }}
           >
-            Manage multiple document operations in a single queue
+            Process multiple files simultaneously
           </p>
         </div>
         {onClose && (
@@ -483,287 +527,321 @@ const BatchManager: React.FC<BatchManagerProps> = ({
         )}
       </div>
 
-      {/* Queue Stats */}
-      <div style={queueStatsStyles}>
-        <Card style={statCardStyles}>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize['2xl'],
-              fontWeight: designTokens.typography.fontWeight.bold,
-              color: designTokens.colors.text.primary,
-            }}
-          >
-            {queue.totalOperations}
-          </div>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.secondary,
-            }}
-          >
-            Total Operations
-          </div>
-        </Card>
-
-        <Card style={statCardStyles}>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize['2xl'],
-              fontWeight: designTokens.typography.fontWeight.bold,
-              color: designTokens.colors.confidence.high,
-            }}
-          >
-            {queue.completedOperations}
-          </div>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.secondary,
-            }}
-          >
-            Completed
-          </div>
-        </Card>
-
-        <Card style={statCardStyles}>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize['2xl'],
-              fontWeight: designTokens.typography.fontWeight.bold,
-              color: designTokens.colors.accent.alert,
-            }}
-          >
-            {queue.failedOperations}
-          </div>
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.secondary,
-            }}
-          >
-            Failed
-          </div>
-        </Card>
-      </div>
-
-      {/* Overall Progress */}
+      {/* Operation Type Selection */}
       <Card style={{ padding: designTokens.spacing[4], marginBottom: designTokens.spacing[4] }}>
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: designTokens.spacing[2],
+            fontSize: designTokens.typography.fontSize.sm,
+            fontWeight: designTokens.typography.fontWeight.medium,
+            marginBottom: designTokens.spacing[3],
+            color: designTokens.colors.text.primary,
           }}
         >
-          <span
-            style={{
-              fontSize: designTokens.typography.fontSize.sm,
-              fontWeight: designTokens.typography.fontWeight.medium,
-              color: designTokens.colors.text.primary,
-            }}
-          >
-            Overall Progress
-          </span>
-          <Badge variant={queue.status === 'completed' ? 'success' : 'default'}>
-            {queue.status}
-          </Badge>
+          Operation Type
         </div>
-        <Progress value={queue.progress} variant="ai" animated showPercentage />
-        {queue.status === 'running' && estimatedTimeRemaining > 0 && (
-          <div
-            style={{
-              fontSize: designTokens.typography.fontSize.xs,
-              color: designTokens.colors.text.tertiary,
-              marginTop: designTokens.spacing[2],
-            }}
-          >
-            Est. time remaining: {formatTime(estimatedTimeRemaining)}
-          </div>
-        )}
-      </Card>
-
-      {/* Operations List */}
-      <div style={operationListStyles}>
-        {queue.operations.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: designTokens.spacing[6],
-              color: designTokens.colors.text.tertiary,
-            }}
-          >
-            <Icon
-              name="FileText"
-              size={48}
-              color={designTokens.colors.text.tertiary}
-              style={{ marginBottom: designTokens.spacing[2] }}
-            />
-            <div>No operations in queue</div>
-          </div>
-        ) : (
-          queue.operations.map(operation => (
-            <div key={operation.id} style={operationItemStyles}>
-              <Icon
-                name={getOperationIcon(operation.type) as never}
-                size={20}
-                color={getStatusColor(operation.status)}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: designTokens.typography.fontSize.sm,
-                    fontWeight: designTokens.typography.fontWeight.medium,
-                    color: designTokens.colors.text.primary,
-                    marginBottom: designTokens.spacing[1],
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {operation.documentName || operation.type}
-                </div>
-                {operation.status === 'running' && (
-                  <Progress value={operation.progress} size="sm" animated variant="ai" />
-                )}
-                {operation.error && (
-                  <div
-                    style={{
-                      fontSize: designTokens.typography.fontSize.xs,
-                      color: designTokens.colors.accent.alert,
-                    }}
-                  >
-                    Error: {operation.error}
-                  </div>
-                )}
-                {operation.actualDuration && (
-                  <div
-                    style={{
-                      fontSize: designTokens.typography.fontSize.xs,
-                      color: designTokens.colors.text.tertiary,
-                    }}
-                  >
-                    Duration: {formatTime(operation.actualDuration)}
-                  </div>
-                )}
-              </div>
-              <Badge variant="default" size="sm">
-                {operation.status}
-              </Badge>
-              {(operation.status === 'pending' || operation.status === 'running') && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => cancelOperation(operation.id)}
-                  style={{ minWidth: 'auto', padding: designTokens.spacing[1] }}
-                >
-                  <Icon name="X" size={14} />
-                </Button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Options */}
-      <Card style={{ padding: designTokens.spacing[3], marginTop: designTokens.spacing[4] }}>
         <div
           style={{
-            display: 'flex',
-            gap: designTokens.spacing[4],
-            alignItems: 'center',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: designTokens.spacing[2],
           }}
         >
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: designTokens.spacing[2],
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.primary,
-              cursor: 'pointer',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={retryEnabled}
-              onChange={e => setRetryEnabled(e.target.checked)}
-              style={{ cursor: 'pointer' }}
-            />
-            Auto-retry failed operations
-          </label>
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: designTokens.spacing[2],
-              fontSize: designTokens.typography.fontSize.sm,
-              color: designTokens.colors.text.primary,
-              cursor: 'pointer',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={autoDownload}
-              onChange={e => setAutoDownload(e.target.checked)}
-              style={{ cursor: 'pointer' }}
-            />
-            Auto-download completed results
-          </label>
+          {OPERATION_TYPES.map(opType => (
+            <Button
+              key={opType.value}
+              variant={selectedOperationType === opType.value ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => {
+                setSelectedOperationType(opType.value)
+                setOperation(prev => ({ ...prev, type: opType.value as BatchOperation['type'] }))
+              }}
+              disabled={operation.status === 'running'}
+              leftIcon={<Icon name={opType.icon as never} size={16} />}
+              style={{ justifyContent: 'flex-start' }}
+            >
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: designTokens.typography.fontSize.xs,
+                    fontWeight: designTokens.typography.fontWeight.medium,
+                  }}
+                >
+                  {opType.label}
+                </div>
+              </div>
+            </Button>
+          ))}
         </div>
       </Card>
 
+      {/* File Selection / Drop Zone */}
+      {operation.files.length === 0 && (
+        <div
+          ref={dropZoneRef}
+          style={dropZoneStyles}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleSelectFiles}
+        >
+          <Icon
+            name={isDragging ? 'Download' : 'Zap'}
+            size={48}
+            color={isDragging ? designTokens.colors.accent.ai : designTokens.colors.text.tertiary}
+            style={{ marginBottom: designTokens.spacing[3] }}
+          />
+          <div
+            style={{
+              fontSize: designTokens.typography.fontSize.lg,
+              fontWeight: designTokens.typography.fontWeight.medium,
+              color: designTokens.colors.text.primary,
+              marginBottom: designTokens.spacing[2],
+            }}
+          >
+            {isDragging ? 'Drop files here' : 'Drag & drop files or click to browse'}
+          </div>
+          <div
+            style={{
+              fontSize: designTokens.typography.fontSize.sm,
+              color: designTokens.colors.text.tertiary,
+            }}
+          >
+            Supported: PDF, DOCX, TXT, MD, HTML, PPTX
+          </div>
+        </div>
+      )}
+
+      {/* File List */}
+      {operation.files.length > 0 && (
+        <>
+          {/* Statistics */}
+          <div
+            style={{
+              display: 'flex',
+              gap: designTokens.spacing[3],
+              marginBottom: designTokens.spacing[4],
+            }}
+          >
+            <Card style={statsCardStyles}>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize['2xl'],
+                  fontWeight: designTokens.typography.fontWeight.bold,
+                  color: designTokens.colors.text.primary,
+                }}
+              >
+                {stats.total}
+              </div>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  color: designTokens.colors.text.secondary,
+                }}
+              >
+                Total Files
+              </div>
+            </Card>
+
+            <Card style={statsCardStyles}>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize['2xl'],
+                  fontWeight: designTokens.typography.fontWeight.bold,
+                  color: designTokens.colors.confidence.high,
+                }}
+              >
+                {stats.completed}
+              </div>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  color: designTokens.colors.text.secondary,
+                }}
+              >
+                Completed
+              </div>
+            </Card>
+
+            <Card style={statsCardStyles}>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize['2xl'],
+                  fontWeight: designTokens.typography.fontWeight.bold,
+                  color: designTokens.colors.accent.alert,
+                }}
+              >
+                {stats.failed}
+              </div>
+              <div
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  color: designTokens.colors.text.secondary,
+                }}
+              >
+                Failed
+              </div>
+            </Card>
+          </div>
+
+          {/* Overall Progress */}
+          <Card style={{ padding: designTokens.spacing[4], marginBottom: designTokens.spacing[4] }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: designTokens.spacing[2],
+              }}
+            >
+              <span
+                style={{
+                  fontSize: designTokens.typography.fontSize.sm,
+                  fontWeight: designTokens.typography.fontWeight.medium,
+                  color: designTokens.colors.text.primary,
+                }}
+              >
+                Overall Progress
+              </span>
+              <Badge
+                variant={
+                  operation.status === 'completed'
+                    ? 'success'
+                    : operation.status === 'error'
+                      ? 'error'
+                      : 'default'
+                }
+              >
+                {operation.status}
+              </Badge>
+            </div>
+            <Progress value={operation.totalProgress} variant="ai" animated showPercentage />
+          </Card>
+
+          {/* Files */}
+          <div style={fileListStyles}>
+            {operation.files.map(file => (
+              <div key={file.id} style={fileItemStyles}>
+                <Icon
+                  name={getFileIcon(file.type) as never}
+                  size={20}
+                  color={getStatusColor(file.status)}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: designTokens.typography.fontSize.sm,
+                      fontWeight: designTokens.typography.fontWeight.medium,
+                      color: designTokens.colors.text.primary,
+                      marginBottom: designTokens.spacing[1],
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {file.name}
+                  </div>
+                  {file.status === 'processing' && (
+                    <Progress value={file.progress} size="sm" animated variant="ai" />
+                  )}
+                  {file.error && (
+                    <div
+                      style={{
+                        fontSize: designTokens.typography.fontSize.xs,
+                        color: designTokens.colors.accent.alert,
+                      }}
+                    >
+                      Error: {file.error}
+                    </div>
+                  )}
+                </div>
+                <Badge variant="default" size="sm">
+                  {file.status}
+                </Badge>
+                {file.status === 'pending' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveFile(file.id)}
+                    style={{ minWidth: 'auto', padding: designTokens.spacing[1] }}
+                  >
+                    <Icon name="X" size={14} />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add More Files Button */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleSelectFiles}
+            disabled={operation.status === 'running'}
+            leftIcon={<Icon name="FilePlus" size={16} />}
+            style={{ marginBottom: designTokens.spacing[4] }}
+          >
+            Add More Files
+          </Button>
+        </>
+      )}
+
       {/* Actions */}
-      <div style={actionsStyles}>
-        {queue.failedOperations > 0 && (
-          <Button variant="secondary" onClick={retryFailedOperations}>
-            <Icon
-              name="RefreshCcw"
-              size={16}
-              style={{ marginRight: designTokens.spacing[2], display: 'inline-block' }}
-            />
-            Retry Failed
-          </Button>
+      <div style={{ display: 'flex', gap: designTokens.spacing[2], justifyContent: 'flex-end' }}>
+        {operation.files.length > 0 && operation.status === 'idle' && (
+          <>
+            <Button variant="ghost" onClick={handleClearAll}>
+              Clear All
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleStartBatch}
+              leftIcon={<Icon name="ArrowRight" size={16} />}
+            >
+              Start Batch
+            </Button>
+          </>
         )}
-        {queue.completedOperations > 0 && (
-          <Button variant="ghost" onClick={clearCompletedOperations}>
-            Clear Completed
-          </Button>
-        )}
-        {queue.status === 'running' && (
-          <Button variant="secondary" onClick={pauseQueue}>
-            <Icon
-              name="AlertCircle"
-              size={16}
-              style={{ marginRight: designTokens.spacing[2], display: 'inline-block' }}
-            />
+
+        {operation.status === 'running' && (
+          <Button
+            variant="secondary"
+            onClick={handlePause}
+            leftIcon={<Icon name="Pulse" size={16} />}
+          >
             Pause
           </Button>
         )}
-        {queue.status === 'paused' && (
-          <Button variant="primary" onClick={resumeQueue}>
-            <Icon
-              name="ArrowRight"
-              size={16}
-              style={{ marginRight: designTokens.spacing[2], display: 'inline-block' }}
-            />
+
+        {operation.status === 'paused' && (
+          <Button
+            variant="primary"
+            onClick={handleResume}
+            leftIcon={<Icon name="ArrowRight" size={16} />}
+          >
             Resume
           </Button>
         )}
-        {(queue.status === 'running' || queue.status === 'paused') && (
-          <Button variant="ghost" onClick={cancelAllOperations}>
-            Cancel All
-          </Button>
-        )}
-        {queue.status === 'completed' && (
-          <Button variant="primary" onClick={() => setShowResults(true)}>
-            <Icon
-              name="TrendingUp"
-              size={16}
-              style={{ marginRight: designTokens.spacing[2], display: 'inline-block' }}
-            />
-            View Results
-          </Button>
+
+        {operation.status === 'completed' && (
+          <>
+            {stats.failed > 0 && (
+              <Button
+                variant="secondary"
+                onClick={handleRetryFailed}
+                leftIcon={<Icon name="RefreshCcw" size={16} />}
+              >
+                Retry Failed
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={() => setShowResults(true)}
+              leftIcon={<Icon name="TrendingUp" size={16} />}
+            >
+              View Results
+            </Button>
+          </>
         )}
       </div>
 
@@ -782,7 +860,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
               gap: designTokens.spacing[4],
             }}
           >
-            <Card style={statCardStyles}>
+            <Card style={statsCardStyles}>
               <div
                 style={{
                   fontSize: designTokens.typography.fontSize.xl,
@@ -794,7 +872,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
               </div>
               <div style={{ fontSize: designTokens.typography.fontSize.sm }}>Successful</div>
             </Card>
-            <Card style={statCardStyles}>
+            <Card style={statsCardStyles}>
               <div
                 style={{
                   fontSize: designTokens.typography.fontSize.xl,
@@ -806,7 +884,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
               </div>
               <div style={{ fontSize: designTokens.typography.fontSize.sm }}>Failed</div>
             </Card>
-            <Card style={statCardStyles}>
+            <Card style={statsCardStyles}>
               <div
                 style={{
                   fontSize: designTokens.typography.fontSize.xl,
@@ -837,7 +915,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
                   style={{ display: 'flex', alignItems: 'center', gap: designTokens.spacing[3] }}
                 >
                   <Icon
-                    name={result.success ? 'Health' : 'AlertCircle'}
+                    name={result.success ? 'CheckCircle' : 'AlertCircle'}
                     size={20}
                     color={
                       result.success
@@ -853,7 +931,7 @@ const BatchManager: React.FC<BatchManagerProps> = ({
                         marginBottom: designTokens.spacing[1],
                       }}
                     >
-                      {result.operation.documentName || result.operation.type}
+                      {result.filePath.split('/').pop() || result.filePath}
                     </div>
                     {result.error && (
                       <div
@@ -892,14 +970,6 @@ const BatchManager: React.FC<BatchManagerProps> = ({
           >
             <Button variant="ghost" onClick={() => setShowResults(false)}>
               Close
-            </Button>
-            <Button variant="primary" onClick={() => console.log('Download results:', results)}>
-              <Icon
-                name="Share2"
-                size={16}
-                style={{ marginRight: designTokens.spacing[2], display: 'inline-block' }}
-              />
-              Download Summary
             </Button>
           </div>
         </div>
